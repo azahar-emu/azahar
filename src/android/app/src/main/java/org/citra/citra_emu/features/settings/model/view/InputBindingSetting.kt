@@ -128,6 +128,10 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
                 Settings.HOTKEY_QUICKLOAD -> Hotkey.QUICKLOAD.button
                 Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
                 Settings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_BUTTON.button
+                Settings.HOTKEY_SAVE_CURRENT_SLOT -> Hotkey.SAVE_CURRENT_SLOT.button
+                Settings.HOTKEY_LOAD_CURRENT_SLOT -> Hotkey.LOAD_CURRENT_SLOT.button
+                Settings.HOTKEY_NEXT_SAVE_SLOT -> Hotkey.NEXT_SAVE_SLOT.button
+                Settings.HOTKEY_PREV_SAVE_SLOT -> Hotkey.PREV_SAVE_SLOT.button
                 else -> -1
             }
 

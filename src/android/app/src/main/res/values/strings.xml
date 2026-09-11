@@ -1008,6 +1008,13 @@
     <string name="emulation_quickload">Quickload</string>
     <string name="emulation_occupied_quicksave_slot">Quicksave - %1$tF %1$tR</string>
     <string name="quickload_not_found">No Quicksave available.</string>
+    <string name="emulation_save_current_slot">Save to current slot</string>
+    <string name="emulation_load_current_slot">Load from current slot</string>
+    <string name="emulation_next_save_slot">Next save slot</string>
+    <string name="emulation_prev_save_slot">Previous save slot</string>
+    <string name="emulation_slot_saved">Slot %1$d - saving…</string>
+    <string name="emulation_slot_empty">Slot %1$d - empty</string>
+    <string name="emulation_slot_time">Slot %1$d - %2$s</string>
 
     <!-- File Compression -->
     <string name="compress">Compress</string>

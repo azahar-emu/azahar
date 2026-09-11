@@ -59,10 +59,11 @@ void ConfigureHotkeys::Populate(const HotkeyRegistry& registry) {
     for (const auto& group : registry.hotkey_groups) {
         QStandardItem* parent_item = new QStandardItem(group.first);
         parent_item->setEditable(false);
-        for (const auto& hotkey : group.second) {
-            QStandardItem* action = new QStandardItem(hotkey.first);
+
+        for (const QString& name : HotkeyDisplayOrder(group.first, group.second)) {
+            QStandardItem* action = new QStandardItem(name);
             QStandardItem* keyseq =
-                new QStandardItem(hotkey.second.keyseq.toString(QKeySequence::NativeText));
+                new QStandardItem(group.second.at(name).keyseq.toString(QKeySequence::NativeText));
             action->setEditable(false);
             keyseq->setEditable(false);
             parent_item->appendRow({action, keyseq});
@@ -186,13 +187,22 @@ void ConfigureHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
 }
 
 void ConfigureHotkeys::RestoreDefaults() {
+    // Match by name: the display order is not default_hotkeys' order.
     for (int r = 0; r < model->rowCount(); ++r) {
-        const QStandardItem* parent = model->item(r, 0);
+        QStandardItem* parent = model->item(r, 0);
+        const QString group_name = parent->text();
 
         for (int r2 = 0; r2 < parent->rowCount(); ++r2) {
-            model->item(r, 0)
-                ->child(r2, hotkey_column)
-                ->setText(QtConfig::default_hotkeys[r2].shortcut.keyseq);
+            const QString action_name = parent->child(r2, name_column)->text();
+            const auto it = std::find_if(
+                std::begin(QtConfig::default_hotkeys), std::end(QtConfig::default_hotkeys),
+                [&](const UISettings::Shortcut& shortcut) {
+                    return shortcut.name == action_name && shortcut.group == group_name;
+                });
+            if (it == std::end(QtConfig::default_hotkeys)) {
+                continue;
+            }
+            parent->child(r2, hotkey_column)->setText(it->shortcut.keyseq);
         }
     }
 }
@@ -227,8 +237,24 @@ void ConfigureHotkeys::PopupContextMenu(const QPoint& menu_location) {
 }
 
 void ConfigureHotkeys::RestoreHotkey(QModelIndex index) {
-    const QKeySequence& default_key_sequence = QKeySequence::fromString(
-        QtConfig::default_hotkeys[index.row()].shortcut.keyseq, QKeySequence::NativeText);
+    // Match by name: index.row() is a position in the sorted view, not in default_hotkeys.
+    const QModelIndex name_index = index.sibling(index.row(), name_column);
+    const QString action_name = model->data(name_index).toString();
+    const QModelIndex parent_index = index.parent();
+    const QString group_name = parent_index.isValid() ? model->data(parent_index).toString()
+                                                      : QStringLiteral("Main Window");
+
+    const auto it =
+        std::find_if(std::begin(QtConfig::default_hotkeys), std::end(QtConfig::default_hotkeys),
+                     [&](const UISettings::Shortcut& shortcut) {
+                         return shortcut.name == action_name && shortcut.group == group_name;
+                     });
+    if (it == std::end(QtConfig::default_hotkeys)) {
+        return;
+    }
+
+    const QKeySequence& default_key_sequence =
+        QKeySequence::fromString(it->shortcut.keyseq, QKeySequence::NativeText);
     const auto [key_sequence_used, used_action] = IsUsedKey(default_key_sequence);
 
     if (key_sequence_used && default_key_sequence != QKeySequence(model->data(index).toString())) {

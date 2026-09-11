@@ -857,13 +857,21 @@ void GMainWindow::InitializeHotkeys() {
     const QString main_window = QStringLiteral("Main Window");
     const QString fullscreen = QStringLiteral("Fullscreen");
 
+    const auto group_of = [](const QString& action_name) {
+        const auto it = std::find_if(
+            std::begin(QtConfig::default_hotkeys), std::end(QtConfig::default_hotkeys),
+            [&](const UISettings::Shortcut& shortcut) { return shortcut.name == action_name; });
+        return it != std::end(QtConfig::default_hotkeys) ? it->group
+                                                         : QStringLiteral("Main Window");
+    };
+
     // QAction Hotkeys
     const auto link_action_shortcut = [&](QAction* action, const QString& action_name,
                                           const bool primary_only = false,
                                           const bool auto_repeat = false) {
-        static const QString main_window = QStringLiteral("Main Window");
-        auto context = hotkey_registry.GetShortcutContext(main_window, action_name);
-        auto shortcut = hotkey_registry.GetKeySequence(main_window, action_name);
+        const QString group = group_of(action_name);
+        auto context = hotkey_registry.GetShortcutContext(group, action_name);
+        auto shortcut = hotkey_registry.GetKeySequence(group, action_name);
         action->setShortcut(shortcut);
         action->setShortcutContext(context);
         action->setAutoRepeat(auto_repeat);
@@ -875,7 +883,7 @@ void GMainWindow::InitializeHotkeys() {
                 secondary_window->addAction(action);
             }
         }
-        hotkey_registry.SetAction(main_window, action_name, action);
+        hotkey_registry.SetAction(group, action_name, action);
     };
 
     link_action_shortcut(ui->action_Load_File, QStringLiteral("Load File"));
@@ -913,7 +921,7 @@ void GMainWindow::InitializeHotkeys() {
 
     // QShortcut Hotkeys
     const auto connect_shortcut = [&](const QString& action_name, const auto& function) {
-        const auto* hotkey = hotkey_registry.GetHotkey(main_window, action_name, this);
+        const auto* hotkey = hotkey_registry.GetHotkey(group_of(action_name), action_name, this);
         connect(hotkey, &QShortcut::activated, this, function);
     };
 
@@ -979,6 +987,54 @@ void GMainWindow::InitializeHotkeys() {
             UpdateStatusBar();
         }
     });
+
+    connect_shortcut(QStringLiteral("Save to Current Slot"), [this] {
+        if (!emulation_running) {
+            return;
+        }
+        SaveToSlot(Core::GetCurrentSlot());
+    });
+
+    connect_shortcut(QStringLiteral("Load from Current Slot"), [this] {
+        if (!emulation_running) {
+            return;
+        }
+        LoadFromSlot(Core::GetCurrentSlot());
+    });
+
+    connect_shortcut(QStringLiteral("Next Save Slot"), [this] {
+        if (!emulation_running) {
+            return;
+        }
+        const u32 slot = Core::AdvanceSlot(1);
+        UpdateSaveStates();
+        ShowSlotMessage(slot);
+    });
+
+    connect_shortcut(QStringLiteral("Previous Save Slot"), [this] {
+        if (!emulation_running) {
+            return;
+        }
+        const u32 slot = Core::AdvanceSlot(-1);
+        UpdateSaveStates();
+        ShowSlotMessage(slot);
+    });
+
+    for (u32 slot = Core::FirstUserSlot; slot <= Core::LastUserSlot; ++slot) {
+        connect_shortcut(QStringLiteral("Save to Slot %1").arg(slot), [this, slot] {
+            if (!emulation_running) {
+                return;
+            }
+            SaveToSlot(slot);
+        });
+
+        connect_shortcut(QStringLiteral("Load from Slot %1").arg(slot), [this, slot] {
+            if (!emulation_running) {
+                return;
+            }
+            LoadFromSlot(slot);
+        });
+    }
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -1841,6 +1897,38 @@ void GMainWindow::UpdateSaveStates() {
             break;
         }
     }
+
+    const u32 current = Core::GetCurrentSlot();
+    for (u32 i = Core::FirstUserSlot; i <= Core::LastUserSlot; ++i) {
+        QFont font = actions_save_state[i]->font();
+        font.setBold(i == current);
+        actions_save_state[i]->setFont(font);
+        actions_load_state[i]->setFont(font);
+    }
+}
+
+void GMainWindow::ShowSlotMessage(u32 slot) {
+    const QString text = actions_load_state[slot]->isEnabled() ? actions_load_state[slot]->text()
+                                                               : tr("Slot %1 - empty").arg(slot);
+    statusBar()->showMessage(text, 2000);
+}
+
+void GMainWindow::SaveToSlot(u32 slot) {
+    Core::SetCurrentSlot(slot);
+    actions_save_state[slot]->trigger();
+    UpdateSaveStates();
+    // The save is asynchronous, so the slot's label still describes its pre-save state.
+    statusBar()->showMessage(tr("Saving to slot %1...").arg(slot), 2000);
+}
+
+void GMainWindow::LoadFromSlot(u32 slot) {
+    // Move the cursor even when the slot is empty and OnLoadState never runs.
+    Core::SetCurrentSlot(slot);
+    UpdateSaveStates();
+    if (actions_load_state[slot]->isEnabled()) {
+        actions_load_state[slot]->trigger();
+    }
+    ShowSlotMessage(slot);
 }
 
 void GMainWindow::OnGameListLoadFile(QString game_path) {
@@ -2944,9 +3032,14 @@ void GMainWindow::OnSaveState() {
     QAction* action = qobject_cast<QAction*>(sender());
     ASSERT(action);
 
-    system.SendSignal(Core::System::Signal::Save, action->data().toUInt());
+    const u32 slot = action->data().toUInt();
+    if (slot != Core::QuicksaveSlot) {
+        Core::SetCurrentSlot(slot);
+    }
+
+    system.SendSignal(Core::System::Signal::Save, slot);
     system.frame_limiter.AdvanceFrame();
-    newest_slot = action->data().toUInt();
+    newest_slot = slot;
 }
 
 void GMainWindow::OnLoadState() {
@@ -2957,6 +3050,11 @@ void GMainWindow::OnLoadState() {
     QAction* action = qobject_cast<QAction*>(sender());
     ASSERT(action);
 
+    const u32 slot = action->data().toUInt();
+    if (slot != Core::QuicksaveSlot) {
+        Core::SetCurrentSlot(slot);
+    }
+
     if (UISettings::values.save_state_warning) {
         QMessageBox::warning(
             this, tr("Savestates"),
@@ -2966,7 +3064,7 @@ void GMainWindow::OnLoadState() {
         config->Save();
     }
 
-    system.SendSignal(Core::System::Signal::Load, action->data().toUInt());
+    system.SendSignal(Core::System::Signal::Load, slot);
     system.frame_limiter.AdvanceFrame();
 }
 
@@ -3171,6 +3269,8 @@ void GMainWindow::OnCloseMovie() {
 
         const bool was_recording = movie.GetPlayMode() == Core::Movie::PlayMode::Recording;
         movie.Shutdown();
+        // Shutdown() changes both the savestate listing and the cursor.
+        UpdateSaveStates();
         if (was_recording) {
             QMessageBox::information(this, tr("Movie Saved"),
                                      tr("The movie is successfully saved."));
