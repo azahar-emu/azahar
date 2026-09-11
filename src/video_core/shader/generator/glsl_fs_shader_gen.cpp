@@ -1316,6 +1316,10 @@ void FragmentModule::DefineBindingsVK() {
                            num_descriptors);
     }
 
+    if (use_blend_fallback) {
+        out += "layout(set = 1, binding = 3) uniform sampler2D tex_color;\n";
+    }
+
     // Utility textures
     if (config.framebuffer.shadow_rendering) {
         out += "layout(set = 2, binding = 0, r32ui) uniform uimage2D shadow_buffer;\n\n";

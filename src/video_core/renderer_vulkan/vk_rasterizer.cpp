@@ -12,6 +12,7 @@
 #include "core/loader/loader.h"
 #include "core/memory.h"
 #include "video_core/pica/pica_core.h"
+#include "video_core/renderer_vulkan/pica_to_vk.h"
 #include "video_core/renderer_vulkan/renderer_vulkan.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
@@ -125,7 +126,7 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory, Pica::PicaCore&
     Sampler& null_sampler = res_cache.GetSampler(VideoCore::NULL_SAMPLER_ID);
 
     // Prepare texture and utility descriptor sets.
-    for (u32 i = 0; i < 3; i++) {
+    for (u32 i = 0; i < 4; i++) {
         update_queue.AddImageSampler(texture_set, i, 0, null_surface.ImageView(),
                                      null_sampler.Handle());
     }
@@ -190,6 +191,11 @@ void RasterizerVulkan::SyncDrawState() {
     pipeline_info.state.blending.dst_alpha_blend_factor.Assign(
         regs.framebuffer.output_merger.alpha_blending.factor_dest_a);
     // SyncBlendColor();
+    const auto blend_color = PicaToVK::ColorRGBA8(regs.framebuffer.output_merger.blend_const.raw);
+    if (fs_data.blend_color != blend_color) {
+        fs_data.blend_color = blend_color;
+        fs_data_dirty = true;
+    }
     pipeline_info.dynamic_info.blend_color = regs.framebuffer.output_merger.blend_const.raw;
     // SyncLogicOp();
     // SyncColorWriteMask();
@@ -199,6 +205,12 @@ void RasterizerVulkan::SyncDrawState() {
                                ? (regs.framebuffer.output_merger.depth_color_mask >> 8) & 0xF
                                : 0;
     pipeline_info.state.blending.color_write_mask = color_mask;
+
+    bool rgb_blend_emulation = false;
+    bool alpha_blend_emulation = false;
+    pipeline_cache.QueryBlendEmulation(regs, rgb_blend_emulation, alpha_blend_emulation);
+    pipeline_info.state.blending.rgb_blend_emulation.Assign(rgb_blend_emulation);
+    pipeline_info.state.blending.alpha_blend_emulation.Assign(alpha_blend_emulation);
 
     // SyncStencilTest();
     const auto& stencil_test = regs.framebuffer.output_merger.stencil_test;
@@ -695,6 +707,15 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
         const vk::ImageView texture_view =
             is_feedback_loop ? surface.CopyImageView() : surface.ImageView();
         update_queue.AddImageSampler(texture_set, texture_index, 0, texture_view, sampler.Handle());
+    }
+
+    if ((pipeline_info.state.blending.rgb_blend_emulation ||
+         pipeline_info.state.blending.alpha_blend_emulation) &&
+        framebuffer->color_id) {
+        const Sampler& null_sampler = res_cache.GetSampler(VideoCore::NULL_SAMPLER_ID);
+        Surface& color_surface = res_cache.GetSurface(framebuffer->color_id);
+        update_queue.AddImageSampler(texture_set, 3, 0, color_surface.CopyImageView(),
+                                     null_sampler.Handle());
     }
 }
 

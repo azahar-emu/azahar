@@ -67,11 +67,13 @@ constexpr std::array<vk::DescriptorSetLayoutBinding, 6> BUFFER_BINDINGS = {{
 }};
 
 template <u32 NumTex0>
-constexpr std::array<vk::DescriptorSetLayoutBinding, 3> TEXTURE_BINDINGS = {{
+constexpr std::array<vk::DescriptorSetLayoutBinding, 4> TEXTURE_BINDINGS = {{
     {0, vk::DescriptorType::eCombinedImageSampler, NumTex0,
      vk::ShaderStageFlagBits::eFragment},                                                  // tex0
     {1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment}, // tex1
     {2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment}, // tex2
+    {3, vk::DescriptorType::eCombinedImageSampler, 1,
+     vk::ShaderStageFlagBits::eFragment}, // tex_color
 }};
 
 constexpr std::array<vk::DescriptorSetLayoutBinding, 2> UTILITY_BINDINGS = {{
@@ -578,6 +580,14 @@ void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
         current_shaders[ProgramType::FS] = (*res).second;
         shader_hashes[ProgramType::FS] = (*res).first;
     }
+}
+
+void PipelineCache::QueryBlendEmulation(const Pica::RegsInternal& regs, bool& rgb_emulation,
+                                        bool& alpha_emulation) const {
+    Pica::Shader::FramebufferConfig framebuffer_config{regs};
+    framebuffer_config.ApplyProfile(profile);
+    rgb_emulation = framebuffer_config.requested_rgb_blend.RequiresMinMaxEmulation();
+    alpha_emulation = framebuffer_config.requested_alpha_blend.RequiresMinMaxEmulation();
 }
 
 bool PipelineCache::IsCacheValid(std::span<const u8> data) const {
