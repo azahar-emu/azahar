@@ -700,7 +700,14 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
 
 void RasterizerVulkan::SyncUtilityTextures(const Framebuffer* framebuffer) {
     const bool shadow_writing = regs.framebuffer.IsShadowRendering();
-    const bool shadow_reading = regs.lighting.config0.enable_shadow;
+    bool shadow_reading = regs.lighting.config0.enable_shadow;
+    // Ensure the shadow-texture slot is actually enabled
+    if (shadow_reading) {
+        const u32 shadow_texture_unit = regs.lighting.config0.shadow_selector.Value();
+        const auto shadow_texture = regs.texturing.GetTextures()[shadow_texture_unit];
+        shadow_reading &= shadow_texture.enabled;
+    }
+
     const auto utility_set = pipeline_cache.Acquire(DescriptorHeapType::Utility);
 
     // Reading and writing are mutually exclusive
