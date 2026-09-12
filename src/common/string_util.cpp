@@ -277,4 +277,23 @@ std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, std::size_t 
 
     return std::string(buffer, len);
 }
+
+std::string BytesToHex(std::span<const u8> data, u32 group_each) {
+    if (data.empty())
+        return {};
+
+    const std::size_t groups = group_each ? (data.size() + group_each - 1) / group_each : 1;
+
+    std::string result;
+    result.reserve(data.size() * 2 + (groups - 1));
+
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        if (group_each && i != 0 && i % group_each == 0)
+            result += ' ';
+        result += fmt::format("{:02X}", data[i]);
+    }
+
+    return result;
+}
+
 } // namespace Common
