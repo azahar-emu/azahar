@@ -561,7 +561,7 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
     }
 
     const auto draw_rect = fb_helper.DrawRect();
-    if (draw_rect.GetHeight() * draw_rect.GetHeight() == 0) {
+    if (draw_rect.GetArea() == 0) {
         return true;
     }
 
