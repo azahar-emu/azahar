@@ -111,25 +111,26 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
     }
 
     if (state == true) {
-        // Read in and convert pointer values to absolute values on the canvas
         auto pointerX = LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_X);
         auto pointerY = LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_Y);
         auto newX = static_cast<int>((pointerX + 0x7fff) / (float)(0x7fff * 2) * bufferWidth);
         auto newY = static_cast<int>((pointerY + 0x7fff) / (float)(0x7fff * 2) * bufferHeight);
 
-        // Use mouse pointer movement
         if ((pointerX != 0 || pointerY != 0) && (newX != lastMouseX || newY != lastMouseY)) {
-            lastMouseX = newX;
-            lastMouseY = newY;
+            if (layout.IsWithinTouchscreen(newX, newY) || isPressed) {
+                lastMouseX = newX;
+                lastMouseY = newY;
 
-            // Use layout system to validate and map coordinates
-            if (layout.IsWithinTouchscreen(newX, newY)) {
                 x = std::clamp(newX, static_cast<int>(layout.bottom_screen.left),
                                static_cast<int>(layout.bottom_screen.right)) -
                     layout.bottom_screen.left;
                 y = std::clamp(newY, static_cast<int>(layout.bottom_screen.top),
                                static_cast<int>(layout.bottom_screen.bottom)) -
                     layout.bottom_screen.top;
+            } else {
+                // If touch was already pressed before going off the edge of the screen, keep it
+                // pressed. Otherwise, ignore the touch entirely.
+                state = false;
             }
         }
     }
