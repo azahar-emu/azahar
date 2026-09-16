@@ -48,6 +48,15 @@ struct FramebufferLayout {
      */
     u32 GetScalingRatio() const;
 
+    /**
+     * Check if the given x/y coordinates are within the touchpad specified by the framebuffer
+     * layout
+     * @param framebuffer_x Framebuffer x-coordinate to check
+     * @param framebuffer_y Framebuffer y-coordinate to check
+     * @return True if the coordinates are within the touchpad, otherwise false
+     */
+    bool IsWithinTouchscreen(unsigned framebuffer_x, unsigned framebuffer_y) const;
+
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
 
     Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();

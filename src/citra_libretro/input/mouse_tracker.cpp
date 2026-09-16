@@ -63,38 +63,6 @@ struct CursorCoordinates {
     }
 };
 
-/// Helper function to check if coordinates are within the touchscreen area
-/// (uses the same logic as EmuWindow::IsWithinTouchscreen)
-static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigned framebuffer_x,
-                                unsigned framebuffer_y) {
-    // Note: LibRetro doesn't support SeparateWindows, so we can skip that check
-
-    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
-
-    if (render_3d_mode == Settings::StereoRenderOption::SideBySide ||
-        render_3d_mode == Settings::StereoRenderOption::SideBySideFull) {
-        return (framebuffer_y >= layout.bottom_screen.top &&
-                framebuffer_y < layout.bottom_screen.bottom &&
-                ((framebuffer_x >= layout.bottom_screen.left / 2 &&
-                  framebuffer_x < layout.bottom_screen.right / 2) ||
-                 (framebuffer_x >= (layout.bottom_screen.left / 2) + (layout.width / 2) &&
-                  framebuffer_x < (layout.bottom_screen.right / 2) + (layout.width / 2))));
-    } else if (render_3d_mode == Settings::StereoRenderOption::CardboardVR) {
-        return (framebuffer_y >= layout.bottom_screen.top &&
-                framebuffer_y < layout.bottom_screen.bottom &&
-                ((framebuffer_x >= layout.bottom_screen.left &&
-                  framebuffer_x < layout.bottom_screen.right) ||
-                 (framebuffer_x >= layout.cardboard.bottom_screen_right_eye + (layout.width / 2) &&
-                  framebuffer_x < layout.cardboard.bottom_screen_right_eye +
-                                      layout.bottom_screen.GetWidth() + (layout.width / 2))));
-    } else {
-        return (framebuffer_y >= layout.bottom_screen.top &&
-                framebuffer_y < layout.bottom_screen.bottom &&
-                framebuffer_x >= layout.bottom_screen.left &&
-                framebuffer_x < layout.bottom_screen.right);
-    }
-}
-
 MouseTracker::MouseTracker() {
     // Create renderer-specific cursor renderer based on current graphics API
     cursor_renderer = nullptr;
@@ -150,7 +118,7 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
             lastMouseY = newY;
 
             // Use layout system to validate and map coordinates
-            if (IsWithinTouchscreen(layout, newX, newY)) {
+            if (layout.IsWithinTouchscreen(newX, newY)) {
                 x = std::clamp(newX, static_cast<int>(layout.bottom_screen.left),
                                static_cast<int>(layout.bottom_screen.right)) -
                     layout.bottom_screen.left;
@@ -177,7 +145,7 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
             lastMouseY = newY;
 
             // Use layout system to validate and map coordinates
-            if (IsWithinTouchscreen(layout, newX, newY)) {
+            if (layout.IsWithinTouchscreen(newX, newY)) {
                 x = std::clamp(newX, static_cast<int>(layout.bottom_screen.left),
                                static_cast<int>(layout.bottom_screen.right)) -
                     layout.bottom_screen.left;
