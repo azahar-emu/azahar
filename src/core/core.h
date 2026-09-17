@@ -320,6 +320,11 @@ public:
         return *app_loader;
     }
 
+    /// Returns the app loader for the running application, or nullptr when none is loaded.
+    [[nodiscard]] Loader::AppLoader* GetAppLoaderOrNull() const {
+        return app_loader.get();
+    }
+
     /// Frontend Applets
 
     void RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_selector);
