@@ -105,7 +105,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["clang", "gcc-nopch"]
+        target: ["appimage", "gcc-nopch"]
     container:
       image: opensauce04/azahar-build-environment:latest
       options: -u 1001
@@ -115,11 +115,13 @@ jobs:
       CCACHE_SLOPPINESS: time_macros
       OS: linux
       TARGET: ${{ matrix.target }}
+      CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
+        if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -128,6 +130,32 @@ jobs:
             ${{ github.job }}-${{ matrix.target }}-
       - name: Build
         run: ./.ci/linux.sh
+      - name: Move AppImage to artifacts directory
+        if: ${{ matrix.target == 'appimage' }}
+        run: |
+          mkdir -p artifacts
+          mv build/bundle/azahar.AppImage artifacts/azahar-arm64.AppImage
+      - name: Generate SBOM
+        if: ${{ matrix.target == 'appimage' && github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: artifacts/linux-arm64-${{ matrix.target }}.spdx.json
+          upload-artifact: false
+      - name: Upload
+        if: ${{ matrix.target == 'appimage' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ github.job }}-${{ matrix.target }}
+          path: artifacts/
+      - name: Attest artifacts
+        if: ${{ matrix.target == 'appimage' && github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            artifacts/*.AppImage
+          sbom-path: artifacts/linux-arm64-${{ matrix.target }}.spdx.json
 
   macos:
     runs-on: 'macos-26'
