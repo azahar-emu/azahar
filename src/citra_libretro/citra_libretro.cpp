@@ -482,7 +482,7 @@ static void context_reset() {
 
 static void context_destroy() {
     LOG_DEBUG(Frontend, "context_destroy");
-    if (emu_instance->game_loaded &&
+    if (emu_instance->game_loaded && Core::System::GetInstance().IsPoweredOn() &&
         Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::OpenGL) {
         // Release the renderer's OpenGL resources
         Core::System::GetInstance().GPU().ReleaseRenderer();
@@ -635,6 +635,7 @@ bool retro_load_game(const struct retro_game_info* info) {
 void retro_unload_game() {
     LOG_DEBUG(Frontend, "Unloading game...");
     Core::System::GetInstance().Shutdown();
+    emu_instance->game_loaded = false;
 }
 
 unsigned retro_get_region() {
