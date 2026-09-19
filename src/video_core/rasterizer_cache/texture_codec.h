@@ -12,6 +12,7 @@
 #include <span>
 #include "common/alignment.h"
 #include "common/color.h"
+#include "common/unroll.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/utils.h"
 
@@ -27,14 +28,46 @@
 #define TEXCODEC_SIMD 1
 #endif
 
+#ifndef TEXCODEC_UNSAFE_MEMORY_ACCESS
+#define TEXCODEC_UNSAFE_MEMORY_ACCESS 1
+#endif // !TEXCODEC_UNSAFE_MEMORY_ACCESS
+
 namespace VideoCore {
 
 template <typename T>
-inline T MakeInt(const u8* bytes) {
+inline T LoadFromBytes(const u8* bytes) {
+#if TEXCODEC_UNSAFE_MEMORY_ACCESS == 1
+    return *reinterpret_cast<const T*>(bytes);
+#else
     T integer{};
     std::memcpy(&integer, bytes, sizeof(T));
-
     return integer;
+#endif
+}
+
+template <typename T>
+inline void StoreToBytes(u8* bytes, T value) {
+#if TEXCODEC_UNSAFE_MEMORY_ACCESS == 1
+    *reinterpret_cast<T*>(bytes) = value;
+#else
+    std::memcpy(bytes, &value, sizeof(T));
+#endif
+}
+
+// Copies N bytes, using a single native load and store for compatible sizes.
+template <std::size_t N>
+inline void CopyBytes(u8* dest, const u8* source) {
+    if constexpr (N == 1) {
+        *dest = *source;
+    } else if constexpr (N == 2) {
+        StoreToBytes(dest, LoadFromBytes<u16>(source));
+    } else if constexpr (N == 4) {
+        StoreToBytes(dest, LoadFromBytes<u32>(source));
+    } else if constexpr (N == 8) {
+        StoreToBytes(dest, LoadFromBytes<u64>(source));
+    } else {
+        std::memcpy(dest, source, N); // Fallback to memcpy
+    }
 }
 
 // Scalar fallback and reference
@@ -45,42 +78,42 @@ constexpr void DecodePixel(const u8* source, u8* dest) {
 
     if constexpr (format == PixelFormat::RGBA8 && converted) {
         const auto abgr = DecodeRGBA8(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::RGB8 && converted) {
         const auto abgr = DecodeRGB8(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::RGB565 && converted) {
         const auto abgr = DecodeRGB565(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::RGB5A1 && converted) {
         const auto abgr = DecodeRGB5A1(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::RGBA4 && converted) {
         const auto abgr = DecodeRGBA4(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::IA8) {
         const auto abgr = DecodeIA8(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::RG8) {
         const auto abgr = DecodeRG8(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::I8) {
         const auto abgr = DecodeI8(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::A8) {
         const auto abgr = DecodeA8(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::IA4) {
         const auto abgr = DecodeIA4(source);
-        std::memcpy(dest, abgr.AsArray(), 4);
+        CopyBytes<4>(dest, abgr.AsArray());
     } else if constexpr (format == PixelFormat::D24 && converted) {
-        const auto d32 = DecodeD24(source) / 16777215.f;
-        std::memcpy(dest, &d32, sizeof(d32));
+        const float d32 = DecodeD24(source) / 16777215.f;
+        StoreToBytes(dest, d32);
     } else if constexpr (format == PixelFormat::D24S8) {
-        const u32 d24s8 = std::rotl(MakeInt<u32>(source), 8);
-        std::memcpy(dest, &d24s8, sizeof(u32));
+        const u32 d24s8 = std::rotl(LoadFromBytes<u32>(source), 8);
+        StoreToBytes(dest, d24s8);
     } else {
-        std::memcpy(dest, source, bytes_per_pixel);
+        CopyBytes<bytes_per_pixel>(dest, source);
     }
 }
 
@@ -90,12 +123,11 @@ constexpr void EncodePixel(const u8* source, u8* dest) {
     constexpr u32 bytes_per_pixel = GetFormatBpp(format) / 8;
 
     if constexpr (format == PixelFormat::D24 && converted) {
-        float d32;
-        std::memcpy(&d32, source, sizeof(d32));
+        const float d32 = LoadFromBytes<float>(source);
         EncodeD24(static_cast<u32>(d32 * 0xFFFFFF), dest);
     } else if constexpr (format == PixelFormat::D24S8) {
-        const u32 s8d24 = std::rotr(MakeInt<u32>(source), 8);
-        std::memcpy(dest, &s8d24, sizeof(u32));
+        const u32 s8d24 = std::rotr(LoadFromBytes<u32>(source), 8);
+        StoreToBytes(dest, s8d24);
     } else if constexpr ((converted &&
                           (format == PixelFormat::RGBA8 || format == PixelFormat::RGB8 ||
                            format == PixelFormat::RGB565 || format == PixelFormat::RGB5A1 ||
@@ -104,7 +136,7 @@ constexpr void EncodePixel(const u8* source, u8* dest) {
                          format == PixelFormat::I8 || format == PixelFormat::A8 ||
                          format == PixelFormat::IA4) {
         Common::Vec4<u8> rgba;
-        std::memcpy(rgba.AsArray(), source, 4);
+        CopyBytes<4>(rgba.AsArray(), source);
         if constexpr (format == PixelFormat::RGBA8) {
             EncodeRGBA8(rgba, dest);
         } else if constexpr (format == PixelFormat::RGB8) {
@@ -127,7 +159,7 @@ constexpr void EncodePixel(const u8* source, u8* dest) {
             EncodeIA4(rgba, dest);
         }
     } else {
-        std::memcpy(dest, source, bytes_per_pixel);
+        CopyBytes<bytes_per_pixel>(dest, source);
     }
 }
 
@@ -169,6 +201,7 @@ constexpr bool IsTrivialCopy() {
 //   ZipLo64:  interleave the low 2 u64 lanes -> a0, b0
 //   AddSat8:  per byte unsigned add, saturating at 255 instead of wrapping
 //   SubSat8:  per byte unsigned subtract, saturating at 0 instead of wrapping
+//   Neg16:    negates all four u16 lanes
 #if defined(TEXCODEC_NEON)
 using V128 = uint8x16_t;
 inline V128 Load(const u8* p) {
@@ -236,6 +269,9 @@ inline V128 AddSat8(V128 a, V128 b) {
 inline V128 SubSat8(V128 a, V128 b) {
     return vqsubq_u8(a, b);
 }
+inline V128 Neg16(V128 a) {
+    return vreinterpretq_u8_s16(vnegq_s16(vreinterpretq_s16_u8(a)));
+}
 #elif defined(TEXCODEC_SSE42)
 using V128 = __m128i;
 inline V128 Load(const u8* p) {
@@ -302,6 +338,9 @@ inline V128 AddSat8(V128 a, V128 b) {
 }
 inline V128 SubSat8(V128 a, V128 b) {
     return _mm_subs_epu8(a, b);
+}
+inline V128 Neg16(V128 a) {
+    return _mm_sign_epi16(a, _mm_set1_epi16(-1));
 }
 #endif
 
@@ -385,7 +424,7 @@ inline void DecodeSIMD8(const u8* src, u8* dst) {
         } else {
             g = Or(And(Shr16<3>(p), Splat16(0xF8)), And(Shr16<8>(p), Splat16(0x07)));
             b = Or(And(Shl16<2>(p), Splat16(0xF8)), And(Shr16<3>(p), Splat16(0x07)));
-            a = And(Sub16(Zero(), And(p, Splat16(1))), Splat16(0xFF00));
+            a = And(Neg16(And(p, Splat16(1))), Splat16(0xFF00));
         }
         const V128 rg = Or(r, Shl16<8>(g));
         const V128 ba = Or(b, a);
@@ -747,12 +786,8 @@ inline void DecodeETC1Block(u64 block, u64 alpha, u8* dst, std::ptrdiff_t pitch)
     }
 
     // Loop unrolling has shown better results here
-#if defined(__clang__)
-#pragma clang loop unroll(full)
-#elif defined(__GNUC__)
-#pragma GCC unroll 4
-#endif
-    for (u32 y = 0; y < 4; y++) {
+    Common::unroll<4>([&](auto yc) {
+        constexpr u32 y = yc;
         const u32 sub_bits = flip ? (y >= 2 ? 0x4444u : 0u) : 0x4400u;
         const u32 idx = ((lsb >> y) & 0x1111u) | (((msb >> y) & 0x1111u) << 1) | sub_bits;
         u32 row[4] = {palette[idx & 7], palette[(idx >> 4) & 7], palette[(idx >> 8) & 7],
@@ -764,7 +799,7 @@ inline void DecodeETC1Block(u64 block, u64 alpha, u8* dst, std::ptrdiff_t pitch)
             row[3] |= static_cast<u32>(alpha8[12 + y]) << 24;
         }
         std::memcpy(dst + y * pitch, row, sizeof(row));
-    }
+    });
 }
 
 template <PixelFormat format>
@@ -779,12 +814,12 @@ inline void DecodeTileETC1(const u8* tile, u8* linear, u32 stride) {
         const u8* src = tile + i * block_size;
         u64 alpha = 0;
         if constexpr (has_alpha) {
-            alpha = MakeInt<u64>(src);
+            alpha = LoadFromBytes<u64>(src);
             src += 8;
         }
 
         u8* dst = linear + (7 - 4 * by) * pitch + bx * 16;
-        DecodeETC1Block<has_alpha>(MakeInt<u64>(src), alpha, dst, -pitch);
+        DecodeETC1Block<has_alpha>(LoadFromBytes<u64>(src), alpha, dst, -pitch);
     }
 }
 
