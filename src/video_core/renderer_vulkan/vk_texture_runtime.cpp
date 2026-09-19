@@ -95,7 +95,7 @@ u32 UnpackDepthStencil(const VideoCore::StagingData& data, vk::Format dest) {
     case vk::Format::eD24UnormS8Uint: {
         for (; stencil_offset < data.size; depth_offset += 4) {
             u8* ptr = mapped.data() + depth_offset;
-            const u32 d24s8 = VideoCore::MakeInt<u32>(ptr);
+            const u32 d24s8 = VideoCore::LoadFromBytes<u32>(ptr);
             const u32 d24 = d24s8 >> 8;
             mapped[stencil_offset] = d24s8 & 0xFF;
             std::memcpy(ptr, &d24, 4);
@@ -106,7 +106,7 @@ u32 UnpackDepthStencil(const VideoCore::StagingData& data, vk::Format dest) {
     case vk::Format::eD32SfloatS8Uint: {
         for (; stencil_offset < data.size; depth_offset += 4) {
             u8* ptr = mapped.data() + depth_offset;
-            const u32 d24s8 = VideoCore::MakeInt<u32>(ptr);
+            const u32 d24s8 = VideoCore::LoadFromBytes<u32>(ptr);
             const float d32 = (d24s8 >> 8) / 16777215.f;
             mapped[stencil_offset] = d24s8 & 0xFF;
             std::memcpy(ptr, &d32, 4);
