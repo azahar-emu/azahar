@@ -284,6 +284,7 @@ public:
         filter.ParseFilterString(Settings::values.log_filter.GetValue());
         instance = std::unique_ptr<Impl, decltype(&Deleter)>(new Impl(callback, filter), Deleter);
         initialization_in_progress_suppress_logging = false;
+        logging_initialized = true;
     }
 #endif
     static void Initialize(std::string_view log_file) {
@@ -561,7 +562,6 @@ private:
 void LibRetroStart(retro_log_printf_t callback) {
     Impl::Initialize(callback);
     Impl::Start();
-    logging_initialized = true;
 }
 #endif
 
