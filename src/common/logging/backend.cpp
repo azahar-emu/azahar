@@ -561,6 +561,7 @@ private:
 void LibRetroStart(retro_log_printf_t callback) {
     Impl::Initialize(callback);
     Impl::Start();
+    logging_initialized = true;
 }
 #endif
 
