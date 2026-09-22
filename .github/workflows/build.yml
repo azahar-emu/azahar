@@ -195,8 +195,6 @@ jobs:
         include:
         - target: msvc
           os: windows-latest
-        - target: msys2
-          os: windows-latest
         - target: mxe
           os: ubuntu-latest
           container:
@@ -206,7 +204,7 @@ jobs:
     container: ${{ matrix.container }}
     defaults:
       run:
-        shell: ${{ (matrix.target == 'msys2' && 'msys2') || 'bash' }} {0}
+        shell: 'bash'
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
@@ -237,21 +235,6 @@ jobs:
         run: |
           wget https://sdk.lunarg.com/sdk/download/1.4.304.1/windows/VulkanSDK-1.4.304.1-Installer.exe -O D:/a/_temp/vulkan.exe
           D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
-      - name: Set up MSYS2
-        if: ${{ matrix.target == 'msys2' }}
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: clang64
-          update: true
-          install: git make p7zip
-          pacboy: >-
-            toolchain:p ccache:p cmake:p ninja:p spirv-tools:p
-            qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p
-      - name: Install extra tools (MSYS2)
-        if: ${{ matrix.target == 'msys2' }}
-        uses: crazy-max/ghaction-chocolatey@v4
-        with:
-          args: install ptime wget
       - name: Install NSIS
         if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
         run: |
