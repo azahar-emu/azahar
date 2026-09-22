@@ -22,7 +22,7 @@ Azahar is available as both an installer and a zip archive.
 
 Download the latest release in your preferred format from the [Releases](https://github.com/azahar-emu/azahar/releases) page.
 
-If you are unsure of whether you want to use MSVC or MSYS2, use MSYS2.
+If you are unsure of whether you want to use MSVC or MXE, use MXE.
 
 ---
 
