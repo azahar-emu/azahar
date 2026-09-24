@@ -229,7 +229,9 @@ private:
                             const bool& skip_tryexec);
 
     void ShowCommandOutput(std::string title, std::string message);
+#ifdef ENABLE_FFMPEG
     void ShowFFmpegErrorMessage();
+#endif
 
 private slots:
     void OnResumeGame(bool first_start);
@@ -293,15 +295,14 @@ private slots:
     void OnCloseMovie();
     void OnSaveMovie();
     void OnCaptureScreenshot();
-    void OnDumpVideo();
     void OnCompressFile();
     void OnDecompressFile();
-#ifdef _WIN32
-    void OnOpenFFmpeg();
-#endif
+#ifdef ENABLE_FFMPEG
+    void OnDumpVideo();
     void OnStartVideoDumping();
     void StartVideoDumping(const QString& path);
     void OnStopVideoDumping();
+#endif
     void OnCoreError(Core::System::ResultStatus, std::string);
     bool ShowExceptionDialog(Core::System::ResultStatus result, const std::string& details);
     /// Called whenever a user selects Help->About Azahar

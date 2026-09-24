@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -66,6 +66,7 @@ void FrameDumperOpenGL::PresentLoop(std::stop_token stop_token) {
         frame->present_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         glFlush();
 
+#ifdef ENABLE_FFMPEG
         auto video_dumper = system.GetVideoDumper();
         if (video_dumper) {
             // Bind the previous PBO and read the pixels
@@ -77,6 +78,7 @@ void FrameDumperOpenGL::PresentLoop(std::stop_token stop_token) {
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
             glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         }
+#endif
 
         current_pbo = (current_pbo + 1) % 2;
         next_pbo = (current_pbo + 1) % 2;

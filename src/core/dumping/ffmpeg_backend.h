@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,10 +13,17 @@
 #include <thread>
 #include <vector>
 #include "common/common_types.h"
-#include "common/dynamic_library/ffmpeg.h"
 #include "common/thread.h"
 #include "common/threadsafe_queue.h"
 #include "core/dumping/backend.h"
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavfilter/avfilter.h>
+#include <libavformat/avformat.h>
+#include <libavutil/opt.h>
+#include <libswresample/swresample.h>
+}
 
 namespace VideoCore {
 class RendererBase;
@@ -46,13 +53,13 @@ protected:
 
     struct AVCodecContextDeleter {
         void operator()(AVCodecContext* codec_context) const {
-            DynamicLibrary::FFmpeg::avcodec_free_context(&codec_context);
+            avcodec_free_context(&codec_context);
         }
     };
 
     struct AVFrameDeleter {
         void operator()(AVFrame* frame) const {
-            DynamicLibrary::FFmpeg::av_frame_free(&frame);
+            av_frame_free(&frame);
         }
     };
 
@@ -104,7 +111,7 @@ private:
     // Filter related
     struct AVFilterGraphDeleter {
         void operator()(AVFilterGraph* filter_graph) const {
-            DynamicLibrary::FFmpeg::avfilter_graph_free(&filter_graph);
+            avfilter_graph_free(&filter_graph);
         }
     };
     std::unique_ptr<AVFilterGraph, AVFilterGraphDeleter> filter_graph{};
@@ -133,7 +140,7 @@ public:
 private:
     struct SwrContextDeleter {
         void operator()(SwrContext* swr_context) const {
-            DynamicLibrary::FFmpeg::swr_free(&swr_context);
+            swr_free(&swr_context);
         }
     };
 
@@ -166,8 +173,8 @@ public:
 private:
     struct AVFormatContextDeleter {
         void operator()(AVFormatContext* format_context) const {
-            DynamicLibrary::FFmpeg::avio_closep(&format_context->pb);
-            DynamicLibrary::FFmpeg::avformat_free_context(format_context);
+            avio_closep(&format_context->pb);
+            avformat_free_context(format_context);
         }
     };
 
