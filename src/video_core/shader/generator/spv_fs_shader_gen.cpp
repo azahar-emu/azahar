@@ -799,7 +799,8 @@ Id FragmentModule::SampleShadow() {
         AddLabel(true_label);
         OpBranch(end_label);
         AddLabel(false_label);
-        const Id px_texel{OpImageFetch(uvec_ids.Get(4), shadow_texture, uv, spv::ImageOperandsMask::Lod, ConstS32(0))};
+        const Id px_texel{OpImageFetch(uvec_ids.Get(4), shadow_texture, uv,
+                                       spv::ImageOperandsMask::Lod, ConstS32(0))};
         const Id px_texel_x{OpCompositeExtract(u32_id, px_texel, 0)};
         const Id result{CompareShadow(px_texel_x, z)};
         OpBranch(end_label);
