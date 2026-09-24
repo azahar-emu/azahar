@@ -239,7 +239,7 @@ private:
     Id image2d_id{};
     Id image_cube_id{};
     Id image_buffer_id{};
-    Id image_r32_id{};
+    Id image2d_u32_id{};
     Id sampler_id{};
     Id shader_data_id{};
 
@@ -261,7 +261,6 @@ private:
     Id texture_buffer_lut_lf_id{};
     Id texture_buffer_lut_rg_id{};
     Id texture_buffer_lut_rgba_id{};
-    Id shadow_texture_px_id{};
 
     Id texture_buffer_lut_lf{};
     Id texture_buffer_lut_rg{};

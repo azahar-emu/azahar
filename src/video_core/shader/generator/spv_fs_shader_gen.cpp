@@ -586,15 +586,17 @@ void FragmentModule::WriteLighting() {
 
         const Id light_diffuse{GetLightMember(2)};
         const Id light_ambient{GetLightMember(3)};
-        const Id diffuse_mul_dot{OpVectorTimesScalar(vec_ids.Get(3), light_diffuse, dot_product)};
+        Id diffuse_mul_dot{OpVectorTimesScalar(vec_ids.Get(3), light_diffuse, dot_product)};
+
+        // Shadow only attenuates diffuse, not the light's ambient
+        if (shadow_primary_enable) {
+            diffuse_mul_dot = OpFMul(vec_ids.Get(3), diffuse_mul_dot, shadow_rgb);
+        }
 
         // Compute primary fragment color (diffuse lighting) function
         Id diffuse_sum_rgb{OpFAdd(vec_ids.Get(3), diffuse_mul_dot, light_ambient)};
         diffuse_sum_rgb = OpVectorTimesScalar(vec_ids.Get(3), diffuse_sum_rgb, dist_atten);
         diffuse_sum_rgb = OpVectorTimesScalar(vec_ids.Get(3), diffuse_sum_rgb, spot_atten);
-        if (shadow_primary_enable) {
-            diffuse_sum_rgb = OpFMul(vec_ids.Get(3), diffuse_sum_rgb, shadow_rgb);
-        }
 
         // Compute secondary fragment color (specular lighting) function
         const Id specular_01{OpFAdd(vec_ids.Get(3), specular_0, specular_1)};
@@ -774,8 +776,10 @@ Id FragmentModule::SampleShadow() {
     const Id z_i32{OpSMax(i32_id, ConstS32(0),
                           OpISub(i32_id, OpConvertFToS(i32_id, abs_min_w), shadow_texture_bias))};
     const Id z{OpBitcast(u32_id, z_i32)};
-    const Id shadow_texture_px{OpLoad(image_r32_id, shadow_texture_px_id)};
-    const Id px_size{OpImageQuerySize(ivec_ids.Get(2), shadow_texture_px)};
+
+    const Id sampled_image{OpLoad(TypeSampledImage(image2d_u32_id), tex0_id)};
+    const Id shadow_texture{OpImage(image2d_u32_id, sampled_image)};
+    const Id px_size{OpImageQuerySizeLod(ivec_ids.Get(2), shadow_texture, ConstS32(0))};
     const Id coord{OpFma(vec_ids.Get(2), OpConvertSToF(vec_ids.Get(2), px_size), texcoord0,
                          ConstF32(-0.5f, -0.5f))};
     const Id coord_floor{OpFloor(vec_ids.Get(2), coord)};
@@ -795,7 +799,8 @@ Id FragmentModule::SampleShadow() {
         AddLabel(true_label);
         OpBranch(end_label);
         AddLabel(false_label);
-        const Id px_texel{OpImageRead(uvec_ids.Get(4), shadow_texture_px, uv)};
+        const Id px_texel{OpImageFetch(uvec_ids.Get(4), shadow_texture, uv,
+                                       spv::ImageOperandsMask::Lod, ConstS32(0))};
         const Id px_texel_x{OpCompositeExtract(u32_id, px_texel, 0)};
         const Id result{CompareShadow(px_texel_x, z)};
         OpBranch(end_label);
@@ -1586,7 +1591,7 @@ void FragmentModule::DefineInterface() {
     image_buffer_id = TypeImage(f32_id, spv::Dim::Buffer, 0, 0, 0, 1, spv::ImageFormat::Unknown);
     image2d_id = TypeImage(f32_id, spv::Dim::Dim2D, 0, 0, 0, 1, spv::ImageFormat::Unknown);
     image_cube_id = TypeImage(f32_id, spv::Dim::Cube, 0, 0, 0, 1, spv::ImageFormat::Unknown);
-    image_r32_id = TypeImage(u32_id, spv::Dim::Dim2D, 0, 0, 0, 2, spv::ImageFormat::R32ui);
+    image2d_u32_id = TypeImage(u32_id, spv::Dim::Dim2D, 0, 0, 0, 1, spv::ImageFormat::Unknown);
     sampler_id = TypeSampler();
 
     // Define lighting texture buffers
@@ -1596,13 +1601,15 @@ void FragmentModule::DefineInterface() {
 
     // Define texture unit samplers
     const auto texture_type = config.texture.texture0_type.Value();
-    const auto tex0_type = texture_type == TextureType::TextureCube ? image_cube_id : image2d_id;
+    Id tex0_type{image2d_id};
+    if (texture_type == TextureType::TextureCube) {
+        tex0_type = image_cube_id;
+    } else if (texture_type == TextureType::Shadow2D) {
+        tex0_type = image2d_u32_id;
+    }
     tex0_id = DefineUniformConst(TypeSampledImage(tex0_type), 1, 0);
     tex1_id = DefineUniformConst(TypeSampledImage(image2d_id), 1, 1);
     tex2_id = DefineUniformConst(TypeSampledImage(image2d_id), 1, 2);
-
-    // Define shadow textures
-    shadow_texture_px_id = DefineUniformConst(image_r32_id, 2, 0, true);
 
     // Define built-ins
     gl_frag_coord_id = DefineVar(vec_ids.Get(4), spv::StorageClass::Input);
