@@ -66,7 +66,9 @@
 #ifdef ENABLE_DISCORD_RPC
 #include "citra_qt/discord.h"
 #endif
+#ifdef ENABLE_FFMPEG
 #include "citra_qt/dumping/dumping_dialog.h"
+#endif
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/loading_screen.h"
@@ -85,7 +87,7 @@
 #include "citra_qt/util/util.h"
 #include "common/arch.h"
 #include "common/common_paths.h"
-#include "common/dynamic_library/dynamic_library.h"
+#include "common/dynamic_library.h"
 #include "common/file_util.h"
 #include "common/literals.h"
 #include "common/logging/backend.h"
@@ -278,10 +280,6 @@ GMainWindow::GMainWindow(Core::System& system_)
         // Dump video
         if (args[i] == QStringLiteral("--dump-video") || args[i] == QStringLiteral("-d")) {
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
-                continue;
-            }
-            if (!DynamicLibrary::FFmpeg::LoadFFmpeg()) {
-                ShowFFmpegErrorMessage();
                 continue;
             }
             video_dumping_path = args[++i];
@@ -562,6 +560,9 @@ void GMainWindow::InitializeWidgets() {
     secondary_window->hide();
     secondary_window->setParent(nullptr);
 
+#ifndef ENABLE_FFMPEG
+    ui->action_Dump_Video->setVisible(false);
+#endif
     game_list = new GameList(*play_time_manager, this);
     ui->horizontalLayout->addWidget(game_list);
 
@@ -1202,7 +1203,9 @@ void GMainWindow::ConnectMenuEvents() {
         }
     });
     connect_menu(ui->action_Capture_Screenshot, &GMainWindow::OnCaptureScreenshot);
+#ifdef ENABLE_FFMPEG
     connect_menu(ui->action_Dump_Video, &GMainWindow::OnDumpVideo);
+#endif
 
     // Tools debug
     connect_menu(ui->action_Debug_Pause, [this] {
@@ -1563,11 +1566,13 @@ void GMainWindow::BootGame(const QString& filename) {
 
     ui->action_Advance_Frame->setEnabled(false);
 
+#ifdef ENABLE_FFMPEG
     if (video_dumping_on_start) {
         StartVideoDumping(video_dumping_path);
         video_dumping_on_start = false;
         video_dumping_path.clear();
     }
+#endif()
 
     // Register debug widgets
     if (graphicsWidget && graphicsWidget->isVisible()) {
@@ -1635,12 +1640,14 @@ void GMainWindow::ShutdownGame() {
         HideFullscreen();
     }
 
+#ifdef ENABLE_FFMPEG
     auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {
         game_shutdown_delayed = true;
         OnStopVideoDumping();
         return;
     }
+#endif
 
     AllowOSSleep();
 
@@ -3251,43 +3258,22 @@ void GMainWindow::OnCaptureScreenshot() {
     }
 }
 
+#ifdef ENABLE_FFMPEG
 void GMainWindow::ShowFFmpegErrorMessage() {
     QMessageBox message_box;
     message_box.setWindowTitle(tr("Could not load video dumper"));
-    message_box.setText(
-        tr("FFmpeg could not be loaded. Make sure you have a compatible version installed."
-#ifdef _WIN32
-           "\n\nTo install FFmpeg to Azahar, press Open and select your FFmpeg directory."
-#endif
-           "\n\nTo view a guide on how to install FFmpeg, press Help."));
-    message_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Help
-#ifdef _WIN32
-                                   | QMessageBox::Open
-#endif
-    );
-    auto result = message_box.exec();
-    if (result == QMessageBox::Help) {
-        QDesktopServices::openUrl(
-            QUrl(QStringLiteral("https://github.com/azahar-emu/azahar/wiki/Installing-FFmpeg")));
-#ifdef _WIN32
-    } else if (result == QMessageBox::Open) {
-        OnOpenFFmpeg();
-#endif
-    }
+    message_box.setText(tr(
+        "FFmpeg could not be loaded. Make sure that Azahar was built with a compatible version."));
 }
 
 void GMainWindow::OnDumpVideo() {
-    if (DynamicLibrary::FFmpeg::LoadFFmpeg()) {
-        if (ui->action_Dump_Video->isChecked()) {
-            OnStartVideoDumping();
-        } else {
-            OnStopVideoDumping();
-        }
+    if (ui->action_Dump_Video->isChecked()) {
+        OnStartVideoDumping();
     } else {
-        ui->action_Dump_Video->setChecked(false);
-        ShowFFmpegErrorMessage();
+        OnStopVideoDumping();
     }
 }
+#endif
 
 void GMainWindow::OnCompressFile() {
     // NOTE: Encrypted files SHOULD NEVER be compressed, otherwise the resulting
@@ -3480,63 +3466,7 @@ void GMainWindow::OnDecompressFile() {
     });
 }
 
-#ifdef _WIN32
-void GMainWindow::OnOpenFFmpeg() {
-    auto filename =
-        QFileDialog::getExistingDirectory(this, tr("Select FFmpeg Directory")).toStdString();
-    if (filename.empty()) {
-        return;
-    }
-    // Check for a bin directory if they chose the FFmpeg root directory.
-    auto bin_dir = filename + DIR_SEP + "bin";
-    if (!FileUtil::Exists(bin_dir)) {
-        // Otherwise, assume the user directly selected the directory containing the DLLs.
-        bin_dir = filename;
-    }
-
-    static const std::array library_names = {
-        Common::DynamicLibrary::GetLibraryName("avcodec", LIBAVCODEC_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("avfilter", LIBAVFILTER_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("avformat", LIBAVFORMAT_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("avutil", LIBAVUTIL_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("swresample", LIBSWRESAMPLE_VERSION_MAJOR),
-    };
-
-    for (auto& library_name : library_names) {
-        if (!FileUtil::Exists(bin_dir + DIR_SEP + library_name)) {
-            QMessageBox::critical(this, QStringLiteral("Azahar"),
-                                  tr("The provided FFmpeg directory is missing %1. Please make "
-                                     "sure the correct directory was selected.")
-                                      .arg(QString::fromStdString(library_name)));
-            return;
-        }
-    }
-
-    std::atomic<bool> success(true);
-    auto process_file = [&success](u64* num_entries_out, const std::string& directory,
-                                   const std::string& virtual_name) -> bool {
-        auto file_path = directory + DIR_SEP + virtual_name;
-        if (file_path.ends_with(".dll")) {
-            auto destination_path = FileUtil::GetExeDirectory() + DIR_SEP + virtual_name;
-            if (!FileUtil::Copy(file_path, destination_path)) {
-                success.store(false);
-                return false;
-            }
-        }
-        return true;
-    };
-    FileUtil::ForeachDirectoryEntry(nullptr, bin_dir, process_file);
-
-    if (success.load()) {
-        QMessageBox::information(this, QStringLiteral("Azahar"),
-                                 tr("FFmpeg has been sucessfully installed."));
-    } else {
-        QMessageBox::critical(this, QStringLiteral("Azahar"),
-                              tr("Installation of FFmpeg failed. Check the log file for details."));
-    }
-}
-#endif
-
+#ifdef ENABLE_FFMPEG
 void GMainWindow::OnStartVideoDumping() {
     DumpingDialog dialog(this, system);
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
@@ -3597,6 +3527,7 @@ void GMainWindow::OnStopVideoDumping() {
         future_watcher->setFuture(future);
     }
 }
+#endif
 
 void GMainWindow::UpdateStatusBar() {
     if (!emu_thread) [[unlikely]] {
