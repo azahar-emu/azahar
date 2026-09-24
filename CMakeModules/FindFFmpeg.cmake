@@ -168,7 +168,11 @@ foreach (_component ${FFmpeg_FIND_COMPONENTS})
         (NOT (_component_version_major EQUAL _FFmpeg_REQUIRED_VERSION)) AND
         (NOT (_FFmpeg_REQUIRED_VERSION EQUAL 0))
       )
-          message(FATAL_ERROR "${_component}: ${${_component}_VERSION} != ${_FFmpeg_REQUIRED_VERSION}\n${_component} version ${_FFmpeg_REQUIRED_VERSION}.x *exactly* is required. Check your FFmpeg version.")
+          message(FATAL_ERROR
+            "${_component}: ${${_component}_VERSION} != ${_FFmpeg_REQUIRED_VERSION}\n"
+            "${_component} version ${_FFmpeg_REQUIRED_VERSION}.x *exactly* is required.\n"
+            "Check your FFmpeg version, and be sure to clean the build directory before retrying.\n"
+            "If building with FFmpeg is impractical, you can disable it by setting ENABLE_FFMPEG to OFF.")
       endif ()
     else (NOT WIN32)
       message(WARNING "${_component}: Version check is not supported on Windows")
