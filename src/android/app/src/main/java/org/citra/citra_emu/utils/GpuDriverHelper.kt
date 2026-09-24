@@ -72,6 +72,7 @@ object GpuDriverHelper {
         val driverZips = driverStoragePath.listFiles()
         val drivers: MutableList<Pair<Uri, GpuDriverMetadata>> =
             driverZips
+                .filter { it.isFile }
                 .mapNotNull {
                     val metadata = getMetadataFromZip(it.inputStream())
                     metadata.name?.let { _ -> Pair(it.uri, metadata) }
