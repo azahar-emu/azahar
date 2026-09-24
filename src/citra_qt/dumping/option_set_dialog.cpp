@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,6 +9,10 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "ui_option_set_dialog.h"
+
+extern "C" {
+#include <libavutil/opt.h>
+}
 
 static const std::unordered_map<AVOptionType, const char*> TypeNameMap{{
     {AV_OPT_TYPE_BOOL, QT_TR_NOOP("boolean")},
