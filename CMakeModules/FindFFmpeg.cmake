@@ -28,7 +28,7 @@
 #
 # As the versions of the various FFmpeg components differ for a given release,
 # and CMake supports only one common version for all components, use the
-# following to specify required versions for multiple components:
+# following to specify exact required versions for multiple components:
 #
 # find_package(FFmpeg 57.48 COMPONENTS AVCODEC)
 # find_package(FFmpeg 57.40 COMPONENTS AVFORMAT)
@@ -163,12 +163,15 @@ set(_FFmpeg_FOUND_LIBRARIES "")
 foreach (_component ${FFmpeg_FIND_COMPONENTS})
   if (${_component}_FOUND)
     if (NOT WIN32)
-        if (${_component}_VERSION VERSION_LESS _FFmpeg_REQUIRED_VERSION)
-            message(STATUS "${_component}: ${${_component}_VERSION} < ${_FFmpeg_REQUIRED_VERSION}")
-            unset(${_component}_FOUND)
-        endif ()
+      string(REGEX MATCH "^([0-9]+)" _component_version_major "${${_component}_VERSION}")
+      if (
+        (NOT (_component_version_major EQUAL _FFmpeg_REQUIRED_VERSION)) AND
+        (NOT (_FFmpeg_REQUIRED_VERSION EQUAL 0))
+      )
+          message(FATAL_ERROR "${_component}: ${${_component}_VERSION} != ${_FFmpeg_REQUIRED_VERSION}\n${_component} version ${_FFmpeg_REQUIRED_VERSION}.x *exactly* is required. Check your FFmpeg version.")
+      endif ()
     else (NOT WIN32)
-        message(WARNING "${_component}: Version check is not supported on Windows")
+      message(WARNING "${_component}: Version check is not supported on Windows")
     endif(NOT WIN32)
     list(APPEND _FFmpeg_FOUND_LIBRARIES ${${_component}_LIBRARIES})
   endif ()
