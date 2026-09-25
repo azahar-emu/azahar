@@ -227,6 +227,7 @@ private:
     SurfaceMap dirty_regions;
     PageMap cached_pages;
     u32 resolution_scale_factor;
+    u8 sample_count;
     FramebufferParams fb_params;
     Settings::TextureFilter filter;
     bool dump_textures;

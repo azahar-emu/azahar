@@ -1,11 +1,14 @@
-# Copyright 2023 Citra Emulator Project
+# Copyright Citra Emulator Project / Azahar Emulator Project
 # Licensed under GPLv2 or any later version
 # Refer to the license.txt file included.
 
 set(SHADER_FILES
     format_reinterpreter/d24s8_to_rgba8.frag
+    format_reinterpreter/d24s8_to_rgba8_ms.frag
     format_reinterpreter/rgba4_to_rgb5a1.frag
+    format_reinterpreter/rgba4_to_rgb5a1_ms.frag
     format_reinterpreter/vulkan_d24s8_to_rgba8.comp
+    format_reinterpreter/vulkan_d24s8_to_rgba8_ms.comp
     texture_filtering/bicubic.frag
     texture_filtering/refine.frag
     texture_filtering/scale_force.frag
