@@ -65,6 +65,8 @@ public:
     // Load whole CIAs outright
     Loader::ResultStatus Load(const FileBackend& backend);
     Loader::ResultStatus Load(FileUtil::IOFileBase* file);
+    Loader::ResultStatus Load(
+        std::unique_ptr<FileUtil::IOFileBase>&& file); // Allows calling GetContentFile
     Loader::ResultStatus Load(std::span<const u8> header_data);
 
     // Load parts of CIAs (for CIAs streamed in)
@@ -78,6 +80,7 @@ public:
 
     const CIAHeader* GetHeader();
     Ticket& GetTicket();
+    const Ticket& GetTicket() const;
     const TitleMetadata& GetTitleMetadata() const;
     std::array<u64, 0x30>& GetDependencies();
     u32 GetCoreVersion() const;
@@ -95,6 +98,8 @@ public:
     u32 GetMetadataSize() const;
     u64 GetTotalContentSize() const;
     u64 GetContentSize(std::size_t index = 0) const;
+
+    std::unique_ptr<FileUtil::IOFileBase> GetContentFile(std::size_t index = 0) const;
 
     void Print() const;
 
@@ -114,6 +119,7 @@ private:
     std::unique_ptr<Loader::SMDH> cia_smdh;
     Ticket cia_ticket;
     TitleMetadata cia_tmd;
+    std::unique_ptr<FileUtil::IOFileBase> cia_io_file;
 };
 
 } // namespace FileSys

@@ -156,6 +156,10 @@ else()
     target_compile_definitions(microprofile INTERFACE MICROPROFILE_ENABLED=0)
 endif()
 
+# microtar
+add_library(microtar STATIC ./microtar/src/microtar.c)
+target_include_directories(microtar PUBLIC ./microtar/src)
+
 # Nihstro
 add_library(nihstro-headers INTERFACE)
 target_include_directories(nihstro-headers INTERFACE ./nihstro/include)

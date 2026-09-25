@@ -62,7 +62,7 @@ public:
 
     ResultStatus ReadCode(std::vector<u8>& buffer) override;
 
-    ResultStatus ReadIcon(std::vector<u8>& buffer) override;
+    ResultStatus ReadIcon(std::vector<u8>& buffer, bool prefer_update_icon) override;
 
     ResultStatus ReadBanner(std::vector<u8>& buffer) override;
 
@@ -80,7 +80,7 @@ public:
 
     ResultStatus DumpUpdateRomFS(const std::string& target_path) override;
 
-    ResultStatus ReadTitle(std::string& title) override;
+    ResultStatus ReadTitle(std::string& title, bool prefer_update_icon) override;
 
     bool SupportsSaveStates() override {
         return false;

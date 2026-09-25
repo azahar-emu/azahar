@@ -70,23 +70,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             loader->ReadExtdataId(extdata_id);
 
             std::vector<u8> smdh;
-            // Look for an update icon if available
-            if (!(program_id & ~0x00040000FFFFFFFF)) {
-                std::string update_path = Service::AM::GetTitleContentPath(
-                    Service::FS::MediaType::SDMC, program_id | 0x0000000E00000000);
-                if (FileUtil::Exists(update_path)) {
-                    std::unique_ptr<Loader::AppLoader> update_loader =
-                        Loader::GetLoader(update_path);
-                    if (update_loader) {
-                        update_loader->ReadIcon(smdh);
-                    }
-                }
-            }
-
-            if (!Loader::IsValidSMDH(smdh)) {
-                // Read the original smdh if there is no valid update smdh
-                loader->ReadIcon(smdh);
-            }
+            loader->ReadIcon(smdh, true);
 
             const auto system_title = ((program_id >> 32) & 0xFFFFFFFF) == 0x00040010;
             if (Loader::IsValidSMDH(smdh)) {
@@ -117,8 +101,9 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                                          loader->GetFileType() == Loader::FileType::CCI),
                     new GameListItemCompat(compatibility),
                     new GameListItemRegion(smdh),
-                    new GameListItem(QString::fromStdString(Loader::GetFileTypeString(
-                        loader->GetFileType(), loader->IsFileCompressed()))),
+                    new GameListItem(QString::fromStdString(
+                        Loader::GetFileTypeString(loader->GetFileType(), loader->IsFileCompressed(),
+                                                  loader->IsFileBundle()))),
                     new GameListItemSize(FileUtil::GetSize(physical_name)),
                     new GameListItemPlayTime(play_time_manager.GetPlayTime(program_id)),
                 },

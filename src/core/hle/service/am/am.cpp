@@ -17,6 +17,7 @@
 #include "common/hacks/hack_manager.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "common/tar_file.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/file_sys/certificate.h"
@@ -1056,6 +1057,106 @@ void ContentFile::Cancel(FS::MediaType media_type, u64 title_id) {
     FileUtil::Delete(path);
 }
 
+BundleCIAHandler::BundleCIAHandler() = default;
+
+bool BundleCIAHandler::RegisterBundle(const std::string& filename) {
+    auto tar = FileUtil::TarArchive(filename);
+    auto files = tar.GetFileList();
+    if (files.empty()) {
+        LOG_ERROR(Service_AM, "Failed to parse bundle file");
+        return false;
+    }
+    for (auto f : files) {
+        if (f.name.ends_with(".cia") || f.name.ends_with(".zcia")) {
+            auto sub_file = tar.OpenSubFile(f.name);
+            if (!sub_file->IsGood()) {
+                LOG_ERROR(Service_AM, "Failed to open sub file {}", f.name);
+                cia_containers.clear();
+                return false;
+            }
+            cia_containers.emplace_back();
+            auto res = cia_containers.back().Load(std::move(sub_file));
+            if (res != Loader::ResultStatus::Success) {
+                LOG_ERROR(Service_AM, "Failed to parse bundled cia file {}: (error {})", f.name,
+                          res);
+            }
+            if (cia_containers.back().GetTitleMetadata().HasEncryptedContent(
+                    cia_containers.back().GetHeader())) {
+                LOG_ERROR(Service_AM, "Bundle contains encrypted cia file {}", f.name);
+                cia_containers.clear();
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+std::vector<std::pair<u64, FS::MediaType>> BundleCIAHandler::List() const {
+    std::vector<std::pair<u64, FS::MediaType>> ret;
+    for (auto& c : cia_containers) {
+        u64 title_id = c.GetTitleMetadata().GetTitleID();
+        ret.push_back({title_id, Service::AM::GetTitleMediaType(title_id)});
+    }
+    return ret;
+}
+
+bool BundleCIAHandler::HasTitle(u64 title_id, FS::MediaType mediatype, u64 content_index) const {
+    for (auto& c : cia_containers) {
+        if (c.GetTitleMetadata().GetTitleID() == title_id &&
+            Service::AM::GetTitleMediaType(title_id) == mediatype &&
+            (content_index == std::numeric_limits<u64>::max() ||
+             content_index < c.GetTitleMetadata().GetContentCount())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BundleCIAHandler::HasContent(u64 title_id, FS::MediaType mediatype, u64 content_index) {
+    for (auto& c : cia_containers) {
+        if (c.GetTitleMetadata().GetTitleID() == title_id &&
+            Service::AM::GetTitleMediaType(title_id) == mediatype) {
+            return c.GetHeader()->IsContentPresent(content_index);
+        }
+    }
+    return false;
+}
+
+const FileSys::Ticket* BundleCIAHandler::GetTicket(u64 title_id) const {
+    for (const auto& c : cia_containers) {
+        if (c.GetTitleMetadata().GetTitleID() == title_id) {
+            return &c.GetTicket();
+        }
+    }
+    return nullptr;
+}
+
+const FileSys::TitleMetadata* BundleCIAHandler::GetTitleMetadata(u64 title_id,
+                                                                 FS::MediaType mediatype,
+                                                                 u64 content_index) const {
+    for (const auto& c : cia_containers) {
+        if (c.GetTitleMetadata().GetTitleID() == title_id &&
+            Service::AM::GetTitleMediaType(title_id) == mediatype &&
+            (content_index == std::numeric_limits<u64>::max() ||
+             content_index < c.GetTitleMetadata().GetContentCount())) {
+            return &c.GetTitleMetadata();
+        }
+    }
+    return nullptr;
+}
+
+std::unique_ptr<FileUtil::IOFileBase> BundleCIAHandler::OpenContentFile(u64 title_id,
+                                                                        FS::MediaType mediatype,
+                                                                        u64 content_index) const {
+    for (const auto& c : cia_containers) {
+        if (c.GetTitleMetadata().GetTitleID() == title_id &&
+            Service::AM::GetTitleMediaType(title_id) == mediatype &&
+            content_index < c.GetTitleMetadata().GetContentCount()) {
+            return c.GetContentFile(content_index);
+        }
+    }
+}
+
 InstallStatus InstallCIA(const std::string& path,
                          std::function<ProgressCallback>&& update_callback) {
     LOG_INFO(Service_AM, "Installing {}...", path);
@@ -1065,73 +1166,103 @@ InstallStatus InstallCIA(const std::string& path,
         return InstallStatus::ErrorFileNotFound;
     }
 
-    std::unique_ptr<FileUtil::IOFileBase> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
-    bool is_compressed =
-        FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(in_file.get()) != std::nullopt;
-    if (is_compressed) {
-        in_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(in_file));
+    auto install_single_cia = [&update_callback](std::unique_ptr<FileUtil::IOFileBase> in_file,
+                                                 const std::string& path) {
+        bool is_compressed =
+            FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(in_file.get()) != std::nullopt;
+        if (is_compressed) {
+            in_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(in_file));
+        }
+
+        FileSys::CIAContainer container;
+        if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
+            in_file->Seek(0, SEEK_SET);
+            Service::AM::CIAFile installFile(
+                Core::System::GetInstance(),
+                Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
+
+            if (container.GetTitleMetadata().HasEncryptedContent(container.GetHeader())) {
+                LOG_ERROR(Service_AM, "File {} is encrypted! Aborting...", path);
+                return InstallStatus::ErrorEncrypted;
+            }
+
+            std::vector<u8> buffer;
+            buffer.resize(0x10000);
+            auto file_size = in_file->GetSize();
+            std::size_t total_bytes_read = 0;
+            while (total_bytes_read != file_size) {
+                std::size_t bytes_read = in_file->ReadBytes(buffer.data(), buffer.size());
+                auto result = installFile.Write(static_cast<u64>(total_bytes_read), bytes_read,
+                                                true, false, static_cast<u8*>(buffer.data()));
+
+                if (update_callback) {
+                    update_callback(total_bytes_read, file_size);
+                }
+                if (result.Failed()) {
+                    LOG_ERROR(Service_AM, "CIA file installation aborted with error code {:08x}",
+                              result.Code().raw);
+                    return InstallStatus::ErrorAborted;
+                }
+                total_bytes_read += bytes_read;
+            }
+            installFile.Close();
+
+            InstallStatus install_res = InstallStatus::Success;
+            for (auto result : installFile.GetInstallResults()) {
+                if (result.type != CIAFile::InstallResult::Type::APP || result.result.IsError()) {
+                    continue;
+                }
+
+                std::unique_ptr<Loader::AppLoader> loader =
+                    Loader::GetLoader(result.install_full_path);
+                if (!loader) {
+                    continue;
+                }
+
+                bool executable = false;
+                const auto res = loader->IsExecutable(executable);
+                if (res == Loader::ResultStatus::ErrorEncrypted) {
+                    LOG_ERROR(Service_AM, "CIA contains encrypted content: {}", path,
+                              result.install_full_path);
+                    install_res = InstallStatus::ErrorEncrypted;
+                }
+            }
+            if (install_res == InstallStatus::Success) {
+                LOG_INFO(Service_AM, "Installed {} successfully.", path);
+            }
+            return install_res;
+        }
+
+        LOG_ERROR(Service_AM, "CIA file {} is invalid!", path);
+        return InstallStatus::ErrorInvalid;
+    };
+
+    // Check bcia first
+    if (auto tar = FileUtil::TarArchive::OpenTarArchive(path)) {
+        auto files = tar->GetFileList();
+        if (files.empty()) {
+            LOG_ERROR(Service_AM, "Failed to parse BCIA file");
+            return InstallStatus::ErrorInvalid;
+        }
+        for (auto f : files) {
+            if (f.name.ends_with(".cia") || f.name.ends_with(".zcia")) {
+                auto sub_file = tar->OpenSubFile(f.name);
+                if (!sub_file->IsGood()) {
+                    LOG_ERROR(Service_AM, "Failed to open sub file");
+                }
+                auto res = install_single_cia(std::move(sub_file), path + ":" + f.name);
+                if (res != InstallStatus::Success) {
+                    LOG_ERROR(Service_AM, "Aborting BCIA install");
+                    return res;
+                }
+            } else {
+                LOG_WARNING(Service_AM, "Skipping unknown file {}", f.name);
+            }
+        }
+        return InstallStatus::Success;
+    } else {
+        return install_single_cia(std::make_unique<FileUtil::IOFile>(path, "rb"), path);
     }
-
-    FileSys::CIAContainer container;
-    if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
-        in_file->Seek(0, SEEK_SET);
-        Service::AM::CIAFile installFile(
-            Core::System::GetInstance(),
-            Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
-
-        if (container.GetTitleMetadata().HasEncryptedContent(container.GetHeader())) {
-            LOG_ERROR(Service_AM, "File {} is encrypted! Aborting...", path);
-            return InstallStatus::ErrorEncrypted;
-        }
-
-        std::vector<u8> buffer;
-        buffer.resize(0x10000);
-        auto file_size = in_file->GetSize();
-        std::size_t total_bytes_read = 0;
-        while (total_bytes_read != file_size) {
-            std::size_t bytes_read = in_file->ReadBytes(buffer.data(), buffer.size());
-            auto result = installFile.Write(static_cast<u64>(total_bytes_read), bytes_read, true,
-                                            false, static_cast<u8*>(buffer.data()));
-
-            if (update_callback) {
-                update_callback(total_bytes_read, file_size);
-            }
-            if (result.Failed()) {
-                LOG_ERROR(Service_AM, "CIA file installation aborted with error code {:08x}",
-                          result.Code().raw);
-                return InstallStatus::ErrorAborted;
-            }
-            total_bytes_read += bytes_read;
-        }
-        installFile.Close();
-
-        InstallStatus install_res = InstallStatus::Success;
-        for (auto result : installFile.GetInstallResults()) {
-            if (result.type != CIAFile::InstallResult::Type::APP || result.result.IsError()) {
-                continue;
-            }
-
-            std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(result.install_full_path);
-            if (!loader) {
-                continue;
-            }
-
-            bool executable = false;
-            const auto res = loader->IsExecutable(executable);
-            if (res == Loader::ResultStatus::ErrorEncrypted) {
-                LOG_ERROR(Service_AM, "CIA contains encrypted content: {}", path,
-                          result.install_full_path);
-                install_res = InstallStatus::ErrorEncrypted;
-            }
-        }
-        if (install_res == InstallStatus::Success) {
-            LOG_INFO(Service_AM, "Installed {} successfully.", path);
-        }
-        return install_res;
-    }
-
-    LOG_ERROR(Service_AM, "CIA file {} is invalid!", path);
-    return InstallStatus::ErrorInvalid;
 }
 
 InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
@@ -1233,8 +1364,46 @@ std::string GetTicketDirectory() {
     return fmt::format("{}/dbs/ticket.db/", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
 }
 
+FileSys::Ticket GetTicket(u64 title_id, u64 ticket_id) {
+    FileSys::Ticket ticket;
+    ticket.Load(title_id, ticket_id);
+    if (ticket.LoadResult() == Loader::ResultStatus::Success) {
+        return ticket;
+    }
+
+    auto am = GetModule(Core::Global<Core::System>());
+    if (am) {
+        auto& bundle_handler = am->GetBundleCIAHandler();
+        auto* bundle_ticket = bundle_handler->GetTicket(title_id);
+        if (bundle_ticket) {
+            return *bundle_ticket;
+        }
+    }
+
+    return ticket;
+}
+
 std::string GetTicketPath(u64 title_id, u64 ticket_id) {
     return GetTicketDirectory() + fmt::format("{:016X}.{:016X}.tik", title_id, ticket_id);
+}
+
+FileSys::TitleMetadata GetTitleMetadata(Service::FS::MediaType media_type, u64 tid, bool update) {
+    auto path = GetTitleMetadataPath(media_type, tid, update);
+    FileSys::TitleMetadata tmd;
+    tmd.Load(path);
+    if (tmd.LoadResult() == Loader::ResultStatus::Success) {
+        return tmd;
+    }
+
+    auto am = GetModule(Core::Global<Core::System>());
+    if (am && !update) {
+        auto& bundle_handler = am->GetBundleCIAHandler();
+        if (bundle_handler->HasTitle(tid, media_type)) {
+            return *bundle_handler->GetTitleMetadata(tid, media_type);
+        }
+    }
+
+    return tmd;
 }
 
 std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, bool update) {
@@ -1273,6 +1442,41 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
         update_id++;
 
     return content_path + fmt::format("{:08x}.tmd", (update ? update_id : base_id));
+}
+
+bool TitleContentExists(Service::FS::MediaType media_type, u64 tid, std::size_t index,
+                        bool update) {
+    if (FileUtil::Exists(GetTitleContentPath(media_type, tid, index, update))) {
+        return true;
+    }
+
+    auto am = GetModule(Core::Global<Core::System>());
+    if (am && !update) {
+        auto& bundle_handler = am->GetBundleCIAHandler();
+        if (bundle_handler->HasTitle(tid, media_type)) {
+            return bundle_handler->HasContent(tid, media_type, index);
+        }
+    }
+
+    return false;
+}
+
+std::unique_ptr<FileUtil::IOFileBase> GetTitleContent(Service::FS::MediaType media_type, u64 tid,
+                                                      std::size_t index, bool update) {
+    std::string path = GetTitleContentPath(media_type, tid, index, update);
+    if (FileUtil::Exists(path)) {
+        return std::make_unique<FileUtil::IOFile>(path, "rb");
+    }
+
+    auto am = GetModule(Core::Global<Core::System>());
+    if (am && !update) {
+        auto& bundle_handler = am->GetBundleCIAHandler();
+        if (bundle_handler->HasTitle(tid, media_type, index)) {
+            return bundle_handler->OpenContentFile(tid, media_type, index);
+        }
+    }
+
+    return std::make_unique<FileUtil::NullIOFile>();
 }
 
 std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, std::size_t index,
@@ -1393,6 +1597,19 @@ void Module::ScanForTicketsImpl() {
             }
         }
     }
+
+    // Scan the bundle if it exists
+    auto am = GetModule(Core::Global<Core::System>());
+    if (am) {
+        auto& bundle_handler = am->GetBundleCIAHandler();
+        auto list = bundle_handler->List();
+        for (auto& e : list) {
+            if (am_ticket_list.find(e.first) == am_ticket_list.end()) {
+                auto ticket = bundle_handler->GetTicket(e.first);
+                am_ticket_list.insert(std::make_pair(e.first, ticket->GetTicketID()));
+            }
+        }
+    }
     LOG_DEBUG(Service_AM, "Finished ticket scan");
 }
 
@@ -1453,6 +1670,21 @@ void Module::ScanForTitlesImpl(Service::FS::MediaType media_type) {
                             am_title_list[static_cast<u32>(media_type)].push_back(tid);
                         }
                     }
+                }
+            }
+        }
+
+        // Scan the bundle if it exists
+        auto am = GetModule(Core::Global<Core::System>());
+        if (am) {
+            auto& bundle_handler = am->GetBundleCIAHandler();
+            auto list = bundle_handler->List();
+            for (auto& e : list) {
+                if (e.second == media_type &&
+                    std::find(am_title_list[static_cast<u32>(media_type)].begin(),
+                              am_title_list[static_cast<u32>(media_type)].end(),
+                              e.first) == am_title_list[static_cast<u32>(media_type)].end()) {
+                    am_title_list[static_cast<u32>(media_type)].push_back(e.first);
                 }
             }
         }
@@ -1646,8 +1878,8 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
                     return 0;
                 }
 
-                std::string tmd_path =
-                    GetTitleMetadataPath(async_data->media_type, async_data->title_id);
+                FileSys::TitleMetadata tmd =
+                    GetTitleMetadata(async_data->media_type, async_data->title_id);
 
                 // In normal circumstances, if there is no ticket we shouldn't be able to have
                 // any contents either. However to keep compatibility with older emulator builds,
@@ -1656,14 +1888,14 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
                 FileSys::Ticket ticket;
                 std::scoped_lock lock(am->am_lists_mutex);
                 auto entries = am->am_ticket_list.find(async_data->title_id);
-                if (entries != am->am_ticket_list.end() &&
-                    ticket.Load(async_data->title_id, (*entries).second) ==
-                        Loader::ResultStatus::Success) {
-                    has_ticket = true;
+                if (entries != am->am_ticket_list.end()) {
+                    ticket = GetTicket(async_data->title_id, (*entries).second);
+                    if (ticket.LoadResult() == Loader::ResultStatus::Success) {
+                        has_ticket = true;
+                    }
                 }
 
-                FileSys::TitleMetadata tmd;
-                if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
+                if (tmd.LoadResult() == Loader::ResultStatus::Success) {
                     // Get info for each content index requested
                     for (std::size_t i = 0; i < async_data->content_requested.size(); i++) {
                         u16_le index = async_data->content_requested[i];
@@ -1685,8 +1917,8 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
                         content_info.ownership =
                             (!has_ticket || ticket.HasRights(index)) ? OWNERSHIP_OWNED : 0;
 
-                        if (FileUtil::Exists(GetTitleContentPath(async_data->media_type,
-                                                                 async_data->title_id, index))) {
+                        if (TitleContentExists(async_data->media_type, async_data->title_id,
+                                               index)) {
                             bool pending = false;
                             for (auto& import_ctx : am->import_content_contexts) {
                                 if (import_ctx.first == async_data->title_id &&
@@ -1826,8 +2058,8 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
                     return 0;
                 }
 
-                std::string tmd_path =
-                    GetTitleMetadataPath(async_data->media_type, async_data->title_id);
+                FileSys::TitleMetadata tmd =
+                    GetTitleMetadata(async_data->media_type, async_data->title_id);
 
                 // In normal circumstances, if there is no ticket we shouldn't be able to have
                 // any contents either. However to keep compatibility with older emulator builds,
@@ -1836,14 +2068,14 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
                 FileSys::Ticket ticket;
                 std::scoped_lock lock(am->am_lists_mutex);
                 auto entries = am->am_ticket_list.find(async_data->title_id);
-                if (entries != am->am_ticket_list.end() &&
-                    ticket.Load(async_data->title_id, (*entries).second) ==
-                        Loader::ResultStatus::Success) {
-                    has_ticket = true;
+                if (entries != am->am_ticket_list.end()) {
+                    ticket = GetTicket(async_data->title_id, (*entries).second);
+                    if (ticket.LoadResult() == Loader::ResultStatus::Success) {
+                        has_ticket = true;
+                    }
                 }
 
-                FileSys::TitleMetadata tmd;
-                if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
+                if (tmd.LoadResult() == Loader::ResultStatus::Success) {
                     u32 end_index = std::min(async_data->start_index + async_data->content_count,
                                              static_cast<u32>(tmd.GetContentCount()));
                     for (u32 i = async_data->start_index; i < end_index; i++) {
@@ -1856,8 +2088,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
                             (!has_ticket || ticket.HasRights(static_cast<u16>(i))) ? OWNERSHIP_OWNED
                                                                                    : 0;
 
-                        if (FileUtil::Exists(GetTitleContentPath(async_data->media_type,
-                                                                 async_data->title_id, i))) {
+                        if (TitleContentExists(async_data->media_type, async_data->title_id, i)) {
                             bool pending = false;
                             for (auto& import_ctx : am->import_content_contexts) {
                                 if (import_ctx.first == async_data->title_id &&
@@ -2050,13 +2281,12 @@ Result GetTitleInfoFromList(Core::System& system, std::span<const u64> title_id_
                       title_info.version);
             title_info_out.push_back(title_info);
         } else {
-            std::string tmd_path = GetTitleMetadataPath(media_type, title_id_list[i]);
+            FileSys::TitleMetadata tmd = GetTitleMetadata(media_type, title_id_list[i]);
 
             TitleInfo title_info = {};
             title_info.tid = title_id_list[i];
 
-            FileSys::TitleMetadata tmd;
-            if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
+            if (tmd.LoadResult() == Loader::ResultStatus::Success) {
                 // TODO(shinyquagsire23): This is the total size of all files this process owns,
                 // including savefiles and other content. This comes close but is off.
                 title_info.size = tmd.GetContentSizeByIndex(FileSys::TMDContentIndex::Main);
@@ -2264,11 +2494,11 @@ void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     FS::MediaType media_type = rp.PopEnum<FS::MediaType>();
     u64 title_id = rp.Pop<u64>();
-    std::string path = GetTitleContentPath(media_type, title_id);
+    auto content_file = GetTitleContent(media_type, title_id, 0);
 
     LOG_DEBUG(Service_AM, "title_id={:016X}", title_id);
 
-    if (!FileUtil::Exists(path)) {
+    if (!content_file->IsOpen()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
                        ErrorLevel::Permanent));
@@ -2280,7 +2510,7 @@ void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
         ProductCode product_code;
 
         IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-        FileSys::NCCHContainer ncch(path);
+        FileSys::NCCHContainer ncch(content_file.get());
         ncch.Load();
         std::memcpy(&product_code.code, &ncch.ncch_header.product_code, 0x10);
         rb.Push(ResultSuccess);
@@ -2666,8 +2896,8 @@ void Module::Interface::ListDataTitleTicketInfos(Kernel::HLERequestContext& ctx)
 
         u32 written = 0;
         for (; it != range.second && written < ticket_count; it++) {
-            FileSys::Ticket ticket;
-            if (ticket.Load(title_id, it->second) != Loader::ResultStatus::Success)
+            FileSys::Ticket ticket = GetTicket(title_id, it->second);
+            if (ticket.LoadResult() != Loader::ResultStatus::Success)
                 continue;
 
             TicketInfo info = {};
@@ -2756,10 +2986,8 @@ void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(ResultSuccess); // No error
 
-        std::string tmd_path = GetTitleMetadataPath(media_type, title_id);
-
-        FileSys::TitleMetadata tmd;
-        if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
+        FileSys::TitleMetadata tmd = GetTitleMetadata(media_type, title_id);
+        if (tmd.LoadResult() == Loader::ResultStatus::Success) {
             rb.Push<u32>(static_cast<u32>(tmd.GetContentCount()));
         } else {
             rb.Push<u32>(1); // Number of content infos plus one
@@ -2783,15 +3011,22 @@ void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
                        ErrorLevel::Success));
         return;
     }
-    auto it = range.first;
-    for (; it != range.second; it++) {
+    bool found = false;
+    for (auto it = range.first; it != range.second;) {
         auto path = GetTicketPath(title_id, it->second);
-        FileUtil::Delete(path);
+
+        if (FileUtil::Exists(path)) {
+            FileUtil::Delete(path);
+            it = am->am_ticket_list.erase(it);
+            found = true;
+        } else {
+            ++it;
+        }
     }
 
-    am->am_ticket_list.erase(range.first, range.second);
-
-    rb.Push(ResultSuccess);
+    rb.Push(found ? ResultSuccess
+                  : Result(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::NotFound,
+                           ErrorLevel::Permanent));
 }
 
 void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
@@ -3181,9 +3416,8 @@ void Module::Interface::GetPersonalizedTicketInfoList(Kernel::HLERequestContext&
                 if ((tid_high & 0x00048010) == 0x00040010 || (tid_high & 0x00048001) == 0x00048001)
                     continue;
 
-                FileSys::Ticket ticket;
-                if (ticket.Load(title_id, it->second) != Loader::ResultStatus::Success ||
-                    !ticket.IsPersonal())
+                FileSys::Ticket ticket = GetTicket(title_id, it->second);
+                if (ticket.LoadResult() != Loader::ResultStatus::Success || !ticket.IsPersonal())
                     continue;
 
                 TicketInfo info = {};
@@ -3247,9 +3481,11 @@ void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
     FileSys::Ticket ticket;
     std::scoped_lock lock(am->am_lists_mutex);
     auto entries = am->am_ticket_list.find(tid);
-    if (entries != am->am_ticket_list.end() &&
-        ticket.Load(tid, (*entries).second) == Loader::ResultStatus::Success) {
-        has_ticket = true;
+    if (entries != am->am_ticket_list.end()) {
+        ticket = GetTicket(tid, (*entries).second);
+        if (ticket.LoadResult() == Loader::ResultStatus::Success) {
+            has_ticket = true;
+        }
     }
 
     bool has_rights = (!has_ticket || ticket.HasRights(content_index));
@@ -3270,9 +3506,11 @@ void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestConte
     FileSys::Ticket ticket;
     std::scoped_lock lock(am->am_lists_mutex);
     auto entries = am->am_ticket_list.find(tid);
-    if (entries != am->am_ticket_list.end() &&
-        ticket.Load(tid, (*entries).second) == Loader::ResultStatus::Success) {
-        has_ticket = true;
+    if (entries != am->am_ticket_list.end()) {
+        ticket = GetTicket(tid, (*entries).second);
+        if (ticket.LoadResult() == Loader::ResultStatus::Success) {
+            has_ticket = true;
+        }
     }
 
     bool has_rights = (!has_ticket || ticket.HasRights(content_index));
@@ -4554,11 +4792,16 @@ void Module::Interface::DeleteTicketId(Kernel::HLERequestContext& ctx) {
     }
 
     auto path = GetTicketPath(title_id, ticket_id);
-    FileUtil::Delete(path);
+    bool found = false;
+    if (FileUtil::Exists(path)) {
+        FileUtil::Delete(path);
+        am->am_ticket_list.erase(it);
+        found = true;
+    }
 
-    am->am_ticket_list.erase(it);
-
-    rb.Push(ResultSuccess);
+    rb.Push(found ? ResultSuccess
+                  : Result(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::NotFound,
+                           ErrorLevel::Permanent));
 }
 
 void Module::Interface::GetNumTicketIds(Kernel::HLERequestContext& ctx) {
@@ -4631,8 +4874,8 @@ void Module::Interface::ListTicketInfos(Kernel::HLERequestContext& ctx) {
 
     u32 written = 0;
     for (; it != range.second && written < ticket_count; it++) {
-        FileSys::Ticket ticket;
-        if (ticket.Load(title_id, it->second) != Loader::ResultStatus::Success)
+        FileSys::Ticket ticket = GetTicket(title_id, it->second);
+        if (ticket.LoadResult() != Loader::ResultStatus::Success)
             continue;
 
         TicketInfo info = {};
@@ -4934,8 +5177,8 @@ void Module::Interface::ExportTicketWrapped(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    FileSys::Ticket ticket;
-    if (ticket.Load(title_id, ticket_id) != Loader::ResultStatus::Success) {
+    FileSys::Ticket ticket = GetTicket(title_id, ticket_id);
+    if (ticket.LoadResult() != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
                        ErrorLevel::Permanent));
@@ -4986,7 +5229,7 @@ void Module::Interface::ExportTicketWrapped(Kernel::HLERequestContext& ctx) {
 
 Module::Module(Core::System& _system) : system(_system) {
     FileUtil::CreateFullPath(GetTicketDirectory());
-    ScanForAllTitles();
+    bundle_cia_handler = std::make_unique<BundleCIAHandler>();
     system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }
 
@@ -4995,6 +5238,10 @@ Module::~Module() {
 }
 
 std::shared_ptr<Module> GetModule(Core::System& system) {
+    if (!system.IsPoweredOn()) {
+        return nullptr;
+    }
+
     auto am = system.ServiceManager().GetService<Service::AM::Module::Interface>("am:u");
     if (!am)
         return nullptr;

@@ -115,14 +115,14 @@ void LoadingScreen::Prepare(Loader::AppLoader& loader) {
     std::vector<u8> buffer;
     // TODO when banner becomes supported, decode it and add it as a movie
 
-    if (loader.ReadIcon(buffer) == Loader::ResultStatus::Success) {
+    if (loader.ReadIcon(buffer, true) == Loader::ResultStatus::Success) {
         QPixmap icon = GetQPixmapFromSMDH(buffer);
         ui->icon->setPixmap(icon);
     } else {
         ui->icon->clear();
     }
     std::string title;
-    if (loader.ReadTitle(title) != Loader::ResultStatus::Success) {
+    if (loader.ReadTitle(title, true) != Loader::ResultStatus::Success) {
         u64 program_id;
         if (loader.ReadProgramId(program_id) == Loader::ResultStatus::Success) {
             title = fmt::format("{:016x}", program_id);
