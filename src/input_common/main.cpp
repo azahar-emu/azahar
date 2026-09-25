@@ -237,6 +237,16 @@ void ReloadInputDevices() {
     udp->ReloadUDPClient();
 }
 
+BatteryState GetSystemBatteryState() {
+#ifdef HAVE_SDL2
+    BatteryState new_state{};
+    sdl->GetSystemBatteryState(new_state.percentage, new_state.charging);
+    return new_state;
+#else
+    return BatteryState{};
+#endif
+}
+
 namespace Polling {
 
 std::vector<std::unique_ptr<DevicePoller>> GetPollers(DeviceType type) {
