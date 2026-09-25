@@ -5,11 +5,12 @@ ARTIFACTS_LIST=($ARTIFACTS)
 BUILD_DIR=build
 UNIVERSAL_DIR=$BUILD_DIR/universal
 BUNDLE_DIR=$UNIVERSAL_DIR/bundle
-OTHER_BUNDLE_DIR=$BUILD_DIR/x86_64/bundle
+OTHER_BUNDLE_DIR=$BUILD_DIR/arm64/bundle
 
 # Set up the base bundle to combine into.
 mkdir $UNIVERSAL_DIR
-cp -a $BUILD_DIR/arm64/bundle $UNIVERSAL_DIR
+cp -a $BUILD_DIR/x86_64/bundle $UNIVERSAL_DIR # ARM64 has some extra libraries, so we need to
+                                              # Use x86_64 as a base.
 
 # Executable binary paths that need to be combined.
 BIN_PATHS=(Azahar.app/Contents/MacOS/azahar)

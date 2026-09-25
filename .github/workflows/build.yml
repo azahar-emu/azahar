@@ -138,9 +138,6 @@ jobs:
       CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
       OS: macos
     steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
@@ -151,6 +148,21 @@ jobs:
             ${{ runner.os }}-
       - name: Install tools
         run: brew install ccache ninja spirv-tools
+      - name: Install Conan
+        uses: conan-io/setup-conan@v1
+      - name: Build FFmpeg
+        run: conan install
+               --output-folder=$HOME/conan
+               --generator=CMakeToolchain
+               --build=missing
+               -s os.version=13.4
+               -o "*:shared=True"
+               --requires=ffmpeg/7.1.5
+               -c "ffmpeg/*:tools.build:sharedlinkflags+=['-Wl,-flat_namespace']"
+               -c "ffmpeg/*:tools.build:exelinkflags+=['-Wl,-flat_namespace']"
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
       - name: Build (arm64)
         run: BUILD_ARCH=arm64 ./.ci/macos.sh
       - name: Build (x86_64)
