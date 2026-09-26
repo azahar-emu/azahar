@@ -340,23 +340,30 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
         // Not all components are enabled, so mask the result when storing to the destination
         // register...
 
+        Xbyak::Address dest_memory = xword[STATE + dest_offset_disp];
         if (dest.GetRegisterType() == RegisterType::Output) {
             lea(rax, ptr[STATE + dest_offset_disp]);
-
             movzx(ecx, byte[STATE + ShaderUnit::OutputBankOffset()]);
             shl(rcx, OutputBankShift);
             add(rax, rcx);
+            dest_memory = xword[rax];
+        }
+        const u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
+                        ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
 
-            movaps(SCRATCH, xword[rax]);
-        } else {
-            movaps(SCRATCH, xword[STATE + dest_offset_disp]);
+        if (host_caps.has(Cpu::tAVX512F | Cpu::tAVX512VL | Cpu::tAVX512DQ)) {
+            // Masked write
+            mov(cx, mask);
+            kmovb(k1, ecx);
+            vmovaps(dest_memory | k1, src);
+            return;
         }
 
+        // Load dest memory, blend it with incoming values, and write it back
+        movaps(SCRATCH, dest_memory);
 #if !defined(CITRA_HAS_SSE42)
         if (host_caps.has(Cpu::tSSE41)) {
 #endif
-            u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
-                      ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             blendps(SCRATCH, src, mask);
 #if !defined(CITRA_HAS_SSE42)
         } else {
@@ -375,12 +382,7 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
 #endif
 
         // Store dest back to memory
-        if (dest.GetRegisterType() == RegisterType::Output) {
-            movaps(xword[rax], SCRATCH);
-        } else {
-            // Store dest back to memory
-            movaps(xword[STATE + dest_offset_disp], SCRATCH);
-        }
+        movaps(dest_memory, SCRATCH);
     }
 }
 
