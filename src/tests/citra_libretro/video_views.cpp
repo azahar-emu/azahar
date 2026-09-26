@@ -187,3 +187,47 @@ TEST_CASE("Swapped screens put the bottom screen first", "[libretro]") {
                                          {400, 240, 400, 240, 1, EYE_RIGHT},
                                          {40, 0, 320, 240, 0, EYE_NONE}});
 }
+
+TEST_CASE("Views mode overrides Azahar's layout and gates the 3D slider", "[libretro]") {
+    Common::Log::DisableLoggingInTests();
+    SettingsGuard guard;
+    LibRetro::settings.layout_option = Settings::LayoutOption::LargeScreen;
+    LibRetro::settings.render_3d = Settings::StereoRenderOption::Anaglyph;
+    LibRetro::settings.factor_3d = 50;
+
+    // Azahar's own layout and 3D mode.
+    LibRetro::VideoViews::SetCurrentMode(Mode{});
+    LibRetro::ApplyLayoutSettings();
+    REQUIRE(Settings::values.layout_option.GetValue() == Settings::LayoutOption::LargeScreen);
+    REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph);
+    REQUIRE(Settings::values.render_3d_which_display.GetValue() ==
+            Settings::StereoWhichDisplay::Both);
+    REQUIRE(Settings::values.factor_3d.GetValue() == 50u);
+
+    // Views in 2D: one eye is drawn, so the slider is down.
+    LibRetro::VideoViews::SetCurrentMode(Mode{true, false});
+    LibRetro::ApplyLayoutSettings();
+    REQUIRE(Settings::values.layout_option.GetValue() == Settings::LayoutOption::Default);
+    REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off);
+    REQUIRE(Settings::values.render_3d_which_display.GetValue() ==
+            Settings::StereoWhichDisplay::None);
+    REQUIRE(Settings::values.factor_3d.GetValue() == 0u);
+
+    // Views in stereo: the full side-by-side draw, slider at Depth.
+    LibRetro::VideoViews::SetCurrentMode(Mode{true, true});
+    LibRetro::ApplyLayoutSettings();
+    REQUIRE(Settings::values.layout_option.GetValue() == Settings::LayoutOption::Default);
+    REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::SideBySideFull);
+    REQUIRE(Settings::values.render_3d_which_display.GetValue() ==
+            Settings::StereoWhichDisplay::Both);
+    REQUIRE(Settings::values.factor_3d.GetValue() == 50u);
+
+    // Azahar's own 3D mode Off: the slider is down.
+    LibRetro::settings.render_3d = Settings::StereoRenderOption::Off;
+    LibRetro::VideoViews::SetCurrentMode(Mode{});
+    LibRetro::ApplyLayoutSettings();
+    REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off);
+    REQUIRE(Settings::values.render_3d_which_display.GetValue() ==
+            Settings::StereoWhichDisplay::None);
+    REQUIRE(Settings::values.factor_3d.GetValue() == 0u);
+}
