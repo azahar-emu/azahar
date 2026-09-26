@@ -225,9 +225,6 @@ jobs:
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
@@ -239,9 +236,20 @@ jobs:
       - name: Set up MSVC
         if: ${{ matrix.target == 'msvc' }}
         uses: azahar-emu/msvc-dev-cmd@v1
-      - name: Install extra tools (MSVC)
+      - name: Install tools (MSVC)
         if: ${{ matrix.target == 'msvc' }}
-        run: choco install ccache ninja ptime wget
+        run: |
+          choco install ccache ninja ptime wget
+      - name: Checkout vcpkg for FFmpeg 7.1.2 (MSVC)
+        if: ${{ matrix.target == 'msvc' }}
+        shell: pwsh
+        run: |
+          cd C:\vcpkg
+          git checkout 5087d22fd76fe1844ca492866055dea3c34e7f52
+          .\bootstrap-vcpkg.bat -disableMetrics
+      - name: Install FFmpeg (MSVC)
+        if: ${{ matrix.target == 'msvc' }}
+        run: vcpkg install ffmpeg:x64-windows-release
       - name: Install vulkan-sdk (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: |
@@ -255,13 +263,16 @@ jobs:
         shell: pwsh
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
-      - name: Build (Native)
-        if: ${{ matrix.target != 'mxe' }}
-        run: ./.ci/windows.sh
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Build (MSVC)
+        if: ${{ matrix.target == 'msvc' }}
+        run: ./.ci/win-msvc.sh
       - name: Build (MXE)
         if: ${{ matrix.target == 'mxe' }}
-        run: ./.ci/mxe.sh
-      - name: Generate installer (Native)
+        run: ./.ci/win-mxe.sh
+      - name: Generate installer (MSVC)
         if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
         run: |
           cd src\installer
