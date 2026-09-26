@@ -24,7 +24,7 @@
 #endif
 
 #include "common/common_paths.h"
-#include "common/dynamic_library/dynamic_library.h"
+#include "common/dynamic_library.h"
 #include "common/file_derived.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"

@@ -138,9 +138,6 @@ jobs:
       CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
       OS: macos
     steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
@@ -151,6 +148,21 @@ jobs:
             ${{ runner.os }}-
       - name: Install tools
         run: brew install ccache ninja spirv-tools
+      - name: Install Conan
+        uses: conan-io/setup-conan@v1
+      - name: Build FFmpeg
+        run: conan install
+               --output-folder=$HOME/conan
+               --generator=CMakeToolchain
+               --build=missing
+               -s os.version=13.4
+               -o "*:shared=True"
+               --requires=ffmpeg/7.1.5
+               -c "ffmpeg/*:tools.build:sharedlinkflags+=['-Wl,-flat_namespace']"
+               -c "ffmpeg/*:tools.build:exelinkflags+=['-Wl,-flat_namespace']"
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
       - name: Build (arm64)
         run: BUILD_ARCH=arm64 ./.ci/macos.sh
       - name: Build (x86_64)
@@ -213,9 +225,6 @@ jobs:
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
@@ -227,30 +236,45 @@ jobs:
       - name: Set up MSVC
         if: ${{ matrix.target == 'msvc' }}
         uses: azahar-emu/msvc-dev-cmd@v1
-      - name: Install extra tools (MSVC)
+      - name: Install tools (MSVC)
         if: ${{ matrix.target == 'msvc' }}
-        run: choco install ccache ninja ptime wget
+        run: |
+          choco install ccache ninja ptime wget
+      - name: Checkout vcpkg for FFmpeg 7.1.2 (MSVC)
+        if: ${{ matrix.target == 'msvc' }}
+        shell: pwsh
+        run: |
+          cd C:\vcpkg
+          git checkout 5087d22fd76fe1844ca492866055dea3c34e7f52
+          .\bootstrap-vcpkg.bat -disableMetrics
+      - name: Build FFmpeg (MSVC)
+        if: ${{ matrix.target == 'msvc' }}
+        run: vcpkg install
+          ffmpeg[avcodec,avfilter,avformat,swresample,aom,dav1d,mp3lame,opus,snappy,soxr,theora,vorbis,vpx,vulkan,x264,x265]:x64-windows-release
       - name: Install vulkan-sdk (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: |
           wget https://sdk.lunarg.com/sdk/download/1.4.304.1/windows/VulkanSDK-1.4.304.1-Installer.exe -O D:/a/_temp/vulkan.exe
           D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
-      - name: Install NSIS
-        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
+      - name: Install NSIS (MSVC)
+        if: ${{ github.ref_type == 'tag' && matrix.target == 'msvc' }}
         run: |
           wget https://download.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe -O D:/a/_temp/nsis-setup.exe
           ptime D:/a/_temp/nsis-setup.exe /S
         shell: pwsh
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
-      - name: Build (Native)
-        if: ${{ matrix.target != 'mxe' }}
-        run: ./.ci/windows.sh
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Build (MSVC)
+        if: ${{ matrix.target == 'msvc' }}
+        run: ./.ci/win-msvc.sh
       - name: Build (MXE)
         if: ${{ matrix.target == 'mxe' }}
-        run: ./.ci/mxe.sh
-      - name: Generate installer (Native)
-        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
+        run: ./.ci/win-mxe.sh
+      - name: Generate installer (MSVC)
+        if: ${{ github.ref_type == 'tag' && matrix.target == 'msvc' }}
         run: |
           cd src\installer
           "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi

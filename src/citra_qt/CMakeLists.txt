@@ -127,15 +127,6 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     debugger/wait_tree.cpp
     debugger/wait_tree.h
     discord.h
-    dumping/dumping_dialog.cpp
-    dumping/dumping_dialog.h
-    dumping/dumping_dialog.ui
-    dumping/option_set_dialog.cpp
-    dumping/option_set_dialog.h
-    dumping/option_set_dialog.ui
-    dumping/options_dialog.cpp
-    dumping/options_dialog.h
-    dumping/options_dialog.ui
     game_list.cpp
     game_list.h
     game_list_p.h
@@ -204,6 +195,20 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
 )
 
 target_include_directories(citra_qt PUBLIC ${CMAKE_BINARY_DIR}/src)
+
+if(ENABLE_FFMPEG)
+    target_sources(citra_qt PRIVATE
+        dumping/dumping_dialog.cpp
+        dumping/dumping_dialog.h
+        dumping/dumping_dialog.ui
+        dumping/option_set_dialog.cpp
+        dumping/option_set_dialog.h
+        dumping/option_set_dialog.ui
+        dumping/options_dialog.cpp
+        dumping/options_dialog.h
+        dumping/options_dialog.ui
+    )
+endif()
 
 if (APPLE)
   target_sources(citra_qt PUBLIC
@@ -359,6 +364,12 @@ endif()
 if (ENABLE_WEB_SERVICE)
     target_link_libraries(citra_qt PRIVATE web_service)
 endif()
+
+if (ENABLE_FFMPEG)
+    target_link_libraries(citra_qt PRIVATE ${FFMPEG_LIBRARIES})
+    target_include_directories(citra_qt PRIVATE ${FFMPEG_INCLUDE_DIRS})
+endif()
+
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra_qt PRIVATE precompiled_headers.h)

@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,6 +9,10 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "ui_option_set_dialog.h"
+
+extern "C" {
+#include <libavutil/opt.h>
+}
 
 static const std::unordered_map<AVOptionType, const char*> TypeNameMap{{
     {AV_OPT_TYPE_BOOL, QT_TR_NOOP("boolean")},
@@ -27,7 +31,7 @@ static const std::unordered_map<AVOptionType, const char*> TypeNameMap{{
     {AV_OPT_TYPE_STRING, QT_TR_NOOP("string")},
     {AV_OPT_TYPE_DICT, QT_TR_NOOP("dictionary")},
     {AV_OPT_TYPE_VIDEO_RATE, QT_TR_NOOP("video rate")},
-    {AV_OPT_TYPE_CHANNEL_LAYOUT, QT_TR_NOOP("channel layout")},
+    {AV_OPT_TYPE_CHLAYOUT, QT_TR_NOOP("channel layout")},
 }};
 
 static const std::unordered_map<AVOptionType, const char*> TypeDescriptionMap{{
@@ -39,7 +43,7 @@ static const std::unordered_map<AVOptionType, const char*> TypeDescriptionMap{{
     {AV_OPT_TYPE_DICT,
      QT_TR_NOOP("Comma-splitted list of &lt;key>=&lt;value>. Do not put spaces.")},
     {AV_OPT_TYPE_VIDEO_RATE, QT_TR_NOOP("&lt;num>/&lt;den>, or preset values like 'pal'.")},
-    {AV_OPT_TYPE_CHANNEL_LAYOUT, QT_TR_NOOP("Hexadecimal channel layout mask starting with '0x'.")},
+    {AV_OPT_TYPE_CHLAYOUT, QT_TR_NOOP("Channel layout string")},
 }};
 
 /// Get the preset values of an option. returns {display value, real value}

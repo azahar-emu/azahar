@@ -76,9 +76,6 @@
 [submodule "faad2"]
 	path = externals/faad2/faad2
 	url = https://github.com/knik0/faad2
-[submodule "library-headers"]
-	path = externals/library-headers
-	url = https://github.com/azahar-emu/ext-library-headers.git
 [submodule "libadrenotools"]
 	path = externals/libadrenotools
 	url = https://github.com/bylaws/libadrenotools

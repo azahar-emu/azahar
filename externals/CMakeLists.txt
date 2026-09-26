@@ -171,25 +171,6 @@ add_subdirectory(open_source_archives EXCLUDE_FROM_ALL)
 # faad2
 add_subdirectory(faad2 EXCLUDE_FROM_ALL)
 
-# Dynamic library headers
-add_library(library-headers INTERFACE)
-
-if (USE_SYSTEM_FFMPEG_HEADERS)
-    find_path(SYSTEM_FFMPEG_INCLUDES NAMES libavutil/avutil.h)
-    if (SYSTEM_FFMPEG_INCLUDES STREQUAL "SYSTEM_FFMPEG_INCLUDES-NOTFOUND")
-        message(WARNING "System FFmpeg headers not found. Falling back on bundled headers.")
-    else()
-        message(STATUS "Using system FFmpeg headers.")
-        target_include_directories(library-headers SYSTEM INTERFACE ${SYSTEM_FFMPEG_INCLUDES})
-        set(FOUND_FFMPEG_HEADERS ON)
-    endif()
-endif()
-if (NOT FOUND_FFMPEG_HEADERS)
-    message(STATUS "Using bundled ffmpeg headers.")
-    target_include_directories(library-headers INTERFACE ./library-headers/ffmpeg/include)
-    target_disable_warnings(library-headers)
-endif()
-
 # SoundTouch
 if(NOT USE_SYSTEM_SOUNDTOUCH)
     set(INTEGER_SAMPLES ON CACHE BOOL "")
