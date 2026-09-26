@@ -129,6 +129,10 @@ if (NOT FFMPEG_LIBRARIES)
       set(FFMPEG_LIBRARIES   ${FFMPEG_LIBRARIES}   ${${_component}_LIBRARIES})
       set(FFMPEG_DEFINITIONS ${FFMPEG_DEFINITIONS} ${${_component}_DEFINITIONS})
       list(APPEND FFMPEG_INCLUDE_DIRS ${${_component}_INCLUDE_DIRS})
+    else ()
+      message(FATAL_ERROR
+        "FFmpeg component ${_component} not found.\n"
+        "If building with FFmpeg is impractical, you can disable it by setting ENABLE_FFMPEG to OFF.")
     endif ()
   endforeach ()
 
