@@ -231,3 +231,31 @@ TEST_CASE("Views mode overrides Azahar's layout and gates the 3D slider", "[libr
             Settings::StereoWhichDisplay::None);
     REQUIRE(Settings::values.factor_3d.GetValue() == 0u);
 }
+
+TEST_CASE("Views geometry and frame limits", "[libretro]") {
+    Common::Log::DisableLoggingInTests();
+    SettingsGuard guard;
+    Settings::values.layout_option = Settings::LayoutOption::Default;
+    retro_system_av_info info{};
+
+    LibRetro::VideoViews::SetCurrentMode(Mode{true, true});
+    Settings::values.resolution_factor = 10;
+    retro_get_system_av_info(&info);
+    REQUIRE(info.geometry.base_width == 8000u);
+    REQUIRE(info.geometry.base_height == 4800u);
+    REQUIRE(info.geometry.max_width >= info.geometry.base_width);
+    REQUIRE(info.geometry.max_height >= info.geometry.base_height);
+
+    LibRetro::VideoViews::SetCurrentMode(Mode{true, false});
+    Settings::values.resolution_factor = 1;
+    retro_get_system_av_info(&info);
+    REQUIRE(info.geometry.base_width == 400u);
+    REQUIRE(info.geometry.base_height == 480u);
+
+    // Outside views mode Azahar's own layout sizes the frame.
+    LibRetro::VideoViews::SetCurrentMode(Mode{});
+    Settings::values.layout_option = Settings::LayoutOption::SideScreen;
+    retro_get_system_av_info(&info);
+    REQUIRE(info.geometry.base_width == 720u);
+    REQUIRE(info.geometry.base_height == 240u);
+}
