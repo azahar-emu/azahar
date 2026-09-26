@@ -1,10 +1,11 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <cstdint>
+#include "citra_libretro/libretro_views.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -89,6 +90,12 @@ bool SetFrameTimeCallback(retro_frame_time_callback* cb);
 
 /// Set the size of the new screen buffer.
 bool SetGeometry(retro_system_av_info* cb);
+
+/// Gets the frontend's RETRO_VIDEO_VIEWS_STATUS_ flags.
+bool GetVideoViewsStatus(unsigned* flags);
+
+/// Tells the frontend how the frame divides into screens and eyes.
+bool SetVideoViews(retro_video_views* views);
 
 /// Tells LibRetro what input buttons are labelled on the 3DS.
 bool SetInputDescriptors(const retro_input_descriptor desc[]);

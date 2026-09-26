@@ -2,6 +2,7 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
+#include <algorithm>
 #include <list>
 #include <numeric>
 #include <vector>
@@ -32,6 +33,7 @@
 #include "citra_libretro/core_settings.h"
 #include "citra_libretro/environment.h"
 #include "citra_libretro/input/input_factory.h"
+#include "citra_libretro/video_views.h"
 
 #include "common/arch.h"
 #if CITRA_ARCH(x86_64)
@@ -64,6 +66,14 @@ public:
     bool game_loaded = false;
     bool first_run_loop = true;
     struct retro_hw_render_callback hw_render{};
+    /// The last video views status logged; all ones before the first run.
+    unsigned views_status = ~0u;
+    /// The frontend holds a view map from us.
+    bool views_map_sent = false;
+    /// False once the frontend has shown it doesn't know the status call.
+    bool views_status_supported = true;
+    /// The last view map the frontend rejected, logged once.
+    std::vector<retro_video_view> views_rejected;
 };
 
 CitraLibRetro* emu_instance;
@@ -212,6 +222,70 @@ static void UpdateSettings() {
     Core::System::GetInstance().ApplySettings();
 }
 
+static bool SameViews(const std::vector<retro_video_view>& a,
+                      const std::vector<retro_video_view>& b) {
+    return std::equal(a.begin(), a.end(), b.begin(), b.end(),
+                      [](const retro_video_view& l, const retro_video_view& r) {
+                          return l.x == r.x && l.y == r.y && l.width == r.width &&
+                                 l.height == r.height && l.screen == r.screen && l.eye == r.eye &&
+                                 l.aspect_ratio == r.aspect_ratio;
+                      });
+}
+
+/**
+ * Follows the frontend's video views status, and sends the view map for the
+ * frame this run draws.
+ */
+static void UpdateVideoViews() {
+    unsigned status = 0;
+    // A frontend that doesn't know the call won't learn it while content runs.
+    if (emu_instance->views_status_supported && !LibRetro::GetVideoViewsStatus(&status)) {
+        emu_instance->views_status_supported = false;
+        status = 0;
+    }
+    const auto mode = LibRetro::VideoViews::SelectMode(
+        LibRetro::settings.frontend_layout, LibRetro::settings.layout_option,
+        LibRetro::settings.render_3d, status,
+        Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::Software);
+    const bool changed = mode != LibRetro::VideoViews::CurrentMode();
+
+    if (changed || status != emu_instance->views_status) {
+        LOG_INFO(Frontend, "Video views: presents={} stereo={}, {}",
+                 (status & RETRO_VIDEO_VIEWS_STATUS_PRESENTS) ? 1 : 0,
+                 (status & RETRO_VIDEO_VIEWS_STATUS_STEREO) ? 1 : 0,
+                 !mode.active  ? "own layout"
+                 : mode.stereo ? "views in stereo"
+                               : "views in 2D");
+        emu_instance->views_status = status;
+    }
+
+    if (changed) {
+        LibRetro::VideoViews::SetCurrentMode(mode);
+        LibRetro::ApplyLayoutSettings();
+        Core::System::GetInstance().ApplySettings();
+        emu_instance->emu_window->UpdateLayout();
+    }
+
+    if (mode.active) {
+        const auto views =
+            LibRetro::VideoViews::BuildMap(emu_instance->emu_window->GetFramebufferLayout(),
+                                           mode.stereo, Settings::values.swap_screen.GetValue());
+        retro_video_views map{};
+        map.views = views.data();
+        map.num_views = static_cast<unsigned>(views.size());
+        if (!LibRetro::SetVideoViews(&map) && !SameViews(views, emu_instance->views_rejected)) {
+            LOG_ERROR(Frontend, "The frontend rejected a video views map of {} views",
+                      views.size());
+            emu_instance->views_rejected = views;
+        }
+        emu_instance->views_map_sent = true;
+    } else if (emu_instance->views_map_sent) {
+        retro_video_views none{};
+        LibRetro::SetVideoViews(&none);
+        emu_instance->views_map_sent = false;
+    }
+}
+
 /**
  * libretro callback; Called every game tick.
  */
@@ -269,6 +343,8 @@ void retro_run() {
 
         screen_swap_button_state = screen_swap_btn;
     }
+
+    UpdateVideoViews();
 
 #ifdef ENABLE_OPENGL
     if (Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::OpenGL) {
@@ -522,6 +598,12 @@ bool retro_load_game(const struct retro_game_info* info) {
     }
 #endif
 
+    // The mode outlives retro_deinit() while the core stays loaded.
+    LibRetro::VideoViews::SetCurrentMode({});
+    emu_instance->views_status_supported = true;
+    // The frontend clears the map when content unloads.
+    emu_instance->views_map_sent = false;
+    emu_instance->views_rejected.clear();
     UpdateSettings();
 
     // If using HW rendering, don't actually load the game here. azahar wants
@@ -645,6 +727,7 @@ bool retro_load_game(const struct retro_game_info* info) {
 void retro_unload_game() {
     LOG_DEBUG(Frontend, "Unloading game...");
     Core::System::GetInstance().Shutdown();
+    emu_instance->views_status_supported = true;
 }
 
 unsigned retro_get_region() {
