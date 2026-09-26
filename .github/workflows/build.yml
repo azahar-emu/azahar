@@ -247,16 +247,17 @@ jobs:
           cd C:\vcpkg
           git checkout 5087d22fd76fe1844ca492866055dea3c34e7f52
           .\bootstrap-vcpkg.bat -disableMetrics
-      - name: Install FFmpeg (MSVC)
+      - name: Build FFmpeg (MSVC)
         if: ${{ matrix.target == 'msvc' }}
-        run: vcpkg install ffmpeg:x64-windows-release
+        run: vcpkg install
+          ffmpeg[avcodec,avfilter,avformat,swresample,aom,dav1d,mp3lame,opus,snappy,soxr,theora,vorbis,vpx,vulkan,x264,x265]:x64-windows-release
       - name: Install vulkan-sdk (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: |
           wget https://sdk.lunarg.com/sdk/download/1.4.304.1/windows/VulkanSDK-1.4.304.1-Installer.exe -O D:/a/_temp/vulkan.exe
           D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
-      - name: Install NSIS
-        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
+      - name: Install NSIS (MSVC)
+        if: ${{ github.ref_type == 'tag' && matrix.target == 'msvc' }}
         run: |
           wget https://download.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe -O D:/a/_temp/nsis-setup.exe
           ptime D:/a/_temp/nsis-setup.exe /S
@@ -273,7 +274,7 @@ jobs:
         if: ${{ matrix.target == 'mxe' }}
         run: ./.ci/win-mxe.sh
       - name: Generate installer (MSVC)
-        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
+        if: ${{ github.ref_type == 'tag' && matrix.target == 'msvc' }}
         run: |
           cd src\installer
           "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
