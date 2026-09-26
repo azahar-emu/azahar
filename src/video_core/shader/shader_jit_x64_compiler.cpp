@@ -367,6 +367,14 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
             return;
         }
 
+        if (host_caps.has(Cpu::tAVX)) {
+            // Masked write
+            xorps(SCRATCH, SCRATCH);
+            vblendps(SCRATCH, SCRATCH, NEGBIT, write_mask);
+            vmaskmovps(dest_memory, SCRATCH, src);
+            return;
+        }
+
         // Load dest memory, blend it with incoming values, and write it back
         movaps(SCRATCH, dest_memory);
 #if !defined(CITRA_HAS_SSE42)
