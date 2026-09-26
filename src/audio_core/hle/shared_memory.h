@@ -1,4 +1,4 @@
-// Copyright 2016-2025 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -411,8 +411,50 @@ struct DspConfiguration {
 
     DelayEffect delay_effect[2];
 
+    /**
+     * Reverb effect. This is two comb filters and one all-pass filter in the standard
+     * configuration, plus a pre-delay feeding the tail and a separate early reflection tap.
+     */
     struct ReverbEffect {
-        INSERT_PADDING_DSPWORDS(26); ///< TODO
+        /// These dirty flags are set by the application when it updates the fields in this struct.
+        /// The DSP clears these each audio frame.
+        union {
+            u16_le dirty_raw;
+            BitField<0, 1, u16> enable_dirty;
+            BitField<1, 1, u16> work_buffer_address_dirty;
+            BitField<2, 1, u16> other_dirty; ///< Set when anything else has been changed
+        };
+
+        u16_le enable;
+        INSERT_PADDING_DSPWORDS(1);
+        u16_le outputs;
+
+        /// The application allocates the work buffers the DSP uses for each delay line.
+        u32_dsp early_delay_buffer_address;
+        u32_dsp pre_delay_buffer_address;
+        std::array<u32_dsp, 2> comb_buffer_address;
+        u32_dsp all_pass_buffer_address;
+
+        /// Delay line lengths, in frames of samples_per_frame samples each.
+        u16_le early_delay_frame_count;
+        u16_le pre_delay_frame_count;
+        std::array<u16_le, 2> comb_frame_count;
+        u16_le all_pass_frame_count;
+
+        // All of the following values are fixed point with 7 fractional bits.
+
+        /// Gain applied to the early reflection tap.
+        u16_le early_g;
+        /// Gain applied to the late (comb + all-pass) signal when fused with the early tap.
+        u16_le fused_g;
+        /// All pass fitler coefficient.
+        u16_le all_pass_coef;
+        /// Comb filter feedback coefficients.
+        std::array<u16_le, 2> comb_coef;
+
+        /// Single pole filter in the comb feedback arms.
+        s16_le a;
+        s16_le b;
     };
 
     ReverbEffect reverb_effect[2];
