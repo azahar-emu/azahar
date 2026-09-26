@@ -175,10 +175,57 @@
       <item>
        <widget class="QCheckBox" name="toggle_audio_stretching">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This post-processing effect adjusts audio speed to match emulation speed and helps prevent audio stutter. This however increases audio latency.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Stretches audio to cover slowdowns when emulation cannot hold full speed, and fast-forward, so neither becomes stutter. Adds audio latency only while engaged; at full speed audio passes straight through.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Enable audio stretching</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="speedup_lowpass_layout">
+        <item>
+         <widget class="QLabel" name="speedup_lowpass_label">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Softens harsh fast-forward audio: the cutoff is this value divided by the current speed, so faster playback is dulled more. Only applies above normal speed. The maximum turns the filter off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Fast-forward low-pass:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="speedup_lowpass_spinbox">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Softens harsh fast-forward audio: the cutoff is this value divided by the current speed, so faster playback is dulled more. Only applies above normal speed. The maximum turns the filter off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <!-- The maximum is AudioCore::kSpeedupLowPassOff, the "do not filter" sentinel
+               (audio_core/speedup_lowpass.h). This pair mirrors the range on
+               Settings::values.speedup_lowpass (common/settings.h); the Android app carries a
+               third copy in SettingsFragmentPresenter.kt. -->
+          <property name="minimum">
+           <number>1000</number>
+          </property>
+          <property name="maximum">
+           <number>48000</number>
+          </property>
+          <property name="singleStep">
+           <number>500</number>
+          </property>
+          <property name="suffix">
+           <string> Hz</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="toggle_audio_ramp">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Fades audio out and back in when emulation pauses, loads a state or resets, and conceals brief dropouts by repeating the last of the waveform rather than holding a single sample, which is heard as a thump. Turn this off for hard cuts at those points.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Fade audio instead of cutting it</string>
         </property>
        </widget>
       </item>
@@ -252,6 +299,8 @@
  <tabstops>
   <tabstop>emulation_combo_box</tabstop>
   <tabstop>toggle_audio_stretching</tabstop>
+  <tabstop>speedup_lowpass_spinbox</tabstop>
+  <tabstop>toggle_audio_ramp</tabstop>
   <tabstop>volume_slider</tabstop>
   <tabstop>output_type_combo_box</tabstop>
   <tabstop>output_device_combo_box</tabstop>

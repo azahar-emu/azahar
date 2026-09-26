@@ -589,6 +589,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     dsp_core->SetSink(Settings::values.output_type.GetValue(),
                       Settings::values.output_device.GetValue());
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
+    dsp_core->SetAudioRamp(Settings::values.enable_audio_ramp.GetValue());
+    dsp_core->SetSpeedupLowPass(Settings::values.speedup_lowpass.GetValue());
 
 #ifdef ENABLE_SCRIPTING
     if (Settings::values.enable_rpc_server.GetValue()) {
@@ -769,6 +771,12 @@ void System::Reset() {
     // reloading.
     // TODO: Properly implement the reset
 
+    // Shutdown() closes the sink wherever the waveform stands; take the stream down on its
+    // tail first. The reloaded DSP opens on a ramp of its own.
+    if (dsp_core) {
+        dsp_core->JumpBegin();
+    }
+
     // Save the APT deliver arg and plugin loader context across resets.
     // This is needed as we don't currently support proper app jumping.
     if (auto apt = Service::APT::GetModule(*this)) {
@@ -819,6 +827,8 @@ void System::ApplySettings() {
         dsp_core->SetSink(Settings::values.output_type.GetValue(),
                           Settings::values.output_device.GetValue());
         dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
+        dsp_core->SetAudioRamp(Settings::values.enable_audio_ramp.GetValue());
+        dsp_core->SetSpeedupLowPass(Settings::values.speedup_lowpass.GetValue());
 
         auto hid = Service::HID::GetModule(*this);
         if (hid) {
