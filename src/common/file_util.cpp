@@ -32,6 +32,7 @@
 // windows.h needs to be included before other windows headers
 #include <direct.h> // getcwd
 #include <io.h>
+#include <pathcch.h>
 #include <share.h>
 #include <shellapi.h>
 #include <shlobj.h> // for SHGetFolderPath
@@ -353,6 +354,16 @@ bool CreateFullPath(const std::string& fullPath) {
     }
 
     std::size_t position = 0;
+#ifdef _WIN32
+    std::wstring wfullPath = Common::UTF8ToUTF16W(fullPath);
+
+    // Convert sanitized path back to Windows forward-slashes to support UNC/network paths.
+    std::replace(wfullPath.begin(), wfullPath.end(), L'/', L'\\');
+    PCWSTR wpathRootEnd = nullptr;
+    if (SUCCEEDED(PathCchSkipRoot(wfullPath.c_str(), &wpathRootEnd))) {
+        position = Common::UTF16ToUTF8(wfullPath.substr(0, wpathRootEnd - wfullPath.c_str())).size();
+    }
+#endif
     while (true) {
         std::size_t prev_pos = position;
         // Find next sub path
