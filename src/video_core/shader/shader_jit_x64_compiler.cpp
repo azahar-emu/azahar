@@ -348,12 +348,20 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
             add(rax, rcx);
             dest_memory = xword[rax];
         }
-        const u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
-                        ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
+        const u8 write_mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
+                              ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
+
+        if (write_mask == 0b0001) {
+            movss(dest_memory, src);
+            return;
+        } else if (write_mask == 0b0011) {
+            movsd(dest_memory, src);
+            return;
+        }
 
         if (host_caps.has(Cpu::tAVX512F | Cpu::tAVX512VL | Cpu::tAVX512DQ)) {
             // Masked write
-            mov(cx, mask);
+            mov(cx, write_mask);
             kmovb(k1, ecx);
             vmovaps(dest_memory | k1, src);
             return;
@@ -364,7 +372,7 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
 #if !defined(CITRA_HAS_SSE42)
         if (host_caps.has(Cpu::tSSE41)) {
 #endif
-            blendps(SCRATCH, src, mask);
+            blendps(SCRATCH, src, write_mask);
 #if !defined(CITRA_HAS_SSE42)
         } else {
             movaps(SCRATCH2, src);
