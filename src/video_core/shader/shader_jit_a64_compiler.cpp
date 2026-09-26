@@ -351,16 +351,27 @@ void JitShader::Compile_DestEnable(Instruction instr, QReg src) {
         // register...
         if (dest.GetRegisterType() == RegisterType::Output) {
             ADD(XSCRATCH0, STATE, dest_offset_disp);
-
             LDRB(XSCRATCH1.toW(), STATE, ShaderUnit::OutputBankOffset());
             LSL(XSCRATCH1, XSCRATCH1, OutputBankShift);
             ADD(XSCRATCH0, XSCRATCH0, XSCRATCH1);
-
-            LDR(VSCRATCH0, XSCRATCH0);
         } else {
-            LDR(VSCRATCH0, STATE, dest_offset_disp);
+            ADD(XSCRATCH0, STATE, dest_offset_disp);
         }
 
+        // Special case masked-write of contiguous elements
+        if (swiz.dest_mask == 0b1000) {
+            ST1(List{src.Selem()[0]}, XSCRATCH0);
+            return;
+        } else if (swiz.dest_mask == 0b1100) {
+            ST1(List{src.Delem()[0]}, XSCRATCH0);
+            return;
+        } else if (swiz.dest_mask == 0b1110) {
+            ST1(List{src.Delem()[0]}, XSCRATCH0, POST_INDEXED, 8);
+            ST1(List{src.Selem()[2]}, XSCRATCH0);
+            return;
+        }
+
+        LDR(VSCRATCH0, XSCRATCH0);
         // MOVI encodes a 64-bit value into an 8-bit immidiate by replicating bits
         // The 8-bit immediate "a:b:c:d:e:f:g:h" maps to the 64-bit value:
         // "aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffgggggggghhhhhhhh"
@@ -394,11 +405,7 @@ void JitShader::Compile_DestEnable(Instruction instr, QReg src) {
         BSL(VSCRATCH2.B16(), src.B16(), VSCRATCH0.B16());
 
         // Store dest back to memory
-        if (dest.GetRegisterType() == RegisterType::Output) {
-            STR(VSCRATCH2, XSCRATCH0);
-        } else {
-            STR(VSCRATCH2, STATE, dest_offset_disp);
-        }
+        STR(VSCRATCH2, XSCRATCH0);
     }
 }
 
