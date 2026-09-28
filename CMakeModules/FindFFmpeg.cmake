@@ -176,6 +176,10 @@ foreach (_component ${FFmpeg_FIND_COMPONENTS})
       message(WARNING "${_component}: Version check is not supported on Windows, using anyway...")
     endif(NOT WIN32)
     list(APPEND _FFmpeg_FOUND_LIBRARIES ${${_component}_LIBRARIES})
+  else ()
+    message(FATAL_ERROR
+      "FFmpeg component ${_component} not found.\n"
+      "If building with FFmpeg is impractical, you can disable it by setting ENABLE_FFMPEG to OFF.")
   endif ()
   list(APPEND _FFmpeg_REQUIRED_VARS ${_component}_LIBRARIES ${_component}_INCLUDE_DIRS ${_component}_FOUND)
 endforeach ()
