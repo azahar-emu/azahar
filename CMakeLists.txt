@@ -162,6 +162,7 @@ option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via 
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 option(CITRA_ADDRESS_SANITIZE "Enable address sanitizer" OFF)
+option(USE_CCACHE "Use ccache to speed up subsequent builds" OFF)
 
 # Handle incompatible options for libretro builds
 if(ENABLE_LIBRETRO)
@@ -238,7 +239,18 @@ if ($ENV{NDK_CCACHE})
     set(CCACHE_PATH $ENV{NDK_CCACHE})
 endif()
 
-include(UseCcache)
+set(CCACHE_PATH "ccache" CACHE STRING "Path/name of an installed ccache binary")
+if (USE_CCACHE)
+    find_program(CCACHE_EXE ${CCACHE_PATH})
+    if (CCACHE_EXE)
+        message(STATUS "CCache found at: ${CCACHE_EXE}")
+        set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_EXE})
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXE})
+    else()
+        message(FATAL_ERROR "USE_CCACHE enabled, but no ccache found at ${CCACHE_PATH}")
+    endif()
+endif()
+
 
 # Check for LTO support
 # =======================================================================
