@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,9 +11,9 @@ SDLJoystick::SDLJoystick(std::string guid_, int port_, SDL_Joystick* joystick,
                          SDL_GameController* game_controller)
     : guid{std::move(guid_)}, port{port_}, sdl_joystick{joystick, &SDL_JoystickClose},
       sdl_controller{game_controller, &SDL_GameControllerClose} {
-    EnableMotion();
     CreateControllerButtonMap();
     CalibrateJoystickAxes();
+    EnableMotion();
 }
 
 void SDLJoystick::CalibrateJoystickAxes() {
@@ -141,6 +141,7 @@ int SDLJoystick::GetPort() const {
 }
 
 std::tuple<float, float, float> SDLJoystick::GetTouch(int pad) const {
+    std::lock_guard lock{mutex};
     if (state.touchpad.contains(pad))
         return state.touchpad.at(pad);
     else
@@ -171,7 +172,6 @@ void SDLJoystick::CreateControllerButtonMap() {
     for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++) {
         auto bind = SDL_GameControllerGetBindForButton(sdl_controller.get(),
                                                        static_cast<SDL_GameControllerButton>(i));
-
         if (bind.bindType == SDL_CONTROLLER_BINDTYPE_BUTTON) {
             mapped_joystick_buttons.insert(bind.value.button);
         }

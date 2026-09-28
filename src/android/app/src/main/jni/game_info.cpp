@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -185,7 +185,7 @@ jstring Java_org_citra_citra_1emu_model_GameInfo_getRegions(JNIEnv* env, jobject
         return ToJString(env, "Region free");
     }
 
-    const std::string separator = ", ";
+    const std::string separator = "|";
     std::string result = regions_map.at(regions.front());
     for (auto region = ++regions.begin(); region != regions.end(); ++region) {
         result += separator + regions_map.at(*region);

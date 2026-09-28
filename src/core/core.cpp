@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,6 +10,7 @@
 #include "audio_core/lle/lle.h"
 #include "common/arch.h"
 #include "common/logging/log.h"
+#include "common/scope_exit.h"
 #include "common/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/exclusive_monitor.h"
@@ -20,6 +21,9 @@
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #endif
 #include "core/arm/dyncom/arm_dyncom.h"
+#ifdef HAVE_FASTINTERP
+#include "core/arm/fastinterp/fastinterp.h"
+#endif
 #include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -48,6 +52,7 @@
 #include "core/hw/aes/key.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
+#include "core/savestate.h"
 #ifdef ENABLE_SCRIPTING
 #include "core/rpc/server.h"
 #endif
@@ -81,6 +86,7 @@ System::~System() = default;
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
+
     if (!IsPoweredOn()) {
         return ResultStatus::ErrorNotInitialized;
     }
@@ -123,6 +129,20 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             LOG_ERROR(Core, "A pending save state operation has not finished yet");
             status_details = "A pending save state operation has not finished yet";
             return ResultStatus::ErrorSavestate;
+        }
+        u64 title_id{};
+        if (app_loader) {
+            app_loader->ReadProgramId(title_id);
+        }
+        auto info = GetSaveStateInfo(title_id, movie.GetCurrentMovieID(), param);
+        if (info.slot == std::numeric_limits<u32>::max()) {
+            // Should not happen
+            status_details = "Failed to load savestate";
+            return ResultStatus::ErrorSavestate;
+        }
+        if (info.status == Core::SaveStateInfo::ValidationStatus::BuildMismatch) {
+            status_details = info.build_name;
+            return ResultStatus::ErrorSavestateBuildMismatch;
         }
         save_state_slot = param;
         save_state_request_time = std::chrono::steady_clock::now();
@@ -228,6 +248,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                 current_core_to_execute->Step();
             }
         }
+        Reschedule();
     } else {
         // Now all cores are at the same global time. So we will run them one after the other
         // with a max slice that is the minimum of all max slices of all cores
@@ -264,10 +285,9 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                 }
             }
             max_slice = cpu_core->GetTimer().GetTicks() - start_ticks;
+            Reschedule();
         }
     }
-
-    Reschedule();
 
     return status;
 }
@@ -476,7 +496,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
 
 void System::PrepareReschedule() {
     running_core->PrepareReschedule();
-    reschedule_pending = true;
+    curr_core_reschedule_pending = true;
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
@@ -493,20 +513,27 @@ double System::GetStableFrameTimeScale() {
 }
 
 void System::Reschedule() {
-    if (!reschedule_pending) {
+    if (!curr_core_reschedule_pending) {
         return;
     }
 
-    reschedule_pending = false;
-    for (const auto& core : cpu_cores) {
-        LOG_TRACE(Core_ARM11, "Reschedule core {}", core->GetID());
-        kernel->GetThreadManager(core->GetID()).Reschedule();
-    }
+    curr_core_reschedule_pending = false;
+    kernel->GetThreadManager(running_core->GetID()).Reschedule();
 }
 
 System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
                                   Frontend::EmuWindow* secondary_window,
                                   Kernel::MemoryMode memory_mode, u32 num_cores) {
+    // Notification for system initialization (either boot or savestate).
+    if (on_init_callback) {
+        on_init_callback(true);
+    }
+    SCOPE_EXIT({
+        if (on_init_callback) {
+            on_init_callback(false);
+        }
+    });
+
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     memory = std::make_unique<Memory::MemorySystem>(*this);
@@ -532,6 +559,13 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
                 std::make_shared<ARM_DynCom>(*this, *memory, USER32MODE, i, timing->GetTimer(i)));
         }
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
+#endif
+#ifdef HAVE_FASTINTERP
+    } else if (Settings::values.use_fastinterp) {
+        for (u32 i = 0; i < num_cores; ++i) {
+            cpu_cores.push_back(std::make_shared<FastInterp::ARM_FastInterp>(*this, *memory, i,
+                                                                             timing->GetTimer(i)));
+        }
 #endif
     } else {
         for (u32 i = 0; i < num_cores; ++i) {

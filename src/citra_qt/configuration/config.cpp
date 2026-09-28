@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -231,15 +231,18 @@ void QtConfig::WriteBasicSetting(const Settings::Setting<std::vector<Type>, rang
     }
     qt_config->setValue(name, stringList);
 }
-// Explicit u16 definition: Qt would store it as QMetaType otherwise, which is not human-readable
-template <>
-void QtConfig::WriteBasicSetting(const Settings::Setting<u16>& setting) {
-    const QString name = QString::fromStdString(setting.GetLabel());
-    const u16& value = setting.GetValue();
-    if (global)
-        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
-    qt_config->setValue(name, static_cast<u32>(value));
-}
+
+// Promote configuration types into simpler types so that Qt does not implicitly convert
+// configuration values into a QMetaType and ensures the ini files are human-readable
+template <typename T>
+using config_promoted_t = std::conditional_t<
+    // Preserve bools
+    std::is_same_v<T, bool>, bool,
+    // Signed/Unsigned integers get promoted to s64/u64
+    std::conditional_t<std::is_integral_v<T>,
+                       std::conditional_t<std::is_signed_v<T>, std::int64_t, std::uint64_t>,
+                       // Otherwise, leave the type unchanged
+                       T>>;
 
 template <typename Type, bool ranged>
 void QtConfig::WriteBasicSetting(const Settings::Setting<Type, ranged>& setting) {
@@ -248,9 +251,11 @@ void QtConfig::WriteBasicSetting(const Settings::Setting<Type, ranged>& setting)
     if (global)
         qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
     if constexpr (std::is_enum_v<Type>) {
-        qt_config->setValue(name, static_cast<std::underlying_type_t<Type>>(value));
+        using TypeU = std::underlying_type_t<Type>;
+        qt_config->setValue(
+            name, QVariant::fromValue<config_promoted_t<TypeU>>(static_cast<TypeU>(value)));
     } else {
-        qt_config->setValue(name, QVariant::fromValue(value));
+        qt_config->setValue(name, QVariant::fromValue<config_promoted_t<Type>>(value));
     }
 }
 
@@ -483,6 +488,7 @@ void QtConfig::ReadCoreValues() {
 
     if (global) {
         ReadBasicSetting(Settings::values.use_cpu_jit);
+        ReadBasicSetting(Settings::values.use_fastinterp);
         ReadBasicSetting(Settings::values.delay_start_for_lle_modules);
     }
 
@@ -524,7 +530,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.instant_debug_log);
     ReadBasicSetting(Settings::values.enable_rpc_server);
     ReadBasicSetting(Settings::values.toggle_unique_data_console_type);
-    ReadBasicSetting(Settings::values.break_on_unmapped_memory_access);
+    ReadBasicSetting(Settings::values.enable_exception_handler);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -1080,6 +1086,7 @@ void QtConfig::SaveCoreValues() {
 
     if (global) {
         WriteBasicSetting(Settings::values.use_cpu_jit);
+        WriteBasicSetting(Settings::values.use_fastinterp);
         WriteBasicSetting(Settings::values.delay_start_for_lle_modules);
     }
 
@@ -1115,7 +1122,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.instant_debug_log);
     WriteBasicSetting(Settings::values.enable_rpc_server);
     WriteBasicSetting(Settings::values.toggle_unique_data_console_type);
-    WriteBasicSetting(Settings::values.break_on_unmapped_memory_access);
+    WriteBasicSetting(Settings::values.enable_exception_handler);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {

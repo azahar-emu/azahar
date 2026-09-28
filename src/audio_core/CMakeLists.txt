@@ -9,6 +9,8 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     hle/common.h
     hle/decoder.cpp
     hle/decoder.h
+    hle/effects.cpp
+    hle/effects.h
     hle/filter.cpp
     hle/filter.h
     hle/hle.cpp

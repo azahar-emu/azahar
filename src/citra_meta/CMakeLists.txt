@@ -52,11 +52,12 @@ endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
     # TODO: Do this for all executables, not just citra_meta
-    # TODO: Don't hardcode MXE directory to root?
+    # TODO: Don't hardcode MXE directory?
     set(dllwalker_command "${CMAKE_SOURCE_DIR}/externals/dllwalker/dllwalker.rb"
                           $<TARGET_FILE:citra_meta>
-                          /mxe/usr/x86_64-w64-mingw32.shared/bin/
-                          /mxe/usr/x86_64-w64-mingw32.shared/qt6/bin/)
+                          /opt/mxe/usr/x86_64-w64-mingw32.shared/bin/
+                          /opt/mxe/usr/x86_64-w64-mingw32.shared/qt6/bin/
+                          /opt/mxe/usr/x86_64-w64-mingw32.shared/x86_64-w64-mingw32/bin/)
     set(dll_list_filename "${CMAKE_CURRENT_BINARY_DIR}/required_dlls_list.txt")
     add_custom_command(TARGET citra_meta POST_BUILD
         COMMAND ${dllwalker_command} > ${dll_list_filename}
@@ -64,7 +65,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
     add_custom_command(TARGET citra_meta POST_BUILD
         COMMAND cat ${dll_list_filename} | xargs -I {} ${CMAKE_COMMAND} -E copy {} $<TARGET_FILE_DIR:citra_meta>
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:citra_meta>/plugins/"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory /mxe/usr/x86_64-w64-mingw32.shared/qt6/plugins/ "$<TARGET_FILE_DIR:citra_meta>/plugins/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory /opt/mxe/usr/x86_64-w64-mingw32.shared/qt6/plugins/ "$<TARGET_FILE_DIR:citra_meta>/plugins/"
         COMMAND_EXPAND_LISTS
         DEPENDS ${dll_list_filename}
     )
@@ -105,10 +106,6 @@ endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra_meta PRIVATE precompiled_headers.h)
-endif()
-
-if (SSE42_COMPILE_OPTION)
-    target_compile_definitions(citra_meta PRIVATE CITRA_HAS_SSE42)
 endif()
 
 # Bundle in-place on MSVC so dependencies can be resolved by builds.

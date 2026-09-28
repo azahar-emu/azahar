@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -32,25 +32,47 @@ public:
     }
 
     static constexpr Float<M, E> FromRaw(u32 hex) {
+        constexpr s32 bias = 127 - ((1 << (E - 1)) - 1);
+
         Float<M, E> res;
 
-        const s32 width = M + E + 1;
-        const s32 bias = 128 - (1 << (E - 1));
-        s32 exponent = (hex >> M) & ((1 << E) - 1);
-        const u32 mantissa = hex & ((1 << M) - 1);
-        const u32 sign = (hex >> (E + M)) << 31;
+#ifdef __FLT16_MANT_DIG__
+        if constexpr (M == 10 && E == 5) {
+            res.value = std::bit_cast<_Float16>(static_cast<u16>(hex));
+            return res;
+        }
+#endif
 
-        if (hex & ((1 << (width - 1)) - 1)) {
-            if (exponent == (1 << E) - 1)
-                exponent = 255;
-            else
-                exponent += bias;
-            hex = sign | (mantissa << (23 - M)) | (exponent << 23);
-        } else {
-            hex = sign;
+        s32 exponent = (hex >> M) & EXPONENT_MASK;
+        u32 mantissa = hex & MANTISSA_MASK;
+        const u32 fp32_sign = (hex >> (E + M)) << 31;
+
+        if (exponent == 0 && mantissa == 0) {
+            // Zero
+            hex = fp32_sign;
+        } else [[likely]] {
+            if (exponent == 0) {
+                // PICA200 flushes denormals, but in our case, we want these values to be converted
+                // into 32-bit floats in a lossless way
+                // Denormals might map to normal values in fp32 and must be renormalized to have the
+                // exact same value
+                exponent = bias + 1;
+                while ((mantissa & (1 << M)) == 0) {
+                    exponent--;
+                    mantissa <<= 1;
+                }
+                mantissa &= MANTISSA_MASK;
+                hex = fp32_sign | (exponent << 23) | (mantissa << (23 - M));
+            } else if (exponent == EXPONENT_MASK) {
+                // Inf or NaN
+                hex = fp32_sign | (0xFF << 23) | (mantissa << (23 - M));
+            } else [[likely]] {
+                // Normal
+                hex = fp32_sign | ((bias + exponent) << 23) | (mantissa << (23 - M));
+            }
         }
 
-        std::memcpy(&res.value, &hex, sizeof(float));
+        res.value = std::bit_cast<float>(hex);
 
         return res;
     }
@@ -153,7 +175,6 @@ private:
     }
 };
 
-using f31 = Pica::Float<23, 7>;
 using f24 = Pica::Float<16, 7>;
 using f20 = Pica::Float<12, 7>;
 using f16 = Pica::Float<10, 5>;

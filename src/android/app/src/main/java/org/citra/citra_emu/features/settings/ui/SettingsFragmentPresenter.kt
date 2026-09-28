@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -1910,6 +1910,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.cpu_jit_description,
                     BooleanSetting.CPU_JIT.key,
                     BooleanSetting.CPU_JIT.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.USE_FASTINTERP,
+                    R.string.use_fastinterp,
+                    R.string.use_fastinterp_description,
+                    BooleanSetting.USE_FASTINTERP.key,
+                    BooleanSetting.USE_FASTINTERP.defaultValue
                 )
             )
             add(

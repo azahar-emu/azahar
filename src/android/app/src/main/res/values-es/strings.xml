@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_disclaimer">Este software ejecutará aplicaciones para la consola portátil Nintendo 3DS. No se incluyen juegos.\n\nAntes de comenzar con la emulación, seleccione una carpeta para almacenar los datos de usuario de Azahar en.\n\nQué es ésto:\n<a href='https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage'>Wiki - Datos de usuario de Azahar Android y almacenamiento</a></string>
     <string name="app_notification_channel_description">Notificaciones del emulador 3DS Azahar</string>
     <string name="app_notification_running">Azahar está ejecutándose</string>
     <string name="app_game_install_description">A continuación, deberá seleccionar una Carpeta de Aplicaciones. Azahar mostrará todas las ROM de 3DS de la carpeta seleccionada en la aplicación.\n\nLas ROM CIA, actualizaciones y los DLC deberán instalarse por separado haciendo clic en el icono de la carpeta y seleccionando Instalar CIA.</string>
@@ -31,6 +32,15 @@
     <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>
     <string name="theme_and_color_description">Modifica el aspecto de la app</string>
     <string name="install_cia_title">Instalar CIA</string>
+
+    <!-- Network Settings-->
+    <string name="preferences_network">Red</string>
+    <string name="web_api_url">URL de API Web</string>
+    <string name="web_api_url_description">URL de API Web para la funcionalidad de salas multijugador públicas</string>
+    <string name="network_token">Token de Red</string>
+    <string name="network_token_description">Token de Red para la funcionalidad de salas multijugador públicas</string>
+    <string name="username_uses_system">Este campo está enlazado al nombre de usuario del sistema 3DS.</string>
+    <string name="username_invalid">El nombre de usuario no es válido. Debe tener entre 4 y 20 caracteres alfanuméricos.</string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleccionar driver de GPU</string>
@@ -84,12 +94,14 @@
     <string name="warning_skip">Saltar</string>
     <string name="warning_cancel">Cancelar</string>
     <string name="select_citra_user_folder">Seleccionar Carpeta de Usuario</string>
+    <string name="select_citra_user_folder_description"><![CDATA[Selecciona tu directorio de <a href=\"https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage\">datos de usuario</a> con el botón de abajo.]]></string>
     <string name="select_which_user_directory_to_use">Parece que tienes directorios de usuario configurados tanto para Lime3DS como para Azahar. Probablemente se deba a que actualizaste a Azahar y, cuando se te pidió, elegiste un directorio de usuario diferente al que usabas para Lime3DS.\n\nEsto puede haberte hecho pensar que perdiste partidas guardadas u otras configuraciones; te pedimos disculpas si eso ocurrió.\n\n¿Prefieres volver a usar tu directorio de usuario original de Lime3DS, restaurando la configuración y las partidas guardadas de Lime3DS, o conservar tu directorio de usuario actual de Azahar?\n\nNinguno de los directorios se eliminará, independientemente de tu elección, y puedes cambiar libremente entre ellos usando la opción \"Seleccionar carpeta de usuario\".</string>
     <string name="keep_current_azahar_directory">Mantener el directorio Azahar actual</string>
     <string name="use_prior_lime3ds_directory">Usar el directorio de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
     <string name="cannot_skip">No puedes saltarte el configuración de la carpeta de usuario</string>
     <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, seleccione un directorio y luego puede continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Has perdido los permisos de escritura en tu <a href="https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage">directorio de datos de usuario</a> , donde se guardan las partidas guardadas y otra información. Esto puede ocurrir después de algunas actualizaciones de aplicaciones o de Android. Vuelve a seleccionar el directorio para recuperar los permisos y poder continuar.</string>
     <string name="invalid_selection">Selección no válida</string>
     <string name="invalid_user_directory">La selección del directorio de usuario no es válida.\nVuelve a seleccionar el directorio de usuario, asegurándote de navegar hasta él desde la raíz del almacenamiento del dispositivo.</string>
     <string name="filesystem_permission_lost">Azahar ha perdido el permiso para administrar archivos en este dispositivo. Esto puede ocurrir después de alguna actualización de la aplicación o de Android. Vuelve a conceder este permiso en la siguiente pantalla para seguir usando la aplicación.</string>
@@ -138,11 +150,15 @@
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercambiar Pantallas</string>
     <string name="button_turbo">Turbo</string>
+    <string name="button_combo">Botón Combo</string>
     <string name="input_message_analog_only">¡Este control debe asignarse a un stick analógico del mando o a un eje del Pad de Control!</string>
     <string name="input_message_button_only">¡Este control debe asignarse a un botón del mando!</string>
     <string name="turbo_limit_hotkey">Velocidad Turbo</string>
     <string name="turbo_enabled_toast">Velocidad Turbo Activada</string>
     <string name="turbo_disabled_toast">Velocidad Turbo Desactivada</string>
+    <string name="combo_button_settings">Configurar Botón Combo</string>
+    <string name="combo_button_settings_description">Selecciona qué botones se activan por el Botón Combo.</string>
+
     <!-- System files strings -->
     <string name="setup_system_files">Archivos de Sistema</string>
     <string name="setup_system_files_description">Realizar operaciones de archivos del sistema, como instalar archivos del sistema o iniciar el Menú Home</string>
@@ -208,6 +224,9 @@
     <string name="storage">Almacenamiento</string>
     <string name="compress_cia_installs">Comprimir el contenido de CIAs instalados</string>
     <string name="compress_cia_installs_description">Comprime el contenido de archivos CIA cuando son instalados a la SD emulada. Solo afecta contenido CIA instalado con esta opción activada.</string>
+    <string name="async_fs_operations">Operaciones de sistema de archivos asíncronas</string>
+    <string name="async_fs_operations_description">Permite que los accesos al sistema de archivos emulado sean asíncronos. Reduce considerablemente el tartamudeo relacionado con el sistema de archivos, pero puede aumentar ligeramente los tiempos de carga.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>
     <string name="outer_left_camera">Cámara izquierda externa</string>
@@ -239,9 +258,13 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="texture_filter_description">Mejora los gráficos visuales de las aplicaciones aplicando un filtro a las texturas. Los filtros soportados son Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, y MMPX.</string>
     <string name="delay_render_thread">Atrasar hilo de renderizado del juego</string>
     <string name="delay_render_thread_description">Retrasa el hilo de renderización del juego cuando envía datos a la GPU. Ayuda con los problemas de rendimiento en las (muy pocas) aplicaciones de fps dinámicos.</string>
+    <string name="simulate_3ds_gpu_timings">Simular Tiempos de GPU de 3DS</string>
+    <string name="simulate_3ds_gpu_timings_description">Retrasa los eventos de finalización de la GPU según las mediciones tomadas del hardware real, para que los juegos tengan mediciones de tiempo de GPU más realistas. Ayuda a estabilizar los juegos de FPS dinámicos. Deshabilitar esta función puede mejorar el rendimiento en algunos casos excepcionales, pero a costa de la estabilidad.</string>
     <string name="advanced">Avanzado</string>
     <string name="texture_sampling_name">Muestreo de Texturas</string>
     <string name="texture_sampling_description">Sobreescribe el filtro de muestreo usado en juegos. Puede ser útil en ciertos casos con juegos con bajo rendimiento al subir la resolución. Si no estás seguro, pónlo en Controlado por Juego</string>
+    <string name="use_skip_duplicate_frames">Omitir Fotogramas Duplicados</string>
+    <string name="use_skip_duplicate_frames_description">Omite la presentación de fotogramas que no son únicos. Además, permite que las herramientas externas de generación de fotogramas funcionen correctamente con juegos a 30 fps.</string>
     <string name="shaders_accurate_mul">Multiplicación Precisa</string>
     <string name="shaders_accurate_mul_description">Usa multiplicaciones más precisas en los sombreados de hardware, que podrían arreglar ciertos bugs gráficos. Cuando se active, el rendimiento se reducirá.</string>
     <string name="asynchronous_gpu">Activar Emulación Asíncrona de la GPU</string>
@@ -269,6 +292,14 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="internal_resolution_setting_8x">8x Nativa (3200x1920)</string>
     <string name="internal_resolution_setting_9x">9x Nativa (3600x2160)</string>
     <string name="internal_resolution_setting_10x">10x Nativa (4000x2400)</string>
+    <string name="internal_resolution_setting_11x">11x Nativa (4400x2640)</string>
+    <string name="internal_resolution_setting_12x">12x Nativa (4800x2880)</string>
+    <string name="internal_resolution_setting_13x">13x Nativa (5200x3120)</string>
+    <string name="internal_resolution_setting_14x">14x Nativa (5600x3360)</string>
+    <string name="internal_resolution_setting_15x">15x Nativa (6000x3600)</string>
+    <string name="internal_resolution_setting_16x">16x Nativa (6400x3840)</string>
+    <string name="internal_resolution_setting_17x">17x Nativa (6800x4080)</string>
+    <string name="internal_resolution_setting_18x">18x Nativa (7200x4320)</string>
     <string name="performance_warning">¡Desactivar esta opción reducirá la velocidad de emulación! Para obtener la mejor experiencia, se recomienda que se mantenga activada.</string>
     <string name="debug_warning">Aviso: Modificar estas configuraciones reducirán la velocidad de emulación.</string>
     <string name="stereoscopy">Estereoscopía</string>
@@ -311,6 +342,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="audio_stretch_description">Extiende el audio para reducir los parones. Cuando se active, la latencia de audio se incrementará y reducirá un poco el rendimiento.</string>
     <string name="realtime_audio">Activar audio en tiempo real</string>
     <string name="realtime_audio_description">Ajusta la velocidad de reproducción de audio para compensar las caídas en la velocidad de emulación de cuadros. Esto significa que el audio se reproducirá a velocidad completa incluso cuando la velocidad de cuadros del juego sea baja. Puede causar problemas de desincronización de audio.</string>
+    <string name="simulate_headphones_plugged">Simular Auriculares Conectados</string>
+    <string name="simulate_headphones_plugged_description">Simula si los auriculares están conectados en el sistema 3DS emulado.</string>
     <string name="audio_input_type">Dispositivo de entrada de audio</string>
     <string name="sound_output_mode">Modo de salida del audio</string>
 
@@ -380,12 +413,16 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="reset_setting_confirmation">¿Quiere reiniciar esta configuración a su valor por defecto?</string>
     <string name="setting_not_editable">No puedes editarlo ahora</string>
     <string name="setting_disabled">Configuración deshabilitada</string>
+    <string name="setting_disabled_description_incompatible_setting">Esta opción está desactivada actualmente porque otra configuración no tiene el valor adecuado.</string>
+    <string name="setting_disabled_description_angle">No se puede cambiar el renderizador porque el dispositivo está utilizando ANGLE para OpenGL, que actualmente es incompatible con Azahar. Se utilizará Vulkan.</string>
     <string name="setting_not_editable_description">Esta opción no puede cambiarse mientras se está ejecutando un juego.</string>
     <string name="auto_select">Auto-elegir</string>
     <string name="start">Iniciar</string>
     <string name="cancelling">Cancelando...</string>
     <string name="visibility">Visibilidad</string>
     <string name="information">Información</string>
+    <string name="refresh">Actualizar</string>
+
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleccionar Directorio de Juego</string>
 
@@ -405,9 +442,39 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="preferences_theme">Tema y Color</string>
     <string name="preferences_layout">Estilo</string>
 
-    <string name="loader_error_encrypted">Tu ROM está encriptada</string>
+    <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Error cargando la aplicación</string>
+    <string name="loader_error_invalid_format">Formato de aplicación inválido</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[El formato de la aplicación no está soportado.<br>Por favor asegúrate de usar uno de los formatos compatibles:<ul><li>Imagenes de cartucho:<b>.cci/.zcci/.3ds</b></li><li>Archivos instalables:<b>.cia/.zcia</b></li><li>Títulos Homebrew:<b>.3dsx/.z3dsx</b></li><li>Contenedores NCCH:<b>.cxi/.zcxi/.app</b></li><li>Archivos ELF:<b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Modo de sistema no válido</string>
+    <string name="loader_error_invalid_system_mode_description">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
+    <string name="loader_error_applying_patches">Error al aplicar parches</string>
+    <string name="loader_error_applying_patches_description">Un error genérico ha ocurrido al intentar aplicar un parche a la aplicación. Por favor comprueba el log para más detalles.</string>
+    <string name="loader_error_patch_wrong_application">No se pudo aplicar un parche porque está diseñado para otra aplicación. Por favor comprueba que estés usando parches para la aplicación correcta, incluyendo región y versión.</string>
+    <string name="loader_error_encrypted">Tu ROM está cifrada</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar no admite aplicaciones cifradas. Lee nuestra <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">entrada del blog</a> para obtener más información.]]></string>
     <string name="loader_error_file_not_found">El archivo ROM no existe</string>
     <string name="no_game_present">¡No hay ningún juego iniciable!</string>
+    <string name="invalid_rom">ROM no válido</string>
+    <string name="loader_error_generic">Se produjo un error al cargar el ROM: \"%s (%d)\"</string>
+    <string name="core_error_success">Éxito</string>
+    <string name="core_error_not_initialized">No inicializado</string>
+    <string name="core_error_get_loader">El cargador no se ha encontrado, tipo de archivo incompatible</string>
+    <string name="core_error_system_mode">Error al analizar el archivo</string>
+    <string name="core_error_loader">Fallo de cargador genérico </string>
+    <string name="core_error_loader_encrypted">Archivo cifrado</string>
+    <string name="core_error_loader_invalid_format">Archivo corrupto</string>
+    <string name="core_error_loader_gba_title">Archivo es un título de GBA</string>
+    <string name="core_error_loader_error_patches">Error al aplicar parches</string>
+    <string name="core_error_loader_patches_invalid_title">Los parches son para otra aplicación</string>
+    <string name="core_error_system_files">Faltan Archivos de Sistema</string>
+    <string name="core_error_savestate">Guardado de estado falló</string>
+    <string name="core_error_artic_disconnected">Artic Base se desconectó</string>
+    <string name="core_error_n3ds_application">El archivo es una aplicación de New 3DS</string>
+    <string name="core_error_core_exception_raised">Se produjo una excepción en el núcleo</string>
+    <string name="core_error_savestate_build_mismatch">Incompatibilidad de versión del estado guardado</string>
+    <string name="core_error_shutdown_requested">Se solicitó el cierre</string>
+    <string name="core_error_unknown">Error desconocido</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Pulsa Atrás para acceder al menú.</string>
@@ -437,6 +504,11 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_aspect_ratio">Relación de Aspecto</string>
     <string name="emulation_switch_screen_layout">Estilo de Pantalla Apaisada</string>
     <string name="emulation_switch_portrait_layout">Estilo de Pantalla de Perfil</string>
+    <string name="emulation_secondary_display_enable">Activar la pantalla secundaria</string>
+    <string name="emulation_secondary_display_enable_description">Si está desactivado, Azahar permitirá que Android gestione las pantallas conectadas. Si está activado y hay varias pantallas conectadas, puede seleccionar cuál utilizará Azahar en el menú rápido.</string>
+    <string name="emulation_switch_secondary_layout">Estilo de Pantalla Secundaria</string>
+    <string name="emulation_secondary_display_management">Pantalla Secundaria</string>
+    <string name="emulation_select_secondary_display">Elige Pantalla</string>
     <string name="emulation_switch_secondary_layout_description">El estilo de la pantalla secundaria conectada, con cable o inalámbrica (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Retrato</string>
@@ -445,6 +517,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_screen_layout_hybrid">Pantallas híbridas</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Por defecto</string>
+    <string name="emulation_secondary_display_opposite">Pantalla Opuesta</string>
     <string name="emulation_screen_layout_custom">Estilo personalizado</string>
     <string name="bg_color">Color de fondo</string>
     <string name="bg_color_description">El color que aparece detrás de las pantallas durante la emulación, representado como un valor RGB.</string>
@@ -547,9 +620,10 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="save_load_error">Error de guardado/carga</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
-    <string name="unsupported_encrypted">Aplicación encriptada no soportada</string>
+    <string name="unsupported_encrypted">Aplicación cifrada no soportada</string>
     <string name="invalid_system_mode">Modo de sistema no válido</string>
     <string name="invalid_system_mode_message">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
+    <string name="savestate_build_mismatch_message"><![CDATA[No se pudo cargar el estado guardado porque se creó con una versión diferente de Azahar:<br/><b>Azahar %1$s</b>.<br/><br/>Por favor lee nuestro blog <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">entendiendo estados guardados</a> para más información.<br/><br/>Para recuperar tu progreso, vuelve a la versión <b>Azahar %1$s</b>, carga este estado guardado y utiliza la función de guardado integrada de la aplicación emulada.]]></string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
@@ -578,9 +652,11 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="create_shortcut">Crear atajo</string>
     <string name="shortcut_name_empty">El nombre del atajo no puede estar vacío</string>
     <string name="shortcut_image_stretch_toggle">Alargar para ajustar la imagen</string>
+    <string name="game_context_region">Región:</string>
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Archivo:</string>
     <string name="game_context_type">Tipo:</string>
+    <string name="game_context_playtime">Tiempo de juego:</string>
     <string name="game_context_insert">Insertar Cartucho</string>
     <string name="game_context_eject">Expulsar Cartucho</string>
 
@@ -639,11 +715,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="cia_install_success">\"%s\" se ha instalado con éxito</string>
     <string name="cia_install_error_aborted">La instalación de \"%s\" ha sido abortada.\n Por favor, mira el log para más información.</string>
     <string name="cia_install_error_invalid">\"%s\" no es un CIA válido.</string>
-    <string name="cia_install_error_encrypted">\"%s\" debe ser desencriptado antes de ser usado en Azahar. Se necesita una 3DS real.</string>
+    <string name="cia_install_error_encrypted">\"%s\" debe ser descifrado antes de ser usado en Azahar. Se necesita una 3DS real.</string>
     <string name="cia_install_error_unknown">Ha ocurrido un error desconocido mientras se instalaba \"%s\".\n Por favor, mira el log para más detalles.</string>
 
-    <!-- Memory Sizes -->
-    <string name="memory_formatted">%1$s %2$s</string>
     <string name="memory_byte">Byte</string>
     <string name="memory_byte_shorthand">B</string>
     <string name="memory_kilobyte">KB</string>
@@ -670,15 +744,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">Fondos Oscuros</string>
     <string name="use_black_backgrounds_description">Cuando uses el tema oscuro, se aplicarán fondos oscuros.</string>
-
-    <!-- Region names -->
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">USA</string>
-    <string name="system_region_eur">EUR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
 
     <!-- Language names -->
     <string name="language_japanese">Japonés (日本語)</string>
@@ -719,17 +784,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="anaglyph">Anáglifo</string>
     <string name="interlaced">Entrelazado</string>
     <string name="reverse_interlaced">Entrelazado inverso</string>
-
-    <!-- Graphics API names -->
-    <string name="opengles">OpenGLES</string>
-    <string name="vulkan">Vulkan</string>
-
-    <!-- Texture filter names -->
-    <string name="anime4k">Anime4K</string>
-    <string name="bicubic">Bicubic</string>
-    <string name="scaleforce">ScaleForce</string>
-    <string name="xbrz">xBRZ</string>
-    <string name="mmpx">MMPX</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Controlado por Juego</string>
@@ -876,6 +930,14 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="vatican_city">Ciudad del Vaticano</string>
     <string name="bermuda">Bermudas</string>
 
+    <!-- Regions (Japan, Australia, China and Taiwan are above) -->
+    <string name="north_america">América del Norte</string>
+    <string name="europe">Europa</string>
+    <string name="korea">Korea</string>
+    <string name="region_free">Sin bloqueo de región</string>
+    <string name="invalid_region">Región no válida</string>
+    <string name="region_get_error">ERROR POR FAVOR REPORTE</string>
+
     <!-- Months -->
     <string name="january">Enero</string>
     <string name="february">Febrero</string>
@@ -919,4 +981,96 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="decompress_failed"> Falló la descompresión.</string>
     <string name="compress_decompress_installed_app">Las aplicaciones ya instaladas no se pueden comprimir ni descomprimir.</string>
 
-  </resources>
+  <!-- Multiplayer -->
+    <string name="multiplayer">Multijugador</string>
+    <string name="multiplayer_description">Organiza tu propia sala o únete a una ya existente para jugar con otras personas.</string>
+    <string name="multiplayer_room_title">Sala: %1$s</string>
+    <string name="multiplayer_console_id">ID de Consola:  %1$s</string>
+    <string name="multiplayer_create_room">Crear</string>
+    <string name="multiplayer_join_room">Unirse</string>
+    <string name="multiplayer_public_room">Buscar Salas Públicas</string>
+    <string name="multiplayer_username">Nombre de usuario</string>
+    <string name="multiplayer_ip_address">Dirección IP</string>
+    <string name="multiplayer_ip_port">Puerto</string>
+    <string name="multiplayer_create_room_success">¡Sala creada correctamente!</string>
+    <string name="multiplayer_join_room_success">¡Unido a la sala correctamente!</string>
+    <string name="multiplayer_create_room_failed">¡Fallo al crear un sala!</string>
+    <string name="multiplayer_join_room_failed">Falló la entrada a la sala</string>
+    <string name="multiplayer_input_invalid">Dirección inválida o el nombre es demasiado corto</string>
+    <string name="multiplayer_port_invalid">¡Puerto no válido!</string>
+    <string name="multiplayer_exit_room">Salir de la sala</string>
+    <string name="multiplayer_network_error">Error de red</string>
+    <string name="multiplayer_lost_connection">Conexión perdida</string>
+    <string name="multiplayer_name_collision">Colisión de nombre</string>
+    <string name="multiplayer_mac_collision">Colisión de MAC</string>
+    <string name="multiplayer_console_id_collision">Colisión de ID de consola</string>
+    <string name="multiplayer_wrong_version">Versión incorrecta</string>
+    <string name="multiplayer_wrong_password">Contraseña incorrecta</string>
+    <string name="multiplayer_could_not_connect">No se pudo conectar</string>
+    <string name="multiplayer_room_is_full">La sala está llena</string>
+    <string name="multiplayer_host_banned">El host te ha baneado</string>
+    <string name="multiplayer_permission_denied">Permiso denegado</string>
+    <string name="multiplayer_no_such_user">No existe el usuario</string>
+    <string name="multiplayer_already_in_room">Ya unido en la sala</string>
+    <string name="multiplayer_create_room_error">Fallo al crear una sala</string>
+    <string name="multiplayer_host_kicked">El host te ha expulsado</string>
+    <string name="multiplayer_unknown_error">Error desconocido</string>
+    <string name="multiplayer_room_uninitialized">Sala no inicializada</string>
+    <string name="multiplayer_room_idle">Sala en espera</string>
+    <string name="multiplayer_room_joining">Entrando en la sala</string>
+    <string name="multiplayer_room_joined">Unido a la sala</string>
+    <string name="multiplayer_room_moderator">Moderador de la sala</string>
+    <string name="multiplayer_member_join">%1$s se ha unido</string>
+    <string name="multiplayer_member_leave">%1$s se ha ido</string>
+    <string name="multiplayer_member_kicked">%1$s expulsado</string>
+    <string name="multiplayer_member_banned">%1$s baneado</string>
+    <string name="multiplayer_address_unbanned">Dirección desbaneada</string>
+    <string name="multiplayer_kick_member">Echar</string>
+    <string name="multiplayer_chat_input_hint">Enviar mensajes……</string>
+    <string name="multiplayer_password">Contraseña</string>
+    <string name="original_button_text">Entrar</string>
+    <string name="disabled_button_text">Entrando...</string>
+    <string name="multiplayer_room_name">Nombre de Sala</string>
+    <string name="multiplayer_room_name_invalid">El nombre de la sala debe tener entre 3 y 20 caracteres</string>
+    <string name="multiplayer_max_players">Jugadores Máximos (16)</string>
+    <string name="multiplayer_max_players_value">Jugadores Máximos: %d</string>
+    <string name="multiplayer_chat">Chat</string>
+    <string name="multiplayer_more_options">Más Opciones</string>
+    <string name="multiplayer_ip_copied">Dirección IP copiada al portapapeles</string>
+    <string name="multiplayer_server_address">Dirección del servidor</string>
+    <string name="chat">Chat</string>
+    <string name="type_message">Escribe un mensaje……</string>
+    <string name="send">Enviar</string>
+    <string name="send_message">Enviar Mensaje</string>
+    <string name="multiplayer_moderation">Moderación</string>
+    <string name="multiplayer_moderation_title">Lista de Baneos</string>
+    <string name="multiplayer_no_bans">No hay usuarios baneados</string>
+    <string name="multiplayer_unban_title">Desbanear Usuario</string>
+    <string name="multiplayer_unban">Desbanear</string>
+    <string name="multiplayer_unban_message">¿Estás seguro de querer desbanear a %1$s?</string>
+    <string name="multiplayer_ban">Banear Usuario</string>
+    <string name="multiplayer_room_browser">Salas Públicas</string>
+    <string name="multiplayer_no_rooms_found">No se han encontrado salas públicas</string>
+    <string name="multiplayer_password_required">Contraseña Requerida</string>
+    <string name="multiplayer_game">Juego</string>
+    <string name="multiplayer_no_game_info">Cualquier juego</string>
+    <string name="multiplayer_password_protected">Sala protegida por contraseña</string>
+    <string name="multiplayer_hide_full_rooms">Ocultar Salas Llenas</string>
+    <string name="multiplayer_hide_empty_rooms">Ocultar Salas Vacías</string>
+    <string name="multiplayer_tap_refresh_to_check_again">Pulsa refrescar para comprobar de nuevo</string>
+    <string name="multiplayer_search_public_lobbies">Buscar Salas Públicas...</string>
+    <string name="multiplayer_game_name">Juegos Preferidos</string>
+    <string name="prefered_game_name">Juego Preferido</string>
+    <string name="multiplayer_no_game">No se han encontrado juegos</string>
+    <string name="no_preference">Sin Preferencia</string>
+
+    <string name="update_available">Actualización Disponible</string>
+    <string name="update_available_description">Hay una nueva versión de Azahar disponible (versión %1$s).\n¿Quieres descargarla?</string>
+    <string name="check_for_updates">Buscar Actualizaciones</string>
+    <string name="check_for_updates_description">Mostrar una notificación cuando haya una actualización disponible para Azahar.</string>
+    <string name="update_check_channel">Canal de Actualización</string>
+    <string name="update_check_channel_description">Canal a usar para comprobar actualizaciones.</string>
+    <string name="update_check_channel_stable">Estable</string>
+    <string name="update_check_channel_prerelease">Prelanzamiento</string>
+
+</resources>

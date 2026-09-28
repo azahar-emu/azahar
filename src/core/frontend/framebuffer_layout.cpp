@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -22,6 +22,44 @@ u32 FramebufferLayout::GetScalingRatio() const {
     } else {
         return static_cast<u32>(((top_screen.GetWidth() - 1) / Core::kScreenTopHeight) + 1);
     }
+}
+
+bool FramebufferLayout::IsWithinTouchscreen(unsigned framebuffer_x, unsigned framebuffer_y) const {
+    if (!bottom_screen_enabled) {
+        return false;
+    }
+
+    const Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
+
+    if (framebuffer_x > width / 2 &&
+        render_3d_mode == Settings::StereoRenderOption::SideBySideFull) {
+        framebuffer_x = static_cast<unsigned>(framebuffer_x - width / 2);
+    }
+
+    // clang-format off
+    // ^- clang-format makes this code look REALLY ugly
+    if (render_3d_mode == Settings::StereoRenderOption::SideBySide) {
+        return (framebuffer_y >= bottom_screen.top &&
+                framebuffer_y < bottom_screen.bottom &&
+                ((framebuffer_x >= bottom_screen.left / 2 &&
+                  framebuffer_x < bottom_screen.right / 2) ||
+                 (framebuffer_x >= (bottom_screen.left / 2) + (width / 2) &&
+                  framebuffer_x < (bottom_screen.right / 2) + (width / 2))));
+    } else if (render_3d_mode == Settings::StereoRenderOption::CardboardVR) {
+        return (framebuffer_y >= bottom_screen.top &&
+                framebuffer_y < bottom_screen.bottom &&
+                ((framebuffer_x >= bottom_screen.left &&
+                  framebuffer_x < bottom_screen.right) ||
+                 (framebuffer_x >= cardboard.bottom_screen_right_eye + (width / 2) &&
+                  framebuffer_x < cardboard.bottom_screen_right_eye +
+                                      bottom_screen.GetWidth() + (width / 2))));
+    } else {
+        return (framebuffer_y >= bottom_screen.top &&
+                framebuffer_y < bottom_screen.bottom &&
+                framebuffer_x >= bottom_screen.left &&
+                framebuffer_x < bottom_screen.right);
+    }
+    // clang-format on
 }
 
 // Finds the largest size subrectangle contained in window area that is confined to the aspect ratio

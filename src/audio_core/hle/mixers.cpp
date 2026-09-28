@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -34,6 +34,8 @@ DspStatus Mixers::Tick(DspConfiguration& config, const IntermediateMixSamples& r
 
     AuxReturn(read_samples);
     AuxSend(write_samples, input);
+
+    ApplyEffects();
 
     MixCurrentFrame();
 
@@ -80,6 +82,26 @@ void Mixers::ParseConfig(DspConfiguration& config) {
         state.output_format = config.output_format;
         LOG_TRACE(Audio_DSP, "mixers output_format = {}",
                   static_cast<std::size_t>(config.output_format));
+    }
+
+    if (config.delay_effect_0_dirty) {
+        config.delay_effect_0_dirty.Assign(0);
+        state.delay_effect[0].ParseConfig(config.delay_effect[0], 0);
+    }
+
+    if (config.delay_effect_1_dirty) {
+        config.delay_effect_1_dirty.Assign(0);
+        state.delay_effect[1].ParseConfig(config.delay_effect[1], 1);
+    }
+
+    if (config.reverb_effect_0_dirty) {
+        config.reverb_effect_0_dirty.Assign(0);
+        state.reverb_effect[0].ParseConfig(config.reverb_effect[0], 0);
+    }
+
+    if (config.reverb_effect_1_dirty) {
+        config.reverb_effect_1_dirty.Assign(0);
+        state.reverb_effect[1].ParseConfig(config.reverb_effect[1], 1);
     }
 
     if (config.headphones_connected_dirty) {
@@ -193,6 +215,13 @@ void Mixers::AuxSend(IntermediateMixSamples& write_samples,
         }
     } else {
         state.intermediate_mix_buffer[2] = input[2];
+    }
+}
+
+void Mixers::ApplyEffects() {
+    for (u32 i = 0; i < 2; i++) {
+        state.delay_effect[i].ProcessFrame(state.intermediate_mix_buffer[i + 1]);
+        state.reverb_effect[i].ProcessFrame(state.intermediate_mix_buffer[i + 1]);
     }
 }
 

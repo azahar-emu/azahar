@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -63,38 +63,6 @@ struct CursorCoordinates {
     }
 };
 
-/// Helper function to check if coordinates are within the touchscreen area
-/// (uses the same logic as EmuWindow::IsWithinTouchscreen)
-static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigned framebuffer_x,
-                                unsigned framebuffer_y) {
-    // Note: LibRetro doesn't support SeparateWindows, so we can skip that check
-
-    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
-
-    if (render_3d_mode == Settings::StereoRenderOption::SideBySide ||
-        render_3d_mode == Settings::StereoRenderOption::SideBySideFull) {
-        return (framebuffer_y >= layout.bottom_screen.top &&
-                framebuffer_y < layout.bottom_screen.bottom &&
-                ((framebuffer_x >= layout.bottom_screen.left / 2 &&
-                  framebuffer_x < layout.bottom_screen.right / 2) ||
-                 (framebuffer_x >= (layout.bottom_screen.left / 2) + (layout.width / 2) &&
-                  framebuffer_x < (layout.bottom_screen.right / 2) + (layout.width / 2))));
-    } else if (render_3d_mode == Settings::StereoRenderOption::CardboardVR) {
-        return (framebuffer_y >= layout.bottom_screen.top &&
-                framebuffer_y < layout.bottom_screen.bottom &&
-                ((framebuffer_x >= layout.bottom_screen.left &&
-                  framebuffer_x < layout.bottom_screen.right) ||
-                 (framebuffer_x >= layout.cardboard.bottom_screen_right_eye + (layout.width / 2) &&
-                  framebuffer_x < layout.cardboard.bottom_screen_right_eye +
-                                      layout.bottom_screen.GetWidth() + (layout.width / 2))));
-    } else {
-        return (framebuffer_y >= layout.bottom_screen.top &&
-                framebuffer_y < layout.bottom_screen.bottom &&
-                framebuffer_x >= layout.bottom_screen.left &&
-                framebuffer_x < layout.bottom_screen.right);
-    }
-}
-
 MouseTracker::MouseTracker() {
     // Create renderer-specific cursor renderer based on current graphics API
     cursor_renderer = nullptr;
@@ -135,55 +103,34 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
     bool wasMoved = false;
 
     if (LibRetro::settings.enable_mouse_touchscreen) {
-        // Check mouse input
         state |= LibRetro::CheckInput(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_LEFT);
-
-        // Read in and convert pointer values to absolute values on the canvas
-        auto pointerX = LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_X);
-        auto pointerY = LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_Y);
-        auto newX = static_cast<int>((pointerX + 0x7fff) / (float)(0x7fff * 2) * bufferWidth);
-        auto newY = static_cast<int>((pointerY + 0x7fff) / (float)(0x7fff * 2) * bufferHeight);
-
-        // Use mouse pointer movement
-        if ((pointerX != 0 || pointerY != 0) && (newX != lastMouseX || newY != lastMouseY)) {
-            lastMouseX = newX;
-            lastMouseY = newY;
-
-            // Use layout system to validate and map coordinates
-            if (IsWithinTouchscreen(layout, newX, newY)) {
-                x = std::clamp(newX, static_cast<int>(layout.bottom_screen.left),
-                               static_cast<int>(layout.bottom_screen.right)) -
-                    layout.bottom_screen.left;
-                y = std::clamp(newY, static_cast<int>(layout.bottom_screen.top),
-                               static_cast<int>(layout.bottom_screen.bottom)) -
-                    layout.bottom_screen.top;
-            }
-        }
     }
 
     if (LibRetro::settings.enable_touch_touchscreen) {
-        // Check touchscreen input
         state |= LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_PRESSED);
+    }
 
-        // Read in and convert pointer values to absolute values on the canvas
+    if (state == true) {
         auto pointerX = LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_X);
         auto pointerY = LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_Y);
         auto newX = static_cast<int>((pointerX + 0x7fff) / (float)(0x7fff * 2) * bufferWidth);
         auto newY = static_cast<int>((pointerY + 0x7fff) / (float)(0x7fff * 2) * bufferHeight);
 
-        // Use mouse pointer movement
         if ((pointerX != 0 || pointerY != 0) && (newX != lastMouseX || newY != lastMouseY)) {
-            lastMouseX = newX;
-            lastMouseY = newY;
+            if (layout.IsWithinTouchscreen(newX, newY) || isPressed) {
+                lastMouseX = newX;
+                lastMouseY = newY;
 
-            // Use layout system to validate and map coordinates
-            if (IsWithinTouchscreen(layout, newX, newY)) {
                 x = std::clamp(newX, static_cast<int>(layout.bottom_screen.left),
                                static_cast<int>(layout.bottom_screen.right)) -
                     layout.bottom_screen.left;
                 y = std::clamp(newY, static_cast<int>(layout.bottom_screen.top),
                                static_cast<int>(layout.bottom_screen.bottom)) -
                     layout.bottom_screen.top;
+            } else {
+                // If touch was already pressed before going off the edge of the screen, keep it
+                // pressed. Otherwise, ignore the touch entirely.
+                state = false;
             }
         }
     }

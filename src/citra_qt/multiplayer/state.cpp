@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -184,7 +184,7 @@ void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
 void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
     announce_multiplayer_session->Stop();
     QMessageBox::warning(this, tr("Error"),
-                         tr("Failed to update the room information. Please check your Internet "
+                         tr("Failed to update the room information. Please check your internet "
                             "connection and try hosting the room again.\nDebug Message: ") +
                              QString::fromStdString(result.result_string),
                          QMessageBox::Ok);

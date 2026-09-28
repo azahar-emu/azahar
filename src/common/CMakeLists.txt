@@ -32,6 +32,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     error.cpp
     error.h
     expected.h
+    file_derived.cpp
+    file_derived.h
     file_util.cpp
     file_util.h
     hash.h
@@ -96,6 +98,7 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     timer.cpp
     timer.h
     unique_function.h
+    unroll.h
     vector_math.h
     web_util.cpp
     web_util.h

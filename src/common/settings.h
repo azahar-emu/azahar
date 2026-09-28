@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -484,6 +484,7 @@ struct Values {
 
     // Core
     Setting<bool> use_cpu_jit{true, Keys::use_cpu_jit};
+    Setting<bool> use_fastinterp{true, Keys::use_fastinterp};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, Keys::cpu_clock_percentage};
     SwitchableSetting<bool> is_new_3ds{true, Keys::is_new_3ds};
     SwitchableSetting<bool> lle_applets{true, Keys::lle_applets};
@@ -538,7 +539,7 @@ struct Values {
     SwitchableSetting<bool> async_presentation{true, Keys::async_presentation};
     SwitchableSetting<bool> use_hw_shader{true, Keys::use_hw_shader};
     SwitchableSetting<bool> use_disk_shader_cache{true, Keys::use_disk_shader_cache};
-    SwitchableSetting<bool> use_skip_duplicate_frames{true, Keys::use_skip_duplicate_frames};
+    SwitchableSetting<bool> use_skip_duplicate_frames{false, Keys::use_skip_duplicate_frames};
     SwitchableSetting<bool> shaders_accurate_mul{true, Keys::shaders_accurate_mul};
 #ifdef ANDROID // TODO: Fuck this -OS
     SwitchableSetting<bool> use_vsync{false, Keys::use_vsync};
@@ -548,7 +549,7 @@ struct Values {
     SwitchableSetting<bool> use_display_refresh_rate_detection{
         true, Keys::use_display_refresh_rate_detection};
     Setting<bool> use_shader_jit{true, Keys::use_shader_jit};
-    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, Keys::resolution_factor};
+    SwitchableSetting<u32, true> resolution_factor{1, 0, 18, Keys::resolution_factor};
     SwitchableSetting<bool> use_integer_scaling{false, Keys::use_integer_scaling};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, Keys::frame_limit};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};
@@ -659,7 +660,7 @@ struct Values {
     Setting<bool> instant_debug_log{false, Keys::instant_debug_log};
     Setting<bool> enable_rpc_server{false, Keys::enable_rpc_server};
     Setting<bool> toggle_unique_data_console_type{false, Keys::toggle_unique_data_console_type};
-    Setting<bool> break_on_unmapped_memory_access{false, Keys::break_on_unmapped_memory_access};
+    Setting<bool> enable_exception_handler{false, Keys::enable_exception_handler};
 
     // WebService
     Setting<std::string> web_api_url{"", Keys::web_api_url};

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -260,7 +260,8 @@ void RasterizerOpenGL::SyncDrawState() {
     // SyncClipEnabled();
     state.clip_distance[1] = regs.rasterizer.clip_enable != 0;
     // SyncCullMode();
-    state.cull.enabled = regs.rasterizer.cull_mode != Pica::RasterizerRegs::CullMode::KeepAll;
+    state.cull.enabled = regs.rasterizer.cull_mode != Pica::RasterizerRegs::CullMode::KeepAll &&
+                         regs.rasterizer.cull_mode != Pica::RasterizerRegs::CullMode::KeepAll2;
     if (state.cull.enabled) {
         state.cull.front_face =
             regs.rasterizer.cull_mode == Pica::RasterizerRegs::CullMode::KeepClockWise ? GL_CW
@@ -580,9 +581,16 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         return true;
     }
 
+    const auto draw_rect = fb_helper.DrawRect();
+    if (draw_rect.GetArea() == 0) {
+        return true;
+    }
+
     // Bind the framebuffer surfaces
     if (shadow_rendering) {
         state.image_shadow_buffer = framebuffer->Attachment(SurfaceType::Color);
+    } else {
+        state.image_shadow_buffer = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID).Handle();
     }
     state.draw.draw_framebuffer = framebuffer->Handle();
 
@@ -595,7 +603,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // Viewport can have negative offsets or larger dimensions than our framebuffer sub-rect.
     // Enable scissor test to prevent drawing outside of the framebuffer region
-    const auto draw_rect = fb_helper.DrawRect();
     state.scissor.enabled = true;
     state.scissor.x = draw_rect.left;
     state.scissor.y = draw_rect.bottom;

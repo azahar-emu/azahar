@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2022-2025 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -86,7 +86,7 @@ ConfigurePerGame::~ConfigurePerGame() = default;
 void ConfigurePerGame::ResetDefaults() {
     const auto config_file_name = title_id == 0 ? filename : fmt::format("{:016X}", title_id);
     QMessageBox::StandardButton answer = QMessageBox::question(
-        this, tr("Azahar"),
+        this, QStringLiteral("Azahar"),
         tr("Are you sure you want to <b>reset your settings for this application</b>?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 

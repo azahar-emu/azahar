@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -70,7 +70,7 @@ Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {
     return Loader::ResultStatus::Success;
 }
 
-Loader::ResultStatus CIAContainer::Load(FileUtil::IOFile* file) {
+Loader::ResultStatus CIAContainer::Load(FileUtil::IOFileBase* file) {
     if (!file->IsOpen())
         return Loader::ResultStatus::Error;
 

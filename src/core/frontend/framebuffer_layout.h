@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -47,6 +47,15 @@ struct FramebufferLayout {
      * screen.
      */
     u32 GetScalingRatio() const;
+
+    /**
+     * Check if the given x/y coordinates are within the touchpad specified by the framebuffer
+     * layout
+     * @param framebuffer_x Framebuffer x-coordinate to check
+     * @param framebuffer_y Framebuffer y-coordinate to check
+     * @return True if the coordinates are within the touchpad, otherwise false
+     */
+    bool IsWithinTouchscreen(unsigned framebuffer_x, unsigned framebuffer_y) const;
 
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
 

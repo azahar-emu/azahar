@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -244,7 +244,8 @@ class GamesFragment : Fragment() {
         return (
             version.contains("alpha") ||
                 version.contains("beta") ||
-                version.contains("rc")
+                version.contains("rc") ||
+                version.contains("test")
             )
     }
 
