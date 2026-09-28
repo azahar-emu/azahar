@@ -443,6 +443,7 @@ if (ENABLE_VULKAN)
     # spirv-tools
     if(USE_SYSTEM_SPIRV_TOOLS)
         find_package(SPIRV-Tools REQUIRED)
+        set(ALLOW_EXTERNAL_SPIRV_TOOLS ON)
     else()
         set(SPIRV_SKIP_EXECUTABLES ON)
         add_subdirectory(spirv-tools EXCLUDE_FROM_ALL)
