@@ -551,7 +551,7 @@ QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureInput::GetUsedKeyboard
             const Common::ParamPackage modButton{analog_param.Get("modifier", "")};
             if (modButton.Get("code", 0) != 0) {
                 list[QKeySequence(modButton.Get("code", 0))] =
-                    InputBinding{InputBindingType::CModButton, QStringLiteral("Circle Mod")};
+                    InputBinding{InputBindingType::CModButton, tr("Circle Mod")};
             }
         }
     }
