@@ -1,9 +1,10 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <memory>
 #include <string>
+#include "common/file_derived.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/zstd_compression.h"

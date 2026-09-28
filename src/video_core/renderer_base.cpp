@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,7 +18,7 @@ RendererBase::RendererBase(Core::System& system_, Frontend::EmuWindow& window,
 RendererBase::~RendererBase() = default;
 
 u32 RendererBase::GetResolutionScaleFactor() {
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     if (graphics_api == Settings::GraphicsAPI::Software) {
         // Software renderer always render at native resolution
         return 1;

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -51,6 +51,10 @@ protected:
         u32 vs_input_index_min;
         u32 vs_input_index_max;
         u32 vs_input_size;
+
+        bool Invalid() const {
+            return vs_input_index_min == 0 && vs_input_index_max == 0 && vs_input_size == 0;
+        }
     };
 
     /// Retrieve the range and the size of the input vertex

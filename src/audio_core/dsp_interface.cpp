@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -72,13 +72,13 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
 
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
     // Determine if we should stretch based on the current emulation speed.
-    const auto perf_stats = system.GetLastPerfStats();
-    const auto should_stretch = enable_time_stretching && perf_stats.emulation_speed <= 95;
-    if (performing_time_stretching && !should_stretch) {
+    // TODO: Only activate audio stretching when emulation speed goes below 95% threshold
+    //       (see #2487) -OS
+    if (performing_time_stretching && !enable_time_stretching) {
         // If we just stopped stretching, flush the stretcher before returning to normal output.
         flushing_time_stretcher = true;
     }
-    performing_time_stretching = should_stretch;
+    performing_time_stretching = enable_time_stretching.load();
 
     std::size_t frames_written = 0;
     if (performing_time_stretching) {

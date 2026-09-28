@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -148,6 +148,14 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
     std::shared_ptr<Process> previous_process = nullptr;
 
     Core::Timing& timing = kernel.timing;
+
+    // On real ARM11 a thread context switch (exception entry/return) clears the CPU's local
+    // exclusive monitor, so a LDREX reservation never survives a reschedule. The HLE switch
+    // replaces that exception path, so we must clear the reservation explicitly. Without this,
+    // a thread preempted between LDREX and STREX can have its STREX spuriously succeed (or a
+    // stale reservation corrupt another thread's atomic), breaking guest LightLocks/mutexes and
+    // desyncing multi-threaded scheduling.
+    cpu->ClearExclusiveState();
 
     // Save context for previous thread
     if (previous_thread) {

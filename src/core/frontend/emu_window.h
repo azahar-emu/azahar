@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -334,17 +334,6 @@ private:
     }
 
     void CreateTouchState();
-
-    /**
-     * Check if the given x/y coordinates are within the touchpad specified by the framebuffer
-     * layout
-     * @param layout FramebufferLayout object describing the framebuffer size and screen positions
-     * @param framebuffer_x Framebuffer x-coordinate to check
-     * @param framebuffer_y Framebuffer y-coordinate to check
-     * @return True if the coordinates are within the touchpad, otherwise false
-     */
-    bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigned framebuffer_x,
-                             unsigned framebuffer_y);
 
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
 

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2025-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,24 +16,26 @@ object CitraDirectoryUtils {
 
     fun needToUpdateManually(): Boolean {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
-        val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY,"")
-        return (directoryString != "" && limeDirectoryString != "" && directoryString != limeDirectoryString)
+        val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY, "")
+        return (
+            directoryString != "" && limeDirectoryString != "" &&
+                directoryString != limeDirectoryString
+            )
     }
 
     fun attemptAutomaticUpdateDirectory() {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
-        val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY,"")
+        val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY, "")
         if (needToUpdateManually()) {
-            return;
+            return
         }
-       if (directoryString == "" && limeDirectoryString != "") {
+        if (directoryString == "" && limeDirectoryString != "") {
             // Upgrade from Lime3DS to Azahar
-           PermissionsHandler.setCitraDirectory(limeDirectoryString)
+            PermissionsHandler.setCitraDirectory(limeDirectoryString)
             removeLimeDirectoryPreference()
             DirectoryInitialization.resetCitraDirectoryState()
             DirectoryInitialization.start()
-
-       } else if (directoryString != "" && directoryString == limeDirectoryString) {
+        } else if (directoryString != "" && directoryString == limeDirectoryString) {
             // Both the Lime3DS and Azahar directories are the same,
             // so delete the obsolete Lime3DS value.
             removeLimeDirectoryPreference()

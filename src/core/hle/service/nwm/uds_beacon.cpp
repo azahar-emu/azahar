@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -238,12 +238,14 @@ void DecryptBeacon(const NetworkInfo& network_info, std::vector<u8>& buffer) {
  */
 std::vector<u8> GenerateNintendoFirstEncryptedDataTag(const NetworkInfo& network_info,
                                                       const NodeList& nodes) {
-    const std::size_t payload_size =
-        std::min<std::size_t>(EncryptedDataSizeCutoff, nodes.size() * sizeof(NodeInfo));
+    const std::size_t payload_size = std::min<std::size_t>(
+        EncryptedDataSizeCutoff, nodes.size() * sizeof(BeaconNodeInfo) + sizeof(BeaconData));
+
+    const std::size_t tag_length = sizeof(EncryptedDataTag) - sizeof(TagHeader) + payload_size;
 
     EncryptedDataTag tag{};
     tag.header.tag_id = static_cast<u8>(TagId::VendorSpecific);
-    tag.header.length = static_cast<u8>(sizeof(tag) - sizeof(TagHeader) + payload_size);
+    tag.header.length = static_cast<u8>(tag_length);
     tag.oui_type = static_cast<u8>(NintendoTagId::EncryptedData0);
     tag.oui = NintendoOUI;
 
@@ -267,10 +269,11 @@ std::vector<u8> GenerateNintendoFirstEncryptedDataTag(const NetworkInfo& network
 std::vector<u8> GenerateNintendoSecondEncryptedDataTag(const NetworkInfo& network_info,
                                                        const NodeList& nodes) {
     // This tag is only present if the payload is larger than EncryptedDataSizeCutoff (0xFA).
-    if (nodes.size() * sizeof(NodeInfo) <= EncryptedDataSizeCutoff)
+    if (nodes.size() * sizeof(BeaconNodeInfo) + sizeof(BeaconData) <= EncryptedDataSizeCutoff)
         return {};
 
-    const std::size_t payload_size = nodes.size() * sizeof(NodeInfo) - EncryptedDataSizeCutoff;
+    const std::size_t payload_size =
+        (nodes.size() * sizeof(BeaconNodeInfo) + sizeof(BeaconData)) - EncryptedDataSizeCutoff;
 
     const std::size_t tag_length = sizeof(EncryptedDataTag) - sizeof(TagHeader) + payload_size;
 

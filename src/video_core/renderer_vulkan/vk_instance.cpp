@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -400,6 +400,7 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR,
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT, vk::PhysicalDeviceIndexTypeUint8FeaturesEXT,
+        vk::PhysicalDeviceRobustness2FeaturesEXT,
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT,
         vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT,
         vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR>();
@@ -451,7 +452,8 @@ bool Instance::CreateDevice() {
     image_format_list = add_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
     shader_stencil_export = add_extension(VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
     external_memory_host = add_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
-    tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME);
+    tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME, is_moltenvk,
+                                 "function pointer is not exposed by MoltenVK");
     const bool has_timeline_semaphores =
         add_extension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME, is_qualcomm || is_turnip,
                       "it is broken on Qualcomm drivers");
@@ -465,6 +467,7 @@ bool Instance::CreateDevice() {
     const bool has_index_type_uint8 =
         add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME, is_moltenvk,
                       "uint8 index conversion causes memory leaks in MoltenVK");
+    const bool has_robustness2 = add_extension(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
     const bool has_fragment_shader_interlock =
         add_extension(VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME, is_nvidia,
                       "it is broken on Nvidia drivers");
@@ -529,6 +532,7 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{},
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT{},
         vk::PhysicalDeviceIndexTypeUint8FeaturesEXT{},
+        vk::PhysicalDeviceRobustness2FeaturesEXT{},
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT{},
         vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT{},
         vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR{},
@@ -567,6 +571,12 @@ bool Instance::CreateDevice() {
         FEAT_SET(vk::PhysicalDeviceIndexTypeUint8FeaturesEXT, indexTypeUint8, index_type_uint8)
     } else {
         device_chain.unlink<vk::PhysicalDeviceIndexTypeUint8FeaturesEXT>();
+    }
+
+    if (has_robustness2) {
+        FEAT_SET(vk::PhysicalDeviceRobustness2FeaturesEXT, nullDescriptor, null_descriptor)
+    } else {
+        device_chain.unlink<vk::PhysicalDeviceRobustness2FeaturesEXT>();
     }
 
     if (has_fragment_shader_interlock) {

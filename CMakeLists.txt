@@ -117,11 +117,14 @@ foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
 endforeach()
 
 option(ENABLE_SDL2 "Enable using SDL2" ON)
+option(USE_SYSTEM_FAAD "Use the system faad2 lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_SPIRV_TOOLS "Use the system SPIRV-Tools lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_XXHASH "Use the system xxHash lib (instead of the bundled one)" OFF)
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
-option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
+option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" ON)
 option(ENABLE_QT_UPDATE_CHECKER "Enable built-in update checker for the Qt frontend" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
@@ -142,7 +145,7 @@ CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENA
 # NetBSD doesn't support Vulkan yet, remove this check when it does.
 CMAKE_DEPENDENT_OPTION(ENABLE_VULKAN "Enables the Vulkan renderer" ON "NOT (BSD MATCHES \"NetBSD\")" OFF)
 
-option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
+option(ENABLE_DISCORD_RPC "Enables Discord Rich Presence" OFF)
 
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 
@@ -158,6 +161,7 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via -march=native" OFF)
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+option(CITRA_ADDRESS_SANITIZE "Enable address sanitizer" OFF)
 
 # Handle incompatible options for libretro builds
 if(ENABLE_LIBRETRO)
@@ -205,6 +209,8 @@ if(ENABLE_SSE42 AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64"))
     else()
         SET(SSE42_COMPILE_OPTION -msse4.1 -msse4.2)
     endif()
+    add_compile_options(${SSE42_COMPILE_OPTION})
+    add_compile_definitions(CITRA_HAS_SSE42)
 endif()
 
 include(CitraHandleSystemLibs)
@@ -247,6 +253,17 @@ if (ENABLE_LTO)
     endif()
 else()
     message(STATUS "LTO disabled")
+endif()
+
+# Address sanitizer
+# =======================================================================
+if (CITRA_ADDRESS_SANITIZE)
+    if (MSVC)
+        add_compile_options(/fsanitize=address)
+    else()
+        add_compile_options(-fsanitize=address)
+        add_link_options(-fsanitize=address)
+    endif()
 endif()
 
 # Check for march=native support
@@ -364,7 +381,7 @@ find_package(Threads REQUIRED)
 
 if (ENABLE_QT)
     if (NOT USE_SYSTEM_QT)
-        download_qt(6.9.3)
+        download_qt(6.10.3)
     endif()
 
     find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent)
@@ -563,6 +580,16 @@ if (USE_SYSTEM_SOUNDTOUCH)
     add_library(SoundTouch INTERFACE)
     target_link_libraries(SoundTouch INTERFACE "${SOUNDTOUCH_LIBRARIES}")
     target_include_directories(SoundTouch INTERFACE "${SOUNDTOUCH_INCLUDE_DIRS}")
+endif()
+
+if (USE_SYSTEM_XXHASH)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(libxxhash_PKGCONFIG IMPORTED_TARGET libxxhash REQUIRED)
+endif()
+
+if (USE_SYSTEM_FAAD)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(libfaad_PKGCONFIG IMPORTED_TARGET faad2 REQUIRED)
 endif()
 
 add_subdirectory(src)

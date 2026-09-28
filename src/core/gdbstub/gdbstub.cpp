@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -592,7 +592,7 @@ bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type) {
         bool hit = false;
 
         if (type == BreakpointType::Execute) {
-            // Execute breakpoints should only trigger on exact PC match.
+            // execute breakpoints should only trigger on exact PC match.
             hit = (addr == bp.addr);
         } else {
             // Range overlap test:

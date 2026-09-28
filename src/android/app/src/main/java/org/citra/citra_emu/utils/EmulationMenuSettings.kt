@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -28,7 +28,10 @@ object EmulationMenuSettings {
                 .apply()
         }
     var buttonSlide: Int
-        get() = preferences.getInt("EmulationMenuSettings_ButtonSlideMode", ButtonSlidingMode.Disabled.int)
+        get() = preferences.getInt(
+            "EmulationMenuSettings_ButtonSlideMode",
+            ButtonSlidingMode.Disabled.int
+        )
         set(value) {
             preferences.edit()
                 .putInt("EmulationMenuSettings_ButtonSlideMode", value)
@@ -39,8 +42,8 @@ object EmulationMenuSettings {
         get() = preferences.getBoolean("EmulationMenuSettings_HapticFeedback", true)
         set(value) {
             preferences.edit()
-                    .putBoolean("EmulationMenuSettings_HapticFeedback", value)
-                    .apply()
+                .putBoolean("EmulationMenuSettings_HapticFeedback", value)
+                .apply()
         }
     var swapScreens: Boolean
         get() = preferences.getBoolean("EmulationMenuSettings_SwapScreens", false)

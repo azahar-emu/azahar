@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -64,7 +64,7 @@ class CIAContainer {
 public:
     // Load whole CIAs outright
     Loader::ResultStatus Load(const FileBackend& backend);
-    Loader::ResultStatus Load(FileUtil::IOFile* file);
+    Loader::ResultStatus Load(FileUtil::IOFileBase* file);
     Loader::ResultStatus Load(std::span<const u8> header_data);
 
     // Load parts of CIAs (for CIAs streamed in)

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,6 +13,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.OpenableColumns
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Surface
@@ -25,15 +26,17 @@ import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.lang.ref.WeakReference
+import java.util.Date
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
+import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.NetPlayManager
 import org.citra.citra_emu.utils.RemovableStorageHelper
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
-import java.lang.ref.WeakReference
-import java.util.Date
 
 /**
  * Class which contains methods that interact
@@ -43,7 +46,7 @@ object NativeLibrary {
     /**
      * Default touchscreen device
      */
-    const val TouchScreenDevice = "Touchscreen"
+    const val TOUCHSCREEN_DEVICE = "Touchscreen"
 
     @JvmField
     var sEmulationActivity = WeakReference<EmulationActivity?>(null)
@@ -135,10 +138,8 @@ object NativeLibrary {
      */
     external fun setUserDirectory(directory: String)
 
-    data class InstalledGame(
-        val path: String,
-        val mediaType: Game.MediaType
-    )
+    data class InstalledGame(val path: String, val mediaType: Game.MediaType)
+
     fun getInstalledGamePaths(): Array<InstalledGame> {
         val games = getInstalledGamePathsImpl()
 
@@ -154,6 +155,7 @@ object NativeLibrary {
             }
         }.toTypedArray()
     }
+
     private external fun getInstalledGamePathsImpl(): Array<String?>
 
     // Create the config.ini file.
@@ -253,9 +255,8 @@ object NativeLibrary {
     external fun playTimeManagerGetCurrentTitleId(): Long
 
     private external fun uninstallTitle(titleId: Long, mediaType: Int): Boolean
-    fun uninstallTitle(titleId: Long, mediaType: Game.MediaType): Boolean {
-        return uninstallTitle(titleId, mediaType.value)
-    }
+    fun uninstallTitle(titleId: Long, mediaType: Game.MediaType): Boolean =
+        uninstallTitle(titleId, mediaType.value)
 
     external fun nativeFileExists(path: String): Boolean
 
@@ -324,6 +325,13 @@ object NativeLibrary {
                 canContinue = false
             }
 
+            CoreError.ErrorSavestateBuildMismatch -> {
+                title = emulationActivity.getString(R.string.core_error_savestate_build_mismatch)
+                message =
+                    emulationActivity.getString(R.string.savestate_build_mismatch_message, details)
+                canContinue = true
+            }
+
             CoreError.ErrorUnknown -> {
                 title = emulationActivity.getString(R.string.fatal_error)
                 message = emulationActivity.getString(R.string.fatal_error_message)
@@ -348,11 +356,12 @@ object NativeLibrary {
         return coreErrorAlertResult
     }
 
-    @get:Keep
-    @get:JvmStatic
-    val isPortraitMode: Boolean
-        get() = CitraApplication.appContext.resources.configuration.orientation ==
-                Configuration.ORIENTATION_PORTRAIT
+    @Keep
+    @JvmStatic
+    fun isPortraitMode(): Boolean = (
+        CitraApplication.appContext.resources.configuration.orientation ==
+            Configuration.ORIENTATION_PORTRAIT
+        )
 
     @Keep
     @JvmStatic
@@ -465,16 +474,18 @@ object NativeLibrary {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             emulationActivity = requireActivity() as EmulationActivity
 
-            var coreError = CoreError.fromInt(requireArguments().getInt(RESULT_CODE))
+            val coreError = CoreError.fromInt(requireArguments().getInt(RESULT_CODE))
             val title: String
             val message: String
             when (coreError) {
-                CoreError.ErrorGetLoader, CoreError.ErrorLoader_ErrorInvalidFormat, CoreError.ErrorSystemMode -> {
+                CoreError.ErrorGetLoader,
+                CoreError.ErrorLoaderErrorInvalidFormat,
+                CoreError.ErrorSystemMode -> {
                     title = getString(R.string.loader_error_invalid_format)
                     message = getString(R.string.loader_error_invalid_format_description)
                 }
 
-                CoreError.ErrorLoader_ErrorEncrypted -> {
+                CoreError.ErrorLoaderErrorEncrypted -> {
                     title = getString(R.string.loader_error_encrypted)
                     message = getString(R.string.loader_error_encrypted_description)
                 }
@@ -489,28 +500,32 @@ object NativeLibrary {
                     message = getString(R.string.loader_error_invalid_system_mode_description)
                 }
 
-                CoreError.ErrorLoader_ErrorPatches -> {
+                CoreError.ErrorLoaderErrorPatches -> {
                     title = getString(R.string.loader_error_applying_patches)
                     message = getString(R.string.loader_error_applying_patches_description)
                 }
 
-                CoreError.ErrorLoader_ErrorPatchesInvalidTitle -> {
+                CoreError.ErrorLoaderErrorPatchesInvalidTitle -> {
                     title = getString(R.string.loader_error_applying_patches)
                     message = getString(R.string.loader_error_patch_wrong_application)
                 }
 
                 else -> {
                     title = getString(R.string.loader_error_generic_title)
-                    message = getString(R.string.loader_error_generic,
-                        getString(coreError.stringRes), coreError.value)
+                    message = getString(
+                        R.string.loader_error_generic,
+                        getString(coreError.stringRes),
+                        coreError.value
+                    )
                 }
             }
 
             val alert = MaterialAlertDialogBuilder(requireContext())
                 .setTitle(title)
                 .setMessage(
-                    Html.fromHtml(message,
-                    Html.FROM_HTML_MODE_LEGACY
+                    Html.fromHtml(
+                        message,
+                        Html.FROM_HTML_MODE_LEGACY
                     )
                 )
                 .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
@@ -641,7 +656,7 @@ object NativeLibrary {
     fun loadStateIfAvailable(slot: Int): Boolean {
         var available = false
         getSavestateInfo()?.forEach {
-            if (it.slot == slot){
+            if (it.slot == slot) {
                 available = true
                 return@forEach
             }
@@ -679,21 +694,38 @@ object NativeLibrary {
     // Compression / Decompression
     private external fun compressFileNative(inputPath: String?, outputPath: String): Int
 
-    fun compressFile(inputPath: String?, outputPath: String): CompressStatus {
-        return CompressStatus.fromValue(
+    fun compressFile(inputPath: String?, outputPath: String): CompressStatus =
+        CompressStatus.fromValue(
             compressFileNative(inputPath, outputPath)
         )
-    }
 
     private external fun decompressFileNative(inputPath: String?, outputPath: String): Int
 
-    fun decompressFile(inputPath: String?, outputPath: String): CompressStatus {
-        return CompressStatus.fromValue(
+    fun decompressFile(inputPath: String?, outputPath: String): CompressStatus =
+        CompressStatus.fromValue(
             decompressFileNative(inputPath, outputPath)
         )
-    }
 
     external fun getRecommendedExtension(inputPath: String?, shouldCompress: Boolean): String
+
+    @Keep
+    @JvmStatic
+    fun addNetPlayMessage(type: Int, message: String) {
+        val emulationActivity = sEmulationActivity.get()
+        if (emulationActivity != null) {
+            emulationActivity.addNetPlayMessages(type, message)
+        } else {
+            NetPlayManager.addNetPlayMessage(type, message)
+        }
+    }
+
+    @Keep
+    @JvmStatic
+    fun clearChat() {
+        NetPlayManager.clearChat()
+    }
+
+    external fun initMultiplayer()
 
     @Keep
     @JvmStatic
@@ -725,27 +757,26 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun openContentUri(path: String, openMode: String): Int =
-        if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.openContentUri(path, openMode)
-        } else {
-            FileUtil.openContentUri(path, openMode)
-        }
+    fun openContentUri(path: String, openMode: String): Int = if (FileUtil.isNativePath(path)) {
+        CitraApplication.documentsTree.openContentUri(path, openMode)
+    } else {
+        FileUtil.openContentUri(path, openMode)
+    }
 
     @Keep
     @JvmStatic
-    fun getFilesName(path: String): Array<String?> =
-        if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.getFilesName(path)
-        } else {
-            FileUtil.getFilesName(path)
-        }
+    fun getFilesName(path: String): Array<String?> = if (FileUtil.isNativePath(path)) {
+        CitraApplication.documentsTree.getFilesName(path)
+    } else {
+        FileUtil.getFilesName(path)
+    }
 
     @Keep
     @JvmStatic
     fun getNativePath(uri: Uri): String {
         BuildUtil.assertNotGooglePlay()
 
+        val context = CitraApplication.appContext
         val dirSep = "/"
 
         val uriString = uri.toString()
@@ -760,19 +791,61 @@ object NativeLibrary {
         val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
 
-        if (pathSegment.startsWith("primary:")) { // User directory is located in primary storage
+        if (pathSegment.startsWith("primary:")) { // Path is located in primary storage
             val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type PRIMARY: $uri)"
+            )
             return primaryStoragePath + dirSep + virtualPath
-        } else { // User directory probably located on a removable storage device
+        } else if (uriString // Path is likely located in the /Download folder
+                .startsWith("content://com.android.providers.downloads.documents/document/msf")
+        ) {
+            var fileName: String? = null
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    fileName = cursor.getString(0)
+                }
+            }
+            if (fileName == null) {
+                android.util.Log.e(
+                    "NativeLibrary",
+                    "Unable to resolve URI to real file (URI: $uri)"
+                )
+                return ""
+            }
+            val downloadsPath = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            ).absolutePath
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type DOWNLOAD with fileName '$fileName': $uri)"
+            )
+            return downloadsPath + dirSep + fileName
+        } else { // Path is probably located on a removable storage device
             val storageIdString = pathSegment.substringBefore(":")
-            val removablePath = RemovableStorageHelper.getRemovableStoragePath(CitraApplication.appContext, storageIdString)
+            val removablePath = RemovableStorageHelper.getRemovableStoragePath(
+                CitraApplication.appContext,
+                storageIdString
+            )
 
             if (removablePath == null) {
-                android.util.Log.e("NativeLibrary",
+                android.util.Log.e(
+                    "NativeLibrary",
                     "Unknown mount location for storage device '$storageIdString' (URI: $uri)"
                 )
                 return ""
             }
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type EXTERNAL: $uri)"
+            )
             return removablePath + dirSep + virtualPath
         }
     }
@@ -788,12 +861,11 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun getSize(path: String): Long =
-        if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.getFileSize(path)
-        } else {
-            FileUtil.getFileSize(path)
-        }
+    fun getSize(path: String): Long = if (FileUtil.isNativePath(path)) {
+        CitraApplication.documentsTree.getFileSize(path)
+    } else {
+        FileUtil.getFileSize(path)
+    }
 
     @Keep
     @JvmStatic
@@ -801,21 +873,23 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun fileExists(path: String): Boolean =
-        if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.exists(path)
-        } else {
-            FileUtil.exists(path)
-        }
+    fun isUsingAngleForOpenGL(): Boolean = GraphicsUtil.isUsingAngleForOpenGL()
 
     @Keep
     @JvmStatic
-    fun isDirectory(path: String): Boolean =
-        if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.isDirectory(path)
-        } else {
-            FileUtil.isDirectory(path)
-        }
+    fun fileExists(path: String): Boolean = if (FileUtil.isNativePath(path)) {
+        CitraApplication.documentsTree.exists(path)
+    } else {
+        FileUtil.exists(path)
+    }
+
+    @Keep
+    @JvmStatic
+    fun isDirectory(path: String): Boolean = if (FileUtil.isNativePath(path)) {
+        CitraApplication.documentsTree.isDirectory(path)
+    } else {
+        FileUtil.isDirectory(path)
+    }
 
     @Keep
     @JvmStatic
@@ -823,19 +897,18 @@ object NativeLibrary {
         sourcePath: String,
         destinationParentPath: String,
         destinationFilename: String
-    ): Boolean =
-        if (FileUtil.isNativePath(sourcePath) &&
-            FileUtil.isNativePath(destinationParentPath)
-        ) {
-            CitraApplication.documentsTree
-                .copyFile(sourcePath, destinationParentPath, destinationFilename)
-        } else {
-            FileUtil.copyFile(
-                Uri.parse(sourcePath),
-                Uri.parse(destinationParentPath),
-                destinationFilename
-            )
-        }
+    ): Boolean = if (FileUtil.isNativePath(sourcePath) &&
+        FileUtil.isNativePath(destinationParentPath)
+    ) {
+        CitraApplication.documentsTree
+            .copyFile(sourcePath, destinationParentPath, destinationFilename)
+    } else {
+        FileUtil.copyFile(
+            Uri.parse(sourcePath),
+            Uri.parse(destinationParentPath),
+            destinationFilename
+        )
+    }
 
     @Keep
     @JvmStatic
@@ -870,12 +943,11 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun deleteDocument(path: String): Boolean =
-        if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.deleteDocument(path)
-        } else {
-            FileUtil.deleteDocument(path)
-        }
+    fun deleteDocument(path: String): Boolean = if (FileUtil.isNativePath(path)) {
+        CitraApplication.documentsTree.deleteDocument(path)
+    } else {
+        FileUtil.deleteDocument(path)
+    }
 
     enum class CoreError(val value: Int, @StringRes val stringRes: Int) {
         Success(0, R.string.core_error_success),
@@ -883,24 +955,22 @@ object NativeLibrary {
         ErrorGetLoader(2, R.string.core_error_get_loader),
         ErrorSystemMode(3, R.string.core_error_system_mode),
         ErrorLoader(4, R.string.core_error_loader),
-        ErrorLoader_ErrorEncrypted(5, R.string.core_error_loader_encrypted),
-        ErrorLoader_ErrorInvalidFormat(6, R.string.core_error_loader_invalid_format),
-        ErrorLoader_ErrorGBATitle(7, R.string.core_error_loader_gba_title),
-        ErrorLoader_ErrorPatches(8, R.string.core_error_loader_error_patches),
-        ErrorLoader_ErrorPatchesInvalidTitle(9, R.string.core_error_loader_patches_invalid_title),
+        ErrorLoaderErrorEncrypted(5, R.string.core_error_loader_encrypted),
+        ErrorLoaderErrorInvalidFormat(6, R.string.core_error_loader_invalid_format),
+        ErrorLoaderErrorGBATitle(7, R.string.core_error_loader_gba_title),
+        ErrorLoaderErrorPatches(8, R.string.core_error_loader_error_patches),
+        ErrorLoaderErrorPatchesInvalidTitle(9, R.string.core_error_loader_patches_invalid_title),
         ErrorSystemFiles(10, R.string.core_error_system_files),
         ErrorSavestate(11, R.string.core_error_savestate),
         ErrorArticDisconnected(12, R.string.core_error_artic_disconnected),
         ErrorN3DSApplication(13, R.string.core_error_n3ds_application),
         ErrorCoreExceptionRaised(14, R.string.core_error_core_exception_raised),
-        ErrorMemoryExceptionRaised(15, R.string.core_error_memory_exception_raised),
+        ErrorSavestateBuildMismatch(15, R.string.core_error_savestate_build_mismatch),
         ShutdownRequested(16, R.string.core_error_shutdown_requested),
         ErrorUnknown(17, R.string.core_error_unknown);
 
         companion object {
-            fun fromInt(value: Int): CoreError {
-                return entries.find { it.value == value } ?: ErrorUnknown
-            }
+            fun fromInt(value: Int): CoreError = entries.find { it.value == value } ?: ErrorUnknown
         }
     }
 
@@ -922,7 +992,12 @@ object NativeLibrary {
             val canContinue = requireArguments().getBoolean(CAN_CONTINUE)
             val dialog = MaterialAlertDialogBuilder(requireContext())
                 .setTitle(title)
-                .setMessage(message)
+                .setMessage(
+                    Html.fromHtml(
+                        message,
+                        Html.FROM_HTML_MODE_LEGACY
+                    )
+                )
             if (canContinue) {
                 dialog.setPositiveButton(R.string.continue_button) { _: DialogInterface?, _: Int ->
                     coreErrorAlertResult = true
@@ -933,7 +1008,11 @@ object NativeLibrary {
                 coreErrorAlertResult = false
                 userChosen = true
             }
-            return dialog.show()
+            val alert = dialog.create()
+            alert.show()
+            val alertMessage = alert.findViewById<View>(android.R.id.message) as TextView
+            alertMessage.movementMethod = LinkMovementMethod.getInstance()
+            return alert
         }
 
         override fun onDismiss(dialog: DialogInterface) {
@@ -952,7 +1031,11 @@ object NativeLibrary {
             const val MESSAGE = "message"
             const val CAN_CONTINUE = "canContinue"
 
-            fun newInstance(title: String, message: String, canContinue: Boolean): CoreErrorDialogFragment {
+            fun newInstance(
+                title: String,
+                message: String,
+                canContinue: Boolean
+            ): CoreErrorDialogFragment {
                 val frag = CoreErrorDialogFragment()
                 val args = Bundle()
                 args.putString(TITLE, title)

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -31,7 +31,9 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
         binding.textSettingValue.text = when (setting.setting) {
             is ScaledFloatSetting ->
                 "${(setting.setting as ScaledFloatSetting).float.toInt()}${setting.units}"
+
             is FloatSetting -> "${(setting.setting as AbstractFloatSetting).float}${setting.units}"
+
             else -> "${(setting.setting as AbstractIntSetting).int}${setting.units}"
         }
 
@@ -50,7 +52,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
         if (setting.isActive) {
             adapter.onSliderClick(setting, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting.disabledMessage)
         }
     }
 
@@ -58,7 +60,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
         if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting.disabledMessage)
         }
         return false
     }

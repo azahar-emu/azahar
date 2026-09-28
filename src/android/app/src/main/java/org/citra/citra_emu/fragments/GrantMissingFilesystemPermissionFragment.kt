@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2025-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -43,8 +43,6 @@ class GrantMissingFilesystemPermissionFragment : DialogFragment() {
             } else {
                 { permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) }
             }
-
-
 
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.filesystem_permission_warning)

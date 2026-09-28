@@ -6,7 +6,7 @@ gcc -v
 tx --version
 
 mkdir build && cd build
-cmake .. -DENABLE_QT_TRANSLATION=ON -DGENERATE_QT_TRANSLATION=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_SDL2=OFF
+cmake .. -DGENERATE_QT_TRANSLATION=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_SDL2=OFF
 make translation
 cd ..
 

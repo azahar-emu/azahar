@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -424,13 +424,6 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
     QMenu context_menu;
 
     QString username = player_list->item(item.row())->data(PlayerListItem::UsernameRole).toString();
-    if (!username.isEmpty()) {
-        QAction* view_profile_action = context_menu.addAction(tr("View Profile"));
-        connect(view_profile_action, &QAction::triggered, [username] {
-            QDesktopServices::openUrl(
-                QUrl(QStringLiteral("https://community.citra-emu.org/u/%1").arg(username)));
-        });
-    }
 
     std::string cur_nickname;
     if (auto room = Network::GetRoomMember().lock()) {

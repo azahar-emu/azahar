@@ -5,7 +5,7 @@
 ; Usage:
 ;   get the latest nsis: https://nsis.sourceforge.io/Download
 ;   probably also want vscode extension: https://marketplace.visualstudio.com/items?itemName=idleberg.nsis
-;   makensis /DPRODUCT_VERSION=<release-name> /DPRODUCT_VARIANT=<msvc/msys2> <this-script>
+;   makensis /DPRODUCT_VERSION=<release-name> /DPRODUCT_VARIANT=<msvc/msys2/mxe> <this-script>
 
 ; Require /DPRODUCT_VERSION=<release-name> to makensis.
 !ifndef PRODUCT_VERSION

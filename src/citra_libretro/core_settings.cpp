@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -39,6 +39,7 @@ static constexpr const char* input = "input";
 
 namespace cpu {
 static constexpr const char* use_cpu_jit = citra_setting(BaseKeys::use_cpu_jit);
+static constexpr const char* use_fastinterp = citra_setting(BaseKeys::use_fastinterp);
 static constexpr const char* cpu_clock_percentage = citra_setting(BaseKeys::cpu_clock_percentage);
 } // namespace cpu
 
@@ -72,6 +73,8 @@ static constexpr const char* swap_screen = citra_setting(BaseKeys::swap_screen);
 static constexpr const char* swap_screen_mode = citra_setting(BaseKeys::swap_screen_mode);
 static constexpr const char* large_screen_proportion =
     citra_setting(BaseKeys::large_screen_proportion);
+static constexpr const char* render_3d = citra_setting(BaseKeys::render_3d);
+static constexpr const char* factor_3d = citra_setting(BaseKeys::factor_3d);
 } // namespace layout
 
 namespace storage {
@@ -141,6 +144,7 @@ static constexpr retro_core_option_v2_category option_categories[] = {
 
 static constexpr retro_core_option_v2_definition option_definitions[] = {
     // CPU Category
+#ifndef IOS
     {
         config::cpu::use_cpu_jit,
         "Enable CPU JIT",
@@ -148,6 +152,22 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "Enable Just-In-Time compilation for ARM CPU emulation. "
         "Significantly improves performance but may reduce accuracy. "
         "Restart required.",
+        nullptr,
+        config::category::cpu,
+        {
+            { config::enabled, "Enabled" },
+            { config::disabled, "Disabled" },
+            { nullptr, nullptr }
+        },
+        config::enabled
+    },
+#endif
+    {
+        config::cpu::use_fastinterp,
+        "Use Fast Interpreter",
+        "Fast Interpreter",
+        "When the CPU JIT is disabled or unavailable, use the fast interpreter "
+        "instead of the legacy interpreter. Restart required.",
         nullptr,
         config::category::cpu,
         {
@@ -310,6 +330,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         },
         config::enabled
     },
+#ifndef IOS
     {
         config::graphics::use_shader_jit,
         "Enable Shader JIT",
@@ -325,6 +346,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         },
         config::enabled
     },
+#endif
     {
         config::graphics::shaders_accurate_mul,
         "Accurate Shader Multiplication",
@@ -373,6 +395,14 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
             { "8", "8x (3200x1920)" },
             { "9", "9x (3600x2160)" },
             { "10", "10x (4000x2400)" },
+            { "11", "11x (4400x2640)" },
+            { "12", "12x (4800x2880)" },
+            { "13", "13x (5200x3120)" },
+            { "14", "14x (5600x3360)" },
+            { "15", "15x (6000x3600)" },
+            { "16", "16x (6400x3840)" },
+            { "17", "17x (6800x4080)" },
+            { "18", "18x (7200x4320)" },
             { nullptr, nullptr }
         },
         "1"
@@ -519,6 +549,48 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
             { nullptr, nullptr }
         },
         "4.00"
+    },
+    {
+        config::layout::render_3d,
+        "Stereoscopic 3D Mode",
+        "Stereo 3D Mode",
+        "Stereoscopic 3D output, used when a game is rendering in 3D. 'Off' shows a "
+        "single 2D image. 'Side by Side' places the left and right eye images beside "
+        "each other in one frame, each at half width. 'Side by Side (Full)' does the "
+        "same but keeps each eye at full width. 'Anaglyph' merges both eyes into a "
+        "single red/cyan image for use with red/cyan glasses. 'Interlaced' alternates "
+        "the eyes on odd and even scanlines for interlaced 3D displays, and 'Reverse "
+        "Interlaced' swaps which eye is on which line. 'Cardboard VR' outputs side by "
+        "side with lens-distortion correction for Cardboard-style viewers.",
+        nullptr,
+        config::category::layout,
+        {
+            { "off", "Off (2D)" },
+            { "side-by-side", "Side by Side" },
+            { "side-by-side-full", "Side by Side (Full)" },
+            { "anaglyph", "Anaglyph (Red/Cyan)" },
+            { "interlaced", "Interlaced" },
+            { "reverse-interlaced", "Reverse Interlaced" },
+            { "cardboard", "Cardboard VR" },
+            { nullptr, nullptr }
+        },
+        "off"
+    },
+    {
+        config::layout::factor_3d,
+        "Stereoscopic 3D Depth",
+        "Stereo 3D Depth",
+        "Depth intensity of the stereoscopic 3D effect, as a percentage. Only used "
+        "when a 3D mode is active.",
+        nullptr,
+        config::category::layout,
+        {
+            {   "0",   "0%" }, {  "10",  "10%" }, {  "20",  "20%" }, {  "30",  "30%" },
+            {  "40",  "40%" }, {  "50",  "50%" }, {  "60",  "60%" }, {  "70",  "70%" },
+            {  "80",  "80%" }, {  "90",  "90%" }, { "100", "100%" },
+            { nullptr, nullptr }
+        },
+        "0"
     },
 
     // Storage Category
@@ -772,11 +844,14 @@ void RegisterCoreOptions(void) {
 
 static void ParseCpuOptions(void) {
     Settings::values.use_cpu_jit =
+#ifdef IOS
+        false;
+#else
         LibRetro::FetchVariable(config::cpu::use_cpu_jit, config::enabled) == config::enabled;
-#if defined(IOS)
-    if (!LibRetro::CanUseJIT())
-        Settings::values.use_cpu_jit = false;
 #endif
+
+    Settings::values.use_fastinterp =
+        LibRetro::FetchVariable(config::cpu::use_fastinterp, config::enabled) == config::enabled;
 
     auto cpu_clock = LibRetro::FetchVariable(config::cpu::cpu_clock_percentage, "100");
     Settings::values.cpu_clock_percentage = std::stoi(cpu_clock);
@@ -907,11 +982,12 @@ static void ParseGraphicsOptions(void) {
     Settings::values.use_hw_shader = LibRetro::FetchVariable(config::graphics::use_hw_shader,
                                                              config::enabled) == config::enabled;
 
-    Settings::values.use_shader_jit = LibRetro::FetchVariable(config::graphics::use_shader_jit,
-                                                              config::enabled) == config::enabled;
-#if defined(IOS)
-    if (!LibRetro::CanUseJIT())
-        Settings::values.use_shader_jit = false;
+    Settings::values.use_shader_jit =
+#ifdef IOS
+        false;
+#else
+        LibRetro::FetchVariable(config::graphics::use_shader_jit, config::enabled) ==
+        config::enabled;
 #endif
 
     Settings::values.shaders_accurate_mul =
@@ -948,9 +1024,39 @@ static Settings::LayoutOption GetLayoutOption(const std::string& name) {
     return Settings::LayoutOption::Default;
 }
 
+static Settings::StereoRenderOption GetStereoRenderOption(const std::string& name) {
+    if (name == "side-by-side")
+        return Settings::StereoRenderOption::SideBySide;
+    if (name == "side-by-side-full")
+        return Settings::StereoRenderOption::SideBySideFull;
+    if (name == "anaglyph")
+        return Settings::StereoRenderOption::Anaglyph;
+    if (name == "interlaced")
+        return Settings::StereoRenderOption::Interlaced;
+    if (name == "reverse-interlaced")
+        return Settings::StereoRenderOption::ReverseInterlaced;
+    if (name == "cardboard")
+        return Settings::StereoRenderOption::CardboardVR;
+    return Settings::StereoRenderOption::Off;
+}
+
 static void ParseLayoutOptions(void) {
     Settings::values.layout_option =
         GetLayoutOption(LibRetro::FetchVariable(config::layout::layout_option, "default"));
+
+    Settings::values.render_3d =
+        GetStereoRenderOption(LibRetro::FetchVariable(config::layout::render_3d, "off"));
+
+    Settings::values.factor_3d =
+        static_cast<u32>(std::stoi(LibRetro::FetchVariable(config::layout::factor_3d, "0")));
+
+    // EmuWindow::get3DMode() forces the mode Off on mobile builds while
+    // render_3d_which_display is None, which is its default and which no
+    // libretro code path ever changes — so render_3d alone is inert on Android.
+    Settings::values.render_3d_which_display =
+        (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off)
+            ? Settings::StereoWhichDisplay::None
+            : Settings::StereoWhichDisplay::Both;
 
     Settings::values.swap_screen =
         LibRetro::FetchVariable(config::layout::swap_screen, "Top") == "Bottom";

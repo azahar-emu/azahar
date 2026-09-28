@@ -32,6 +32,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     error.cpp
     error.h
     expected.h
+    file_derived.cpp
+    file_derived.h
     file_util.cpp
     file_util.h
     hash.h
@@ -96,8 +98,10 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     timer.cpp
     timer.h
     unique_function.h
+    unroll.h
     vector_math.h
-    web_result.h
+    web_util.cpp
+    web_util.h
     x64/cpu_detect.cpp
     x64/cpu_detect.h
     x64/xbyak_abi.h
@@ -130,8 +134,8 @@ endif()
 # Android storage is only used for non-libretro Android builds
 if (ANDROID AND NOT ENABLE_LIBRETRO)
   target_sources(citra_common PRIVATE
-    android_storage.cpp
-    android_storage.h
+    android_utils.cpp
+    android_utils.h
   )
 endif()
 
@@ -172,9 +176,8 @@ if (BACKTRACE_LIBRARY AND ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND CMAKE_CXX_CO
     target_compile_definitions(citra_common PRIVATE CITRA_LINUX_GCC_BACKTRACE)
 endif()
 
-if (SSE42_COMPILE_OPTION)
-    target_compile_definitions(citra_common PRIVATE CITRA_HAS_SSE42)
-    target_compile_options(citra_common PRIVATE ${SSE42_COMPILE_OPTION})
+if (USE_SYSTEM_XXHASH)
+    target_link_libraries(citra_common PUBLIC xxhash)
+else()
+    target_link_libraries(citra_common PUBLIC xxHash::xxhash)
 endif()
-
-target_link_libraries(citra_common PUBLIC xxHash::xxhash)

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -28,6 +28,8 @@ constexpr double FRAME_LENGTH = 1.0 / SCREEN_REFRESH_RATE;
 constexpr std::size_t IgnoreFrames = 5;
 
 namespace Core {
+
+bool PerfStats::game_frames_updated = true;
 
 PerfStats::PerfStats(u64 title_id) : title_id(title_id) {}
 
@@ -109,6 +111,7 @@ void PerfStats::EndGameFrame() {
     std::scoped_lock lock{object_mutex};
 
     game_frames += 1;
+    PerfStats::game_frames_updated = true;
 }
 
 double PerfStats::GetMeanFrametime() const {

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,10 +12,10 @@ import android.content.Context
 import android.os.Build
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DocumentsTree
-import org.citra.citra_emu.utils.GpuDriverHelper
-import org.citra.citra_emu.utils.PermissionsHandler
+import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.MemoryUtil
+import org.citra.citra_emu.utils.PermissionsHandler
 
 class CitraApplication : Application() {
     private fun createNotificationChannel() {
@@ -69,6 +69,7 @@ class CitraApplication : Application() {
             Log.info("SoC Model - ${Build.SOC_MODEL}")
         }
         Log.info("Total System Memory - ${MemoryUtil.getDeviceRAM()}")
+        Log.info("OpenGL ES Renderer - ${GraphicsUtil.openGLRendererString}")
     }
 
     companion object {

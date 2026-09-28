@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -25,6 +25,7 @@
 
 #include "common/common_paths.h"
 #include "common/dynamic_library/dynamic_library.h"
+#include "common/file_derived.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -34,7 +35,6 @@
 #include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/string_util.h"
-#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
@@ -51,6 +51,7 @@
 #include "jni/camera/ndk_camera.h"
 #include "jni/camera/still_image_camera.h"
 #include "jni/config.h"
+#include "network/announce_multiplayer_session.h"
 
 #ifdef ENABLE_OPENGL
 #include "jni/emu_window/emu_window_gl.h"
@@ -63,10 +64,11 @@
 #endif
 #endif
 
+#include "common/android_utils.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
 #include "jni/ndk_motion.h"
-#include "jni/util.h"
+#include "multiplayer.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -101,7 +103,27 @@ std::mutex paused_mutex;
 std::mutex running_mutex;
 std::condition_variable running_cv;
 
+// Guards the lifetime of s_surface/s_secondary_surface and the (re)creation of the
+// EmuWindow_Android and renderer objects that consume them. Android may destroy or replace the
+// Surface passed to us (on rotation, or if the fragment hosting the SurfaceView is torn
+// down and recreated) from the UI thread at any time, including while the renderer is still
+// being constructed on the emulation thread in RunCitra(). Without this lock, the UI thread can
+// release/replace the ANativeWindow while it is concurrently being used to create the
+// initial Vulkan/EGL surface, resulting in a use-after-free. A recursive mutex is needed
+// due to the locking pattern used in RunCitra().
+std::recursive_mutex surface_mutex;
+
+// Signalled by surfaceChanged() whenever s_surface goes from null to non-null. Used by the
+// System::Init() callback to block the renderer (re)creation (initial boot or a
+// savestate load) until a surface actually exists, instead of giving
+// VideoCore a null ANativeWindow.
+std::condition_variable_any surface_cv;
+
 std::string inserted_cartridge;
+
+// Android Multiplayer which can be initialized with parameters
+std::unique_ptr<AndroidMultiplayer> multiplayer{nullptr};
+std::shared_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
 
 } // Anonymous namespace
 
@@ -111,6 +133,8 @@ static jobject ToJavaCoreError(Core::System::ResultStatus result) {
         {Core::System::ResultStatus::ErrorSavestate, "ErrorSavestate"},
         {Core::System::ResultStatus::ErrorArticDisconnected, "ErrorArticDisconnected"},
         {Core::System::ResultStatus::ErrorN3DSApplication, "ErrorN3DSApplication"},
+        {Core::System::ResultStatus::ErrorCoreExceptionRaised, "ErrorCoreExceptionRaised"},
+        {Core::System::ResultStatus::ErrorSavestateBuildMismatch, "ErrorSavestateBuildMismatch"},
         {Core::System::ResultStatus::ErrorUnknown, "ErrorUnknown"},
     };
 
@@ -142,6 +166,8 @@ static void LoadDiskCacheProgress(VideoCore::LoadCallbackStage stage, int progre
 static Camera::NDK::Factory* g_ndk_factory{};
 
 static void TryShutdown() {
+    std::scoped_lock surface_lock(surface_mutex);
+
     if (!window) {
         return;
     }
@@ -189,7 +215,38 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         system.InsertCartridge(inserted_cartridge);
     }
 
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    // Acquired for the whole window/renderer construction below (and released again once
+    // system.Load() has finished setting up the renderer), so that a concurrent
+    // surfaceChanged/surfaceDestroyed callback from the UI thread cannot release or replace
+    // s_surface/s_secondary_surface while they're still being used.
+    std::unique_lock<std::recursive_mutex> surface_lock(surface_mutex);
+
+    // We also need to lock the surface mutex when System::Init() is called.
+    // This is because save state saving and loading may call System::Init
+    // on its own which does GPU reinitialization.
+    // This is why a recursive mutex is needed, as System::Load() also calls
+    // System::Init() which in this RunCitra() function would result in a deadlock.
+    system.RegisterOnInitCallback([](bool init_start) {
+        if (init_start) {
+            surface_mutex.lock();
+            // A savestate load re-enters here later, well after surface_lock in RunCitra() has
+            // already been released. If a rotation destroyed s_surface just before this callback
+            // acquired the lock, wait here for surfaceChanged() to hand us a new one rather than
+            // proceeding into CreateSurface() with a null window. During the very first call
+            // (initial boot) this never actually blocks, since surfaceChanged/surfaceDestroyed
+            // cannot run concurrently here, this same thread still holds surface_lock above
+            // for the whole boot sequence.
+            if (!s_surface) {
+                std::unique_lock<std::recursive_mutex> wait_lock(surface_mutex, std::adopt_lock);
+                surface_cv.wait(wait_lock, [] { return s_surface != nullptr; });
+                wait_lock.release();
+            }
+        } else {
+            surface_mutex.unlock();
+        }
+    });
+
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
@@ -255,12 +312,23 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Register microphone permission check
     system.RegisterMicPermissionCheck(&CheckMicPermission);
 
-    Pica::g_debug_context = Pica::DebugContext::Construct();
+    // No PICA debugging on Android
+    if (Settings::values.pica_debugging) {
+        Pica::g_debug_context = Pica::DebugContext::Construct();
+    } else {
+        Pica::g_debug_context.reset();
+    }
+
     InputManager::Init();
 
     window->MakeCurrent();
+
     const Core::System::ResultStatus load_result{
         system.Load(*window, filepath, secondary_window.get())};
+
+    // At this point, the surface has already been used, so the mutex can be unlocked.
+    surface_lock.unlock();
+
     if (load_result != Core::System::ResultStatus::Success) {
         return load_result;
     }
@@ -280,6 +348,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     SCOPE_EXIT({ TryShutdown(); });
 
+    system.RegisterCoreLoopThreadId();
+
     // Start running emulation
     while (!stop_run) {
         if (!pause_emulation) {
@@ -295,12 +365,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                     handler->DisableSensors();
                 }
                 if (!HandleCoreError(result, system.GetStatusDetails())) {
-                    // Frontend requests us to abort
-                    // If the error was an Artic disconnect, return shutdown request.
-                    if (result == Core::System::ResultStatus::ErrorArticDisconnected) {
-                        return Core::System::ResultStatus::ShutdownRequested;
-                    }
-                    return result;
+                    // Frontend requests us to abort, return a shutdown request.
+                    return Core::System::ResultStatus::ShutdownRequested;
                 }
                 handler = InputManager::NDKMotionHandler();
                 if (handler) {
@@ -358,7 +424,20 @@ extern "C" {
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
                                                             [[maybe_unused]] jobject obj,
                                                             jobject surf) {
+    std::scoped_lock lock(surface_mutex);
+
+    if (s_surface) {
+        ANativeWindow_release(s_surface);
+        s_surface = nullptr;
+    }
     s_surface = ANativeWindow_fromSurface(env, surf);
+    if (!s_surface) {
+        LOG_WARNING(Frontend, "Surface changed, but failed to acquire the native window");
+        return;
+    }
+    // Wake up any System::Init() currently blocked waiting for a live surface
+    // (can happen when loading savestates and the screen rotates).
+    surface_cv.notify_all();
 
     bool notify = false;
     if (window) {
@@ -376,6 +455,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
 void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv* env,
                                                                      [[maybe_unused]] jobject obj,
                                                                      jobject surf) {
+    std::scoped_lock lock(surface_mutex);
+
     auto& system = Core::System::GetInstance();
 
     if (s_secondary_surface) {
@@ -391,6 +472,11 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv* env
     if (secondary_window) {
         // Second window already created, so update it
         notify = secondary_window->OnSurfaceChanged(s_secondary_surface);
+
+        // Log the dimensions for debugging
+        int32_t width = ANativeWindow_getWidth(s_secondary_surface);
+        int32_t height = ANativeWindow_getHeight(s_secondary_surface);
+        LOG_INFO(Frontend, "Secondary Surface changed to {}x{}", width, height);
     } else {
         LOG_WARNING(Frontend,
                     "Second Window does not exist in native.cpp but surface changed. Ignoring.");
@@ -405,6 +491,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv* env
 
 void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceDestroyed(
     JNIEnv* env, [[maybe_unused]] jobject obj) {
+    std::scoped_lock lock(surface_mutex);
+
     if (s_secondary_surface != nullptr) {
         ANativeWindow_release(s_secondary_surface);
         s_secondary_surface = nullptr;
@@ -415,6 +503,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceDestroyed(
 
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
+    std::scoped_lock lock(surface_mutex);
+
     if (s_surface != nullptr) {
         ANativeWindow_release(s_surface);
         s_surface = nullptr;
@@ -466,7 +556,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_swapScreens([[maybe_unused]] JNIEnv
     Settings::values.swap_screen = swap_screens;
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
-        system.GPU().Renderer().UpdateCurrentFramebufferLayout(IsPortraitMode());
+        system.GPU().Renderer().UpdateCurrentFramebufferLayout(AndroidUtils::IsPortraitMode());
     }
     InputManager::screen_rotation = rotation;
     Camera::NDK::g_rotation = rotation;
@@ -769,9 +859,14 @@ void Java_org_citra_citra_1emu_NativeLibrary_pauseEmulation([[maybe_unused]] JNI
 
 void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIEnv* env,
                                                            [[maybe_unused]] jobject obj) {
-    stop_run = true;
+    if (stop_run.exchange(true)) {
+        // stop_run was already true
+        return;
+    }
     pause_emulation = false;
-    window->StopPresenting();
+    if (window) {
+        window->StopPresenting();
+    }
     if (secondary_window) {
         secondary_window->StopPresenting();
     }
@@ -922,6 +1017,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNI
         system.GetAppLoader().ReadProgramId(program_id);
     }
 
+    if (multiplayer) {
+        multiplayer->UpdateCredentials();
+    }
+
     system.ApplySettings();
 }
 
@@ -994,6 +1093,93 @@ void Java_org_citra_citra_1emu_NativeLibrary_removeAmiibo([[maybe_unused]] JNIEn
     }
 
     nfc->RemoveAmiibo();
+}
+
+// init multiplayer class
+JNIEXPORT void JNICALL
+Java_org_citra_citra_1emu_NativeLibrary_initMultiplayer(JNIEnv* env, [[maybe_unused]] jobject obj) {
+    if (multiplayer) {
+        return;
+    }
+
+    announce_multiplayer_session = std::make_shared<Network::AnnounceMultiplayerSession>(
+        Service::CFG::GetUsername(Core::System::GetInstance()));
+
+    multiplayer = std::make_unique<AndroidMultiplayer>(Core::System::GetInstance(),
+                                                       announce_multiplayer_session);
+    multiplayer->NetworkInit();
+}
+
+JNIEXPORT jobjectArray JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayGetPublicRooms(
+    JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return ToJStringArray(env, multiplayer->NetPlayGetPublicRooms());
+}
+
+JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayCreateRoom(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jstring ipaddress, jint port, jstring username,
+    jstring preferedGameName, jlong preferedGameId, jstring password, jstring room_name,
+    jint max_players) {
+    return static_cast<jint>(multiplayer->NetPlayCreateRoom(
+        GetJString(env, ipaddress), port, GetJString(env, username),
+        GetJString(env, preferedGameName), preferedGameId, GetJString(env, password),
+        GetJString(env, room_name), max_players));
+}
+
+JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayJoinRoom(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jstring ipaddress, jint port, jstring username,
+    jstring password) {
+    return static_cast<jint>(multiplayer->NetPlayJoinRoom(
+        GetJString(env, ipaddress), port, GetJString(env, username), GetJString(env, password)));
+}
+
+JNIEXPORT jobjectArray JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayRoomInfo(
+    JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return ToJStringArray(env, multiplayer->NetPlayRoomInfo());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayIsJoined(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return multiplayer->NetPlayIsJoined();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayIsHostedRoom(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return multiplayer->NetPlayIsHostedRoom();
+}
+
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlaySendMessage(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jstring msg) {
+    multiplayer->NetPlaySendMessage(GetJString(env, msg));
+}
+
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayKickUser(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jstring username) {
+    multiplayer->NetPlayKickUser(GetJString(env, username));
+}
+
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayLeaveRoom(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    multiplayer->NetPlayLeaveRoom();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayIsModerator(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return multiplayer->NetPlayIsModerator();
+}
+
+JNIEXPORT jobjectArray JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayGetBanList(
+    JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return ToJStringArray(env, multiplayer->NetPlayGetBanList());
+}
+
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayBanUser(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jstring username) {
+    multiplayer->NetPlayBanUser(GetJString(env, username));
+}
+
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayUnbanUser(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jstring username) {
+    multiplayer->NetPlayUnbanUser(GetJString(env, username));
 }
 
 JNIEXPORT jobject JNICALL Java_org_citra_citra_1emu_utils_CiaInstallWorker_installCIA(

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Este software ejecutará aplicaciones para la consola portátil Nintendo 3DS. No se incluyen juegos.\n\nAntes de comenzar con la emulación, seleccione una carpeta para almacenar los datos de usuario de Azahar en.\n\nQué es ésto:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Datos de usuario de Azahar Android y almacenamiento</a></string>
     <string name="app_notification_channel_description">Notificaciones del emulador 3DS Azahar</string>
     <string name="app_notification_running">Azahar está ejecutándose</string>
     <string name="app_game_install_description">A continuación, deberás seleccionar una Carpeta de Aplicaciones. Azahar mostrará todas las ROM de 3DS de la carpeta seleccionada en la aplicación.\n\nLas ROM CIA, actualizaciones y los DLC deben instalarse por separado haciendo clic en el icono de la carpeta y seleccionando Instalar CIA.</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Omitir</string>
     <string name="warning_cancel">Cancelar</string>
     <string name="select_citra_user_folder">Selecciona la carpeta de usuario</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Selecciona tu directorio de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">datos de usuario</a> con el botón de abajo.]]></string>
     <string name="select_which_user_directory_to_use">Parece que tienes directorios de usuario configurados tanto para Lime3DS como para Azahar. Probablemente se deba a que actualizaste a Azahar y, cuando se te pidió, elegiste un directorio de usuario diferente al que usabas para Lime3DS.\n\nEsto puede haberte hecho pensar que perdiste partidas guardadas u otras configuraciones; te pedimos disculpas si eso ocurrió.\n\n¿Prefieres volver a usar tu directorio de usuario original de Lime3DS, restaurando la configuración y las partidas guardadas de Lime3DS, o conservar tu directorio de usuario actual de Azahar?\n\nNinguno de los directorios se eliminará, independientemente de tu elección, y puedes cambiar libremente entre ellos usando la opción \"Selecciona la carpeta de usuario\".</string>
     <string name="keep_current_azahar_directory">Mantener el directorio actual de Azahar</string>
     <string name="use_prior_lime3ds_directory">Usar el directorio de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
     <string name="cannot_skip">No puedes omitir configurar la carpeta de usuario</string>
     <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, selecciona un directorio y luego puedes continuar.</string>
-    <string name="selecting_user_directory_without_write_permissions">Has perdido los permisos de escritura en tu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directorio de datos de usuario</a>, donde se guardan las partidas guardadas y otra información. Esto puede ocurrir después de actualizar Android o algunas aplicaciones. Vuelve a seleccionar el directorio para recuperar los permisos y poder continuar.</string>
     <string name="invalid_selection">Selección no válida</string>
     <string name="invalid_user_directory">La selección del directorio de usuario no es válida.\nVuelve a seleccionar el directorio de usuario, asegurándote de navegar hasta él desde la raíz del almacenamiento del dispositivo.</string>
     <string name="filesystem_permission_lost">Azahar ha perdido el permiso para administrar archivos en este dispositivo. Esto puede ocurrir después de actualizar Android o algunas aplicaciones. Vuelve a conceder este permiso en la siguiente pantalla para seguir usando la aplicación.</string>
@@ -146,7 +143,6 @@
     <string name="turbo_limit_hotkey">Velocidad turbo</string>
     <string name="turbo_enabled_toast">Velocidad turbo activada</string>
     <string name="turbo_disabled_toast">Velocidad turbo desactivada</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Archivos del sistema</string>
     <string name="setup_system_files_description">Realizar operaciones de archivos del sistema, como instalar archivos del sistema o iniciar el Menú Home</string>

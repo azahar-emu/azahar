@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -149,6 +149,11 @@ public:
     /// Returns true when VK_EXT_index_type_uint8 is supported
     bool IsIndexTypeUint8Supported() const {
         return index_type_uint8;
+    }
+
+    /// Returns true when VK_EXT_robustness2 is supported
+    bool IsNullDescriptorSupported() const {
+        return null_descriptor;
     }
 
     /// Returns true when VK_EXT_fragment_shader_interlock is supported
@@ -328,6 +333,7 @@ protected:
     bool extended_dynamic_state{};
     bool custom_border_color{};
     bool index_type_uint8{};
+    bool null_descriptor{};
     bool fragment_shader_interlock{};
     bool image_format_list{};
     bool pipeline_creation_cache_control{};
