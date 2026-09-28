@@ -17,7 +17,7 @@ import org.citra.citra_emu.features.settings.model.AbstractSetting
  * file.)
  */
 abstract class SettingsItem(
-    var setting: AbstractSetting?,
+    var setting: AbstractSetting<*>?,
     val nameId: Int,
     val descriptionId: Int
 ) {
