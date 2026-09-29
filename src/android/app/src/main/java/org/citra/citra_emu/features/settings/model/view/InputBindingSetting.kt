@@ -126,7 +126,8 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
                 Settings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
                 Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
                 Settings.HOTKEY_QUICKLOAD -> Hotkey.QUICKLOAD.button
-                Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
+                Settings.HOTKEY_TURBO_TOGGLE -> Hotkey.TURBO_TOGGLE.button
+                Settings.HOTKEY_TURBO_HOLD -> Hotkey.TURBO_HOLD.button
                 Settings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_BUTTON.button
                 else -> -1
             }
