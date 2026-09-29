@@ -5,6 +5,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 #include <QAction>
 #include <QKeySequence>
 #include <QString>
@@ -110,3 +111,7 @@ private:
 
     HotkeyGroupMap hotkey_groups;
 };
+
+/// Returns the action names in the order the configuration dialogs list them.
+std::vector<QString> HotkeyDisplayOrder(const QString& group,
+                                        const std::map<QString, Hotkey>& hotkeys);

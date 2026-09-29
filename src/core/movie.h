@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -163,6 +163,9 @@ private:
 
     ValidationResult ValidateHeader(const CTMHeader& header) const;
     ValidationResult ValidateInput(std::span<const u8> input, u64 expected_count) const;
+
+    /// Title id of the application currently booted, or 0 when none is.
+    u64 GetBootedTitleId() const;
 
 private:
     const Core::System& system;

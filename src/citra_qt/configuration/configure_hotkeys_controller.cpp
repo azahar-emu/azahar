@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <vector>
 #include <QMenu>
 #include <QMessageBox>
 #include <QStandardItemModel>
@@ -47,11 +46,13 @@ void ConfigureControllerHotkeys::Populate(const HotkeyRegistry& registry) {
     for (const auto& group : registry.hotkey_groups) {
         QStandardItem* parent_item = new QStandardItem(group.first);
         parent_item->setEditable(false);
-        for (const auto& hotkey : group.second) {
-            QStandardItem* action = new QStandardItem(hotkey.first);
-            QStandardItem* controller_keyseq = new QStandardItem(hotkey.second.controller_keyseq);
-            QStandardItem* readable_keyseq = new QStandardItem(
-                HotkeyRegistry::SequenceToString(hotkey.second.controller_keyseq));
+
+        for (const QString& name : HotkeyDisplayOrder(group.first, group.second)) {
+            const QString& seq = group.second.at(name).controller_keyseq;
+            QStandardItem* action = new QStandardItem(name);
+            QStandardItem* controller_keyseq = new QStandardItem(seq);
+            QStandardItem* readable_keyseq =
+                new QStandardItem(HotkeyRegistry::SequenceToString(seq));
             action->setEditable(false);
             controller_keyseq->setEditable(false);
             parent_item->appendRow({action, readable_keyseq, controller_keyseq});
