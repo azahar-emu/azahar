@@ -203,7 +203,13 @@ endif()
 
 # Teakra
 set(BUILD_TESTING OFF CACHE BOOL "")
-add_subdirectory(teakra EXCLUDE_FROM_ALL)
+if (USE_SYSTEM_TEAKRA)
+    find_package(teakra CONFIG REQUIRED)
+    message(STATUS "Using system Teakra")
+else()
+    message(STATUS "Using bundled Teakra")
+    add_subdirectory(teakra EXCLUDE_FROM_ALL)
+endif()
 
 # SDL2
 if (ENABLE_SDL2 AND NOT USE_SYSTEM_SDL2)

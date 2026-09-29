@@ -121,6 +121,7 @@ option(USE_SYSTEM_FAAD "Use the system faad2 lib (instead of the bundled one)" O
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_SPIRV_TOOLS "Use the system SPIRV-Tools lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_XXHASH "Use the system xxHash lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_TEAKRA "Use system teakra lib (instead of the bundled one)" OFF)
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
