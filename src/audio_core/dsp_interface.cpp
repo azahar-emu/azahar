@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cstddef>
+#include <limits>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
@@ -22,9 +24,10 @@ void DspInterface::SetSink(AudioCore::SinkType sink_type, std::string_view audio
     sink.reset();
 
     sink = AudioCore::GetSinkDetails(sink_type).create_sink(audio_device);
+    // Before SetCallback(): the SDL2 sink may call back immediately, already unpaused.
+    pipeline.SetOutputSampleRate(sink->GetNativeSampleRate());
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
-    time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
 }
 
 Sink& DspInterface::GetSink() {
@@ -33,7 +36,31 @@ Sink& DspInterface::GetSink() {
 }
 
 void DspInterface::EnableStretching(bool enable) {
-    enable_time_stretching = enable;
+    pipeline.SetStretching(enable);
+}
+
+void DspInterface::SetAudioRamp(bool enable) {
+    pipeline.SetRamp(enable);
+}
+
+void DspInterface::SetSpeedupLowPass(u16 reference) {
+    pipeline.SetSpeedupLowPass(reference);
+}
+
+void DspInterface::StreamEnd() {
+    pipeline.StreamEnd();
+}
+
+void DspInterface::StreamBegin() {
+    pipeline.StreamBegin();
+}
+
+bool DspInterface::JumpBegin() {
+    return pipeline.JumpBegin();
+}
+
+void DspInterface::JumpEnd(bool ramped) {
+    pipeline.JumpEnd(ramped);
 }
 
 void DspInterface::OutputFrame(StereoFrame16 frame) {
@@ -44,7 +71,7 @@ void DspInterface::OutputFrame(StereoFrame16 frame) {
     if (sink->ImmediateSubmission()) {
         sink->PushSamples(frame.data(), frame.size());
     } else {
-        fifo.Push(frame.data(), frame.size());
+        pipeline.Push(frame.data(), frame.size());
     }
 
     auto video_dumper = system.GetVideoDumper();
@@ -61,7 +88,7 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
     if (sink->ImmediateSubmission()) {
         sink->PushSamples(&sample, 1);
     } else {
-        fifo.Push(&sample, 1);
+        pipeline.Push(&sample, 1);
     }
 
     auto video_dumper = system.GetVideoDumper();
@@ -71,41 +98,11 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
 }
 
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
-    // Determine if we should stretch based on the current emulation speed.
-    // TODO: Only activate audio stretching when emulation speed goes below 95% threshold
-    //       (see #2487) -OS
-    if (performing_time_stretching && !enable_time_stretching) {
-        // If we just stopped stretching, flush the stretcher before returning to normal output.
-        flushing_time_stretcher = true;
-    }
-    performing_time_stretching = enable_time_stretching.load();
-
-    std::size_t frames_written = 0;
-    if (performing_time_stretching) {
-        const std::vector<s16> in{fifo.Pop()};
-        const std::size_t num_in{in.size() / 2};
-        frames_written = time_stretcher.Process(in.data(), num_in, buffer, num_frames);
-    } else {
-        if (flushing_time_stretcher) {
-            time_stretcher.Flush();
-            frames_written = time_stretcher.Process(nullptr, 0, buffer, num_frames);
-            flushing_time_stretcher = false;
-
-            // Make sure any frames that did not fit are cleared from the time stretcher,
-            // so that they do not bleed into the next time the stretcher is enabled.
-            time_stretcher.Clear();
-        }
-        frames_written += fifo.Pop(buffer, num_frames - frames_written);
-    }
-
-    if (frames_written > 0) {
-        std::memcpy(&last_frame[0], buffer + 2 * (frames_written - 1), 2 * sizeof(s16));
-    }
-
-    // Hold last emitted frame; this prevents popping.
-    for (std::size_t i = frames_written; i < num_frames; i++) {
-        std::memcpy(buffer + 2 * i, &last_frame[0], 2 * sizeof(s16));
-    }
+    // A hint for the stretcher's servo, not a decision: the pipeline measures what arrives.
+    const double frame_limit = Settings::GetFrameLimit();
+    pipeline.SetRequestedSpeed(frame_limit <= 0.0 ? std::numeric_limits<double>::infinity()
+                                                  : frame_limit / 100.0);
+    pipeline.Render(buffer, num_frames);
 
     // Implementation of the hardware volume slider
     // A cubic curve is used to approximate a linear change in human-perceived loudness

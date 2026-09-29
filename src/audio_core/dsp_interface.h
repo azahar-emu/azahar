@@ -1,4 +1,4 @@
-// Copyright 2017-2025 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -8,9 +8,8 @@
 #include <span>
 #include <boost/serialization/access.hpp>
 #include "audio_core/audio_types.h"
-#include "audio_core/time_stretch.h"
+#include "audio_core/output_pipeline.h"
 #include "common/common_types.h"
-#include "common/ring_buffer.h"
 #include "core/memory.h"
 
 namespace Core {
@@ -100,25 +99,38 @@ public:
     void SetSink(SinkType sink_type, std::string_view audio_device);
     /// Get the current sink
     Sink& GetSink();
-    /// Enable/Disable audio stretching.
+    /// Enable/Disable audio stretching. On, the stretcher engages while emulation is off full
+    /// speed and stands aside otherwise; off, audio goes straight through at any speed.
     void EnableStretching(bool enable);
+    /// Enable/Disable ending the stream on a ramp; off, its edges are hard cuts.
+    void SetAudioRamp(bool enable);
+    /// Reference cutoff in Hz for the fast-forward low-pass; the applied cutoff is this over
+    /// the speed reached. The top of the setting's range, and zero, mean no filtering.
+    void SetSpeedupLowPass(u16 reference);
+    /// The core has stopped producing audio on purpose: end the stream on a ramp rather than
+    /// wherever the waveform happens to be, and discard whatever it had already produced.
+    /// Any thread.
+    void StreamEnd();
+    /// The core is producing again: the next frames ramp back in. Any thread.
+    void StreamBegin();
+    /// Bracket a jump the frontend makes in the game's state, a load or a reset, so the splice
+    /// lands in silence: takes the stream down and waits, bounded, for the tail to reach the
+    /// sink. Returns false and does nothing if the stream is already down, so the ramp back up
+    /// stays with whatever took it down. Emulation thread.
+    bool JumpBegin();
+    void JumpEnd(bool ramped);
 
 protected:
     void OutputFrame(StereoFrame16 frame);
     void OutputSample(std::array<s16, 2> sample);
 
 private:
-    void FlushResidualStretcherAudio();
     void OutputCallback(s16* buffer, std::size_t num_frames);
 
     Core::System& system;
-
-    std::atomic<bool> enable_time_stretching = false;
-    std::atomic<bool> performing_time_stretching = false;
-    std::atomic<bool> flushing_time_stretcher = false;
-    Common::RingBuffer<s16, 0x2000, 2> fifo;
-    std::array<s16, 2> last_frame{};
-    TimeStretcher time_stretcher;
+    // Everything between the DSP's frames and the sink's callback; see
+    // OutputPipeline::Render() (audio_core/output_pipeline.cpp).
+    OutputPipeline pipeline;
     std::unique_ptr<Sink> sink;
 
     template <class Archive>

@@ -1,7 +1,8 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/core.h>
 
@@ -19,7 +20,13 @@ TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
     Memory::MemorySystem memory{system};
     Core::Timing core_timing(1, 100);
 
-    AudioCore::DspLle lle(system, memory, core_timing, true);
+    // Held by pointer, as Core::System holds the DSP (core/core.h): DspInterface carries
+    // OutputPipeline (audio_core/output_pipeline.h) by value, which is far too large for a
+    // stack frame. On the stack, unwinding out of the SKIP below fails under GCC on AArch64 -
+    // the unwinder reaches __cxa_call_terminate rather than Catch2's handler - and the test
+    // aborts instead of skipping.
+    auto lle_ptr = std::make_unique<AudioCore::DspLle>(system, memory, core_timing, true);
+    auto& lle = *lle_ptr;
     {
         FileUtil::SetUserPath();
         // dspaudio.cdc can be dumped from Pokemon X & Y, It can be found in the romfs at

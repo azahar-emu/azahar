@@ -1,7 +1,8 @@
-// Copyright 2023-2025 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/core.h>
 
@@ -24,8 +25,10 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
     Kernel::KernelSystem lle_kernel(
         lle_memory, lle_core_timing, [] {}, Kernel::MemoryMode::NewProd, 1);
 
-    AudioCore::DspHle hle(system, hle_memory, hle_core_timing);
-    AudioCore::DspLle lle(system, lle_memory, lle_core_timing, true);
+    // On the heap: each DSP carries its OutputPipeline's buffers inline, a quarter megabyte,
+    // and two of them would crowd a 1 MB main-thread stack.
+    const auto hle = std::make_unique<AudioCore::DspHle>(system, hle_memory, hle_core_timing);
+    const auto lle = std::make_unique<AudioCore::DspLle>(system, lle_memory, lle_core_timing, true);
 
     // Initialise LLE
     {
@@ -42,14 +45,14 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
 
         std::vector<u8> firm_file_buf(firm_file.GetSize());
         firm_file.ReadArray(firm_file_buf.data(), firm_file_buf.size());
-        lle.LoadComponent(firm_file_buf);
-        lle.SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
+        lle->LoadComponent(firm_file_buf);
+        lle->SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
             fmt::print("LLE SetInterruptHandler type={} pipe={}\n", type, pipe);
         });
     }
     // Initialise HLE
     {
-        hle.SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
+        hle->SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
             fmt::print("HLE SetInterruptHandler type={} pipe={}\n", type, pipe);
         });
     }
@@ -60,34 +63,34 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
 
         // LLE
         {
-            lle.PipeWrite(AudioCore::DspPipe::Audio, buffer);
-            lle.SetSemaphore(0x4000);
+            lle->PipeWrite(AudioCore::DspPipe::Audio, buffer);
+            lle->SetSemaphore(0x4000);
 
             // todo: wait for interrupt
             do {
                 lle_core_timing.GetTimer(0)->AddTicks(lle_core_timing.GetTimer(0)->GetDowncount());
                 lle_core_timing.GetTimer(0)->Advance();
                 lle_core_timing.GetTimer(0)->SetNextSlice();
-            } while (lle.GetPipeReadableSize(AudioCore::DspPipe::Audio) == 0);
+            } while (lle->GetPipeReadableSize(AudioCore::DspPipe::Audio) == 0);
 
-            REQUIRE(lle.GetPipeReadableSize(AudioCore::DspPipe::Audio) >= 32);
+            REQUIRE(lle->GetPipeReadableSize(AudioCore::DspPipe::Audio) >= 32);
         }
         std::vector<u8> lle_read_buffer;
-        lle_read_buffer = lle.PipeRead(AudioCore::DspPipe::Audio, 2);
+        lle_read_buffer = lle->PipeRead(AudioCore::DspPipe::Audio, 2);
         u16 lle_size;
         std::memcpy(&lle_size, lle_read_buffer.data(), sizeof(lle_size));
-        lle_read_buffer = lle.PipeRead(AudioCore::DspPipe::Audio, lle_size * 2);
+        lle_read_buffer = lle->PipeRead(AudioCore::DspPipe::Audio, lle_size * 2);
 
         // HLE
         {
-            hle.PipeWrite(AudioCore::DspPipe::Audio, buffer);
-            REQUIRE(hle.GetPipeReadableSize(AudioCore::DspPipe::Audio) >= 32);
+            hle->PipeWrite(AudioCore::DspPipe::Audio, buffer);
+            REQUIRE(hle->GetPipeReadableSize(AudioCore::DspPipe::Audio) >= 32);
         }
         std::vector<u8> hle_read_buffer(32);
-        hle_read_buffer = hle.PipeRead(AudioCore::DspPipe::Audio, 2);
+        hle_read_buffer = hle->PipeRead(AudioCore::DspPipe::Audio, 2);
         u16 hle_size;
         std::memcpy(&hle_size, hle_read_buffer.data(), sizeof(hle_size));
-        hle_read_buffer = hle.PipeRead(AudioCore::DspPipe::Audio, hle_size * 2);
+        hle_read_buffer = hle->PipeRead(AudioCore::DspPipe::Audio, hle_size * 2);
 
         REQUIRE(hle_size == lle_size);
         REQUIRE(hle_read_buffer == lle_read_buffer);
@@ -111,29 +114,29 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
         request.decode_aac_init.unknown6 = 0x20;
 
         // LLE
-        lle.PipeWrite(AudioCore::DspPipe::Binary, buffer);
-        lle.SetSemaphore(0x4000);
+        lle->PipeWrite(AudioCore::DspPipe::Binary, buffer);
+        lle->SetSemaphore(0x4000);
 
         // todo: wait for interrupt
         do {
             lle_core_timing.GetTimer(0)->AddTicks(lle_core_timing.GetTimer(0)->GetDowncount());
             lle_core_timing.GetTimer(0)->Advance();
             lle_core_timing.GetTimer(0)->SetNextSlice();
-        } while (lle.GetPipeReadableSize(AudioCore::DspPipe::Binary) == 0);
+        } while (lle->GetPipeReadableSize(AudioCore::DspPipe::Binary) == 0);
 
-        REQUIRE(lle.GetPipeReadableSize(AudioCore::DspPipe::Binary) >= 32);
+        REQUIRE(lle->GetPipeReadableSize(AudioCore::DspPipe::Binary) >= 32);
 
-        std::vector<u8> lle_read_buffer = lle.PipeRead(AudioCore::DspPipe::Binary, 32);
+        std::vector<u8> lle_read_buffer = lle->PipeRead(AudioCore::DspPipe::Binary, 32);
         AudioCore::HLE::BinaryMessage& resp =
             *reinterpret_cast<AudioCore::HLE::BinaryMessage*>(lle_read_buffer.data());
         CHECK(resp.header.result == AudioCore::HLE::ResultStatus::Success);
 
         // HLE
         {
-            hle.PipeWrite(AudioCore::DspPipe::Binary, buffer);
-            REQUIRE(hle.GetPipeReadableSize(AudioCore::DspPipe::Binary) >= 32);
+            hle->PipeWrite(AudioCore::DspPipe::Binary, buffer);
+            REQUIRE(hle->GetPipeReadableSize(AudioCore::DspPipe::Binary) >= 32);
         }
-        std::vector<u8> hle_read_buffer = hle.PipeRead(AudioCore::DspPipe::Binary, 32);
+        std::vector<u8> hle_read_buffer = hle->PipeRead(AudioCore::DspPipe::Binary, 32);
 
         REQUIRE(hle_read_buffer == lle_read_buffer);
     }

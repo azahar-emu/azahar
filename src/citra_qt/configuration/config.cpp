@@ -295,6 +295,8 @@ void QtConfig::ReadAudioValues() {
     ReadGlobalSetting(Settings::values.audio_emulation);
     ReadGlobalSetting(Settings::values.enable_audio_stretching);
     ReadGlobalSetting(Settings::values.enable_realtime_audio);
+    ReadGlobalSetting(Settings::values.enable_audio_ramp);
+    ReadGlobalSetting(Settings::values.speedup_lowpass);
     ReadGlobalSetting(Settings::values.simulate_headphones_plugged);
     ReadGlobalSetting(Settings::values.volume);
 
@@ -956,6 +958,8 @@ void QtConfig::SaveAudioValues() {
     WriteGlobalSetting(Settings::values.audio_emulation);
     WriteGlobalSetting(Settings::values.enable_audio_stretching);
     WriteGlobalSetting(Settings::values.enable_realtime_audio);
+    WriteGlobalSetting(Settings::values.enable_audio_ramp);
+    WriteGlobalSetting(Settings::values.speedup_lowpass);
     WriteGlobalSetting(Settings::values.simulate_headphones_plugged);
     WriteGlobalSetting(Settings::values.volume);
 

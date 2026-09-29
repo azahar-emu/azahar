@@ -6,10 +6,12 @@
 #include <sstream>
 #include <cryptopp/hex.h>
 #include <fmt/ranges.h>
+#include "audio_core/dsp_interface.h"
 #include "common/archives.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
+#include "common/scope_exit.h"
 #include "common/swap.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
@@ -203,6 +205,18 @@ void System::LoadState(u32 slot) {
     if (room_member && room_member->IsConnected()) {
         throw std::runtime_error("Unable to load while connected to multiplayer");
     }
+
+    // A load splices the game's own audio. Take the stream down on its tail first, ahead of
+    // the read and the decompression, so the splice lands in silence. Deserializing replaces
+    // the DSP and its sink, and the replacement opens on a ramp of its own, so on success the
+    // end of the bracket finds nothing to bring back; on a throw it finds the stream it took
+    // down.
+    const bool ramped = dsp_core ? dsp_core->JumpBegin() : false;
+    SCOPE_EXIT({
+        if (ramped && dsp_core) {
+            dsp_core->JumpEnd(true);
+        }
+    });
 
     const u64 movie_id = movie.GetCurrentMovieID();
     const auto path = GetSaveStatePath(title_id, movie_id, slot);
