@@ -1,5 +1,11 @@
 ![Azahar Emulator](https://azahar-emu.org/resources/images/logo/azahar-name-and-logo.svg)
 
+> **Personal fork: movable Android touch controls.** This branch adds direct access
+> to the touch control editor and improves dragging of buttons, the D-pad and sticks.
+> See [usage and testing instructions](src/android/TOUCH_CONTROLS.md).
+> This implementation was generated with AI assistance (OpenAI Codex). It is a
+> personal prototype, not an official Azahar release or an upstream contribution.
+
 ![Current Release](https://img.shields.io/github/v/release/azahar-emu/azahar?label=Current%20Release)
 ![Current Prerelease](https://img.shields.io/github/v/release/azahar-emu/azahar?include_prereleases&label=Current%20Prerelease)
 

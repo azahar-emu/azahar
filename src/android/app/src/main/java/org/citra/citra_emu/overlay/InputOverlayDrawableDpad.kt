@@ -40,10 +40,6 @@ class InputOverlayDrawableDpad(
     val opacity: Int
 ) {
     var trackId: Int
-    private var previousTouchX = 0
-    private var previousTouchY = 0
-    private var controlPositionX = 0
-    private var controlPositionY = 0
     val width: Int
     val height: Int
     private val defaultStateBitmap: BitmapDrawable
@@ -147,9 +143,14 @@ class InputOverlayDrawableDpad(
         return false
     }
 
-    fun draw(canvas: Canvas) {
-        val px = controlPositionX + width / 2
-        val py = controlPositionY + height / 2
+    fun draw(canvas: Canvas, isEditing: Boolean = false) {
+        if (isEditing) {
+            defaultStateBitmap.alpha = opacity.coerceAtLeast(128)
+            defaultStateBitmap.draw(canvas)
+            return
+        }
+        val px = bounds.centerX()
+        val py = bounds.centerY()
 
         // Pressed up
         if (upButtonState && !leftButtonState && !rightButtonState) {
@@ -255,35 +256,8 @@ class InputOverlayDrawableDpad(
             NativeLibrary.ButtonState.RELEASED
         }
 
-    fun onConfigureTouch(event: MotionEvent): Boolean {
-        val pointerIndex = event.actionIndex
-        val fingerPositionX = event.getX(pointerIndex).toInt()
-        val fingerPositionY = event.getY(pointerIndex).toInt()
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                previousTouchX = fingerPositionX
-                previousTouchY = fingerPositionY
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                controlPositionX += fingerPositionX - previousTouchX
-                controlPositionY += fingerPositionY - previousTouchY
-                setBounds(
-                    controlPositionX,
-                    controlPositionY,
-                    width + controlPositionX,
-                    height + controlPositionY
-                )
-                previousTouchX = fingerPositionX
-                previousTouchY = fingerPositionY
-            }
-        }
-        return true
-    }
-
     fun setPosition(x: Int, y: Int) {
-        controlPositionX = x
-        controlPositionY = y
+        setBounds(x, y, x + width, y + height)
     }
 
     fun setBounds(left: Int, top: Int, right: Int, bottom: Int) {

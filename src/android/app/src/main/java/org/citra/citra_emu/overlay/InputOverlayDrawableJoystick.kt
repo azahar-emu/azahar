@@ -15,7 +15,6 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.utils.EmulationMenuSettings
 
 /**
@@ -46,10 +45,6 @@ class InputOverlayDrawableJoystick(
     var yAxis = 0f
     var angle = 0f
     var radius = 0f
-    private var controlPositionX = 0
-    private var controlPositionY = 0
-    private var previousTouchX = 0
-    private var previousTouchY = 0
     val width: Int
     val height: Int
     private var virtBounds: Rect
@@ -86,10 +81,13 @@ class InputOverlayDrawableJoystick(
         outerBitmap.alpha = opacity
     }
 
-    fun draw(canvas: Canvas?) {
+    fun draw(canvas: Canvas?, isEditing: Boolean = false) {
+        if (isEditing) {
+            outerBitmap.alpha = opacity.coerceAtLeast(128)
+        }
         outerBitmap.draw(canvas!!)
         boundsBoxBitmap.draw(canvas)
-        currentStateBitmapDrawable.alpha = opacity
+        currentStateBitmapDrawable.alpha = if (isEditing) opacity.coerceAtLeast(128) else opacity
         currentStateBitmapDrawable.draw(canvas)
     }
 
@@ -192,56 +190,6 @@ class InputOverlayDrawableJoystick(
         return false
     }
 
-    fun onConfigureTouch(event: MotionEvent): Boolean {
-        val pointerIndex = event.actionIndex
-        val fingerPositionX = event.getX(pointerIndex).toInt()
-        val fingerPositionY = event.getY(pointerIndex).toInt()
-        var scale = 1
-        if (joystickId == NativeLibrary.ButtonType.STICK_C) {
-            // C-stick is scaled down to be half the size of the circle pad
-            scale = 2
-        }
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                previousTouchX = fingerPositionX
-                previousTouchY = fingerPositionY
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                val deltaX = fingerPositionX - previousTouchX
-                val deltaY = fingerPositionY - previousTouchY
-                controlPositionX += deltaX
-                controlPositionY += deltaY
-                bounds = Rect(
-                    controlPositionX,
-                    controlPositionY,
-                    outerBitmap.intrinsicWidth / scale + controlPositionX,
-                    outerBitmap.intrinsicHeight / scale + controlPositionY
-                )
-                virtBounds = Rect(
-                    controlPositionX,
-                    controlPositionY,
-                    outerBitmap.intrinsicWidth / scale + controlPositionX,
-                    outerBitmap.intrinsicHeight / scale + controlPositionY
-                )
-                setInnerBounds()
-                setOrigBounds(
-                    Rect(
-                        Rect(
-                            controlPositionX,
-                            controlPositionY,
-                            outerBitmap.intrinsicWidth / scale + controlPositionX,
-                            outerBitmap.intrinsicHeight / scale + controlPositionY
-                        )
-                    )
-                )
-                previousTouchX = fingerPositionX
-                previousTouchY = fingerPositionY
-            }
-        }
-        return true
-    }
-
     private fun setInnerBounds() {
         var x = virtBounds.centerX() + (xAxis * (virtBounds.width() / 2)).toInt()
         var y = virtBounds.centerY() + (yAxis * (virtBounds.height() / 2)).toInt()
@@ -268,14 +216,14 @@ class InputOverlayDrawableJoystick(
     }
 
     fun setPosition(x: Int, y: Int) {
-        controlPositionX = x
-        controlPositionY = y
+        val movedBounds = Rect(x, y, x + bounds.width(), y + bounds.height())
+        bounds = movedBounds
+        virtBounds = Rect(movedBounds)
+        origBounds = Rect(movedBounds)
+        boundsBoxBitmap.bounds = virtBounds
+        setInnerBounds()
     }
 
     private val currentStateBitmapDrawable: BitmapDrawable
         get() = if (pressedState) pressedStateInnerBitmap else defaultStateInnerBitmap
-
-    private fun setOrigBounds(bounds: Rect) {
-        origBounds = bounds
-    }
 }

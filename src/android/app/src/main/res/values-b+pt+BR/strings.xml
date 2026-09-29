@@ -486,6 +486,8 @@
     <string name="emulation_configure_controls">Configurar controles</string>
     <string name="emulation_edit_layout">Editar Disposição</string>
     <string name="emulation_done">Pronto</string>
+    <string name="emulation_move_controls">Mover controles de toque</string>
+    <string name="emulation_move_controls_hint">Arraste os botões, o direcional ou os analógicos para movê-los. As posições são salvas automaticamente. Toque em Pronto para jogar.</string>
     <string name="emulation_button_sliding">Deslizar Botão</string>
     <string name="emulation_button_sliding_disabled">Segurar o botão originalmente pressionado</string>
     <string name="emulation_button_sliding_enabled">Segurar o botão atualmente pressionado</string>

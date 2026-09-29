@@ -13,6 +13,11 @@
         android:visible="false" />
 
     <item
+        android:id="@+id/menu_emulation_edit_layout"
+        android:icon="@drawable/ic_controller"
+        android:title="@string/emulation_move_controls" />
+
+    <item
         android:id="@+id/menu_overlay_options"
         android:icon="@drawable/ic_controller"
         android:title="@string/emulation_overlay_options" />

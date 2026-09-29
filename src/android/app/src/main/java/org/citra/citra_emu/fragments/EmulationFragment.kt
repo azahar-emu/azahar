@@ -230,8 +230,7 @@ class EmulationFragment :
 
         binding.surfaceEmulation.holder.addCallback(this)
         binding.doneControlConfig.setOnClickListener {
-            binding.doneControlConfig.visibility = View.GONE
-            binding.surfaceInputOverlay.setIsInEditMode(false)
+            editControlsPlacement()
         }
 
         // Show/hide the "Stats" overlay
@@ -329,6 +328,12 @@ class EmulationFragment :
 
                 R.id.menu_emulation_savestates -> {
                     showSavestateMenu()
+                    true
+                }
+
+                R.id.menu_emulation_edit_layout -> {
+                    editControlsPlacement()
+                    binding.drawerLayout.close()
                     true
                 }
 
@@ -445,6 +450,8 @@ class EmulationFragment :
 
                     if (binding.drawerLayout.isOpen) {
                         binding.drawerLayout.close()
+                    } else if (binding.surfaceInputOverlay.isInEditMode) {
+                        editControlsPlacement()
                     } else {
                         binding.drawerLayout.open()
                     }
@@ -1251,6 +1258,11 @@ class EmulationFragment :
         } else {
             binding.doneControlConfig.visibility = View.VISIBLE
             binding.surfaceInputOverlay.setIsInEditMode(true)
+            Toast.makeText(
+                requireContext(),
+                R.string.emulation_move_controls_hint,
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

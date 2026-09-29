@@ -50,6 +50,10 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     private var buttonBeingConfigured: InputOverlayDrawableButton? = null
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
+    private var editingPointerId = -1
+    private var editingOffsetX = 0
+    private var editingOffsetY = 0
+    private var editingOrientation = ""
     private val settingsViewModel = NativeLibrary.sEmulationActivity.get()!!.settingsViewModel
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
@@ -78,9 +82,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
-        overlayButtons.forEach { it.draw(canvas) }
-        overlayDpads.forEach { it.draw(canvas) }
-        overlayJoysticks.forEach { it.draw(canvas) }
+        overlayButtons.forEach { it.draw(canvas, isInEditMode) }
+        overlayDpads.forEach { it.draw(canvas, isInEditMode) }
+        overlayJoysticks.forEach { it.draw(canvas, isInEditMode) }
+    }
+
+    override fun onDetachedFromWindow() {
+        finishControlMove()
+        super.onDetachedFromWindow()
     }
 
     private fun swapScreen() {
@@ -314,112 +323,76 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
         return true
     }
 
-    fun onTouchWhileEditing(event: MotionEvent): Boolean {
-        val pointerIndex = event.actionIndex
-        val fingerPositionX = event.getX(pointerIndex).toInt()
-        val fingerPositionY = event.getY(pointerIndex).toInt()
-        val orientation =
-            if (resources.configuration.orientation ==
-                Configuration.ORIENTATION_PORTRAIT
-            ) {
-                "-Portrait"
-            } else {
-                ""
-            }
-
-        // Maybe combine Button and Joystick as subclasses of the same parent?
-        // Or maybe create an interface like IMoveableHUDControl?
-        overlayButtons.forEach {
-            // Determine the button state to apply based on the MotionEvent action flag.
-            when (event.action and MotionEvent.ACTION_MASK) {
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN ->
-                    // If no button is being moved now, remember the currently touched button to move.
-                    if (buttonBeingConfigured == null &&
-                        it.bounds.contains(fingerPositionX, fingerPositionY)
-                    ) {
-                        buttonBeingConfigured = it
-                        buttonBeingConfigured!!.onConfigureTouch(event)
+    private fun onTouchWhileEditing(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                if (editingPointerId != -1) return true
+                val index = event.actionIndex
+                val x = event.getX(index).toInt()
+                val y = event.getY(index).toInt()
+                // Pick only one control, in reverse drawing order, even when controls overlap.
+                joystickBeingConfigured = overlayJoysticks.lastOrNull { it.bounds.contains(x, y) }
+                if (joystickBeingConfigured == null) {
+                    dpadBeingConfigured = overlayDpads.lastOrNull { it.bounds.contains(x, y) }
+                    if (dpadBeingConfigured == null) {
+                        buttonBeingConfigured =
+                            overlayButtons.lastOrNull { it.bounds.contains(x, y) }
                     }
-
-                MotionEvent.ACTION_MOVE -> if (buttonBeingConfigured != null) {
-                    buttonBeingConfigured!!.onConfigureTouch(event)
-                    invalidate()
-                    return true
                 }
-
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> if (buttonBeingConfigured ==
-                    it
-                ) {
-                    // Persist button position by saving new place.
-                    saveControlPosition(
-                        buttonBeingConfigured!!.id,
-                        buttonBeingConfigured!!.bounds.left,
-                        buttonBeingConfigured!!.bounds.top,
-                        orientation
-                    )
-                    buttonBeingConfigured = null
-                }
-            }
-        }
-        overlayDpads.forEach {
-            // Determine the button state to apply based on the MotionEvent action flag.
-            when (event.action and MotionEvent.ACTION_MASK) {
-                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN ->
-                    // If no button is being moved now, remember the currently touched button to move.
-                    if (buttonBeingConfigured == null &&
-                        it.bounds.contains(fingerPositionX, fingerPositionY)
-                    ) {
-                        dpadBeingConfigured = it
-                        dpadBeingConfigured!!.onConfigureTouch(event)
+                val bounds = configuredControlBounds ?: return true
+                editingPointerId = event.getPointerId(index)
+                editingOffsetX = x - bounds.left
+                editingOffsetY = y - bounds.top
+                editingOrientation =
+                    if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        "-Portrait"
+                    } else {
+                        ""
                     }
+            }
 
-                MotionEvent.ACTION_MOVE -> if (dpadBeingConfigured != null) {
-                    dpadBeingConfigured!!.onConfigureTouch(event)
-                    invalidate()
-                    return true
-                }
+            MotionEvent.ACTION_MOVE -> {
+                val index = event.findPointerIndex(editingPointerId)
+                if (index == -1) return true
+                val bounds = configuredControlBounds ?: return true
+                val x = (event.getX(index).toInt() - editingOffsetX)
+                    .coerceIn(0, (width - bounds.width()).coerceAtLeast(0))
+                val y = (event.getY(index).toInt() - editingOffsetY)
+                    .coerceIn(0, (height - bounds.height()).coerceAtLeast(0))
+                buttonBeingConfigured?.setPosition(x, y)
+                dpadBeingConfigured?.setPosition(x, y)
+                joystickBeingConfigured?.setPosition(x, y)
+                invalidate()
+            }
 
-                MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_POINTER_UP -> if (dpadBeingConfigured == it) {
-                    // Persist button position by saving new place.
-                    saveControlPosition(
-                        dpadBeingConfigured!!.upId,
-                        dpadBeingConfigured!!.bounds.left,
-                        dpadBeingConfigured!!.bounds.top,
-                        orientation
-                    )
-                    dpadBeingConfigured = null
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                if (event.getPointerId(event.actionIndex) == editingPointerId) {
+                    finishControlMove()
                 }
             }
-        }
-        overlayJoysticks.forEach {
-            when (event.action) {
-                MotionEvent.ACTION_DOWN,
-                MotionEvent.ACTION_POINTER_DOWN -> if (joystickBeingConfigured == null &&
-                    it.bounds.contains(fingerPositionX, fingerPositionY)
-                ) {
-                    joystickBeingConfigured = it
-                    joystickBeingConfigured!!.onConfigureTouch(event)
-                }
 
-                MotionEvent.ACTION_MOVE -> if (joystickBeingConfigured != null) {
-                    joystickBeingConfigured!!.onConfigureTouch(event)
-                    invalidate()
-                }
-
-                MotionEvent.ACTION_UP,
-                MotionEvent.ACTION_POINTER_UP -> if (joystickBeingConfigured != null) {
-                    saveControlPosition(
-                        joystickBeingConfigured!!.joystickId,
-                        joystickBeingConfigured!!.bounds.left,
-                        joystickBeingConfigured!!.bounds.top,
-                        orientation
-                    )
-                    joystickBeingConfigured = null
-                }
-            }
+            MotionEvent.ACTION_CANCEL -> finishControlMove()
         }
         return true
+    }
+
+    private val configuredControlBounds: Rect?
+        get() = buttonBeingConfigured?.bounds
+            ?: dpadBeingConfigured?.bounds
+            ?: joystickBeingConfigured?.bounds
+
+    private fun finishControlMove() {
+        val id = buttonBeingConfigured?.id
+            ?: dpadBeingConfigured?.upId
+            ?: joystickBeingConfigured?.joystickId
+        val bounds = configuredControlBounds
+        if (id != null && bounds != null) {
+            saveControlPosition(id, bounds.left, bounds.top, editingOrientation)
+        }
+        buttonBeingConfigured = null
+        dpadBeingConfigured = null
+        joystickBeingConfigured = null
+        editingPointerId = -1
     }
 
     private fun addOverlayControls(orientation: String) {
@@ -622,6 +595,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     }
 
     fun refreshControls() {
+        finishControlMove()
         // Remove all the overlay buttons from the HashSet.
         overlayButtons.clear()
         overlayDpads.clear()
@@ -634,7 +608,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             }
 
         // Add all the enabled overlay items back to the HashSet.
-        if (EmulationMenuSettings.showOverlay) {
+        if (EmulationMenuSettings.showOverlay || isInEditMode) {
             addOverlayControls(orientation)
         }
         invalidate()
@@ -648,7 +622,9 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     }
 
     fun setIsInEditMode(isInEditMode: Boolean) {
+        finishControlMove()
         this.isInEditMode = isInEditMode
+        refreshControls()
     }
 
     private fun defaultOverlay() {
@@ -678,6 +654,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     }
 
     fun resetButtonPlacement() {
+        finishControlMove()
         val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         if (isLandscape) {
             defaultOverlayLandscape()

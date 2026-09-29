@@ -510,6 +510,8 @@
     <string name="emulation_configure_controls">Configure Controls</string>
     <string name="emulation_edit_layout">Edit Layout</string>
     <string name="emulation_done">Done</string>
+    <string name="emulation_move_controls">Move touch controls</string>
+    <string name="emulation_move_controls_hint">Drag the buttons, D-pad or sticks to move them. Positions are saved automatically. Tap Done to play.</string>
     <string name="emulation_button_sliding">Button Sliding</string>
     <string name="emulation_button_sliding_disabled">Hold originally pressed button</string>
     <string name="emulation_button_sliding_enabled">Hold currently pressed button</string>

@@ -48,10 +48,6 @@ class InputOverlayDrawableButton(
     private var isMotionFirstButton = false
     // ^- mark the first activated button with the current motion
 
-    private var previousTouchX = 0
-    private var previousTouchY = 0
-    private var controlPositionX = 0
-    private var controlPositionY = 0
     val width: Int
     val height: Int
     private val defaultStateBitmap: BitmapDrawable
@@ -149,40 +145,13 @@ class InputOverlayDrawableButton(
         overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
     }
 
-    fun onConfigureTouch(event: MotionEvent): Boolean {
-        val pointerIndex = event.actionIndex
-        val fingerPositionX = event.getX(pointerIndex).toInt()
-        val fingerPositionY = event.getY(pointerIndex).toInt()
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                previousTouchX = fingerPositionX
-                previousTouchY = fingerPositionY
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                controlPositionX += fingerPositionX - previousTouchX
-                controlPositionY += fingerPositionY - previousTouchY
-                setBounds(
-                    controlPositionX,
-                    controlPositionY,
-                    width + controlPositionX,
-                    height + controlPositionY
-                )
-                previousTouchX = fingerPositionX
-                previousTouchY = fingerPositionY
-            }
-        }
-        return true
-    }
-
     fun setPosition(x: Int, y: Int) {
-        controlPositionX = x
-        controlPositionY = y
+        setBounds(x, y, x + width, y + height)
     }
 
-    fun draw(canvas: Canvas) {
+    fun draw(canvas: Canvas, isEditing: Boolean = false) {
         val bitmapDrawable: BitmapDrawable = currentStateBitmapDrawable
-        bitmapDrawable.alpha = opacity
+        bitmapDrawable.alpha = if (isEditing) opacity.coerceAtLeast(128) else opacity
         bitmapDrawable.draw(canvas)
     }
 
