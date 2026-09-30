@@ -768,7 +768,23 @@ static const retro_core_options_v2 options_v2 = {
     const_cast<retro_core_option_v2_category*>(option_categories),
     const_cast<retro_core_option_v2_definition*>(option_definitions)};
 
+/// Whether the frontend shows the Layout options. New core options show until the core hides
+/// them; only options the frontend took reset this, as RetroArch sets a running core's
+/// environment again, ignoring every call, to read its system info.
+static bool layout_options_visible = true;
+
+static bool RETRO_CALLCONV UpdateOptionsDisplay(void) {
+    unsigned status = 0;
+    if (!LibRetro::GetVideoViewsStatus(&status)) {
+        status = 0;
+    }
+    return UpdateLayoutOptionsDisplay(
+        LibRetro::FetchVariable(config::layout::frontend_layout, "auto") != "off", status);
+}
+
 void RegisterCoreOptions(void) {
+    LibRetro::SetCoreOptionsUpdateDisplayCallback(UpdateOptionsDisplay);
+
     // Try v2 first, then fallback to v1 and v0 if needed
     unsigned version = 0;
     if (!LibRetro::GetCoreOptionsVersion(&version)) {
@@ -780,6 +796,7 @@ void RegisterCoreOptions(void) {
     if (version >= 2) {
         if (LibRetro::SetCoreOptionsV2(&options_v2)) {
             LOG_INFO(Frontend, "V2 core options set successfully");
+            layout_options_visible = true;
             return;
         }
     }
@@ -813,6 +830,7 @@ void RegisterCoreOptions(void) {
 
         if (LibRetro::SetCoreOptionsV1(options_v1.data())) {
             LOG_INFO(Frontend, "V1 core options set successfully");
+            layout_options_visible = true;
             return;
         }
     }
@@ -866,6 +884,7 @@ void RegisterCoreOptions(void) {
     // Set V0 variables
     if (LibRetro::SetVariables(variables.data())) {
         LOG_INFO(Frontend, "V0 core options set successfully");
+        layout_options_visible = true;
     } else {
         LOG_ERROR(Frontend, "Failed to set core options with any version");
     }
@@ -1123,6 +1142,30 @@ void ApplyLayoutSettings(void) {
 
     // Games render a second eye whenever the slider is up.
     Settings::values.factor_3d = both_eyes ? LibRetro::settings.factor_3d : 0u;
+}
+
+std::array<retro_core_option_display, 3> LayoutOptionsDisplay(bool frontend_layout,
+                                                              unsigned status) {
+    // The frontend's stereo modes use views whatever these say; in its 2D mode they decide
+    // whether views are used.
+    const bool visible = !(frontend_layout && (status & RETRO_VIDEO_VIEWS_STATUS_PRESENTS) &&
+                           (status & RETRO_VIDEO_VIEWS_STATUS_STEREO));
+    return {{{config::layout::layout_option, visible},
+             {config::layout::large_screen_proportion, visible},
+             {config::layout::render_3d, visible}}};
+}
+
+bool UpdateLayoutOptionsDisplay(bool frontend_layout, unsigned status) {
+    const auto display = LayoutOptionsDisplay(frontend_layout, status);
+    // They show and hide together.
+    if (display[0].visible == layout_options_visible) {
+        return false;
+    }
+    for (const auto& option : display) {
+        LibRetro::SetCoreOptionsDisplay(&option);
+    }
+    layout_options_visible = display[0].visible;
+    return true;
 }
 
 static void ParseStorageOptions(void) {

@@ -3,6 +3,9 @@
 // Refer to the LICENSE.txt file included.
 
 #include <cstddef>
+#include <map>
+#include <set>
+#include <string>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include "citra_libretro/core_settings.h"
@@ -81,6 +84,73 @@ std::vector<retro_video_view> MapFor(bool stereo, bool swapped, u32 scale) {
     REQUIRE(layout.height == height);
     return LibRetro::VideoViews::BuildMap(layout, stereo, swapped);
 }
+
+template <typename Display>
+std::set<std::string> Keys(const Display& display, bool visible) {
+    std::set<std::string> keys;
+    for (const auto& option : display) {
+        if (option.visible == visible) {
+            keys.insert(option.key);
+        }
+    }
+    return keys;
+}
+
+/// The frontend's visibility of the Layout options the views override.
+std::map<std::string, bool> LayoutDisplay(bool visible) {
+    return {{"citra_layout_option", visible},
+            {"citra_large_screen_proportion", visible},
+            {"citra_render_3d", visible}};
+}
+
+/// Answers the calls the core options' visibility makes.
+namespace FakeFrontend {
+
+unsigned views_status = 0;
+const char* frontend_layout = "auto";
+/// As RetroArch while it reads a running core's system info.
+bool ignore_calls = false;
+retro_core_options_update_display_callback_t update_display = nullptr;
+/// The options the core has hidden or shown; the others show.
+std::map<std::string, bool> display;
+
+bool Environment(unsigned cmd, void* data) {
+    if (ignore_calls) {
+        return false;
+    }
+    switch (cmd) {
+    case RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION:
+        *static_cast<unsigned*>(data) = 2;
+        return true;
+    case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
+        display.clear();
+        return true;
+    case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
+        update_display =
+            static_cast<const retro_core_options_update_display_callback*>(data)->callback;
+        return true;
+    case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY: {
+        const auto* option = static_cast<const retro_core_option_display*>(data);
+        display[option->key] = option->visible;
+        return true;
+    }
+    case RETRO_ENVIRONMENT_GET_VIDEO_VIEWS_STATUS:
+        *static_cast<unsigned*>(data) = views_status;
+        return true;
+    case RETRO_ENVIRONMENT_GET_VARIABLE: {
+        auto* var = static_cast<retro_variable*>(data);
+        if (std::string(var->key) != "citra_frontend_layout") {
+            return false;
+        }
+        var->value = frontend_layout;
+        return true;
+    }
+    default:
+        return false;
+    }
+}
+
+} // namespace FakeFrontend
 
 } // namespace
 
@@ -258,4 +328,75 @@ TEST_CASE("Views geometry and frame limits", "[libretro]") {
     retro_get_system_av_info(&info);
     REQUIRE(info.geometry.base_width == 720u);
     REQUIRE(info.geometry.base_height == 240u);
+}
+
+TEST_CASE("Stereo views hide the Layout options they override", "[libretro]") {
+    using LibRetro::LayoutOptionsDisplay;
+    constexpr unsigned presents = RETRO_VIDEO_VIEWS_STATUS_PRESENTS;
+    constexpr unsigned stereo = RETRO_VIDEO_VIEWS_STATUS_STEREO;
+    // Prominent 3DS Screen, Screen Swap Mode and Stereoscopic 3D Depth still apply.
+    const std::set<std::string> overridden{"citra_layout_option", "citra_large_screen_proportion",
+                                           "citra_render_3d"};
+
+    REQUIRE(Keys(LayoutOptionsDisplay(true, presents | stereo), false) == overridden);
+    REQUIRE(Keys(LayoutOptionsDisplay(true, presents | stereo), true).empty());
+    REQUIRE(Keys(LayoutOptionsDisplay(true, RETRO_VIDEO_VIEWS_STATUS_HMD | presents | stereo),
+                 false) == overridden);
+
+    // In the frontend's 2D mode, Screen Layout and Stereoscopic 3D Mode decide whether views
+    // are used.
+    REQUIRE(Keys(LayoutOptionsDisplay(true, presents), true) == overridden);
+    REQUIRE(Keys(LayoutOptionsDisplay(true, stereo), true) == overridden);
+    REQUIRE(Keys(LayoutOptionsDisplay(true, 0), true) == overridden);
+
+    // "Frontend Layout and 3D" is Off.
+    for (const unsigned status : {0u, presents, presents | stereo}) {
+        REQUIRE(Keys(LayoutOptionsDisplay(false, status), true) == overridden);
+    }
+}
+
+TEST_CASE("Option visibility reaches the frontend", "[libretro]") {
+    Common::Log::DisableLoggingInTests();
+    constexpr unsigned presents = RETRO_VIDEO_VIEWS_STATUS_PRESENTS;
+    constexpr unsigned stereo = RETRO_VIDEO_VIEWS_STATUS_STEREO;
+    const auto hidden = LayoutDisplay(false);
+    const auto shown = LayoutDisplay(true);
+    const auto& display = FakeFrontend::display;
+    FakeFrontend::views_status = presents | stereo;
+    FakeFrontend::frontend_layout = "auto";
+
+    retro_set_environment(FakeFrontend::Environment);
+    REQUIRE(FakeFrontend::update_display != nullptr);
+    REQUIRE(FakeFrontend::update_display());
+    REQUIRE(display == hidden);
+    REQUIRE_FALSE(FakeFrontend::update_display());
+
+    // The frontend asks after the option changes, before the core reads it.
+    FakeFrontend::frontend_layout = "off";
+    REQUIRE(FakeFrontend::update_display());
+    REQUIRE(display == shown);
+
+    // Each run follows the views status.
+    REQUIRE(LibRetro::UpdateLayoutOptionsDisplay(true, presents | stereo));
+    REQUIRE(display == hidden);
+    REQUIRE_FALSE(LibRetro::UpdateLayoutOptionsDisplay(true, presents | stereo));
+    REQUIRE(LibRetro::UpdateLayoutOptionsDisplay(true, presents));
+    REQUIRE(display == shown);
+
+    // New core options start visible.
+    REQUIRE(LibRetro::UpdateLayoutOptionsDisplay(true, presents | stereo));
+    FakeFrontend::frontend_layout = "auto";
+    retro_set_environment(FakeFrontend::Environment);
+    REQUIRE(display.empty());
+    REQUIRE(FakeFrontend::update_display());
+    REQUIRE(display == hidden);
+
+    // RetroArch sets a running core's environment again to read its system info, ignoring
+    // what the core asks for; its options stay as they were.
+    FakeFrontend::ignore_calls = true;
+    retro_set_environment(FakeFrontend::Environment);
+    FakeFrontend::ignore_calls = false;
+    FakeFrontend::frontend_layout = "off";
+    REQUIRE(FakeFrontend::update_display());
+    REQUIRE(display == shown);
 }
