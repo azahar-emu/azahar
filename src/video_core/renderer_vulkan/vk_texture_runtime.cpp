@@ -1175,17 +1175,17 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
                                      flags, traits.aspect, false, DebugName(true));
         current = Type::Scaled;
 
-    handles[Type::Copy].Destroy();
+        handles[Type::Copy].Destroy();
 
-    runtime.renderpass_cache.EndRendering();
-    scheduler.Record(
-        [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
-            std::array<vk::ImageMemoryBarrier, 1> barriers;
-            MakeInitBarriers(aspect, 1, raw_images, barriers);
-            cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
-                                   vk::PipelineStageFlagBits::eTopOfPipe,
-                                   vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
-        });
+        runtime.renderpass_cache.EndRendering();
+        scheduler.Record(
+            [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
+                std::array<vk::ImageMemoryBarrier, 1> barriers;
+                MakeInitBarriers(aspect, 1, raw_images, barriers);
+                cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+                                       vk::PipelineStageFlagBits::eTopOfPipe,
+                                       vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
+            });
 
         for (u32 level = 0; level < levels; level++) {
             const VideoCore::TextureBlit blit = {
