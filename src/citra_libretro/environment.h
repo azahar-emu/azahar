@@ -47,6 +47,12 @@ bool SetCoreOptionsV1(const retro_core_option_definition* options);
 /// Gets the core options version supported by the frontend.
 bool GetCoreOptionsVersion(unsigned* version);
 
+/// Shows or hides a core option in the frontend's menu.
+bool SetCoreOptionsDisplay(const retro_core_option_display* display);
+
+/// Sets the callback the frontend calls after an option changes, to update which options show.
+bool SetCoreOptionsUpdateDisplayCallback(retro_core_options_update_display_callback_t callback);
+
 bool SetHWSharedContext(void);
 
 /// Returns the LibRetro save directory, or a empty string if one doesn't exist.

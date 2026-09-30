@@ -243,6 +243,7 @@ static void UpdateVideoViews() {
         emu_instance->views_status_supported = false;
         status = 0;
     }
+    LibRetro::UpdateLayoutOptionsDisplay(LibRetro::settings.frontend_layout, status);
     const auto mode = LibRetro::VideoViews::SelectMode(
         LibRetro::settings.frontend_layout, LibRetro::settings.layout_option,
         LibRetro::settings.render_3d, status,

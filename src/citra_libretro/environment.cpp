@@ -115,6 +115,15 @@ bool GetCoreOptionsVersion(unsigned* version) {
     return environ_cb(RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION, version);
 }
 
+bool SetCoreOptionsDisplay(const retro_core_option_display* display) {
+    return environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, (void*)display);
+}
+
+bool SetCoreOptionsUpdateDisplayCallback(retro_core_options_update_display_callback_t callback) {
+    retro_core_options_update_display_callback cb{callback};
+    return environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK, &cb);
+}
+
 bool SetMemoryMaps(const retro_memory_map* map) {
     return environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, (void*)map);
 }
