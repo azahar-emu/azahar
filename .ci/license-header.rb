@@ -5,8 +5,8 @@ YEARS_PLACEHOLDER = 'YEARS_PLACEHOLDER'
 
 license_header_template = <<~EOF
       // Copyright #{YEARS_PLACEHOLDER} Citra Emulator Project / Azahar Emulator Project
-      // Licensed under GPLv2 or any later version
-      // Refer to the license.txt file included.
+      // Licensed under GPLv3 or any later version
+      // Refer to the LICENSE.txt file included.
       EOF
 
 def build_license_regex(template, placeholder)
