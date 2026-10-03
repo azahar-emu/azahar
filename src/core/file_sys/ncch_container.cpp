@@ -11,6 +11,7 @@
 #include "common/common_types.h"
 #include "common/file_derived.h"
 #include "common/logging/log.h"
+#include "common/tar_file.h"
 #include "core/core.h"
 #include "core/file_sys/layered_fs.h"
 #include "core/file_sys/ncch_container.h"
@@ -135,6 +136,21 @@ std::unique_ptr<FileUtil::IOFileBase> NCCHContainer::AutoOpenNCCHNCSD(
 
     std::unique_ptr<FileUtil::IOFileBase> file = in_file->OpenCopy();
 
+    // Check if it is a bundle
+    if (auto tar = FileUtil::TarArchive::OpenTarArchive(file->OpenCopy())) {
+        auto files = tar->GetFileList();
+        for (const auto& f : files) {
+            if (f.name.ends_with(".cci") || f.name.ends_with(".zcci") || f.name.ends_with(".3ds")) {
+                file = tar->OpenSubFile(f.name);
+                if (has_ncch_magic(file.get())) {
+                    return std::move(file);
+                }
+                break;
+            }
+        }
+        tar.reset();
+    }
+
     // Check in loop for special files, including nested files.
     while (true) {
         // 1st: Crypto file
@@ -164,9 +180,14 @@ std::unique_ptr<FileUtil::IOFileBase> NCCHContainer::AutoOpenNCCHNCSD(
     }
 }
 
-NCCHContainer::NCCHContainer(const std::string& filepath, u32 ncch_offset, u32 partition)
+NCCHContainer::NCCHContainer(const std::string& filepath, u32 partition)
     : partition(partition), filepath(filepath) {
     file = AutoOpenNCCHNCSD(filepath);
+}
+
+NCCHContainer::NCCHContainer(FileUtil::IOFileBase* _file, u32 partition)
+    : partition(partition), filepath(_file->Filename()) {
+    file = AutoOpenNCCHNCSD(_file);
 }
 
 Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath_, u32 ncch_offset_,

@@ -8,6 +8,7 @@
 #include <atomic>
 #include <functional>
 #include <future>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -368,6 +369,32 @@ private:
     u16 index;
 };
 
+class BundleCIAHandler {
+public:
+    BundleCIAHandler();
+
+    bool RegisterBundle(const std::string& filename);
+
+    std::vector<std::pair<u64, FS::MediaType>> List() const;
+
+    bool HasTitle(u64 title_id, FS::MediaType mediatype,
+                  u64 content_index = std::numeric_limits<u64>::max()) const;
+
+    bool HasContent(u64 title_id, FS::MediaType mediatype, u64 content_index);
+
+    const FileSys::Ticket* GetTicket(u64 title_id) const;
+
+    const FileSys::TitleMetadata* GetTitleMetadata(
+        u64 title_id, FS::MediaType mediatype,
+        u64 content_index = std::numeric_limits<u64>::max()) const;
+
+    std::unique_ptr<FileUtil::IOFileBase> OpenContentFile(u64 title_id, FS::MediaType mediatype,
+                                                          u64 content_index) const;
+
+private:
+    std::vector<FileSys::CIAContainer> cia_containers;
+};
+
 /**
  * Installs a CIA file from a specified file path.
  * @param path file path of the CIA file to install
@@ -404,10 +431,18 @@ u64 GetTitleUpdateId(u64 title_id);
  */
 Service::FS::MediaType GetTitleMediaType(u64 titleId);
 
+FileSys::Ticket GetTicket(u64 title_id, u64 ticket_id);
+
 /**
  * Get the .tik path for a title_id and ticket_id.
  */
 std::string GetTicketPath(u64 title_id, u64 ticket_id);
+
+/**
+ * Get the .tmd for a title, unlike GetTitleMetadataPath, this supports bundled archives.
+ */
+FileSys::TitleMetadata GetTitleMetadata(Service::FS::MediaType media_type, u64 tid,
+                                        bool update = false);
 
 /**
  * Get the .tmd path for a title
@@ -417,6 +452,18 @@ std::string GetTicketPath(u64 title_id, u64 ticket_id);
  * @returns string path to the .tmd file if it exists, otherwise a path to create one is given.
  */
 std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, bool update = false);
+
+/**
+ * Check if the content is present (intalled or in bundle)
+ */
+bool TitleContentExists(Service::FS::MediaType media_type, u64 tid, std::size_t index,
+                        bool update = false);
+
+/**
+ * Opens a file to the specified content (installed or in bundle)
+ */
+std::unique_ptr<FileUtil::IOFileBase> GetTitleContent(Service::FS::MediaType media_type, u64 tid,
+                                                      std::size_t index, bool update = false);
 
 /**
  * Get the .app path for a title's installed content index.
@@ -1103,6 +1150,15 @@ public:
         force_new_device_id = true;
     }
 
+    std::unique_ptr<BundleCIAHandler>& GetBundleCIAHandler() {
+        return bundle_cia_handler;
+    }
+
+    /**
+     * Scans all storage mediums for titles for listing.
+     */
+    void ScanForAllTitles();
+
 private:
     void ScanForTickets();
 
@@ -1115,11 +1171,6 @@ private:
     void ScanForTitles(Service::FS::MediaType media_type);
 
     void ScanForTitlesImpl(Service::FS::MediaType media_type);
-
-    /**
-     * Scans all storage mediums for titles for listing.
-     */
-    void ScanForAllTitles();
 
     Core::System& system;
     bool cia_installing = false;
@@ -1138,6 +1189,7 @@ private:
     std::shared_ptr<CurrentImportingTitle> importing_title;
     std::map<u64, ImportTitleContext> import_title_contexts;
     std::multimap<u64, ImportContentContext> import_content_contexts;
+    std::unique_ptr<BundleCIAHandler> bundle_cia_handler;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

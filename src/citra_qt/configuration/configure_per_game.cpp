@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -159,11 +159,11 @@ void ConfigurePerGame::LoadConfiguration() {
     }
 
     std::string title;
-    if (loader->ReadTitle(title) == Loader::ResultStatus::Success)
+    if (loader->ReadTitle(title, false) == Loader::ResultStatus::Success)
         ui->display_name->setText(QString::fromStdString(title));
 
     std::vector<u8> bytes;
-    if (loader->ReadIcon(bytes) == Loader::ResultStatus::Success) {
+    if (loader->ReadIcon(bytes, false) == Loader::ResultStatus::Success) {
         scene->clear();
 
         QPixmap map = GetQPixmapFromSMDH(bytes);
@@ -173,8 +173,8 @@ void ConfigurePerGame::LoadConfiguration() {
 
     ui->display_filepath->setText(QString::fromStdString(filename));
 
-    ui->display_format->setText(QString::fromStdString(
-        Loader::GetFileTypeString(loader->GetFileType(), loader->IsFileCompressed())));
+    ui->display_format->setText(QString::fromStdString(Loader::GetFileTypeString(
+        loader->GetFileType(), loader->IsFileCompressed(), loader->IsFileBundle())));
 
     const auto valueText = ReadableByteSize(FileUtil::GetSize(filename));
     ui->display_size->setText(valueText);

@@ -240,7 +240,8 @@ public:
     static std::unique_ptr<FileUtil::IOFileBase> AutoOpenNCCHNCSD(const std::string& filepath);
     static std::unique_ptr<FileUtil::IOFileBase> AutoOpenNCCHNCSD(FileUtil::IOFileBase* file);
 
-    NCCHContainer(const std::string& filepath, u32 ncch_offset = 0, u32 partition = 0);
+    NCCHContainer(const std::string& filepath, u32 partition = 0);
+    NCCHContainer(FileUtil::IOFileBase* file, u32 partition = 0);
     NCCHContainer() {}
 
     Loader::ResultStatus OpenFile(const std::string& filepath, u32 ncch_offset = 0,
@@ -353,6 +354,18 @@ public:
 
     bool IsFileCompressed() {
         return file->GetType().HasCompressedType();
+    }
+
+    bool IsFileBundle() {
+        return file->GetType().HasType(FileUtil::IOType::Type::TarIOFile);
+    }
+
+    const std::unique_ptr<FileUtil::IOFileBase>& GetFile() {
+        return file;
+    }
+
+    bool IsLoaded() {
+        return is_loaded;
     }
 
     NCCH_Header ncch_header;
