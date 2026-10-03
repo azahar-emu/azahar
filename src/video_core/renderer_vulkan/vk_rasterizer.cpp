@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/alignment.h"
 #include "common/literals.h"
@@ -937,7 +937,7 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
         sizeof(Common::Vec4f) * 256 +     // proctex
         sizeof(Common::Vec4f) * 256;      // proctex diff
 
-    if (!pica.proctex.lut_dirty) {
+    if (!pica.proctex.table_dirty) {
         return;
     }
 
