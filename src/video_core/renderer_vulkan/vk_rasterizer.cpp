@@ -937,7 +937,7 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
         sizeof(Common::Vec4f) * 256 +     // proctex
         sizeof(Common::Vec4f) * 256;      // proctex diff
 
-    if (!pica.proctex.lut_dirty) {
+    if (!pica.proctex.table_dirty) {
         return;
     }
 
