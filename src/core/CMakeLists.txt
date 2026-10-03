@@ -38,10 +38,6 @@ add_library(citra_core STATIC EXCLUDE_FROM_ALL
     core.h
     core_timing.cpp
     core_timing.h
-    dumping/backend.cpp
-    dumping/backend.h
-    dumping/ffmpeg_backend.cpp
-    dumping/ffmpeg_backend.h
     file_sys/archive_artic.cpp
     file_sys/archive_artic.h
     file_sys/archive_backend.cpp
@@ -502,6 +498,15 @@ if (ENABLE_BUILTIN_KEYBLOB)
     target_sources(citra_core PRIVATE hw/default_keys.h)
 endif()
 
+if(ENABLE_FFMPEG)
+    target_sources(citra_core PRIVATE
+        dumping/backend.cpp
+        dumping/backend.h
+        dumping/ffmpeg_backend.cpp
+        dumping/ffmpeg_backend.h
+    )
+endif()
+
 create_target_directory_groups(citra_core)
 
 target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core)
@@ -534,6 +539,11 @@ if (ENABLE_GDBSTUB)
         gdbstub/hio.cpp
         gdbstub/hio.h
     )
+endif()
+
+if (ENABLE_FFMPEG)
+    target_link_libraries(citra_core PRIVATE ${FFMPEG_LIBRARIES})
+    target_include_directories(citra_core PRIVATE ${FFMPEG_INCLUDE_DIRS})
 endif()
 
 if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
