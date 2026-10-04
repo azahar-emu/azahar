@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Copyright 2013 Dolphin Emulator Project
 // Licensed under GPLv2+
@@ -15,7 +15,9 @@
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <mutex>
 #include <numeric>
+#include <vector>
 #include <fcntl.h>
 #include <fmt/format.h>
 
@@ -28,6 +30,7 @@
 #define SHUT_RDWR 2
 #else
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -35,6 +38,9 @@
 #endif
 
 #include "common/logging/log.h"
+#include "common/polyfill_thread.h"
+#include "common/thread.h"
+#include "common/threadsafe_queue.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
@@ -65,10 +71,6 @@ constexpr u32 SIGTRAP = 5;
 
 #ifndef SIGTERM
 constexpr u32 SIGTERM = 15;
-#endif
-
-#ifndef MSG_WAITALL
-constexpr u32 MSG_WAITALL = 8;
 #endif
 
 #ifndef SIGSEGV
@@ -145,8 +147,33 @@ constexpr char target_xml[] =
 </target>
 )";
 
-SOCKET gdbserver_socket = INVALID_SOCKET;
+/// How long the reader thread blocks in select() before checking if it must stop.
+constexpr timeval READER_POLL_INTERVAL{0, 50 * 1000};
+
+/// An event received from the GDB client by the reader thread, to be handled on the emulation
+/// thread.
+struct ClientEvent {
+    enum class Type {
+        Command,      ///< A complete packet (without '$', '#' and checksum)
+        Interrupt,    ///< The client sent a break request (0x03)
+        Disconnected, ///< The connection was closed or failed
+    };
+    Type type{Type::Command};
+    std::vector<u8> payload;
+};
+
+// Written by the reader thread when a client connects, read by the emulation thread.
+// Only closed by Shutdown, after the reader thread has been joined.
+std::atomic<SOCKET> gdbserver_socket{INVALID_SOCKET};
 bool defer_start = false;
+
+/// Thread that accepts the client connection and reads packets from it.
+std::jthread reader_thread;
+/// Events produced by the reader thread, consumed by HandlePackets on the emulation thread.
+Common::SPSCQueue<ClientEvent> client_events;
+/// Serializes writes to the client socket (acks from the reader thread, replies from the
+/// emulation thread) so they never interleave.
+std::mutex send_mutex;
 
 u8 command_buffer[GDB_BUFFER_SIZE];
 u32 recv_command_length;
@@ -170,7 +197,8 @@ bool current_process_finished = false;
 // If set to false, the server will never be started and no
 // gdbstub-related functions will be executed.
 std::atomic<bool> server_enabled(false);
-SOCKET accept_socket = INVALID_SOCKET;
+// Owned by the reader thread while it waits for a client, closed by it once a client connects.
+std::atomic<SOCKET> accept_socket{INVALID_SOCKET};
 int continue_thread = -1;
 
 static Kernel::Thread* break_thread = nullptr;
@@ -459,19 +487,6 @@ static bool SetNonBlock(SOCKET socket, bool nonblock) {
     return true;
 }
 
-/// Read a byte from the gdb client.
-static u8 ReadByte() {
-    u8 c{};
-    std::size_t received_size = recv(gdbserver_socket, reinterpret_cast<char*>(&c), 1, MSG_WAITALL);
-    if (received_size != 1) {
-        LOG_ERROR(Debug_GDBStub, "recv failed : {}", GetErrno());
-        ToggleServer(false);
-        ToggleServer(true);
-    }
-
-    return c;
-}
-
 /// Calculate the checksum of the current command buffer.
 static u8 CalculateChecksum(const u8* buffer, std::size_t length) {
     return static_cast<u8>(std::accumulate(buffer, buffer + length, 0, std::plus<u8>()));
@@ -627,7 +642,8 @@ bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type) {
  * @param packet Packet to be sent to client.
  */
 static void SendPacket(const char packet) {
-    std::size_t sent_size = send(gdbserver_socket, &packet, 1, 0);
+    std::scoped_lock lock{send_mutex};
+    const auto sent_size = send(gdbserver_socket, &packet, 1, 0);
     if (sent_size != 1) {
         LOG_ERROR(Debug_GDBStub, "send failed");
     }
@@ -659,20 +675,28 @@ void SendReply(const char* reply) {
     command_buffer[send_command_length + 2] = NibbleToHex(checksum >> 4);
     command_buffer[send_command_length + 3] = NibbleToHex(checksum);
 
-    u8* ptr = command_buffer;
-    u32 left = send_command_length + 4;
-    while (left > 0) {
-        s32 sent_size =
-            static_cast<s32>(send(gdbserver_socket, reinterpret_cast<char*>(ptr), left, 0));
-        if (sent_size < 0) {
-            LOG_ERROR(Debug_GDBStub, "gdb: send failed");
-            ToggleServer(false);
-            ToggleServer(true);
-            return;
-        }
+    bool send_failed = false;
+    {
+        std::scoped_lock lock{send_mutex};
+        u8* ptr = command_buffer;
+        u32 left = send_command_length + 4;
+        while (left > 0) {
+            s32 sent_size =
+                static_cast<s32>(send(gdbserver_socket, reinterpret_cast<char*>(ptr), left, 0));
+            if (sent_size < 0) {
+                send_failed = true;
+                break;
+            }
 
-        left -= sent_size;
-        ptr += sent_size;
+            left -= sent_size;
+            ptr += sent_size;
+        }
+    }
+
+    if (send_failed) {
+        LOG_ERROR(Debug_GDBStub, "gdb: send failed");
+        ToggleServer(false);
+        ToggleServer(true);
     }
 }
 
@@ -895,6 +919,11 @@ static void HandleGetStopReason() {
 }
 
 static void BreakImpl(int signal) {
+    if (!current_process) {
+        LOG_WARNING(Debug_GDBStub, "Break requested with no attached process, ignoring");
+        return;
+    }
+
     if (signal == SIGSEGV && !Core::GetCore(0).HasSingleInstructionBreakAccuracy()) {
         LOG_WARNING(Debug_GDBStub, "The current CPU backend does not support accurate watchpoints "
                                    "and memory exceptions. Disable CPU JIT for more accuracy.");
@@ -908,75 +937,214 @@ static void BreakImpl(int signal) {
     SendStopReply(current_thread, signal);
 }
 
-/// Read command from gdb client.
-static void ReadCommand() {
-    recv_command_length = 0;
-    std::memset(command_buffer, 0, sizeof(command_buffer));
+class PacketParser {
+public:
+    /// Feeds one received byte, returning true if an event was queued for the emulation thread.
+    bool Feed(u8 c) {
+        switch (state) {
+        case State::Idle:
+            if (c == GDB_STUB_ACK) {
+                // ignore ack
+            } else if (c == 0x03) {
+                client_events.Push(ClientEvent{ClientEvent::Type::Interrupt, {}});
+                return true;
+            } else if (c == GDB_STUB_START) {
+                payload.clear();
+                state = State::Payload;
+            } else {
+                LOG_DEBUG(Debug_GDBStub, "gdb: read invalid byte {:02x}", c);
+            }
+            return false;
 
-    u8 c = ReadByte();
-    if (c == GDB_STUB_ACK) {
-        // ignore ack
-        return;
-    } else if (c == 0x03) {
-        LOG_INFO(Debug_GDBStub, "gdb: found break command\n");
-        BreakImpl(SIGTRAP);
-        return;
-    } else if (c != GDB_STUB_START) {
-        LOG_DEBUG(Debug_GDBStub, "gdb: read invalid byte {:02x}\n", c);
-        return;
-    }
+        case State::Payload:
+            if (c == GDB_STUB_END) {
+                state = State::ChecksumHigh;
+            } else if (payload.size() >= GDB_BUFFER_SIZE - 1) {
+                LOG_ERROR(Debug_GDBStub, "gdb: command_buffer overflow");
+                SendPacket(GDB_STUB_NACK);
+                state = State::Idle;
+            } else {
+                payload.push_back(c);
+            }
+            return false;
 
-    while ((c = ReadByte()) != GDB_STUB_END) {
-        if (recv_command_length >= sizeof(command_buffer)) {
-            LOG_ERROR(Debug_GDBStub, "gdb: command_buffer overflow\n");
-            SendPacket(GDB_STUB_NACK);
-            return;
+        case State::ChecksumHigh:
+            checksum_received = static_cast<u8>(HexCharToValue(c) << 4);
+            state = State::ChecksumLow;
+            return false;
+
+        case State::ChecksumLow: {
+            state = State::Idle;
+            checksum_received |= HexCharToValue(c);
+            const u8 checksum_calculated = CalculateChecksum(payload.data(), payload.size());
+            if (checksum_received != checksum_calculated) {
+                LOG_ERROR(
+                    Debug_GDBStub,
+                    "gdb: invalid checksum: calculated {:02x} and read {:02x} for ${}# "
+                    "(length: {})",
+                    checksum_calculated, checksum_received,
+                    std::string_view(reinterpret_cast<const char*>(payload.data()), payload.size()),
+                    payload.size());
+                SendPacket(GDB_STUB_NACK);
+                return false;
+            }
+
+            // Ack right away, so the client never waits on the emulation thread for it
+            SendPacket(GDB_STUB_ACK);
+            if (payload.empty()) {
+                return false;
+            }
+            client_events.Push(ClientEvent{ClientEvent::Type::Command, std::move(payload)});
+            payload = {};
+            return true;
         }
-        command_buffer[recv_command_length++] = c;
+        }
+        return false;
     }
 
-    u8 checksum_received = HexCharToValue(ReadByte()) << 4;
-    checksum_received |= HexCharToValue(ReadByte());
+private:
+    enum class State { Idle, Payload, ChecksumHigh, ChecksumLow };
 
-    u8 checksum_calculated = CalculateChecksum(command_buffer, recv_command_length);
+    State state = State::Idle;
+    std::vector<u8> payload;
+    u8 checksum_received = 0;
+};
 
-    if (checksum_received != checksum_calculated) {
-        LOG_ERROR(
-            Debug_GDBStub,
-            "gdb: invalid checksum: calculated {:02x} and read {:02x} for ${}# (length: {})\n",
-            checksum_calculated, checksum_received, reinterpret_cast<const char*>(command_buffer),
-            recv_command_length);
+/// Waits until the socket is readable, or until READER_POLL_INTERVAL. Returns 1 if readable, 0 on
+/// timeout, -1 on error.
+static int WaitReadable(SOCKET socket) {
+    fd_set fd_socket;
+    FD_ZERO(&fd_socket);
+    FD_SET(socket, &fd_socket);
 
-        recv_command_length = 0;
-
-        SendPacket(GDB_STUB_NACK);
-        return;
+    timeval t = READER_POLL_INTERVAL;
+    const int ret = select(static_cast<int>(socket + 1), &fd_socket, nullptr, nullptr, &t);
+    if (ret < 0) {
+#ifndef _WIN32
+        if (GetErrno() == EINTR) {
+            return 0;
+        }
+#endif
+        return -1;
     }
-
-    SendPacket(GDB_STUB_ACK);
+    return (ret > 0 && FD_ISSET(socket, &fd_socket)) ? 1 : 0;
 }
 
-/// Check if there is data to be read from the gdb client.
-static bool IsDataAvailable() {
-    if (!IsConnected()) {
-        return false;
+/// Waits for a client on accept_socket. Returns the client socket, or INVALID_SOCKET if stopped.
+static SOCKET AcceptClient(std::stop_token stop_token) {
+    while (!stop_token.stop_requested()) {
+        const int ready = WaitReadable(accept_socket);
+        if (ready == 0) {
+            continue;
+        }
+        if (ready < 0) {
+            LOG_ERROR(Debug_GDBStub, "select failed on gdb accept socket: {}", GetErrno());
+            return INVALID_SOCKET;
+        }
+
+        sockaddr_in saddr_client;
+        sockaddr* client_addr = reinterpret_cast<sockaddr*>(&saddr_client);
+        socklen_t client_addrlen = sizeof(saddr_client);
+        const SOCKET client =
+            static_cast<SOCKET>(accept(accept_socket, client_addr, &client_addrlen));
+        if (client == INVALID_SOCKET) {
+#ifdef _WIN32
+            if (GetErrno() == WSAEWOULDBLOCK) {
+                continue;
+            }
+#else
+            if (GetErrno() == EAGAIN || GetErrno() == EWOULDBLOCK || GetErrno() == EINTR) {
+                continue;
+            }
+#endif
+            LOG_ERROR(Debug_GDBStub, "Failed to accept gdb client");
+        }
+
+        // Only one client is served per server start, stop listening
+        const SOCKET listener = accept_socket.exchange(INVALID_SOCKET);
+        shutdown(listener, SHUT_RDWR);
+        closesocket(listener);
+        return client;
+    }
+    return INVALID_SOCKET;
+}
+
+/**
+ * Body of the reader thread. Accepts the client, then reads from it and queues the received
+ * packets for the emulation thread, waking it up with NotifyPendingWork so that packets are
+ * handled right away even while the emulation thread is waiting in the frame limiter.
+ * It never closes gdbserver_socket nor restarts the server, that is left to the emulation
+ * thread, which joins this thread in Shutdown.
+ */
+static void ReaderLoop(std::stop_token stop_token) {
+    Common::SetCurrentThreadName("GDBStub");
+    auto& system = Core::System::GetInstance();
+
+    const SOCKET client = AcceptClient(stop_token);
+    if (client == INVALID_SOCKET) {
+        return;
     }
 
-    fd_set fd_socket;
-
-    FD_ZERO(&fd_socket);
-    FD_SET(gdbserver_socket, &fd_socket);
-
-    struct timeval t;
-    t.tv_sec = 0;
-    t.tv_usec = 0;
-
-    if (select(gdbserver_socket + 1, &fd_socket, nullptr, nullptr, &t) < 0) {
-        LOG_ERROR(Debug_GDBStub, "select failed");
-        return false;
+    SetNonBlock(client, false);
+    // Acks and replies are tiny separate writes, which may be held back. Disable delaying packets.
+    int nodelay = 1;
+    if (setsockopt(client, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&nodelay),
+                   sizeof(nodelay)) < 0) {
+        LOG_WARNING(Debug_GDBStub, "Failed to set TCP_NODELAY on gdb socket");
     }
+    gdbserver_socket = client;
+    LOG_INFO(Debug_GDBStub, "Client connected.");
 
-    return FD_ISSET(gdbserver_socket, &fd_socket) != 0;
+    PacketParser parser;
+    std::array<u8, 4096> buffer;
+    while (!stop_token.stop_requested()) {
+        const int ready = WaitReadable(client);
+        if (ready == 0) {
+            continue;
+        }
+
+        const int received =
+            ready < 0 ? -1
+                      : static_cast<int>(recv(client, reinterpret_cast<char*>(buffer.data()),
+                                              static_cast<int>(buffer.size()), 0));
+        if (received <= 0) {
+            if (stop_token.stop_requested()) {
+                // Shutdown closed the connection
+                return;
+            }
+            if (received == 0) {
+                LOG_INFO(Debug_GDBStub, "Client disconnected");
+            } else {
+                LOG_ERROR(Debug_GDBStub, "recv failed : {}", GetErrno());
+            }
+            client_events.Push(ClientEvent{ClientEvent::Type::Disconnected, {}});
+            system.NotifyPendingWork();
+            return;
+        }
+
+        bool queued = false;
+        for (int i = 0; i < received; i++) {
+            queued |= parser.Feed(buffer[i]);
+        }
+        if (queued) {
+            system.NotifyPendingWork();
+        }
+    }
+}
+
+/// Stops and joins the reader thread. Must not be called from the reader thread.
+static void StopReaderThread() {
+    if (!reader_thread.joinable()) {
+        return;
+    }
+    reader_thread.request_stop();
+
+    const SOCKET client = gdbserver_socket;
+    if (client != INVALID_SOCKET) {
+        shutdown(client, SHUT_RDWR);
+    }
+    reader_thread.join();
+    reader_thread = {};
 }
 
 /// Send requested register to gdb client.
@@ -1465,7 +1633,7 @@ void HandleVCommand() {
 }
 
 void OnProcessExit(u32 process_id) {
-    if (!GDBStub::IsConnected || !current_process || current_process->process_id != process_id) {
+    if (!GDBStub::IsConnected() || !current_process || current_process->process_id != process_id) {
         return;
     }
 
@@ -1478,75 +1646,18 @@ void OnProcessExit(u32 process_id) {
 }
 
 void OnThreadExit(u32 thread_id) {
-    if (!GDBStub::IsConnected || !current_thread || current_thread->thread_id != thread_id) {
+    if (!GDBStub::IsConnected() || !current_thread || current_thread->thread_id != thread_id) {
         return;
     }
 
     current_thread = nullptr;
 }
 
-void HandlePacket(Core::System& system) {
-
-    if (!IsConnected()) {
-        if (defer_start) {
-            ToggleServer(true);
-            defer_start = false;
-        }
-
-        // Handle accept new GDB connection
-        if (accept_socket != INVALID_SOCKET) {
-            sockaddr_in saddr_client;
-            sockaddr* client_addr = reinterpret_cast<sockaddr*>(&saddr_client);
-            socklen_t client_addrlen = sizeof(saddr_client);
-            gdbserver_socket =
-                static_cast<SOCKET>(accept(accept_socket, client_addr, &client_addrlen));
-            if (gdbserver_socket == INVALID_SOCKET) {
-#ifdef _WIN32
-                if (GetErrno() == WSAEWOULDBLOCK) {
-                    // Nothing connected yet
-                    return;
-                }
-#else
-                if (GetErrno() == EAGAIN || GetErrno() == EWOULDBLOCK) {
-                    // Nothing connected yet
-                    return;
-                }
-#endif
-                LOG_ERROR(Debug_GDBStub, "Failed to accept gdb client");
-            } else {
-                LOG_INFO(Debug_GDBStub, "Client connected.\n");
-                SetNonBlock(gdbserver_socket, false);
-            }
-
-            shutdown(accept_socket, SHUT_RDWR);
-            closesocket(accept_socket);
-            accept_socket = INVALID_SOCKET;
-        }
-        return;
-    }
-
-    if (break_thread) {
-        current_thread = break_thread;
-        break_thread = nullptr;
-        int signal = break_signal;
-        break_signal = 0;
-        BreakImpl(signal);
-        return;
-    }
-
-    if (HandlePendingHioRequestPacket()) {
-        // Don't do anything else while we wait for the client to respond
-        return;
-    }
-
-    if (!IsDataAvailable()) {
-        return;
-    }
-
-    ReadCommand();
-    if (recv_command_length == 0) {
-        return;
-    }
+/// Copies a received command into command_buffer and dispatches it.
+static void HandleCommand(Core::System& system, const std::vector<u8>& payload) {
+    std::memset(command_buffer, 0, sizeof(command_buffer));
+    std::memcpy(command_buffer, payload.data(), payload.size());
+    recv_command_length = static_cast<u32>(payload.size());
 
 #ifdef PRINT_GDB_TRAFFIC
     std::string cmd_str(command_buffer + 1, command_buffer + recv_command_length);
@@ -1631,6 +1742,45 @@ void HandlePacket(Core::System& system) {
     }
 }
 
+void HandlePackets(Core::System& system) {
+    if (defer_start) {
+        ToggleServer(true);
+        defer_start = false;
+    }
+
+    if (!IsConnected()) {
+        return;
+    }
+
+    if (break_thread) {
+        current_thread = break_thread;
+        break_thread = nullptr;
+        int signal = break_signal;
+        break_signal = 0;
+        BreakImpl(signal);
+    }
+
+    HandlePendingHioRequestPacket();
+
+    // Handle everything the reader thread has queued.
+    ClientEvent event;
+    while (IsConnected() && client_events.Pop(event)) {
+        switch (event.type) {
+        case ClientEvent::Type::Interrupt:
+            LOG_INFO(Debug_GDBStub, "gdb: found break command");
+            BreakImpl(SIGTRAP);
+            break;
+        case ClientEvent::Type::Disconnected:
+            ToggleServer(false);
+            ToggleServer(true);
+            return;
+        case ClientEvent::Type::Command:
+            HandleCommand(system, event.payload);
+            break;
+        }
+    }
+}
+
 void SetServerPort(u16 port) {
     gdbstub_port = port;
 }
@@ -1672,7 +1822,7 @@ static void Init(u16 port) {
     WSAStartup(MAKEWORD(2, 2), &InitData);
 #endif
 
-    accept_socket = static_cast<int>(socket(PF_INET, SOCK_STREAM, 0));
+    accept_socket = static_cast<SOCKET>(socket(PF_INET, SOCK_STREAM, 0));
     if (accept_socket == INVALID_SOCKET) {
         LOG_ERROR(Debug_GDBStub, "Failed to create gdb socket");
         return;
@@ -1689,7 +1839,7 @@ static void Init(u16 port) {
 
     const sockaddr* server_addr = reinterpret_cast<const sockaddr*>(&saddr_server);
     socklen_t server_addrlen = sizeof(saddr_server);
-    if (bind(accept_socket, server_addr, server_addrlen) < 0) {
+    if (::bind(accept_socket, server_addr, server_addrlen) < 0) {
         LOG_ERROR(Debug_GDBStub, "Failed to bind gdb socket");
         Shutdown();
         return;
@@ -1702,6 +1852,8 @@ static void Init(u16 port) {
     }
 
     SetNonBlock(accept_socket, true);
+
+    reader_thread = std::jthread(ReaderLoop);
 }
 
 void Init() {
@@ -1716,6 +1868,9 @@ void Shutdown() {
     RemoveAllBreakpoints();
 
     LOG_INFO(Debug_GDBStub, "Stopping GDB ...");
+
+    StopReaderThread();
+
     if (gdbserver_socket != INVALID_SOCKET) {
         shutdown(gdbserver_socket, SHUT_RDWR);
         closesocket(gdbserver_socket);
@@ -1726,6 +1881,10 @@ void Shutdown() {
         shutdown(accept_socket, SHUT_RDWR);
         closesocket(accept_socket);
         accept_socket = INVALID_SOCKET;
+    }
+
+    ClientEvent event;
+    while (client_events.Pop(event)) {
     }
 
 #ifdef _WIN32

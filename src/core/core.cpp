@@ -306,7 +306,7 @@ void System::ProcessPendingWork() {
 
 #ifdef ENABLE_GDBSTUB
     if (GDBStub::IsServerEnabled()) {
-        GDBStub::HandlePacket(*this);
+        GDBStub::HandlePackets(*this);
     }
 #endif
 
