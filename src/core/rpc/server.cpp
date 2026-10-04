@@ -1,6 +1,6 @@
-// Copyright 2019 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "core/core.h"
 #include "core/rpc/packet.h"
@@ -23,15 +23,15 @@ Server::Server(Core::System& system_) : rpc_server{system_} {
 }
 
 Server::~Server() {
+    rpc_server.Stop();
     udp_server.reset();
-    NewRequestCallback(nullptr); // Notify the RPC server to end
 }
 
 void Server::NewRequestCallback(std::unique_ptr<RPC::Packet> new_request) {
     if (new_request) {
-        LOG_INFO(RPC_Server, "Received request version={} id={} type={} size={}",
-                 new_request->GetVersion(), new_request->GetId(), new_request->GetPacketType(),
-                 new_request->GetPacketDataSize());
+        LOG_DEBUG(RPC_Server, "Received request version={} id={} type={} size={}",
+                  new_request->GetVersion(), new_request->GetId(), new_request->GetPacketType(),
+                  new_request->GetPacketDataSize());
     } else {
         LOG_INFO(RPC_Server, "Received end packet");
     }

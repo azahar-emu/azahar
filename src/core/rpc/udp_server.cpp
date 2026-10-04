@@ -1,6 +1,6 @@
-// Copyright 2019 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <thread>
 #include <boost/asio.hpp>
@@ -19,6 +19,9 @@ public:
         : socket(io_context, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 45987)),
           new_request_callback(std::move(new_request_callback)) {
 
+        EnsureBufferSize<boost::asio::socket_base::send_buffer_size>(MAX_PACKET_SIZE * 2);
+        EnsureBufferSize<boost::asio::socket_base::receive_buffer_size>(MAX_PACKET_SIZE * 4);
+
         StartReceive();
         worker_thread = std::thread([this] { io_context.run(); });
     }
@@ -29,6 +32,20 @@ public:
     }
 
 private:
+    template <typename Option>
+    void EnsureBufferSize(int min_size) {
+        boost::system::error_code error;
+        Option current;
+        socket.get_option(current, error);
+        if (!error && current.value() >= min_size) {
+            return;
+        }
+        socket.set_option(Option(min_size), error);
+        if (error) {
+            LOG_WARNING(RPC_Server, "Failed to set socket buffer size: {}", error.message());
+        }
+    }
+
     void StartReceive() {
         socket.async_receive_from(boost::asio::buffer(request_buffer), remote_endpoint,
                                   [this](const boost::system::error_code& error, std::size_t size) {
@@ -72,9 +89,9 @@ private:
         if (error) {
             LOG_WARNING(RPC_Server, "Failed to send reply: {}", error.message());
         } else {
-            LOG_INFO(RPC_Server, "Sent reply version({}) id=({}) type=({}) size=({})",
-                     reply_packet.GetVersion(), reply_packet.GetId(), reply_packet.GetPacketType(),
-                     reply_packet.GetPacketDataSize());
+            LOG_DEBUG(RPC_Server, "Sent reply version({}) id=({}) type=({}) size=({})",
+                      reply_packet.GetVersion(), reply_packet.GetId(), reply_packet.GetPacketType(),
+                      reply_packet.GetPacketDataSize());
         }
     }
 

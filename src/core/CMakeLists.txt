@@ -514,6 +514,9 @@ endif()
 
 if (ENABLE_SCRIPTING)
     target_compile_definitions(citra_core PUBLIC -DENABLE_SCRIPTING)
+    if (ENABLE_SCRIPTING_SYNC)
+        target_compile_definitions(citra_core PUBLIC -DENABLE_SCRIPTING_SYNC)
+    endif()
     target_sources(citra_core PRIVATE
         rpc/packet.cpp
         rpc/packet.h
