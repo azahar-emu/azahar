@@ -4,14 +4,12 @@
 
 #pragma once
 
-#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <span>
 #include <vector>
 #include "common/polyfill_thread.h"
-#include "common/thread.h"
 #include "common/threadsafe_queue.h"
 #include "core/rpc/packet.h"
 
@@ -44,10 +42,6 @@ public:
     /// emulation thread. Does nothing unless built with ENABLE_SCRIPTING_SYNC.
     void ProcessCoreRequests();
 
-    /// Blocks until a request for the emulation thread is queued (returns true) or the deadline
-    /// passes (returns false).
-    bool WaitForCoreRequests(std::chrono::steady_clock::time_point deadline);
-
     /// Stops the request handler and screenshot threads. No replies are sent after this returns.
     void Stop();
 
@@ -71,8 +65,6 @@ private:
     Common::SPSCQueue<std::unique_ptr<Packet>, true> request_queue;
     /// Requests forwarded from the RPC thread to the emulation thread (sync mode only)
     Common::SPSCQueue<std::unique_ptr<Packet>> core_request_queue;
-    /// Signaled when a request is pushed to core_request_queue
-    Common::Event core_request_event;
 
     std::mutex screenshot_mutex;
     /// Set while a screenshot is being captured or encoded

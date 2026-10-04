@@ -73,9 +73,9 @@ class AzaharRPC:
             return raw_reply[HEADER_SIZE:]
         return None
 
-    def _request(self, request_type, request_data, timeout=-1, resend=True):
+    def _request(self, request_type, request_data, timeout=None, resend=True):
         # Sends a request and returns the reply data, which is empty if the request failed.
-        timeout = self.timeout if timeout < 0 else timeout
+        timeout = self.timeout if timeout is not None else timeout
         attempts = self.retries + 1 if (timeout is not None and resend) else 1
         request, request_id = self._generate_header(request_type, len(request_data))
         self.socket.settimeout(timeout)

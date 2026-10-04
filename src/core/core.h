@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include <boost/serialization/version.hpp>
 #include "common/common_types.h"
+#include "common/thread.h"
 #include "common/vector_math.h"
 #include "core/arm/arm_interface.h"
 #include "core/cheats/cheats.h"
@@ -127,10 +128,24 @@ public:
     [[nodiscard]] ResultStatus RunLoop(bool tight_loop = true);
 
     /**
-     * Handles pending scripting RPC requests that must run on the emulation thread, then keeps
-     * waiting for and handling new ones until wait_until. Called by RunLoop and the frame limiter.
+     * Runs one pass of all the work that must happen on the emulation thread outside of guest
+     * execution (such as GDB or scripting requests). Called by RunLoop between slices and from
+     * the frame limiter.
      */
-    void ServiceRPCRequests(std::chrono::steady_clock::time_point wait_until = {});
+    void ProcessPendingWork();
+
+    /**
+     * Runs ProcessPendingWork until the deadline, sleeping in between until either the deadline
+     * passes or NotifyPendingWork is called. The frame limiter calls this instead of sleeping.
+     * Must be called from the emulation thread.
+     */
+    void ProcessPendingWorkUntil(std::chrono::steady_clock::time_point deadline);
+
+    /**
+     * Wakes up the emulation thread if it is waiting in ProcessPendingWorkUntil, so that newly
+     * queued work is processed right away. This function is thread safe.
+     */
+    void NotifyPendingWork();
 
     /**
      * Step the CPU one instruction
@@ -517,6 +532,8 @@ private:
 
 private:
     static System s_instance;
+
+    Common::Event pending_work_event;
 
     std::atomic_bool is_powered_on{};
 

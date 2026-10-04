@@ -400,7 +400,7 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
     if (sync_with_core && IsCoreRequest(request_packet->GetPacketType())) {
         // Defer to the emulation thread (processed by ProcessCoreRequests)
         core_request_queue.Push(std::move(request_packet));
-        core_request_event.Set();
+        system.NotifyPendingWork();
         return;
     }
 
@@ -414,10 +414,6 @@ void RPCServer::ProcessCoreRequests() {
             DispatchRequest(std::move(request_packet));
         }
     }
-}
-
-bool RPCServer::WaitForCoreRequests(std::chrono::steady_clock::time_point deadline) {
-    return core_request_event.WaitUntil(deadline);
 }
 
 void RPCServer::HandleRequestsLoop(std::stop_token stop_token) {

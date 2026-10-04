@@ -27,10 +27,6 @@ public:
         rpc_server.ProcessCoreRequests();
     }
 
-    bool WaitForCoreRequests(std::chrono::steady_clock::time_point deadline) {
-        return rpc_server.WaitForCoreRequests(deadline);
-    }
-
 private:
     RPCServer rpc_server;
     std::unique_ptr<UDPServer> udp_server;

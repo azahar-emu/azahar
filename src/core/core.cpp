@@ -3,7 +3,6 @@
 // Refer to the LICENSE.txt file included.
 
 #include <stdexcept>
-#include <thread>
 #include <utility>
 #include <boost/serialization/array.hpp>
 #include "audio_core/dsp_interface.h"
@@ -82,11 +81,10 @@ Core::Timing& Global() {
 }
 
 System::System() : movie{*this}, cheat_engine{*this} {
-#ifdef ENABLE_SCRIPTING_SYNC
-    // Function used to run work while the emulator is waiting for the next frame.
-    frame_limiter.SetWaitCallback(
-        [this](std::chrono::steady_clock::time_point deadline) { ServiceRPCRequests(deadline); });
-#endif
+    // Process pending work instead of just sleeping while waiting for the next frame
+    frame_limiter.SetWaitCallback([this](std::chrono::steady_clock::time_point deadline) {
+        ProcessPendingWorkUntil(deadline);
+    });
 }
 
 System::~System() = default;
@@ -106,13 +104,10 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         for (auto& cpu_core : cpu_cores) {
             cpu_core->ClearBreakFlag();
         }
-        GDBStub::HandlePacket(*this);
     }
 #endif
 
-#ifdef ENABLE_SCRIPTING_SYNC
-    ServiceRPCRequests();
-#endif
+    ProcessPendingWork();
 
     Signal signal{Signal::None};
     u32 param{};
@@ -303,16 +298,33 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     return status;
 }
 
-void System::ServiceRPCRequests([[maybe_unused]] std::chrono::steady_clock::time_point wait_until) {
-#ifdef ENABLE_SCRIPTING_SYNC
-    if (!rpc_server) {
-        std::this_thread::sleep_until(wait_until);
-        return;
+void System::ProcessPendingWork() {
+    // Processes work that needs to run on the emulation thread. This function is called from
+    // two places, the RunLoop slice and during the frame limiter wait period.
+    // To wake up the frame limiter so that it processes more work, other threads must call
+    // NotifyPendingWork.
+
+#ifdef ENABLE_GDBSTUB
+    if (GDBStub::IsServerEnabled()) {
+        GDBStub::HandlePacket(*this);
     }
-    do {
-        rpc_server->ProcessCoreRequests();
-    } while (rpc_server->WaitForCoreRequests(wait_until));
 #endif
+
+#ifdef ENABLE_SCRIPTING
+    if (rpc_server) {
+        rpc_server->ProcessCoreRequests();
+    }
+#endif
+}
+
+void System::ProcessPendingWorkUntil(std::chrono::steady_clock::time_point deadline) {
+    do {
+        ProcessPendingWork();
+    } while (pending_work_event.WaitUntil(deadline));
+}
+
+void System::NotifyPendingWork() {
+    pending_work_event.Set();
 }
 
 bool System::SendSignal(System::Signal signal, u32 param) {
