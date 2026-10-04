@@ -1,10 +1,10 @@
 // Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 // Copyright 2019 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <cstring>
 #include <fmt/format.h>

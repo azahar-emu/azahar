@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 // Fused compare/test + branch handlers, plus the unrolled tight-loop handlers
 // that ReoptimizeHotBlock generates. Branch conditions are checked with
