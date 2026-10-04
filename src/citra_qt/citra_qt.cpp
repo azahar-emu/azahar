@@ -3259,13 +3259,6 @@ void GMainWindow::OnCaptureScreenshot() {
 }
 
 #ifdef ENABLE_FFMPEG
-void GMainWindow::ShowFFmpegErrorMessage() {
-    QMessageBox message_box;
-    message_box.setWindowTitle(tr("Could not load video dumper"));
-    message_box.setText(tr(
-        "FFmpeg could not be loaded. Make sure that Azahar was built with a compatible version."));
-}
-
 void GMainWindow::OnDumpVideo() {
     if (ui->action_Dump_Video->isChecked()) {
         OnStartVideoDumping();

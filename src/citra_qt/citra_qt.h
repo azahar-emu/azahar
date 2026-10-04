@@ -229,9 +229,6 @@ private:
                             const bool& skip_tryexec);
 
     void ShowCommandOutput(std::string title, std::string message);
-#ifdef ENABLE_FFMPEG
-    void ShowFFmpegErrorMessage();
-#endif
 
 private slots:
     void OnResumeGame(bool first_start);
