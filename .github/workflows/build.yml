@@ -138,6 +138,9 @@ jobs:
       CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
       OS: macos
     steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
@@ -160,9 +163,6 @@ jobs:
                --requires=ffmpeg/7.1.5
                -c "ffmpeg/*:tools.build:sharedlinkflags+=['-Wl,-flat_namespace']"
                -c "ffmpeg/*:tools.build:exelinkflags+=['-Wl,-flat_namespace']"
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
       - name: Build (arm64)
         run: BUILD_ARCH=arm64 ./.ci/macos.sh
       - name: Build (x86_64)
@@ -225,6 +225,9 @@ jobs:
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
@@ -264,9 +267,6 @@ jobs:
         shell: pwsh
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
       - name: Build (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: ./.ci/win-msvc.sh
