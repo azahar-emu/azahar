@@ -92,6 +92,12 @@ void OnProcessExit(u32 process_id);
 void OnThreadExit(u32 thread_id);
 
 /**
+ * Signal to the GDB stub that a thread flagged for single stepping
+ * (Kernel::Thread::gdb_single_step) has executed one instruction.
+ */
+void OnSingleStepComplete(Kernel::Thread* thread);
+
+/**
  * Handles all packets received from the gdb client since the last call. Must be called from the
  * emulation thread. Packets are read by a separate thread, which calls
  * Core::System::NotifyPendingWork when one arrives so that this runs without waiting for the
