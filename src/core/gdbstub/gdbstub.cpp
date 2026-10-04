@@ -918,11 +918,22 @@ static void HandleGetStopReason() {
     }
 }
 
+static void ClearPendingSteps() {
+    if (!current_process) {
+        return;
+    }
+    for (const auto& thread : current_process->GetThreadList()) {
+        thread->gdb_single_step = false;
+    }
+}
+
 static void BreakImpl(int signal) {
     if (!current_process) {
         LOG_WARNING(Debug_GDBStub, "Break requested with no attached process, ignoring");
         return;
     }
+
+    ClearPendingSteps();
 
     if (signal == SIGSEGV && !Core::GetCore(0).HasSingleInstructionBreakAccuracy()) {
         LOG_WARNING(Debug_GDBStub, "The current CPU backend does not support accurate watchpoints "
@@ -1217,14 +1228,14 @@ static void ReadRegisters() {
     SendReply(reinterpret_cast<char*>(buffer));
 }
 
-static void UpdateCPUThreadContext() {
-    u32 core_id = current_thread->core_id;
+static void UpdateCPUThreadContext(Kernel::Thread* thread) {
+    u32 core_id = thread->core_id;
     auto& system = Core::System::GetInstance();
     auto& thread_manager = system.Kernel().GetThreadManager(core_id);
-    if (thread_manager.GetCurrentThread() == current_thread) {
+    if (thread_manager.GetCurrentThread() == thread) {
         // Only update CPU context if current thread is active,
         // otherwise it will be updated when the thread is selected
-        Core::GetCore(current_thread->core_id).LoadContext(current_thread->context);
+        Core::GetCore(thread->core_id).LoadContext(thread->context);
     }
 }
 
@@ -1258,7 +1269,7 @@ static void WriteRegister() {
         return SendReply("E01");
     }
 
-    UpdateCPUThreadContext();
+    UpdateCPUThreadContext(current_thread);
 
     SendReply("OK");
 }
@@ -1295,7 +1306,7 @@ static void WriteRegisters() {
         }
     }
 
-    UpdateCPUThreadContext();
+    UpdateCPUThreadContext(current_thread);
 
     SendReply("OK");
 }
@@ -1420,6 +1431,92 @@ static void Continue() {
     is_running = true;
 
     ClearAllInstructionCache();
+}
+
+/// Resume the given threads (either a single step or full run)
+static void ResumeThreads(const std::vector<u32>& step_ids, const std::vector<u32>& continue_ids) {
+    for (const u32 thread_id : step_ids) {
+        if (Kernel::Thread* thread = FindThreadById(static_cast<int>(thread_id))) {
+            thread->gdb_single_step = true;
+        }
+    }
+
+    std::vector<u32> resume_ids = continue_ids;
+    resume_ids.insert(resume_ids.end(), step_ids.begin(), step_ids.end());
+    if (resume_ids.empty()) {
+        return;
+    }
+
+    current_process->ClearUnscheduleMode(Kernel::UnscheduleMode::GDB, resume_ids);
+    is_running = true;
+
+    ClearAllInstructionCache();
+}
+
+static void HandleStep() {
+    if (!current_process) {
+        SendReply("E01");
+        return;
+    }
+
+    Kernel::Thread* thread = nullptr;
+    if (continue_thread > 0) {
+        thread = FindThreadById(continue_thread);
+    } else if (current_thread || SetThread(0)) {
+        thread = current_thread;
+    }
+
+    continue_thread = -1;
+
+    if (!thread) {
+        SendReply("E01");
+        return;
+    }
+
+    std::string_view args(reinterpret_cast<const char*>(command_buffer + 1),
+                          recv_command_length - 1);
+    if (command_buffer[0] == 'S') {
+        // The signal is ignored, only keep the optional resume address
+        const std::size_t addr_pos = args.find(';');
+        args = addr_pos == args.npos ? std::string_view{} : args.substr(addr_pos + 1);
+    }
+    if (!args.empty()) {
+        RegWrite(PC_REGISTER, HexToInt(reinterpret_cast<const u8*>(args.data()), args.size()),
+                 thread);
+        UpdateCPUThreadContext(thread);
+    }
+
+    ResumeThreads({thread->GetThreadId()}, {});
+}
+
+void OnSingleStepComplete(Kernel::Thread* thread) {
+    thread->gdb_single_step = false;
+
+    if (!IsConnected() || !current_process ||
+        thread->owner_process.lock().get() != current_process) {
+        return;
+    }
+
+    if (break_thread) {
+        // The stepped instruction hit a breakpoint, watchpoint or exception, which is reported
+        // instead.
+        return;
+    }
+
+    if (thread->status == Kernel::ThreadStatus::Dead) {
+        // The stepped instruction exited the thread, report the stop on another thread of the
+        // process. If none is left, the process exit is reported instead (should never happen but
+        // whatever).
+        auto thread_list = current_process->GetThreadList();
+        if (thread_list.empty()) {
+            return;
+        }
+        thread = thread_list.front().get();
+    }
+
+    // Reported by the next HandlePackets call, which runs before the next CPU slice.
+    break_thread = thread;
+    break_signal = SIGTRAP;
 }
 
 /**
@@ -1593,7 +1690,7 @@ void HandleVCommand() {
         }
         return;
     } else if (command == "Cont?") {
-        SendReply("vCont;c;C");
+        SendReply("vCont;c;C;s;S");
     } else if (command == "Cont;") {
         if (!current_process) {
             SendReply("E01");
@@ -1607,26 +1704,65 @@ void HandleVCommand() {
             SendReply("E01");
             return;
         }
+
+        const auto thread_list = current_process->GetThreadList();
+        std::vector<u32> assigned_ids;
+        std::vector<u32> step_ids;
+        std::vector<u32> continue_ids;
+        const auto assign = [&](u32 thread_id, bool step) {
+            if (std::find(assigned_ids.begin(), assigned_ids.end(), thread_id) !=
+                assigned_ids.end()) {
+                return;
+            }
+            assigned_ids.push_back(thread_id);
+            (step ? step_ids : continue_ids).push_back(thread_id);
+        };
+
         for (auto& action : actions) {
-            auto threads = Common::SplitString(action, ':');
-            if (threads.empty()) {
+            auto parts = Common::SplitString(action, ':');
+            if (parts.empty() || parts[0].empty()) {
                 SendReply("E01");
                 return;
-            }
-            char action_type = threads[0][0];
-            if (action_type != 'c' && action_type != 'C') {
-                SendReply("E01");
-                return;
-            }
-            std::vector<u32> thread_ids;
-            for (size_t i = 1; i < threads.size(); i++) {
-                thread_ids.push_back(
-                    HexToInt(reinterpret_cast<const u8*>(threads[i].c_str()), threads[i].size()));
             }
 
-            current_process->ClearUnscheduleMode(Kernel::UnscheduleMode::GDB, thread_ids);
-            is_running = true;
+            bool step;
+            switch (parts[0][0]) {
+            case 'c':
+            case 'C':
+                step = false;
+                break;
+            case 's':
+            case 'S':
+                step = true;
+                break;
+            default:
+                SendReply("E01");
+                return;
+            }
+
+            if (parts.size() < 2 || parts[1] == "-1") {
+                for (const auto& thread : thread_list) {
+                    assign(thread->GetThreadId(), step);
+                }
+                continue;
+            }
+
+            for (std::size_t i = 1; i < parts.size(); i++) {
+                const u32 thread_id =
+                    HexToInt(reinterpret_cast<const u8*>(parts[i].c_str()), parts[i].size());
+                if (FindThreadById(static_cast<int>(thread_id))) {
+                    assign(thread_id, step);
+                }
+            }
         }
+
+        if (step_ids.empty() && continue_ids.empty()) {
+            // None of the requested threads exist
+            SendReply("E01");
+            return;
+        }
+
+        ResumeThreads(step_ids, continue_ids);
     } else {
         SendReply("");
     }
@@ -1717,8 +1853,8 @@ static void HandleCommand(Core::System& system, const std::vector<u8>& payload) 
         WriteMemory();
         break;
     case 's':
-        // Single step not supported, return ENOTSUP
-        SendReply("E5F");
+    case 'S':
+        HandleStep();
         return;
     case 'C':
     case 'c':

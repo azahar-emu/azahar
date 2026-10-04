@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // PPSSPP Project
 // Licensed under GPLv2 or any later version
@@ -413,6 +413,10 @@ public:
     std::shared_ptr<WakeupCallback> wakeup_callback{};
 
     const u32 core_id;
+
+    /// Set by the GDB stub when this thread should execute a single instruction the next time it
+    /// is scheduled, instead of running a full slice. Temp debugger state, so it is not serialized.
+    bool gdb_single_step = false;
 
 private:
     ThreadManager& thread_manager;
