@@ -17,6 +17,9 @@
 #include <map>
 #include <mutex>
 #include <numeric>
+#include <optional>
+#include <string_view>
+#include <utility>
 #include <vector>
 #include <fcntl.h>
 #include <fmt/format.h>
@@ -59,11 +62,16 @@
 namespace GDBStub {
 namespace {
 constexpr int GDB_BUFFER_SIZE = 10000;
+constexpr std::size_t GDB_MAX_PAYLOAD_SIZE = GDB_BUFFER_SIZE - 4; // Excludes control chars.
 
 constexpr char GDB_STUB_START = '$';
 constexpr char GDB_STUB_END = '#';
 constexpr char GDB_STUB_ACK = '+';
 constexpr char GDB_STUB_NACK = '-';
+
+#ifndef SIGINT
+constexpr u32 SIGINT = 2;
+#endif
 
 #ifndef SIGTRAP
 constexpr u32 SIGTRAP = 5;
@@ -174,6 +182,9 @@ Common::SPSCQueue<ClientEvent> client_events;
 /// Serializes writes to the client socket (acks from the reader thread, replies from the
 /// emulation thread) so they never interleave.
 std::mutex send_mutex;
+/// Last packet sent to the client, framed and with checksum, resent if the client NACKs it.
+/// Guarded by send_mutex.
+std::vector<u8> last_reply;
 
 u8 command_buffer[GDB_BUFFER_SIZE];
 u32 recv_command_length;
@@ -193,6 +204,8 @@ bool is_extended_mode = false;
 
 bool is_running = false;
 bool current_process_finished = false;
+/// An interrupt received while the process was stopped, applied on the next resume.
+bool pending_interrupt = false;
 
 // If set to false, the server will never be started and no
 // gdbstub-related functions will be executed.
@@ -213,13 +226,27 @@ struct Breakpoint {
     VAddr addr;
     u32 len;
     std::array<u8, 4> inst;
+    bool access = false;
 };
+
+/// A watchpoint's hit state, reported in the stop reply as 'reason:address;'.
+struct WatchpointHitState {
+    const char* reason;
+    VAddr address; ///< Accessed data address, within the watched range
+};
+
+/// Set by CheckBreakpoint when a watchpoint is hit.
+std::optional<WatchpointHitState> pending_watchpoint_hit;
+/// Watchpoint hit that caused the pending break_thread stop, if any.
+std::optional<WatchpointHitState> break_watchpoint_hit;
 
 using BreakpointMap = std::map<VAddr, Breakpoint>;
 BreakpointMap breakpoints_execute;
 BreakpointMap breakpoints_read;
 BreakpointMap breakpoints_write;
 } // Anonymous namespace
+
+static void DetachAndRestartServer();
 
 static void ResetState() {
     gdbserver_socket = INVALID_SOCKET;
@@ -228,6 +255,10 @@ static void ResetState() {
     memset(command_buffer, 0, GDB_BUFFER_SIZE);
     recv_command_length = 0;
     send_command_length = 0;
+    {
+        std::scoped_lock lock{send_mutex};
+        last_reply.clear();
+    }
 
     latest_signal = 0;
 
@@ -238,12 +269,15 @@ static void ResetState() {
 
     is_running = false;
     current_process_finished = false;
+    pending_interrupt = false;
 
     accept_socket = INVALID_SOCKET;
     continue_thread = -1;
 
     break_thread = nullptr;
     break_signal = 0;
+    pending_watchpoint_hit.reset();
+    break_watchpoint_hit.reset();
 
     breakpoints_execute.clear();
     breakpoints_read.clear();
@@ -622,11 +656,19 @@ bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type) {
                       "breakpoint range: {:08x} - {:08x}",
                       type, addr, addr, access_end, bp.addr, bp_end);
 
-            if (type != BreakpointType::Execute &&
-                !Core::GetCore(0).HasSingleInstructionBreakAccuracy()) {
-                LOG_WARNING(Debug_GDBStub,
-                            "The current CPU backend does not support accurate watchpoints and "
-                            "memory exceptions. Disable CPU JIT for more accuracy.");
+            if (type != BreakpointType::Execute) {
+                if (!Core::GetCore(0).HasSingleInstructionBreakAccuracy()) {
+                    LOG_WARNING(Debug_GDBStub,
+                                "The current CPU backend does not support accurate watchpoints "
+                                "and memory exceptions. Disable CPU JIT for more accuracy.");
+                }
+
+                // Report the first accessed address inside the watched range, so the client
+                // can match it to its watchpoint.
+                const char* reason = bp.access                      ? "awatch"
+                                     : type == BreakpointType::Read ? "rwatch"
+                                                                    : "watch";
+                pending_watchpoint_hit = WatchpointHitState{reason, std::max(addr, bp.addr)};
             }
 
             return true;
@@ -647,6 +689,20 @@ static void SendPacket(const char packet) {
     if (sent_size != 1) {
         LOG_ERROR(Debug_GDBStub, "send failed");
     }
+}
+
+static bool SendAll(const u8* data, std::size_t length) {
+    while (length > 0) {
+        const auto sent_size = send(gdbserver_socket, reinterpret_cast<const char*>(data),
+                                    static_cast<int>(length), 0);
+        if (sent_size < 0) {
+            return false;
+        }
+
+        length -= static_cast<std::size_t>(sent_size);
+        data += sent_size;
+    }
+    return true;
 }
 
 void SendReply(const char* reply) {
@@ -678,25 +734,24 @@ void SendReply(const char* reply) {
     bool send_failed = false;
     {
         std::scoped_lock lock{send_mutex};
-        u8* ptr = command_buffer;
-        u32 left = send_command_length + 4;
-        while (left > 0) {
-            s32 sent_size =
-                static_cast<s32>(send(gdbserver_socket, reinterpret_cast<char*>(ptr), left, 0));
-            if (sent_size < 0) {
-                send_failed = true;
-                break;
-            }
-
-            left -= sent_size;
-            ptr += sent_size;
-        }
+        last_reply.assign(command_buffer, command_buffer + send_command_length + 4);
+        send_failed = !SendAll(last_reply.data(), last_reply.size());
     }
 
     if (send_failed) {
         LOG_ERROR(Debug_GDBStub, "gdb: send failed");
-        ToggleServer(false);
-        ToggleServer(true);
+        DetachAndRestartServer();
+    }
+}
+
+static void ResendLastReply() {
+    std::scoped_lock lock{send_mutex};
+    if (last_reply.empty()) {
+        return;
+    }
+    LOG_DEBUG(Debug_GDBStub, "gdb: client requested retransmission");
+    if (!SendAll(last_reply.data(), last_reply.size())) {
+        LOG_ERROR(Debug_GDBStub, "gdb: retransmission failed");
     }
 }
 
@@ -711,8 +766,12 @@ static void HandleQuery() {
         SendReply("1");
     } else if (strncmp(query, "Supported", strlen("Supported")) == 0) {
         // PacketSize needs to be large enough for target xml
-        SendReply("PacketSize=9800;qXfer:features:read+;qXfer:osdata:read+;qXfer:threads:read+;"
-                  "vContSupported+");
+        static_assert(sizeof(target_xml) <= GDB_MAX_PAYLOAD_SIZE);
+        const std::string supported =
+            fmt::format("PacketSize={:x};qXfer:features:read+;qXfer:osdata:read+;"
+                        "qXfer:threads:read+;vContSupported+",
+                        GDB_MAX_PAYLOAD_SIZE);
+        SendReply(supported.c_str());
     } else if (strncmp(query, "Xfer:features:read:target.xml:",
                        strlen("Xfer:features:read:target.xml:")) == 0) {
         SendReply(target_xml);
@@ -723,6 +782,11 @@ static void HandleQuery() {
         }
 
         auto thread_list = current_process->GetThreadList();
+        if (thread_list.empty()) {
+            SendReply("l");
+            return;
+        }
+
         std::string val = "m";
         for (const auto& thread : thread_list) {
             val += fmt::format("{:x},", thread->GetThreadId());
@@ -798,6 +862,10 @@ static void HandleSetThread() {
     }
 
     if (command_buffer[1] == 'c') {
+        if (thread_id > 0 && !FindThreadById(thread_id)) {
+            SendReply("E01");
+            return;
+        }
         continue_thread = thread_id;
         SendReply("OK");
         return;
@@ -841,8 +909,10 @@ static void HandleExtendedMode() {
  * Send signal packet to client.
  *
  * @param signal Signal to be sent to client.
+ * @param watchpoint_hit Watchpoint that caused the stop.
  */
-static void SendStopReply(Kernel::Thread* thread, u32 signal, bool full = true) {
+static void SendStopReply(Kernel::Thread* thread, u32 signal, bool full = true,
+                          const std::optional<WatchpointHitState>& watchpoint_hit = std::nullopt) {
     if (gdbserver_socket == INVALID_SOCKET) {
         return;
     }
@@ -876,6 +946,13 @@ static void SendStopReply(Kernel::Thread* thread, u32 signal, bool full = true) 
 
     if (thread) {
         buffer += fmt::format(";thread:{:x};", thread->GetThreadId());
+    }
+
+    if (watchpoint_hit) {
+        if (buffer.size() > 3 && buffer.back() != ';') {
+            buffer += ';';
+        }
+        buffer += fmt::format("{}:{:x};", watchpoint_hit->reason, watchpoint_hit->address);
     }
 
     LOG_DEBUG(Debug_GDBStub, "Response: {}", buffer);
@@ -927,7 +1004,8 @@ static void ClearPendingSteps() {
     }
 }
 
-static void BreakImpl(int signal) {
+static void BreakImpl(int signal,
+                      const std::optional<WatchpointHitState>& watchpoint_hit = std::nullopt) {
     if (!current_process) {
         LOG_WARNING(Debug_GDBStub, "Break requested with no attached process, ignoring");
         return;
@@ -945,7 +1023,49 @@ static void BreakImpl(int signal) {
 
     latest_signal = signal;
 
-    SendStopReply(current_thread, signal);
+    SendStopReply(current_thread, signal, true, watchpoint_hit);
+}
+
+/**
+ * Handles an interrupt from the client. If the process is stopped, the interrupt is
+ * queued until the next resume.
+ */
+static void HandleInterrupt() {
+    if (current_process && !is_running) {
+        LOG_DEBUG(Debug_GDBStub, "gdb: interrupt while stopped, queued until next resume");
+        pending_interrupt = true;
+        return;
+    }
+    BreakImpl(SIGINT);
+}
+
+/**
+ * Applies a queued interrupt at resume time: the process stops again right away and the
+ * interrupt is reported instead of resuming. Returns true if there was one.
+ */
+static bool ConsumePendingInterrupt() {
+    if (!pending_interrupt) {
+        return false;
+    }
+    pending_interrupt = false;
+    BreakImpl(SIGINT);
+    return true;
+}
+
+/**
+ * Lets the attached process run freely again and restarts the server, waiting for a new client.
+ * Used when the client detaches or the connection is lost.
+ */
+static void DetachAndRestartServer() {
+    if (current_process) {
+        ClearPendingSteps();
+        current_process->ClearUnscheduleMode(Kernel::UnscheduleMode::GDB);
+        is_running = true;
+        ClearAllInstructionCache();
+    }
+
+    ToggleServer(false);
+    ToggleServer(true);
 }
 
 class PacketParser {
@@ -956,6 +1076,8 @@ public:
         case State::Idle:
             if (c == GDB_STUB_ACK) {
                 // ignore ack
+            } else if (c == GDB_STUB_NACK) {
+                ResendLastReply();
             } else if (c == 0x03) {
                 client_events.Push(ClientEvent{ClientEvent::Type::Interrupt, {}});
                 return true;
@@ -970,7 +1092,7 @@ public:
         case State::Payload:
             if (c == GDB_STUB_END) {
                 state = State::ChecksumHigh;
-            } else if (payload.size() >= GDB_BUFFER_SIZE - 1) {
+            } else if (payload.size() >= GDB_MAX_PAYLOAD_SIZE) {
                 LOG_ERROR(Debug_GDBStub, "gdb: command_buffer overflow");
                 SendPacket(GDB_STUB_NACK);
                 state = State::Idle;
@@ -1214,7 +1336,7 @@ static void ReadRegisters() {
     bufptr += 8;
 
     for (u32 reg = D0_REGISTER; reg < FPSCR_REGISTER; reg++) {
-        LongToGdbHex(bufptr + reg * 16, FpuRead(reg, current_thread));
+        LongToGdbHex(bufptr + (reg - D0_REGISTER) * 16, FpuRead(reg, current_thread));
     }
 
     bufptr += 16 * 16;
@@ -1281,30 +1403,30 @@ static void WriteRegisters() {
         return;
     }
 
+    constexpr std::size_t registers_hex_size = 16 * 8 + 8 + 16 * 16 + 8 + 8;
+    if (command_buffer[0] != 'G' || recv_command_length - 1 != registers_hex_size) {
+        return SendReply("E01");
+    }
+
     const u8* buffer_ptr = command_buffer + 1;
 
-    if (command_buffer[0] != 'G')
-        return SendReply("E01");
-
-    for (u32 i = 0, reg = 0; reg <= FPEXC_REGISTER; i++, reg++) {
-        if (reg <= PC_REGISTER) {
-            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8), current_thread);
-        } else if (reg == CPSR_REGISTER) {
-            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8), current_thread);
-        } else if (reg == CPSR_REGISTER - 1) {
-            // Dummy FPA register, ignore
-        } else if (reg < CPSR_REGISTER) {
-            // Dummy FPA registers, ignore
-            i += 2;
-        } else if (reg >= D0_REGISTER && reg < FPSCR_REGISTER) {
-            FpuWrite(reg, GdbHexToLong(buffer_ptr + i * 16), current_thread);
-            i++; // Skip padding
-        } else if (reg == FPSCR_REGISTER) {
-            FpuWrite(reg, GdbHexToInt(buffer_ptr + i * 8), current_thread);
-        } else if (reg == FPEXC_REGISTER) {
-            FpuWrite(reg, GdbHexToInt(buffer_ptr + i * 8), current_thread);
-        }
+    for (u32 reg = 0; reg <= PC_REGISTER; reg++) {
+        RegWrite(reg, GdbHexToInt(buffer_ptr), current_thread);
+        buffer_ptr += 8;
     }
+
+    RegWrite(CPSR_REGISTER, GdbHexToInt(buffer_ptr), current_thread);
+    buffer_ptr += 8;
+
+    for (u32 reg = D0_REGISTER; reg < FPSCR_REGISTER; reg++) {
+        FpuWrite(reg, GdbHexToLong(buffer_ptr), current_thread);
+        buffer_ptr += 16;
+    }
+
+    FpuWrite(FPSCR_REGISTER, GdbHexToInt(buffer_ptr), current_thread);
+    buffer_ptr += 8;
+
+    FpuWrite(FPEXC_REGISTER, GdbHexToInt(buffer_ptr), current_thread);
 
     UpdateCPUThreadContext(current_thread);
 
@@ -1314,11 +1436,11 @@ static void WriteRegisters() {
 /// Read location in memory specified by gdb client.
 static void ReadMemory() {
     if (!current_process) {
-        SendReply("");
+        SendReply("E01");
         return;
     }
 
-    static u8 reply[GDB_BUFFER_SIZE - 4];
+    static u8 reply[GDB_MAX_PAYLOAD_SIZE + 1];
 
     auto start_offset = command_buffer + 1;
     auto addr_pos = std::find(start_offset, command_buffer + recv_command_length, ',');
@@ -1330,13 +1452,13 @@ static void ReadMemory() {
 
     LOG_DEBUG(Debug_GDBStub, "ReadMemory addr: {:08x} len: {:08x}", addr, len);
 
-    if (len * 2 > sizeof(reply)) {
-        SendReply("");
+    if (static_cast<u64>(len) * 2 > GDB_MAX_PAYLOAD_SIZE) {
+        return SendReply("E01");
     }
 
     auto& memory = Core::System::GetInstance().Memory();
     if (!memory.IsValidVirtualAddress(*current_process, addr)) {
-        return SendReply("");
+        return SendReply("E0E");
     }
 
     std::vector<u8> data(len);
@@ -1380,6 +1502,8 @@ static void WriteMemory() {
 }
 
 void Break(int signal) {
+    const auto watchpoint_hit = std::exchange(pending_watchpoint_hit, std::nullopt);
+
     if (!IsConnected() || !current_process ||
         Core::System::GetInstance().Kernel().GetCurrentProcess().get() != current_process) {
         LOG_ERROR(Debug_GDBStub, "Got signal for un-attached process, ignoring...");
@@ -1396,6 +1520,7 @@ void Break(int signal) {
         Core::System::GetInstance().Kernel().GetCurrentThreadManager().GetCurrentThread();
     if (break_thread) {
         break_signal = signal;
+        break_watchpoint_hit = watchpoint_hit;
     }
 
     // Try to break CPU asap
@@ -1422,6 +1547,10 @@ static void Continue() {
     // does this, and looks like IDA Pro expects it that way too.
     continue_thread = -1;
 
+    if (ConsumePendingInterrupt()) {
+        return;
+    }
+
     std::vector<u32> continue_list{};
     if (thread_id != -1) {
         continue_list.push_back(thread_id);
@@ -1435,6 +1564,10 @@ static void Continue() {
 
 /// Resume the given threads (either a single step or full run)
 static void ResumeThreads(const std::vector<u32>& step_ids, const std::vector<u32>& continue_ids) {
+    if (ConsumePendingInterrupt()) {
+        return;
+    }
+
     for (const u32 thread_id : step_ids) {
         if (Kernel::Thread* thread = FindThreadById(static_cast<int>(thread_id))) {
             thread->gdb_single_step = true;
@@ -1453,6 +1586,35 @@ static void ResumeThreads(const std::vector<u32>& step_ids, const std::vector<u3
     ClearAllInstructionCache();
 }
 
+static void ApplyResumeAddress(Kernel::Thread* thread) {
+    std::string_view args(reinterpret_cast<const char*>(command_buffer + 1),
+                          recv_command_length - 1);
+    if (command_buffer[0] == 'C' || command_buffer[0] == 'S') {
+        // Skip the signal, only keep the optional resume address
+        const std::size_t addr_pos = args.find(';');
+        args = addr_pos == args.npos ? std::string_view{} : args.substr(addr_pos + 1);
+    }
+    if (args.empty()) {
+        return;
+    }
+
+    RegWrite(PC_REGISTER, HexToInt(reinterpret_cast<const u8*>(args.data()), args.size()), thread);
+    UpdateCPUThreadContext(thread);
+}
+
+static void HandleContinue() {
+    if (current_process) {
+        // The resume address applies to the thread selected with 'Hc', or the current thread
+        Kernel::Thread* thread =
+            continue_thread > 0 ? FindThreadById(continue_thread) : current_thread;
+        if (thread) {
+            ApplyResumeAddress(thread);
+        }
+    }
+
+    Continue();
+}
+
 static void HandleStep() {
     if (!current_process) {
         SendReply("E01");
@@ -1466,6 +1628,7 @@ static void HandleStep() {
         thread = current_thread;
     }
 
+    const bool continue_others = continue_thread == -1;
     continue_thread = -1;
 
     if (!thread) {
@@ -1473,20 +1636,18 @@ static void HandleStep() {
         return;
     }
 
-    std::string_view args(reinterpret_cast<const char*>(command_buffer + 1),
-                          recv_command_length - 1);
-    if (command_buffer[0] == 'S') {
-        // The signal is ignored, only keep the optional resume address
-        const std::size_t addr_pos = args.find(';');
-        args = addr_pos == args.npos ? std::string_view{} : args.substr(addr_pos + 1);
-    }
-    if (!args.empty()) {
-        RegWrite(PC_REGISTER, HexToInt(reinterpret_cast<const u8*>(args.data()), args.size()),
-                 thread);
-        UpdateCPUThreadContext(thread);
+    ApplyResumeAddress(thread);
+
+    std::vector<u32> continue_ids;
+    if (continue_others) {
+        for (const auto& other : current_process->GetThreadList()) {
+            if (other.get() != thread) {
+                continue_ids.push_back(other->GetThreadId());
+            }
+        }
     }
 
-    ResumeThreads({thread->GetThreadId()}, {});
+    ResumeThreads({thread->GetThreadId()}, continue_ids);
 }
 
 void OnSingleStepComplete(Kernel::Thread* thread) {
@@ -1517,6 +1678,7 @@ void OnSingleStepComplete(Kernel::Thread* thread) {
     // Reported by the next HandlePackets call, which runs before the next CPU slice.
     break_thread = thread;
     break_signal = SIGTRAP;
+    break_watchpoint_hit.reset();
 }
 
 /**
@@ -1525,18 +1687,24 @@ void OnSingleStepComplete(Kernel::Thread* thread) {
  * @param type Type of breakpoint.
  * @param addr Address of breakpoint.
  * @param len Length of breakpoint.
+ * @param access Whether it is part of an access (read and write) watchpoint.
  */
-static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
+static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len, bool access = false) {
     BreakpointMap& p = GetBreakpointMap(type);
 
-    if (type == BreakpointType::Execute && len != 2 && len != 4) {
-        return false;
+    if (type == BreakpointType::Execute) {
+        if (len == 3) {
+            len = 2;
+        } else if (len != 2 && len != 4) {
+            return false;
+        }
     }
 
     Breakpoint breakpoint;
     breakpoint.active = true;
     breakpoint.addr = addr;
     breakpoint.len = len;
+    breakpoint.access = access;
     Core::System::GetInstance().Memory().ReadBlock(*current_process, addr, breakpoint.inst.data(),
                                                    len);
 
@@ -1583,7 +1751,8 @@ static void AddBreakpoint() {
         type = BreakpointType::Access;
         break;
     default:
-        return SendReply("E01");
+        // Unsupported breakpoint or watchpoint type
+        return SendReply("");
     }
 
     auto start_offset = command_buffer + 3;
@@ -1594,18 +1763,19 @@ static void AddBreakpoint() {
     u32 len = HexToInt(start_offset,
                        static_cast<u32>((command_buffer + recv_command_length) - start_offset));
 
-    if (type == BreakpointType::Access) {
+    const bool access = type == BreakpointType::Access;
+    if (access) {
         // Access is made up of Read and Write types, so add both breakpoints
         type = BreakpointType::Read;
 
-        if (!CommitBreakpoint(type, addr, len)) {
+        if (!CommitBreakpoint(type, addr, len, access)) {
             return SendReply("E02");
         }
 
         type = BreakpointType::Write;
     }
 
-    if (!CommitBreakpoint(type, addr, len)) {
+    if (!CommitBreakpoint(type, addr, len, access)) {
         return SendReply("E02");
     }
 
@@ -1637,7 +1807,8 @@ static void RemoveBreakpoint() {
         type = BreakpointType::Access;
         break;
     default:
-        return SendReply("E01");
+        // Unsupported breakpoint or watchpoint type
+        return SendReply("");
     }
 
     auto start_offset = command_buffer + 3;
@@ -1750,14 +1921,17 @@ void HandleVCommand() {
             for (std::size_t i = 1; i < parts.size(); i++) {
                 const u32 thread_id =
                     HexToInt(reinterpret_cast<const u8*>(parts[i].c_str()), parts[i].size());
-                if (FindThreadById(static_cast<int>(thread_id))) {
-                    assign(thread_id, step);
+                if (!FindThreadById(static_cast<int>(thread_id))) {
+                    // Reject the whole packet without resuming anything
+                    SendReply("E01");
+                    return;
                 }
+                assign(thread_id, step);
             }
         }
 
         if (step_ids.empty() && continue_ids.empty()) {
-            // None of the requested threads exist
+            // The process has no threads to resume
             SendReply("E01");
             return;
         }
@@ -1817,11 +1991,7 @@ static void HandleCommand(Core::System& system, const std::vector<u8>& payload) 
         break;
     case 'D':
         SendReply("OK");
-        ToggleServer(false);
-        ToggleServer(true);
-        // Continue execution
-        continue_thread = -1;
-        Continue();
+        DetachAndRestartServer();
         break;
     case 'k':
         LOG_INFO(Debug_GDBStub, "killed by gdb");
@@ -1858,7 +2028,7 @@ static void HandleCommand(Core::System& system, const std::vector<u8>& payload) 
         return;
     case 'C':
     case 'c':
-        Continue();
+        HandleContinue();
         return;
     case 'z':
         RemoveBreakpoint();
@@ -1893,7 +2063,8 @@ void HandlePackets(Core::System& system) {
         break_thread = nullptr;
         int signal = break_signal;
         break_signal = 0;
-        BreakImpl(signal);
+        const auto watchpoint_hit = std::exchange(break_watchpoint_hit, std::nullopt);
+        BreakImpl(signal, watchpoint_hit);
     }
 
     HandlePendingHioRequestPacket();
@@ -1904,11 +2075,10 @@ void HandlePackets(Core::System& system) {
         switch (event.type) {
         case ClientEvent::Type::Interrupt:
             LOG_INFO(Debug_GDBStub, "gdb: found break command");
-            BreakImpl(SIGTRAP);
+            HandleInterrupt();
             break;
         case ClientEvent::Type::Disconnected:
-            ToggleServer(false);
-            ToggleServer(true);
+            DetachAndRestartServer();
             return;
         case ClientEvent::Type::Command:
             HandleCommand(system, event.payload);
