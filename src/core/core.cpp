@@ -89,6 +89,27 @@ System::System() : movie{*this}, cheat_engine{*this} {
 
 System::~System() = default;
 
+/**
+ * Executes the thread currently scheduled on the given core. Runs a full slice when tight_loop is
+ * set, a single instruction otherwise, or a single instruction if a debugger asked to step it.
+ */
+static void ExecuteCore(ARM_Interface& core, Kernel::Thread* thread, bool tight_loop) {
+#ifdef ENABLE_GDBSTUB
+    if (thread->gdb_single_step) [[unlikely]] {
+        // Keep a reference to the thread in case it just exits.
+        const auto thread_ref = Kernel::SharedFrom(thread);
+        core.Step();
+        GDBStub::OnSingleStepComplete(thread);
+        return;
+    }
+#endif
+    if (tight_loop) {
+        core.Run();
+    } else {
+        core.Step();
+    }
+}
+
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
 
@@ -243,16 +264,13 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             running_core = current_core_to_execute;
             kernel->SetRunningCPU(running_core);
         }
-        if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
+        Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
+        if (thread == nullptr) {
             LOG_TRACE(Core_ARM11, "Core {} idling", current_core_to_execute->GetID());
             current_core_to_execute->GetTimer().Idle();
             PrepareReschedule();
         } else {
-            if (tight_loop) {
-                current_core_to_execute->Run();
-            } else {
-                current_core_to_execute->Step();
-            }
+            ExecuteCore(*current_core_to_execute, thread, tight_loop);
         }
         Reschedule();
     } else {
@@ -277,18 +295,15 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             kernel->SetRunningCPU(running_core);
             // If we don't have a currently active thread then don't execute instructions,
             // instead advance to the next event and try to yield to the next thread
-            if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
+            Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
+            if (thread == nullptr) {
                 LOG_TRACE(Core_ARM11, "Core {} idling", cpu_core->GetID());
                 cpu_core->GetTimer().Idle();
                 PrepareReschedule();
             } else {
                 // In the rare case the break flag is set (due to exception thrown)
                 // there is probably no need to adjust the timer accordingly.
-                if (tight_loop) {
-                    cpu_core->Run();
-                } else {
-                    cpu_core->Step();
-                }
+                ExecuteCore(*cpu_core, thread, tight_loop);
             }
             max_slice = cpu_core->GetTimer().GetTicks() - start_ticks;
             Reschedule();
