@@ -256,12 +256,13 @@ class GamesFragment : Fragment() {
         @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
         if (!BuildConfig.DEBUG &&
             !BuildUtil.isGooglePlayBuild &&
-            BooleanSetting.CHECK_FOR_UPDATES.boolean &&
+            Settings.settings.get(BooleanSetting.CHECK_FOR_UPDATES) &&
             !homeViewModel.updatePromptShown
         ) {
             Thread({
                 val checkForPrereleaseUpdates =
-                    isPrereleaseBuild() || (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
+                    isPrereleaseBuild() ||
+                        (Settings.settings.get(IntSetting.UPDATE_CHECK_CHANNEL) == 1)
                 val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
 
                 if (!latestReleaseTag.isNullOrEmpty() &&
