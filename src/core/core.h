@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -125,6 +125,12 @@ public:
      * @return Result status, indicating whethor or not the operation succeeded.
      */
     [[nodiscard]] ResultStatus RunLoop(bool tight_loop = true);
+
+    /**
+     * Handles pending scripting RPC requests that must run on the emulation thread, then keeps
+     * waiting for and handling new ones until wait_until. Called by RunLoop and the frame limiter.
+     */
+    void ServiceRPCRequests(std::chrono::steady_clock::time_point wait_until = {});
 
     /**
      * Step the CPU one instruction

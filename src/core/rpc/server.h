@@ -1,6 +1,6 @@
-// Copyright 2018 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -22,6 +22,14 @@ public:
     ~Server();
 
     void NewRequestCallback(std::unique_ptr<Packet> new_request);
+
+    void ProcessCoreRequests() {
+        rpc_server.ProcessCoreRequests();
+    }
+
+    bool WaitForCoreRequests(std::chrono::steady_clock::time_point deadline) {
+        return rpc_server.WaitForCoreRequests(deadline);
+    }
 
 private:
     RPCServer rpc_server;
