@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -229,7 +229,6 @@ private:
                             const bool& skip_tryexec);
 
     void ShowCommandOutput(std::string title, std::string message);
-    void ShowFFmpegErrorMessage();
 
 private slots:
     void OnResumeGame(bool first_start);
@@ -293,15 +292,14 @@ private slots:
     void OnCloseMovie();
     void OnSaveMovie();
     void OnCaptureScreenshot();
-    void OnDumpVideo();
     void OnCompressFile();
     void OnDecompressFile();
-#ifdef _WIN32
-    void OnOpenFFmpeg();
-#endif
+#ifdef ENABLE_FFMPEG
+    void OnDumpVideo();
     void OnStartVideoDumping();
     void StartVideoDumping(const QString& path);
     void OnStopVideoDumping();
+#endif
     void OnCoreError(Core::System::ResultStatus, std::string);
     bool ShowExceptionDialog(Core::System::ResultStatus result, const std::string& details);
     /// Called whenever a user selects Help->About Azahar
