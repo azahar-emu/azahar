@@ -112,10 +112,14 @@ class MainActivity :
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 
-        window.statusBarColor =
-            ContextCompat.getColor(applicationContext, android.R.color.transparent)
-        window.navigationBarColor =
-            ContextCompat.getColor(applicationContext, android.R.color.transparent)
+        @Suppress("DEPRECATION")
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // ^- These are set to transparent automatically on Vanilla Ice Cream and up.
+            window.statusBarColor =
+                ContextCompat.getColor(applicationContext, android.R.color.transparent)
+            window.navigationBarColor =
+                ContextCompat.getColor(applicationContext, android.R.color.transparent)
+        }
 
         binding.statusBarShade.setBackgroundColor(
             ThemeUtil.getColorWithOpacity(
