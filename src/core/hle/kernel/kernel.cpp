@@ -139,8 +139,16 @@ const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
     return *shared_page_handler;
 }
 
+MemoryRef KernelSystem::GetSharedPageMemoryRef(u64 offset) {
+    return MemoryRef(shared_page_handler, offset);
+}
+
 ConfigMem::Handler& KernelSystem::GetConfigMemHandler() {
     return *config_mem_handler;
+}
+
+MemoryRef KernelSystem::GetConfigMemMemoryRef(u64 offset) {
+    return MemoryRef{config_mem_handler, offset};
 }
 
 IPCDebugger::Recorder& KernelSystem::GetIPCRecorder() {

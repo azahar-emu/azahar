@@ -339,8 +339,10 @@ public:
 
     SharedPage::Handler& GetSharedPageHandler();
     const SharedPage::Handler& GetSharedPageHandler() const;
+    MemoryRef GetSharedPageMemoryRef(u64 offset);
 
     ConfigMem::Handler& GetConfigMemHandler();
+    MemoryRef GetConfigMemMemoryRef(u64 offset);
 
     IPCDebugger::Recorder& GetIPCRecorder();
     const IPCDebugger::Recorder& GetIPCRecorder() const;
