@@ -24,7 +24,10 @@ class SliderSetting(
     val defaultValue: Float? = null,
     override var isEnabled: Boolean = true,
     @StringRes override var disabledMessage: Int =
-        R.string.setting_disabled_description_incompatible_setting
+        R.string.setting_disabled_description_incompatible_setting,
+    // Increment the slider snaps to; 0 leaves it continuous. (max - min) must divide evenly by
+    // it, and a value off the step makes Material's Slider throw, so SettingsAdapter snaps first.
+    val stepSize: Float = 0f
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SLIDER
     val selectedFloat: Float
