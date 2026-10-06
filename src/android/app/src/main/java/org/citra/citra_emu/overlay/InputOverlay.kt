@@ -702,13 +702,24 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             @Suppress("DEPRECATION")
             (context as Activity).windowManager.defaultDisplay
         }
-        val outMetrics = DisplayMetrics()
-        display.getMetrics(outMetrics)
+        var displayWidth: Float
+        var displayHeight: Float
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val displayMetrics = (context as Activity).windowManager.maximumWindowMetrics.bounds
+            displayWidth = displayMetrics.width().toFloat()
+            displayHeight = displayMetrics.height().toFloat()
+        } else {
+            val displayMetrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            display.getMetrics(displayMetrics)
+            displayWidth = displayMetrics.widthPixels.toFloat()
+            displayHeight = displayMetrics.heightPixels.toFloat()
+        }
         val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
         val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
         val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
-        var maxX = outMetrics.widthPixels.toFloat() - marginsX
-        var maxY = outMetrics.heightPixels.toFloat() - marginsY
+        var maxX = displayWidth - marginsX
+        var maxY = displayHeight - marginsY
         // Height and width changes depending on orientation. Use the larger value for height.
         if (maxY > maxX) {
             val tmp = maxX
@@ -866,13 +877,24 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             @Suppress("DEPRECATION")
             (context as Activity).windowManager.defaultDisplay
         }
-        val outMetrics = DisplayMetrics()
-        display.getMetrics(outMetrics)
+        var displayWidth: Float
+        var displayHeight: Float
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val displayMetrics = (context as Activity).windowManager.maximumWindowMetrics.bounds
+            displayWidth = displayMetrics.width().toFloat()
+            displayHeight = displayMetrics.height().toFloat()
+        } else {
+            val displayMetrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            display.getMetrics(displayMetrics)
+            displayWidth = displayMetrics.widthPixels.toFloat()
+            displayHeight = displayMetrics.heightPixels.toFloat()
+        }
         val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
         val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
         val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
-        var maxX = outMetrics.widthPixels.toFloat() - marginsX
-        var maxY = outMetrics.heightPixels.toFloat() - marginsY
+        var maxX = displayWidth - marginsX
+        var maxY = displayHeight - marginsY
         // Height and width changes depending on orientation. Use the larger value for height.
         if (maxY < maxX) {
             val tmp = maxX
