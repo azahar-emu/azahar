@@ -3,6 +3,7 @@
 // Refer to the LICENSE.txt file included.
 
 #include <clocale>
+#include <format>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -4423,6 +4424,56 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 #endif
 }
 
+#ifdef _WIN32
+void GMainWindow::UpdateScrollBarStyle() {
+    constexpr auto customScrollbarStyleTemplate = (R"(
+        QScrollBar:vertical {{
+            background: palette(window);
+            width: 16px;
+            margin: 0px;
+            border-left: 1px solid palette({0});
+        }}
+        QScrollBar::handle:vertical {{
+            background: palette({1});
+            border: none;
+            border-radius: 4.5px;
+            margin: 3px;
+        }}
+        QScrollBar::handle:vertical:hover {{
+            background: palette({0});
+        }}
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+            border: none;
+            height: 0px;
+        }}
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+            background: none;
+        }}
+    )");
+
+    const auto darkCustomScrollbarStyle =
+        QString::fromUtf8(std::format(customScrollbarStyleTemplate, "midlight", "light"));
+    const auto lightCustomScrollbarStyle =
+        QString::fromUtf8(std::format(customScrollbarStyleTemplate, "dark", "mid"));
+
+    const bool isDarkMode = (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+
+    if (isDarkMode) {
+        setStyleSheet(darkCustomScrollbarStyle);
+    } else {
+        setStyleSheet(lightCustomScrollbarStyle);
+    }
+}
+
+void GMainWindow::changeEvent(QEvent* event) {
+    if (event->type() == QEvent::PaletteChange ||
+        event->type() == QEvent::ApplicationPaletteChange) {
+        UpdateScrollBarStyle();
+    }
+    QMainWindow::changeEvent(event);
+}
+#endif
+
 int LaunchQtFrontend(int argc, char* argv[]) {
 #ifdef __APPLE__
     // Ensure that the linker doesn't optimize qt_swizzle.mm out of existence.
@@ -4480,6 +4531,10 @@ int LaunchQtFrontend(int argc, char* argv[]) {
     system.RegisterImageInterface(std::make_shared<QtImageInterface>());
 
     GMainWindow main_window(system);
+
+#ifdef _WIN32
+    main_window.UpdateScrollBarStyle();
+#endif
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets(system);
