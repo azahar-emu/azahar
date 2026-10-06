@@ -1,11 +1,12 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.display
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
@@ -23,10 +24,16 @@ class ScreenAdjustmentUtil(
 ) {
     fun swapScreen() {
         val isEnabled = !EmulationMenuSettings.swapScreens
+        val displayRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display.rotation
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.rotation
+        }
         EmulationMenuSettings.swapScreens = isEnabled
         NativeLibrary.swapScreens(
             isEnabled,
-            windowManager.defaultDisplay.rotation
+            displayRotation
         )
         BooleanSetting.SWAP_SCREEN.boolean = isEnabled
         settings.saveSetting(BooleanSetting.SWAP_SCREEN, SettingsFile.FILE_NAME_CONFIG)

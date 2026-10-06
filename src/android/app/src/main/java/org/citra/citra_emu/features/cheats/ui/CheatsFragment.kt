@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.cheats.ui
 
@@ -143,12 +143,12 @@ class CheatsFragment :
 
     override fun onPanelSlide(panel: View, slideOffset: Float) {}
     override fun onPanelOpened(panel: View) {
-        val rtl = ViewCompat.getLayoutDirection(panel) == ViewCompat.LAYOUT_DIRECTION_RTL
+        val rtl = panel.layoutDirection == View.LAYOUT_DIRECTION_RTL
         cheatDetailsLastFocus!!.requestFocus(if (rtl) View.FOCUS_LEFT else View.FOCUS_RIGHT)
     }
 
     override fun onPanelClosed(panel: View) {
-        val rtl = ViewCompat.getLayoutDirection(panel) == ViewCompat.LAYOUT_DIRECTION_RTL
+        val rtl = panel.layoutDirection == View.LAYOUT_DIRECTION_RTL
         cheatListLastFocus!!.requestFocus(if (rtl) View.FOCUS_RIGHT else View.FOCUS_LEFT)
     }
 
