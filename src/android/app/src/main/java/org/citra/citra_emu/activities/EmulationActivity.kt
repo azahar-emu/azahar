@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.activities
 
@@ -11,6 +11,7 @@ import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.InputDevice
 import android.view.KeyEvent
@@ -150,9 +151,15 @@ class EmulationActivity : AppCompatActivity() {
         enableFullscreenImmersive()
 
         // Override Citra core INI with the one set by our in game menu
+        val displayRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            display.rotation
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.rotation
+        }
         NativeLibrary.swapScreens(
             EmulationMenuSettings.swapScreens,
-            windowManager.defaultDisplay.rotation
+            displayRotation
         )
 
         EmulationLifecycleUtil.addShutdownHook(onShutdown)

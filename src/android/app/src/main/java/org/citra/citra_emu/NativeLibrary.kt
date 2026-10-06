@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu
 
@@ -410,11 +410,11 @@ object NativeLibrary {
             } else {
                 alertResult = false
                 builder
-                    .setPositiveButton(android.R.string.yes) { _: DialogInterface, _: Int ->
+                    .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                         alertResult = true
                         synchronized(alertLock) { alertLock.notify() }
                     }
-                    .setNegativeButton(android.R.string.no) { _: DialogInterface, _: Int ->
+                    .setNegativeButton(android.R.string.cancel) { _: DialogInterface, _: Int ->
                         alertResult = false
                         synchronized(alertLock) { alertLock.notify() }
                     }

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.overlay
 
@@ -13,6 +13,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.VectorDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.view.MotionEvent
@@ -86,9 +87,15 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     private fun swapScreen() {
         val isEnabled = !EmulationMenuSettings.swapScreens
         EmulationMenuSettings.swapScreens = isEnabled
+        val displayRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display.rotation
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay.rotation
+        }
         NativeLibrary.swapScreens(
             isEnabled,
-            (context as Activity).windowManager.defaultDisplay.rotation
+            displayRotation
         )
     }
 
@@ -689,7 +696,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
     private fun defaultOverlayLandscape() {
         // Get screen size
-        val display = (context as Activity).windowManager.defaultDisplay
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay
+        }
         val outMetrics = DisplayMetrics()
         display.getMetrics(outMetrics)
         val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
@@ -848,7 +860,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
     private fun defaultOverlayPortrait() {
         // Get screen size
-        val display = (context as Activity).windowManager.defaultDisplay
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay
+        }
         val outMetrics = DisplayMetrics()
         display.getMetrics(outMetrics)
         val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout

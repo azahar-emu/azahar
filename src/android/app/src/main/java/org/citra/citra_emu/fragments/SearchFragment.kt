@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -271,7 +271,7 @@ class SearchFragment : Fragment() {
         binding.noResultsView.updatePadding(bottom = spacingNavigation + barInsets.bottom)
 
         val mlpDivider = binding.divider.layoutParams as ViewGroup.MarginLayoutParams
-        if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
+        if (view.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
             binding.frameSearch.updatePadding(left = spacingNavigationRail)
             binding.gridGamesSearch.updatePadding(left = spacingNavigationRail)
             binding.noResultsView.updatePadding(left = spacingNavigationRail)
