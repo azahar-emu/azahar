@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <array>
@@ -36,6 +36,7 @@
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/svc.h"
 #include "core/hle/kernel/svc_wrapper.h"
 #include "core/hle/kernel/thread.h"
@@ -2109,7 +2110,7 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
 
     // TODO(PabloMK7) Fix-up this svc.
 
-    // Only linear memory supported
+    // Only FCRAM and kernel shared pages supported
     auto vma = src_process->vm_manager.FindVMA(src_address);
     R_UNLESS(vma != src_process->vm_manager.vma_map.end() &&
                  vma->second.type == VMAType::BackingMemory,
@@ -2118,11 +2119,20 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
     const u32 offset = src_address - vma->second.base;
     R_UNLESS(offset + size <= vma->second.size, ResultInvalidAddress);
 
-    auto vma_res = dst_process->vm_manager.MapBackingMemory(
-        dst_address,
-        memory.GetFCRAMRef(vma->second.backing_memory.GetPtr() + offset -
-                           kernel.memory.GetFCRAMPointer(0)),
-        size, map_as_private ? MemoryState::Private : MemoryState::Shared);
+    MemoryRef src_memory_ref;
+    // TODO(PabloMK7): This is hacky, make a proper fix
+    if (vma->second.backing_memory.GetPtr() == kernel.GetSharedPageHandler().GetPtr()) {
+        src_memory_ref = kernel.GetSharedPageMemoryRef(offset);
+    } else if (vma->second.backing_memory.GetPtr() == kernel.GetConfigMemHandler().GetPtr()) {
+        src_memory_ref = kernel.GetConfigMemMemoryRef(offset);
+    } else {
+        src_memory_ref = memory.GetFCRAMRef(vma->second.backing_memory.GetPtr() + offset -
+                                            kernel.memory.GetFCRAMPointer(0));
+    }
+
+    auto vma_res = dst_process->vm_manager.MapBackingMemory(dst_address, src_memory_ref, size,
+                                                            map_as_private ? MemoryState::Private
+                                                                           : MemoryState::Shared);
 
     if (!vma_res.Succeeded()) {
         return ResultInvalidAddressState;
@@ -2141,7 +2151,6 @@ Result SVC::UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size) {
         size = (size & ~0xFFF) + Memory::CITRA_PAGE_SIZE;
     }
 
-    // Only linear memory supported
     auto vma = dst_process->vm_manager.FindVMA(dst_address);
     R_UNLESS(vma != dst_process->vm_manager.vma_map.end() &&
                  vma->second.type == VMAType::BackingMemory,
