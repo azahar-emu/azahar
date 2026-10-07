@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the misc/licenses/gplv2.txt file included.
 
@@ -11,8 +11,8 @@ layout(location = 0) out vec4 frag_color;
 layout(binding = 0) uniform sampler2D tex;
 
 #ifdef VULKAN
-layout(push_constant, std140) uniform XbrzInfo {
-    float scale;
+layout(push_constant) uniform PushConstants {
+    layout(offset = 16) float scale;
 };
 #else
 layout(location = 2) uniform float scale;
