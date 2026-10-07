@@ -670,6 +670,12 @@ object NativeLibrary {
 
     external fun loadState(slot: Int)
 
+    external fun getCurrentSaveSlot(): Int
+
+    external fun setCurrentSaveSlot(slot: Int)
+
+    external fun advanceSaveSlot(delta: Int): Int
+
     /**
      * Logs the Citra version, Android version and, CPU.
      */
