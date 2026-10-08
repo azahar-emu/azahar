@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -355,7 +355,7 @@ public:
         return file->GetType().HasCompressedType();
     }
 
-    NCCH_Header ncch_header;
+    NCCH_Header ncch_header{};
     ExeFs_Header exefs_header;
     ExHeader_Header exheader_header;
 
