@@ -103,17 +103,6 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
             TITLE_ID_APP_VALUE) {
         return;
     }
-    {
-        // Same check as original plugin loader, plugins are not supported in homebrew apps
-        u32 value1, value2;
-        kernel.memory.ReadBlock(process, process.codeset->CodeSegment().addr, &value1, 4);
-        kernel.memory.ReadBlock(process, process.codeset->CodeSegment().addr + 32, &value2, 4);
-        // Check for "B #0x20" and "MOV R4, LR" instructions
-        bool is_homebrew = u32_le(value1) == 0xEA000006 && u32_le(value2) == 0xE1A0400E;
-        if (is_homebrew) {
-            return;
-        }
-    }
     FileSys::Plugin3GXLoader plugin_loader;
     const auto low_title_Id = plgldr_context.user_load_parameters.low_title_Id;
     if (plgldr_context.use_user_load_parameters &&

@@ -76,7 +76,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
         return Loader::ResultStatus::Error;
     }
 
-    // Load CIA Header
+    // Load 3GX Header
     std::vector<u8> header_data(sizeof(_3gx_Header));
     if (file.ReadBytes(header_data.data(), sizeof(_3gx_Header)) != sizeof(_3gx_Header)) {
         LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. File corrupted: {}",
@@ -97,6 +97,21 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
         LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Not compatible with Azahar: {}",
                   plg_context.plugin_path);
         return Loader::ResultStatus::Error;
+    }
+
+    if (!header.infos.flags.allow_homebrew_load) {
+        // Same check as original plugin loader, plugins are not supported in homebrew apps
+        u32 value1, value2;
+        kernel.memory.ReadBlock(process, process.codeset->CodeSegment().addr, &value1, 4);
+        kernel.memory.ReadBlock(process, process.codeset->CodeSegment().addr + 32, &value2, 4);
+        // Check for "B #0x20" and "MOV R4, LR" instructions
+        bool is_homebrew = u32_le(value1) == 0xEA000006 && u32_le(value2) == 0xE1A0400E;
+        if (is_homebrew) {
+            LOG_ERROR(Service_PLGLDR,
+                      "Failed to load 3GX plugin. Not compatible with homebrew apps: {}",
+                      plg_context.plugin_path);
+            return Loader::ResultStatus::Error;
+        }
     }
 
     // Load strings

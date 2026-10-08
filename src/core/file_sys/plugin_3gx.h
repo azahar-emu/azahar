@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -97,6 +97,7 @@ private:
             BitField<6, 1, u32_le> events_self_managed;
             BitField<7, 1, u32_le> swap_not_needed;
             BitField<8, 1, u32_le> use_private_memory;
+            BitField<9, 1, u32_le> allow_homebrew_load;
         } flags;
         u32_le exe_load_checksum;
         u32_le builtin_load_exe_args[4];
