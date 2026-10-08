@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <optional>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
 #include <fmt/format.h>
@@ -57,6 +58,20 @@ constexpr u8 VARIATION_SYSTEM = 0x02;
 constexpr u32 TID_HIGH_UPDATE = 0x0004000E;
 constexpr u32 TID_HIGH_DLC = 0x0004008C;
 
+constexpr Result ResultInvalidMediaType(ErrorDescription::InvalidEnumValue, ErrorModule::AM,
+                                        ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+
+constexpr Result ResultReadNotSupported(ErrorDescription::NotImplemented, ErrorModule::AM,
+                                        ErrorSummary::NotSupported, ErrorLevel::Permanent);
+
+/// Imported tickets, TMDs and contents are stored on FAT32 partitions on hardware, so none of
+/// them can be larger than the maximum FAT32 file size.
+constexpr u64 MAX_IMPORT_FILE_SIZE = 0xFFFFFFFF;
+
+/// Maximum size of the part of a CIA before its contents (header, certificates, ticket and TMD),
+/// which is buffered in memory while installing.
+constexpr u64 MAX_CIA_PRE_CONTENT_SIZE = 8 * 1024 * 1024;
+
 constexpr u8 OWNERSHIP_DOWNLOADED = 0x01;
 constexpr u8 OWNERSHIP_OWNED = 0x02;
 
@@ -80,6 +95,21 @@ struct TicketInfo {
 };
 
 static_assert(sizeof(TicketInfo) == 0x18, "Ticket info structure size is wrong");
+
+static bool IsInstallableMediaType(Service::FS::MediaType media_type) {
+    return media_type == Service::FS::MediaType::NAND || media_type == Service::FS::MediaType::SDMC;
+}
+
+static bool HasOversizedContent(const FileSys::TitleMetadata& tmd) {
+    for (std::size_t i = 0; i < tmd.GetContentCount(); i++) {
+        if (tmd.GetContentSizeByIndex(i) > MAX_IMPORT_FILE_SIZE) {
+            LOG_ERROR(Service_AM, "Content {} of title {:016X} is too large: 0x{:X}", i,
+                      tmd.GetTitleID(), tmd.GetContentSizeByIndex(i));
+            return true;
+        }
+    }
+    return false;
+}
 
 class CIAFile::DecryptionState {
 public:
@@ -447,8 +477,7 @@ CIAFile::~CIAFile() {
 }
 
 ResultVal<std::size_t> CIAFile::Read(u64 offset, std::size_t length, u8* buffer) const {
-    UNIMPLEMENTED();
-    return length;
+    return ResultReadNotSupported;
 }
 
 CIAFile::InstallResult CIAFile::WriteTicket() {
@@ -485,30 +514,41 @@ CIAFile::InstallResult CIAFile::WriteTicket() {
     return res;
 }
 
-CIAFile::InstallResult CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data,
-                                                   std::size_t offset) {
-    InstallResult res{};
+CIAFile::PreparedTitleMetadata CIAFile::PrepareTitleMetadata(Service::FS::MediaType media_type,
+                                                             bool is_update,
+                                                             std::span<const u8> tmd_data,
+                                                             std::size_t offset) {
+    PreparedTitleMetadata prepared{};
+    InstallResult& res = prepared.install_result;
     res.type = InstallResult::Type::TMD;
-    auto load_result = container.LoadTitleMetadata(tmd_data, offset);
+    auto load_result = prepared.tmd.Load(tmd_data, offset);
     if (load_result != Loader::ResultStatus::Success) {
         LOG_ERROR(Service_AM, "Could not read title metadata.");
         // TODO: Correct result code.
         res.result = {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
                       ErrorLevel::Permanent};
-        return res;
+        return prepared;
     }
 
-    FileSys::TitleMetadata tmd = container.GetTitleMetadata();
+    FileSys::TitleMetadata& tmd = prepared.tmd;
     tmd.Print();
+
+    if (HasOversizedContent(tmd)) {
+        // TODO: Correct result code.
+        res.result = {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                      ErrorLevel::Permanent};
+        return prepared;
+    }
 
     // If a TMD already exists for this app (ie 00000000.tmd), the incoming TMD
     // will be the same plus one, (ie 00000001.tmd), both will be kept until
     // the install is finalized and old contents can be discarded.
+    prepared.is_update = is_update;
     if (FileUtil::Exists(GetTitleMetadataPath(media_type, tmd.GetTitleID()))) {
-        is_update = true;
+        prepared.is_update = true;
     }
 
-    std::string tmd_path = GetTitleMetadataPath(media_type, tmd.GetTitleID(), is_update);
+    std::string tmd_path = GetTitleMetadataPath(media_type, tmd.GetTitleID(), prepared.is_update);
 
     // Create content/ folder if it doesn't exist
     std::string tmd_folder;
@@ -521,10 +561,65 @@ CIAFile::InstallResult CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data,
         LOG_ERROR(Service_AM, "Failed to install title metadata file from CIA.");
         // TODO: Correct result code.
         res.result = FileSys::ResultFileNotFound;
+        return prepared;
+    }
+
+    PrepareContentPaths(media_type, prepared);
+    res.result = ResultSuccess;
+    return prepared;
+}
+
+CIAFile::PreparedTitleMetadata CIAFile::PrepareAdditionalContent(Service::FS::MediaType media_type,
+                                                                 bool is_update,
+                                                                 FileSys::TitleMetadata tmd) {
+    PreparedTitleMetadata prepared{};
+    prepared.install_result.type = InstallResult::Type::TMD;
+    if (HasOversizedContent(tmd)) {
+        // TODO: Correct result code.
+        prepared.install_result.result = {ErrCodes::InvalidCIAHeader, ErrorModule::AM,
+                                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent};
+        return prepared;
+    }
+
+    prepared.tmd = std::move(tmd);
+    prepared.is_update = is_update;
+    PrepareContentPaths(media_type, prepared);
+    prepared.install_result.result = ResultSuccess;
+    return prepared;
+}
+
+void CIAFile::PrepareContentPaths(Service::FS::MediaType media_type,
+                                  PreparedTitleMetadata& prepared) {
+    const FileSys::TitleMetadata& tmd = prepared.tmd;
+
+    // Create any other .app folders which may not exist yet
+    std::string app_folder;
+    auto main_content_path = GetTitleContentPath(
+        media_type, tmd.GetTitleID(), FileSys::TMDContentIndex::Main, prepared.is_update);
+    Common::SplitPath(main_content_path, &app_folder, nullptr, nullptr);
+    FileUtil::CreateFullPath(app_folder);
+
+    prepared.content_paths.clear();
+    for (std::size_t i = 0; i < tmd.GetContentCount(); i++) {
+        prepared.content_paths.emplace_back(
+            GetTitleContentPath(media_type, tmd.GetTitleID(), i, prepared.is_update));
+    }
+}
+
+CIAFile::InstallResult CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data,
+                                                   std::size_t offset) {
+    return ApplyTitleMetadata(PrepareTitleMetadata(media_type, is_update, tmd_data, offset));
+}
+
+CIAFile::InstallResult CIAFile::ApplyTitleMetadata(PreparedTitleMetadata&& prepared) {
+    InstallResult res = prepared.install_result;
+    if (res.result.IsError()) {
         return res;
     }
 
-    res.result = PrepareToImportContent(tmd);
+    container.LoadTitleMetadata(prepared.tmd);
+    tmd_installed = true;
+    res.result = ApplyContentPreparation(std::move(prepared));
     return res;
 }
 
@@ -542,7 +637,9 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
 
             // The unwritten range for this content is beyond the buffered data we have
             // or comes before the buffered data we have, so skip this content ID.
-            if (range_min > offset_max || range_max < offset) {
+            // Content data must arrive in order: if the unwritten range starts before this
+            // write, the bytes in between were never received, so skip it as well.
+            if (range_min > offset_max || range_min < offset) {
                 continue;
             }
 
@@ -580,6 +677,11 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
                     install_results.push_back(current_content_install_result);
                     return current_content_install_result.result;
                 }
+                if (i >= decryption_state->content.size()) {
+                    LOG_ERROR(Service_AM, "No decryption state for content index {}", i);
+                    return Result(ErrCodes::InvalidImportState, ErrorModule::AM,
+                                  ErrorSummary::InvalidState, ErrorLevel::Permanent);
+                }
                 decryption_state->content[i].ProcessData(temp.data(), temp.data(), temp.size());
             }
 
@@ -616,15 +718,24 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
     // The CIA Header describes Cert, Ticket, TMD, total content sizes, and TMD is needed for
     // content sizes so it ends up becoming a problem of keeping track of how much has been
     // written and what we have been able to pick up.
+
+    // Copies the part of this write that lies below limit into our buffer.
+    const auto buffer_data = [&](u64 limit) {
+        if (offset >= limit) {
+            return;
+        }
+        const u64 end = std::min(offset + static_cast<u64>(length), limit);
+        if (data.size() < end) {
+            data.resize(end);
+        }
+        std::memcpy(data.data() + offset, buffer, end - offset);
+    };
+
     if (install_state == CIAInstallState::InstallStarted) {
-        std::size_t buf_copy_size = std::min(length, FileSys::CIA_HEADER_SIZE);
-        std::size_t buf_max_size =
-            std::min(static_cast<std::size_t>(offset + length), FileSys::CIA_HEADER_SIZE);
-        data.resize(buf_max_size);
-        std::memcpy(data.data() + offset, buffer, buf_copy_size);
+        buffer_data(FileSys::CIA_HEADER_SIZE);
 
         // We have enough data to load a CIA header and parse it.
-        if (written >= FileSys::CIA_HEADER_SIZE) {
+        if (data.size() >= FileSys::CIA_HEADER_SIZE) {
             container.LoadHeader(data);
             container.Print();
             install_state = CIAInstallState::HeaderLoaded;
@@ -636,23 +747,24 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
         return length;
     }
 
+    // Everything before the contents is kept in memory, and it is never more than a few KiB on a
+    // real CIA, so refuse headers that would need a large buffer.
+    if (container.GetContentOffset() > MAX_CIA_PRE_CONTENT_SIZE) {
+        LOG_ERROR(Service_AM, "CIA content offset 0x{:X} is too large",
+                  container.GetContentOffset());
+        // TODO: Correct result code.
+        return Result(ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                      ErrorLevel::Permanent);
+    }
+
     // If we have been given data before (or including) .app content, pull it into
     // our buffer, but only pull *up to* the content offset, no further.
-    if (offset < container.GetContentOffset()) {
-        std::size_t buf_loaded = data.size();
-        std::size_t copy_offset = std::max(static_cast<std::size_t>(offset), buf_loaded);
-        std::size_t buf_offset = buf_loaded - offset;
-        std::size_t buf_copy_size =
-            std::min(length, static_cast<std::size_t>(container.GetContentOffset() - offset)) -
-            buf_offset;
-        std::size_t buf_max_size = std::min(offset + length, container.GetContentOffset());
-        data.resize(buf_max_size);
-        std::memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
-    }
+    buffer_data(container.GetContentOffset());
 
     // The end of our TMD is at the beginning of Content data, so ensure we have that much
     // buffered before trying to parse.
-    if (written >= container.GetContentOffset() && install_state != CIAInstallState::TMDLoaded) {
+    if (data.size() >= container.GetContentOffset() &&
+        install_state != CIAInstallState::TMDLoaded) {
         InstallResult result = WriteTicket();
         install_results.push_back(result);
         if (result.result.IsError()) {
@@ -681,28 +793,18 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
     return length;
 }
 
-Result CIAFile::PrepareToImportContent(const FileSys::TitleMetadata& tmd) {
+Result CIAFile::ApplyContentPreparation(PreparedTitleMetadata&& prepared) {
+    is_update = prepared.is_update;
 
-    // Create any other .app folders which may not exist yet
-    std::string app_folder;
-    auto main_content_path = GetTitleContentPath(media_type, tmd.GetTitleID(),
-                                                 FileSys::TMDContentIndex::Main, is_update);
-    Common::SplitPath(main_content_path, &app_folder, nullptr, nullptr);
-    FileUtil::CreateFullPath(app_folder);
-
-    auto content_count = container.GetTitleMetadata().GetContentCount();
+    const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
+    auto content_count = tmd.GetContentCount();
     content_written.resize(content_count);
 
     current_content_file.reset();
     current_content_index = -1;
-    content_file_paths.clear();
-    for (std::size_t i = 0; i < content_count; i++) {
-        auto path = GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update);
-        content_file_paths.emplace_back(path);
-    }
+    content_file_paths = std::move(prepared.content_paths);
 
-    if (container.GetTitleMetadata().HasEncryptedContent(from_cdn ? nullptr
-                                                                  : container.GetHeader())) {
+    if (tmd.HasEncryptedContent(from_cdn ? nullptr : container.GetHeader())) {
         if (!decryption_authorized) {
             LOG_ERROR(Service_AM, "Blocked unauthorized encrypted CIA installation.");
             return {ErrorDescription::NotAuthorized, ErrorModule::AM, ErrorSummary::InvalidState,
@@ -747,7 +849,7 @@ Result CIAFile::ProvideTicket(const FileSys::Ticket& ticket) {
     return ResultSuccess;
 }
 
-Result CIAFile::ProvideTMDForAdditionalContent(const FileSys::TitleMetadata& tmd) {
+Result CIAFile::ApplyAdditionalContent(PreparedTitleMetadata&& prepared) {
     ASSERT_MSG(from_cdn, "This method should only be used when installing from CDN");
 
     if (install_state != CIAInstallState::TicketLoaded) {
@@ -757,7 +859,11 @@ Result CIAFile::ProvideTMDForAdditionalContent(const FileSys::TitleMetadata& tmd
                 ErrorLevel::Permanent};
     }
 
-    auto load_result = container.LoadTitleMetadata(tmd);
+    if (prepared.install_result.result.IsError()) {
+        return prepared.install_result.result;
+    }
+
+    auto load_result = container.LoadTitleMetadata(prepared.tmd);
     if (load_result != Loader::ResultStatus::Success) {
         LOG_ERROR(Service_AM, "Could not read ticket from CIA.");
         // TODO: Correct result code.
@@ -767,7 +873,7 @@ Result CIAFile::ProvideTMDForAdditionalContent(const FileSys::TitleMetadata& tmd
 
     is_additional_content = true;
 
-    return PrepareToImportContent(container.GetTitleMetadata());
+    return ApplyContentPreparation(std::move(prepared));
 }
 
 const FileSys::TitleMetadata& CIAFile::GetTMD() {
@@ -784,6 +890,13 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
     ASSERT_MSG(from_cdn, "This method should only be used when installing from CDN");
 
     const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
+
+    if (content_index >= tmd.GetContentCount() || content_index >= content_written.size() ||
+        content_index >= content_file_paths.size()) {
+        LOG_ERROR(Service_AM, "Invalid content index {} for write", content_index);
+        return Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                      ErrorLevel::Permanent);
+    }
 
     u64 remaining_to_write =
         tmd.GetContentSizeByIndex(content_index) - content_written[content_index];
@@ -815,6 +928,11 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
                        ErrorLevel::Permanent);
             install_results.push_back(current_content_install_result);
             return current_content_install_result.result;
+        }
+        if (content_index >= decryption_state->content.size()) {
+            LOG_ERROR(Service_AM, "No decryption state for content index {}", content_index);
+            return Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                          ErrorLevel::Permanent);
         }
         decryption_state->content[content_index].ProcessData(temp.data(), temp.data(), temp.size());
     }
@@ -874,7 +992,8 @@ bool CIAFile::Close() {
     // Install aborted
     if (!complete) {
         LOG_ERROR(Service_AM, "CIAFile closed prematurely or cancelled, aborting install...");
-        if (!is_additional_content) {
+        // Without an installed TMD there is nothing to clean up.
+        if (!is_additional_content && tmd_installed && IsInstallableMediaType(media_type)) {
             // Only delete the content folder as there may be user save data in the title folder.
             const std::string title_content_path =
                 GetTitlePath(media_type, container.GetTitleMetadata().GetTitleID()) + "content/";
@@ -934,14 +1053,19 @@ TicketFile::~TicketFile() {
 }
 
 ResultVal<std::size_t> TicketFile::Read(u64 offset, std::size_t length, u8* buffer) const {
-    UNIMPLEMENTED();
-    return length;
+    return ResultReadNotSupported;
 }
 
 ResultVal<std::size_t> TicketFile::Write(u64 offset, std::size_t length, bool flush,
                                          bool update_timestamp, const u8* buffer) {
+    const u64 end = offset + length;
+    if (end < offset || end > MAX_IMPORT_FILE_SIZE) {
+        return FileSys::ResultWriteBeyondEnd;
+    }
     written += length;
-    data.resize(written);
+    if (data.size() < end) {
+        data.resize(end);
+    }
     std::memcpy(data.data() + offset, buffer, length);
     return length;
 }
@@ -960,16 +1084,14 @@ bool TicketFile::Close() {
 
 void TicketFile::Flush() const {}
 
-Result TicketFile::Commit() {
+ResultVal<std::pair<u64, u64>> TicketFile::Commit(std::span<const u8> ticket_data) {
     FileSys::Ticket ticket;
-    if (ticket.Load(data, 0) == Loader::ResultStatus::Success) {
+    if (ticket.Load(ticket_data, 0) == Loader::ResultStatus::Success) {
         if (ticket.DoTitlekeyFixup() != Loader::ResultStatus::Success) {
             LOG_ERROR(Service_AM, "Failed to do ticket title key fixup");
             return ResultUnknown;
         }
 
-        title_id = ticket.GetTitleID();
-        ticket_id = ticket.GetTicketID();
         const auto ticket_path = GetTicketPath(ticket.GetTitleID(), ticket.GetTicketID());
 
         // Save ticket
@@ -977,7 +1099,7 @@ Result TicketFile::Commit() {
             LOG_ERROR(Service_AM, "Failed to install ticket provided to TicketFile.");
             return ResultUnknown;
         }
-        return ResultSuccess;
+        return std::make_pair(ticket.GetTitleID(), ticket.GetTicketID());
     } else {
         LOG_ERROR(Service_AM, "Invalid ticket provided to TicketFile.");
         return ResultUnknown;
@@ -989,14 +1111,19 @@ TMDFile::~TMDFile() {
 }
 
 ResultVal<std::size_t> TMDFile::Read(u64 offset, std::size_t length, u8* buffer) const {
-    UNIMPLEMENTED();
-    return length;
+    return ResultReadNotSupported;
 }
 
 ResultVal<std::size_t> TMDFile::Write(u64 offset, std::size_t length, bool flush,
                                       bool update_timestamp, const u8* buffer) {
+    const u64 end = offset + length;
+    if (end < offset || end > MAX_IMPORT_FILE_SIZE) {
+        return FileSys::ResultWriteBeyondEnd;
+    }
     written += length;
-    data.resize(written);
+    if (data.size() < end) {
+        data.resize(end);
+    }
     std::memcpy(data.data() + offset, buffer, length);
     return length;
 }
@@ -1015,26 +1142,35 @@ bool TMDFile::Close() {
 
 void TMDFile::Flush() const {}
 
-Result TMDFile::Commit() {
-    return importing_title->cia_file.WriteTitleMetadata(data, 0).result;
-}
-
 ContentFile::~ContentFile() {
     Close();
 }
 
 ResultVal<std::size_t> ContentFile::Read(u64 offset, std::size_t length, u8* buffer) const {
-    UNIMPLEMENTED();
-    return length;
+    return ResultReadNotSupported;
 }
 
 ResultVal<std::size_t> ContentFile::Write(u64 offset, std::size_t length, bool flush,
                                           bool update_timestamp, const u8* buffer) {
+    if (importing_title->tmd_import_pending) {
+        return Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                      ErrorLevel::Permanent);
+    }
     auto res = importing_title->cia_file.WriteContentDataIndexed(index, offset, length, buffer);
     if (res.Succeeded()) {
-        import_context.current_size += static_cast<u64>(res.Unwrap());
+        if (auto context = GetImportContext()) {
+            context->current_size += static_cast<u64>(res.Unwrap());
+        }
     }
     return res;
+}
+
+ImportContentContext* ContentFile::GetImportContext() {
+    auto module = am.lock();
+    if (!module) {
+        return nullptr;
+    }
+    return module->FindImportContentContext(importing_title->title_id, index);
 }
 
 u64 ContentFile::GetSize() const {
@@ -1052,6 +1188,9 @@ bool ContentFile::Close() {
 void ContentFile::Flush() const {}
 
 void ContentFile::Cancel(FS::MediaType media_type, u64 title_id) {
+    if (!IsInstallableMediaType(media_type)) {
+        return;
+    }
     auto path = GetTitleContentPath(media_type, title_id, index, true);
     FileUtil::Delete(path);
 }
@@ -1238,12 +1377,17 @@ std::string GetTicketPath(u64 title_id, u64 ticket_id) {
 }
 
 std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, bool update) {
-    std::string content_path = GetTitlePath(media_type, tid) + "content/";
-
     if (media_type == Service::FS::MediaType::GameCard) {
         LOG_ERROR(Service_AM, "Invalid request for nonexistent gamecard title metadata!");
         return "";
     }
+
+    if (!IsInstallableMediaType(media_type)) {
+        LOG_ERROR(Service_AM, "Invalid media type {}", media_type);
+        return "";
+    }
+
+    std::string content_path = GetTitlePath(media_type, tid) + "content/";
 
     // The TMD ID is usually held in the title databases, which we don't implement.
     // For now, just scan for any .tmd files which exist, the smallest will be the
@@ -1284,6 +1428,11 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, std:
             Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
                 "fs:USER");
         return fs_user->GetRegisteredGamecardPath();
+    }
+
+    if (!IsInstallableMediaType(media_type)) {
+        LOG_ERROR(Service_AM, "Invalid media type {}", media_type);
+        return "";
     }
 
     std::string content_path = GetTitlePath(media_type, tid) + "content/";
@@ -1352,6 +1501,7 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
         return fs_user->GetRegisteredGamecardPath();
     }
 
+    ASSERT_MSG(false, "Invalid media type {} passed to GetMediaTitlePath", media_type);
     return "";
 }
 
@@ -1408,6 +1558,11 @@ void Module::ScanForTitles(Service::FS::MediaType media_type) {
 }
 
 void Module::ScanForTitlesImpl(Service::FS::MediaType media_type) {
+    if (static_cast<u32>(media_type) >= am_title_list.size()) {
+        LOG_ERROR(Service_AM, "Invalid media type {}", media_type);
+        return;
+    }
+
     am_title_list[static_cast<u32>(media_type)].clear();
 
     LOG_DEBUG(Service_AM, "Starting title scan for media_type={}", static_cast<int>(media_type));
@@ -1541,6 +1696,14 @@ void Module::Interface::GetNumPrograms(Kernel::HLERequestContext& ctx) {
             },
             true);
     } else {
+        if (media_type >= static_cast<u8>(FS::MediaType::Count)) {
+            IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+            // TODO: Find the right error code
+            rb.Push<Result>(ResultInvalidMediaType);
+            rb.Push<u32>(0);
+            return;
+        }
+
         std::scoped_lock lock(am->am_lists_mutex);
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(ResultSuccess);
@@ -1622,6 +1785,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
         struct AsyncData {
             Service::FS::MediaType media_type;
             u64 title_id;
+            std::set<u16> pending_indices;
             std::vector<u16> content_requested;
 
             Result res{0};
@@ -1635,6 +1799,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
         content_requested_in.Read(async_data->content_requested.data(), 0,
                                   content_count * sizeof(u16));
         async_data->content_info_out = &rp.PopMappedBuffer();
+        async_data->pending_indices = am->GetPendingImportContentIndices(title_id);
 
         ctx.RunAsync(
             [this, async_data](Kernel::HLERequestContext& ctx) {
@@ -1687,22 +1852,8 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
 
                         if (FileUtil::Exists(GetTitleContentPath(async_data->media_type,
                                                                  async_data->title_id, index))) {
-                            bool pending = false;
-                            for (auto& import_ctx : am->import_content_contexts) {
-                                if (import_ctx.first == async_data->title_id &&
-                                    import_ctx.second.index == index &&
-                                    (import_ctx.second.state ==
-                                         ImportTitleContextState::WAITING_FOR_IMPORT ||
-                                     import_ctx.second.state ==
-                                         ImportTitleContextState::WAITING_FOR_COMMIT ||
-                                     import_ctx.second.state ==
-                                         ImportTitleContextState::RESUMABLE)) {
-                                    LOG_DEBUG(Service_AM, "content pending commit index={:016X}",
-                                              i);
-                                    pending = true;
-                                    break;
-                                }
-                            }
+                            const bool pending =
+                                async_data->pending_indices.contains(static_cast<u16>(index));
                             if (!pending) {
                                 content_info.ownership |= OWNERSHIP_DOWNLOADED;
                             }
@@ -1802,6 +1953,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
         struct AsyncData {
             Service::FS::MediaType media_type;
             u64 title_id;
+            std::set<u16> pending_indices;
             u32 content_count;
             u32 start_index;
 
@@ -1815,6 +1967,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
         async_data->content_count = content_count;
         async_data->start_index = start_index;
         async_data->content_info_out = &rp.PopMappedBuffer();
+        async_data->pending_indices = am->GetPendingImportContentIndices(title_id);
 
         ctx.RunAsync(
             [this, async_data](Kernel::HLERequestContext& ctx) {
@@ -1858,22 +2011,8 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
 
                         if (FileUtil::Exists(GetTitleContentPath(async_data->media_type,
                                                                  async_data->title_id, i))) {
-                            bool pending = false;
-                            for (auto& import_ctx : am->import_content_contexts) {
-                                if (import_ctx.first == async_data->title_id &&
-                                    import_ctx.second.index == i &&
-                                    (import_ctx.second.state ==
-                                         ImportTitleContextState::WAITING_FOR_IMPORT ||
-                                     import_ctx.second.state ==
-                                         ImportTitleContextState::WAITING_FOR_COMMIT ||
-                                     import_ctx.second.state ==
-                                         ImportTitleContextState::RESUMABLE)) {
-                                    LOG_DEBUG(Service_AM, "content pending commit index={:016X}",
-                                              i);
-                                    pending = true;
-                                    break;
-                                }
-                            }
+                            const bool pending =
+                                async_data->pending_indices.contains(static_cast<u16>(i));
                             if (!pending) {
                                 content_info.ownership |= OWNERSHIP_DOWNLOADED;
                             }
@@ -1983,9 +2122,10 @@ void Module::Interface::GetProgramList(Kernel::HLERequestContext& ctx) {
     } else {
         auto& title_ids_output = rp.PopMappedBuffer();
 
-        if (media_type > 2) {
+        if (media_type >= static_cast<u8>(FS::MediaType::Count)) {
             IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-            rb.Push<u32>(-1); // TODO(shinyquagsire23): Find the right error code
+            rb.Push<Result>(
+                ResultInvalidMediaType); // TODO(shinyquagsire23): Find the right error code
             rb.Push<u32>(0);
             return;
         }
@@ -2134,7 +2274,8 @@ void Module::Interface::GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool
                 }
 
                 async_data->out.resize(title_infos->second / sizeof(TitleInfo));
-                memcpy(async_data->out.data(), title_infos->first, title_infos->second);
+                memcpy(async_data->out.data(), title_infos->first,
+                       async_data->out.size() * sizeof(TitleInfo));
                 return 0;
             },
             [async_data](Kernel::HLERequestContext& ctx) {
@@ -2147,7 +2288,7 @@ void Module::Interface::GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool
                     }
                 } else {
                     async_data->title_info_out->Write(async_data->out.data(), 0,
-                                                      async_data->out.size() / sizeof(TitleInfo));
+                                                      async_data->out.size() * sizeof(TitleInfo));
 
                     IPC::RequestBuilder rb(ctx, 1, async_data->ignore_platform ? 0 : 4);
                     rb.Push(async_data->res);
@@ -2177,30 +2318,22 @@ void Module::Interface::GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool
                                                title_count * sizeof(u64));
         async_data->title_info_out = &rp.PopMappedBuffer();
 
+        // nim checks if the current importing title already exists during installation.
+        // Normally, since the program wouldn't be commited, getting the title info returns
+        // not found. However, since GetTitleInfoFromList does not care if the program was
+        // commited and only checks for the tmd, it will detect the title and return
+        // information while it shouldn't. To prevent this, we check if the importing
+        // context is present and not committed. If that's the case, return not found
+        for (auto tid : async_data->title_id_list) {
+            if (am->IsTitleImportPending(tid)) {
+                LOG_DEBUG(Service_AM, "title pending commit title_id={:016X}", tid);
+                async_data->res = Result(ErrorDescription::NotFound, ErrorModule::AM,
+                                         ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
+        }
+
         ctx.RunAsync(
             [this, async_data](Kernel::HLERequestContext& ctx) {
-                // nim checks if the current importing title already exists during installation.
-                // Normally, since the program wouldn't be commited, getting the title info returns
-                // not found. However, since GetTitleInfoFromList does not care if the program was
-                // commited and only checks for the tmd, it will detect the title and return
-                // information while it shouldn't. To prevent this, we check if the importing
-                // context is present and not committed. If that's the case, return not found
-                for (auto tid : async_data->title_id_list) {
-                    for (auto& import_ctx : am->import_title_contexts) {
-                        if (import_ctx.first == tid &&
-                            (import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_IMPORT ||
-                             import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_COMMIT ||
-                             import_ctx.second.state == ImportTitleContextState::RESUMABLE)) {
-                            LOG_DEBUG(Service_AM, "title pending commit title_id={:016X}", tid);
-                            async_data->res =
-                                Result(ErrorDescription::NotFound, ErrorModule::AM,
-                                       ErrorSummary::InvalidState, ErrorLevel::Permanent);
-                        }
-                    }
-                }
-
                 if (async_data->res.IsSuccess()) {
                     async_data->res = GetTitleInfoFromList(am->system, async_data->title_id_list,
                                                            async_data->media_type, async_data->out);
@@ -2237,6 +2370,10 @@ void Module::Interface::DeleteUserProgram(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_AM, "title_id={:016X}", title_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (!IsInstallableMediaType(media_type)) {
+        rb.Push(ResultInvalidMediaType);
+        return;
+    }
     u16 category = static_cast<u16>((title_id >> 32) & 0xFFFF);
     u8 variation = static_cast<u8>(title_id & 0xFF);
     if (category & CATEGORY_SYSTEM || category & CATEGORY_DLP || variation & VARIATION_SYSTEM) {
@@ -2277,7 +2414,7 @@ void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
             u8 code[0x10];
         };
 
-        ProductCode product_code;
+        ProductCode product_code{};
 
         IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
         FileSys::NCCHContainer ncch(path);
@@ -2381,40 +2518,32 @@ void Module::Interface::GetDLCTitleInfos(Kernel::HLERequestContext& ctx) {
                                                title_count * sizeof(u64));
         async_data->title_info_out = &rp.PopMappedBuffer();
 
+        // Validate that DLC TIDs were passed in
+        for (u32 i = 0; i < async_data->title_id_list.size(); i++) {
+            u32 tid_high = static_cast<u32>(async_data->title_id_list[i] >> 32);
+            if (tid_high != TID_HIGH_DLC) {
+                async_data->res = Result(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                                         ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+                break;
+            }
+        }
+
+        // nim checks if the current importing title already exists during installation.
+        // Normally, since the program wouldn't be commited, getting the title info returns
+        // not found. However, since GetTitleInfoFromList does not care if the program was
+        // commited and only checks for the tmd, it will detect the title and return
+        // information while it shouldn't. To prevent this, we check if the importing
+        // context is present and not committed. If that's the case, return not found
+        for (auto tid : async_data->title_id_list) {
+            if (am->IsTitleImportPending(tid)) {
+                LOG_DEBUG(Service_AM, "title pending commit title_id={:016X}", tid);
+                async_data->res = Result(ErrorDescription::NotFound, ErrorModule::AM,
+                                         ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
+        }
+
         ctx.RunAsync(
             [this, async_data](Kernel::HLERequestContext& ctx) {
-                // Validate that DLC TIDs were passed in
-                for (u32 i = 0; i < async_data->title_id_list.size(); i++) {
-                    u32 tid_high = static_cast<u32>(async_data->title_id_list[i] >> 32);
-                    if (tid_high != TID_HIGH_DLC) {
-                        async_data->res = Result(ErrCodes::InvalidTIDInList, ErrorModule::AM,
-                                                 ErrorSummary::InvalidArgument, ErrorLevel::Usage);
-                        break;
-                    }
-                }
-
-                // nim checks if the current importing title already exists during installation.
-                // Normally, since the program wouldn't be commited, getting the title info returns
-                // not found. However, since GetTitleInfoFromList does not care if the program was
-                // commited and only checks for the tmd, it will detect the title and return
-                // information while it shouldn't. To prevent this, we check if the importing
-                // context is present and not committed. If that's the case, return not found
-                for (auto tid : async_data->title_id_list) {
-                    for (auto& import_ctx : am->import_title_contexts) {
-                        if (import_ctx.first == tid &&
-                            (import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_IMPORT ||
-                             import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_COMMIT ||
-                             import_ctx.second.state == ImportTitleContextState::RESUMABLE)) {
-                            LOG_DEBUG(Service_AM, "title pending commit title_id={:016X}", tid);
-                            async_data->res =
-                                Result(ErrorDescription::NotFound, ErrorModule::AM,
-                                       ErrorSummary::InvalidState, ErrorLevel::Permanent);
-                        }
-                    }
-                }
-
                 if (async_data->res.IsSuccess()) {
                     async_data->res = GetTitleInfoFromList(am->system, async_data->title_id_list,
                                                            async_data->media_type, async_data->out);
@@ -2490,7 +2619,8 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
                 }
 
                 async_data->out.resize(title_infos->second / sizeof(TitleInfo));
-                memcpy(async_data->out.data(), title_infos->first, title_infos->second);
+                memcpy(async_data->out.data(), title_infos->first,
+                       async_data->out.size() * sizeof(TitleInfo));
                 return 0;
             },
             [async_data](Kernel::HLERequestContext& ctx) {
@@ -2528,40 +2658,32 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
                                                title_count * sizeof(u64));
         async_data->title_info_out = &rp.PopMappedBuffer();
 
+        // Validate that update TIDs were passed in
+        for (u32 i = 0; i < async_data->title_id_list.size(); i++) {
+            u32 tid_high = static_cast<u32>(async_data->title_id_list[i] >> 32);
+            if (tid_high != TID_HIGH_UPDATE) {
+                async_data->res = Result(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                                         ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+                break;
+            }
+        }
+
+        // nim checks if the current importing title already exists during installation.
+        // Normally, since the program wouldn't be commited, getting the title info returns
+        // not found. However, since GetTitleInfoFromList does not care if the program was
+        // commited and only checks for the tmd, it will detect the title and return
+        // information while it shouldn't. To prevent this, we check if the importing
+        // context is present and not committed. If that's the case, return not found
+        for (auto tid : async_data->title_id_list) {
+            if (am->IsTitleImportPending(tid)) {
+                LOG_DEBUG(Service_AM, "title pending commit title_id={:016X}", tid);
+                async_data->res = Result(ErrorDescription::NotFound, ErrorModule::AM,
+                                         ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
+        }
+
         ctx.RunAsync(
             [this, async_data](Kernel::HLERequestContext& ctx) {
-                // Validate that update TIDs were passed in
-                for (u32 i = 0; i < async_data->title_id_list.size(); i++) {
-                    u32 tid_high = static_cast<u32>(async_data->title_id_list[i] >> 32);
-                    if (tid_high != TID_HIGH_UPDATE) {
-                        async_data->res = Result(ErrCodes::InvalidTIDInList, ErrorModule::AM,
-                                                 ErrorSummary::InvalidArgument, ErrorLevel::Usage);
-                        break;
-                    }
-                }
-
-                // nim checks if the current importing title already exists during installation.
-                // Normally, since the program wouldn't be commited, getting the title info returns
-                // not found. However, since GetTitleInfoFromList does not care if the program was
-                // commited and only checks for the tmd, it will detect the title and return
-                // information while it shouldn't. To prevent this, we check if the importing
-                // context is present and not committed. If that's the case, return not found
-                for (auto tid : async_data->title_id_list) {
-                    for (auto& import_ctx : am->import_title_contexts) {
-                        if (import_ctx.first == tid &&
-                            (import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_IMPORT ||
-                             import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_COMMIT ||
-                             import_ctx.second.state == ImportTitleContextState::RESUMABLE)) {
-                            LOG_DEBUG(Service_AM, "title pending commit title_id={:016X}", tid);
-                            async_data->res =
-                                Result(ErrorDescription::NotFound, ErrorModule::AM,
-                                       ErrorSummary::InvalidState, ErrorLevel::Permanent);
-                        }
-                    }
-                }
-
                 if (async_data->res.IsSuccess()) {
                     async_data->res = GetTitleInfoFromList(am->system, async_data->title_id_list,
                                                            async_data->media_type, async_data->out);
@@ -3403,6 +3525,12 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
 
+    if (!IsInstallableMediaType(media_type)) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultInvalidMediaType);
+        return;
+    }
+
     if (am->cia_installing) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
@@ -3728,8 +3856,14 @@ void Module::Interface::CommitImportTitlesImpl(Kernel::HLERequestContext& ctx,
 
     auto& title_id_buf = rp.PopMappedBuffer();
 
+    if (media_type >= FS::MediaType::Count) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultInvalidMediaType);
+        return;
+    }
+
     std::vector<u64> title_ids(title_id_buf.GetSize() / sizeof(u64));
-    title_id_buf.Read(title_ids.data(), 0, title_id_buf.GetSize());
+    title_id_buf.Read(title_ids.data(), 0, title_ids.size() * sizeof(u64));
 
     for (auto& key_value : am->import_content_contexts) {
         if (std::find(title_ids.begin(), title_ids.end(), key_value.first) != title_ids.end() &&
@@ -3776,6 +3910,9 @@ void Module::Interface::CommitImportTitlesImpl(Kernel::HLERequestContext& ctx,
 }
 
 Result UninstallProgram(const FS::MediaType media_type, const u64 title_id) {
+    if (!IsInstallableMediaType(media_type)) {
+        return ResultInvalidMediaType;
+    }
     // Use the content folder so we don't delete the user's save data.
     const auto path = GetTitlePath(media_type, title_id) + "content/";
     if (!FileUtil::Exists(path)) {
@@ -3907,24 +4044,29 @@ void Module::Interface::EndImportTicket(Kernel::HLERequestContext& ctx) {
     auto ticket_file = GetFileBackendFromSession<TicketFile>(ticket);
     if (ticket_file.Succeeded()) {
         struct AsyncData {
-            Service::AM::TicketFile* ticket_file;
+            std::vector<u8> ticket_data;
 
             Result res{0};
         };
         std::shared_ptr<AsyncData> async_data = std::make_shared<AsyncData>();
-        async_data->ticket_file = ticket_file.Unwrap();
+        // The ticket file can still be written to or closed while the ticket is being
+        // installed, so work on a copy of its data.
+        async_data->ticket_data = ticket_file.Unwrap()->GetData();
 
         ctx.RunAsync(
             [this, async_data](Kernel::HLERequestContext& ctx) {
-                async_data->res = async_data->ticket_file->Commit();
+                auto commit_result = TicketFile::Commit(async_data->ticket_data);
+                if (commit_result.Failed()) {
+                    async_data->res = commit_result.Code();
+                    return 0;
+                }
+                const auto [title_id, ticket_id] = commit_result.Unwrap();
 
                 std::scoped_lock lock(am->am_lists_mutex);
-                am->am_ticket_list.insert(std::make_pair(async_data->ticket_file->GetTitleID(),
-                                                         async_data->ticket_file->GetTicketID()));
+                am->am_ticket_list.insert(std::make_pair(title_id, ticket_id));
 
                 LOG_DEBUG(Service_AM, "EndImportTicket: title_id={:016X} ticket_id={:016X}",
-                          async_data->ticket_file->GetTitleID(),
-                          async_data->ticket_file->GetTicketID());
+                          title_id, ticket_id);
                 return 0;
             },
             [async_data](Kernel::HLERequestContext& ctx) {
@@ -3947,6 +4089,11 @@ void Module::Interface::BeginImportTitle(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_AM, "title_id={:016X} media_type={:016X}", title_id, media_type);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    if (!IsInstallableMediaType(media_type)) {
+        rb.Push(ResultInvalidMediaType);
+        return;
+    }
 
     am->importing_title =
         std::make_shared<CurrentImportingTitle>(Core::System::GetInstance(), title_id, media_type);
@@ -4114,28 +4261,62 @@ void Module::Interface::EndImportTmd(Kernel::HLERequestContext& ctx) {
 
     auto tmd_file = GetFileBackendFromSession<TMDFile>(tmd);
     if (tmd_file.Succeeded()) {
+        if (tmd_file.Unwrap()->GetImportingTitle() != am->importing_title ||
+            am->importing_title->tmd_import_pending) {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM,
+                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
+            return;
+        }
+
         struct AsyncData {
-            Service::AM::TMDFile* tmd_file;
+            std::shared_ptr<CurrentImportingTitle> importing_title;
+            Service::FS::MediaType media_type;
+            bool is_update;
+            std::vector<u8> tmd_data;
             [[maybe_unused]] bool create_context;
 
-            Result res{0};
+            CIAFile::PreparedTitleMetadata prepared;
         };
         std::shared_ptr<AsyncData> async_data = std::make_shared<AsyncData>();
-        async_data->tmd_file = tmd_file.Unwrap();
+        async_data->importing_title = am->importing_title;
+        async_data->media_type = am->importing_title->media_type;
+        async_data->is_update = am->importing_title->cia_file.IsUpdate();
+        async_data->tmd_data = tmd_file.Unwrap()->GetData();
         async_data->create_context = create_context;
 
+        // Saving the TMD and preparing the content folders is done asynchronously, as it
+        // involves host file system operations. The importing title is only modified in the
+        // result function, which runs on the emulation thread. Until then, other requests
+        // that depend on the TMD are rejected.
+        async_data->importing_title->tmd_import_pending = true;
         ctx.RunAsync(
             [async_data](Kernel::HLERequestContext& ctx) {
-                async_data->res = async_data->tmd_file->Commit();
+                async_data->prepared = CIAFile::PrepareTitleMetadata(
+                    async_data->media_type, async_data->is_update, async_data->tmd_data, 0);
                 return 0;
             },
             [this, async_data](Kernel::HLERequestContext& ctx) {
-                IPC::RequestBuilder rb(ctx, 1, 0);
-                rb.Push(async_data->res);
+                const auto& importing_title = async_data->importing_title;
+                importing_title->tmd_import_pending = false;
 
-                if (async_data->res.IsSuccess()) {
-                    am->importing_title->tmd_provided = true;
-                    const FileSys::TitleMetadata& tmd_info = am->importing_title->cia_file.GetTMD();
+                IPC::RequestBuilder rb(ctx, 1, 0);
+
+                // The import may have been cancelled or replaced in the meantime.
+                if (am->importing_title != importing_title) {
+                    rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM,
+                                   ErrorSummary::InvalidState, ErrorLevel::Permanent));
+                    return;
+                }
+
+                const Result res =
+                    importing_title->cia_file.ApplyTitleMetadata(std::move(async_data->prepared))
+                        .result;
+                rb.Push(res);
+
+                if (res.IsSuccess()) {
+                    importing_title->tmd_provided = true;
+                    const FileSys::TitleMetadata& tmd_info = importing_title->cia_file.GetTMD();
 
                     ImportTitleContext& context = am->import_title_contexts[tmd_info.GetTitleID()];
                     context.title_id = tmd_info.GetTitleID();
@@ -4147,7 +4328,7 @@ void Module::Interface::EndImportTmd(Kernel::HLERequestContext& ctx) {
                         if (tmd_info.GetContentOptional(i)) {
                             continue;
                         }
-                        ImportContentContext content_context;
+                        ImportContentContext content_context{};
                         content_context.content_id = tmd_info.GetContentIDByIndex(i);
                         content_context.index = static_cast<u16>(i);
                         content_context.state = ImportTitleContextState::WAITING_FOR_IMPORT;
@@ -4183,57 +4364,112 @@ void Module::Interface::CreateImportContentContexts(Kernel::HLERequestContext& c
         return;
     }
 
+    if (static_cast<std::size_t>(content_count) * sizeof(u16) > content_buf.GetSize()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(Result(ErrorDescription::InvalidSize, ErrorModule::AM,
+                       ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+        return;
+    }
+
     struct AsyncData {
         std::vector<u16> content_indices;
+        std::shared_ptr<CurrentImportingTitle> importing_title;
+        Service::FS::MediaType media_type;
+        u64 title_id;
+        bool is_update;
+        bool load_tmd;
 
+        std::optional<CIAFile::PreparedTitleMetadata> prepared;
         Result res{0};
     };
     std::shared_ptr<AsyncData> async_data = std::make_shared<AsyncData>();
     async_data->content_indices.resize(content_count);
-    content_buf.Read(async_data->content_indices.data(), 0, content_buf.GetSize());
+    content_buf.Read(async_data->content_indices.data(), 0,
+                     async_data->content_indices.size() * sizeof(u16));
+
+    if (am->importing_title->tmd_import_pending) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
+        return;
+    }
+
+    async_data->importing_title = am->importing_title;
+    async_data->media_type = am->importing_title->media_type;
+    async_data->title_id = am->importing_title->title_id;
+    async_data->is_update = am->importing_title->cia_file.IsUpdate();
+    async_data->load_tmd = !am->importing_title->tmd_provided;
+    if (async_data->load_tmd) {
+        async_data->importing_title->tmd_import_pending = true;
+    }
 
     ctx.RunAsync(
-        [this, async_data](Kernel::HLERequestContext& ctx) {
-            if (!am->importing_title->tmd_provided) {
-                std::string tmd_path = GetTitleMetadataPath(am->importing_title->media_type,
-                                                            am->importing_title->title_id);
+        [async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->load_tmd) {
+                std::string tmd_path =
+                    GetTitleMetadataPath(async_data->media_type, async_data->title_id);
                 FileSys::TitleMetadata tmd;
                 if (tmd.Load(tmd_path) != Loader::ResultStatus::Success) {
                     LOG_ERROR(Service_AM, "Couldn't load TMD for title_id={:016X}, mediatype={}",
-                              am->importing_title->title_id, am->importing_title->media_type);
+                              async_data->title_id, async_data->media_type);
 
                     async_data->res =
                         Result(0xFFFFFFFF); // TODO(PabloMK7): Find the right error code
                     return 0;
                 }
-                am->importing_title->cia_file.ProvideTMDForAdditionalContent(tmd);
-                am->importing_title->tmd_provided = true;
+                async_data->prepared = CIAFile::PrepareAdditionalContent(
+                    async_data->media_type, async_data->is_update, std::move(tmd));
             }
-            const FileSys::TitleMetadata& tmd = am->importing_title->cia_file.GetTMD();
+            return 0;
+        },
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->load_tmd) {
+                async_data->importing_title->tmd_import_pending = false;
+            }
+
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            if (async_data->res.IsError()) {
+                rb.Push(async_data->res);
+                return;
+            }
+
+            // The import may have been cancelled or replaced in the meantime.
+            const auto& importing_title = async_data->importing_title;
+            if (am->importing_title != importing_title) {
+                rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM,
+                               ErrorSummary::InvalidState, ErrorLevel::Permanent));
+                return;
+            }
+
+            if (async_data->prepared && !importing_title->tmd_provided) {
+                const Result res = importing_title->cia_file.ApplyAdditionalContent(
+                    std::move(*async_data->prepared));
+                if (res.IsError()) {
+                    rb.Push(res);
+                    return;
+                }
+                importing_title->tmd_provided = true;
+            }
+            const FileSys::TitleMetadata& tmd = importing_title->cia_file.GetTMD();
             for (size_t i = 0; i < async_data->content_indices.size(); i++) {
                 u16 index = async_data->content_indices[i];
-                if (index > tmd.GetContentCount()) {
+                if (index >= tmd.GetContentCount()) {
                     LOG_ERROR(Service_AM,
                               "Tried to create context for invalid index title_id={:016x} index={}",
-                              am->importing_title->title_id, index);
-                    async_data->res =
-                        Result(0xFFFFFFFF); // TODO(PabloMK7): Find the right error code
-                    return 0;
+                              importing_title->title_id, index);
+                    rb.Push(Result(0xFFFFFFFF)); // TODO(PabloMK7): Find the right error code
+                    return;
                 }
-                ImportContentContext content_context;
+                ImportContentContext content_context{};
                 content_context.content_id = tmd.GetContentIDByIndex(index);
                 content_context.index = static_cast<u16>(index);
                 content_context.state = ImportTitleContextState::WAITING_FOR_IMPORT;
                 content_context.size = tmd.GetContentSizeByIndex(index);
                 content_context.current_size = 0;
                 am->import_content_contexts.insert(
-                    std::make_pair(am->importing_title->title_id, content_context));
+                    std::make_pair(importing_title->title_id, content_context));
             }
-            return 0;
-        },
-        [async_data](Kernel::HLERequestContext& ctx) {
-            IPC::RequestBuilder rb(ctx, 1, 0);
-            rb.Push(async_data->res);
+            rb.Push(ResultSuccess);
         },
         true);
 }
@@ -4267,8 +4503,7 @@ void Module::Interface::BeginImportContent(Kernel::HLERequestContext& ctx) {
 
     // Create our TMD handle for the app to write to
     auto file = std::make_shared<Service::FS::File>(
-        am->system.Kernel(),
-        std::make_unique<ContentFile>(am->importing_title, content_index, it->second),
+        am->system.Kernel(), std::make_unique<ContentFile>(am, am->importing_title, content_index),
         FileSys::Path{});
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
@@ -4305,8 +4540,7 @@ void Module::Interface::ResumeImportContent(Kernel::HLERequestContext& ctx) {
 
     it->second.state = ImportTitleContextState::WAITING_FOR_IMPORT;
 
-    auto content_file =
-        std::make_unique<ContentFile>(am->importing_title, content_index, it->second);
+    auto content_file = std::make_unique<ContentFile>(am, am->importing_title, content_index);
     content_file->SetWritten(it->second.current_size);
 
     // Create our TMD handle for the app to write to
@@ -4338,7 +4572,9 @@ void Module::Interface::StopImportContent(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    content_file.Unwrap()->GetImportContext().state = ImportTitleContextState::RESUMABLE;
+    if (auto context = content_file.Unwrap()->GetImportContext()) {
+        context->state = ImportTitleContextState::RESUMABLE;
+    }
 
     rb.Push(ResultSuccess);
 }
@@ -4362,7 +4598,9 @@ void Module::Interface::CancelImportContent(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    content_file.Unwrap()->GetImportContext().state = ImportTitleContextState::DELETING;
+    if (auto context = content_file.Unwrap()->GetImportContext()) {
+        context->state = ImportTitleContextState::DELETING;
+    }
     content_file.Unwrap()->Cancel(am->importing_title->media_type, am->importing_title->title_id);
 
     rb.Push(ResultSuccess);
@@ -4387,7 +4625,9 @@ void Module::Interface::EndImportContent(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    content_file.Unwrap()->GetImportContext().state = ImportTitleContextState::WAITING_FOR_COMMIT;
+    if (auto context = content_file.Unwrap()->GetImportContext()) {
+        context->state = ImportTitleContextState::WAITING_FOR_COMMIT;
+    }
 
     rb.Push(ResultSuccess);
 }
@@ -4547,7 +4787,7 @@ void Module::Interface::DeleteTicketId(Kernel::HLERequestContext& ctx) {
             break;
         }
     }
-    if (range.first == range.second) {
+    if (it == range.second) {
         rb.Push(Result(ErrorDescription::AlreadyDone, ErrorModule::AM, ErrorSummary::Success,
                        ErrorLevel::Success));
         return;
@@ -4680,66 +4920,59 @@ void Module::Interface::FindCurrentContentInfos(Kernel::HLERequestContext& ctx) 
     }
 
     struct AsyncData {
-        u32 content_count;
-        std::vector<u16_le> content_requested;
+        Service::FS::MediaType media_type;
+        u64 title_id;
+        std::set<u16> pending_indices;
 
         std::vector<ContentInfo> out_vec;
         Kernel::MappedBuffer* content_info_out;
         Result res{0};
     };
     auto async_data = std::make_shared<AsyncData>();
-    async_data->content_count = rp.Pop<u32>();
+    const u32 content_count = rp.Pop<u32>();
 
     auto& content_requested_in = rp.PopMappedBuffer();
-    async_data->content_requested.resize(async_data->content_count);
-    content_requested_in.Read(async_data->content_requested.data(), 0,
-                              async_data->content_count * sizeof(u16));
+    std::vector<u16_le> content_requested(content_count);
+    content_requested_in.Read(content_requested.data(), 0, content_count * sizeof(u16));
     async_data->content_info_out = &rp.PopMappedBuffer();
 
+    async_data->media_type = am->importing_title->media_type;
+    async_data->title_id = am->importing_title->title_id;
+    async_data->pending_indices = am->GetPendingImportContentIndices(async_data->title_id);
+
+    const FileSys::TitleMetadata& tmd = am->importing_title->cia_file.GetTMD();
+    FileSys::Ticket& ticket = am->importing_title->cia_file.GetTicket();
+    // Get info for each content index requested
+    for (const u16 index : content_requested) {
+        if (index >= tmd.GetContentCount()) {
+            LOG_ERROR(Service_AM, "Attempted to get info for non-existent content index {:04x}.",
+                      index);
+
+            async_data->res = Result(0xFFFFFFFF);
+            break;
+        }
+
+        ContentInfo content_info = {};
+        content_info.index = index;
+        content_info.type = tmd.GetContentTypeByIndex(index);
+        content_info.content_id = tmd.GetContentIDByIndex(index);
+        content_info.size = tmd.GetContentSizeByIndex(index);
+        content_info.ownership = ticket.HasRights(index) ? OWNERSHIP_OWNED : 0;
+        async_data->out_vec.push_back(content_info);
+    }
+
     ctx.RunAsync(
-        [this, async_data](Kernel::HLERequestContext& ctx) {
-            const FileSys::TitleMetadata& tmd = am->importing_title->cia_file.GetTMD();
-            FileSys::Ticket& ticket = am->importing_title->cia_file.GetTicket();
-            // Get info for each content index requested
-            for (std::size_t i = 0; i < async_data->content_count; i++) {
-                u16_le index = async_data->content_requested[i];
-                if (index >= tmd.GetContentCount()) {
-                    LOG_ERROR(Service_AM,
-                              "Attempted to get info for non-existent content index {:04x}.",
-                              index);
-
-                    async_data->res = Result(0xFFFFFFFF);
-                    return 0;
+        [async_data](Kernel::HLERequestContext& ctx) {
+            if (async_data->res.IsError()) {
+                return 0;
+            }
+            for (auto& content_info : async_data->out_vec) {
+                const u16 index = content_info.index;
+                if (FileUtil::Exists(
+                        GetTitleContentPath(async_data->media_type, async_data->title_id, index)) &&
+                    !async_data->pending_indices.contains(index)) {
+                    content_info.ownership |= OWNERSHIP_DOWNLOADED;
                 }
-
-                ContentInfo content_info = {};
-                content_info.index = index;
-                content_info.type = tmd.GetContentTypeByIndex(index);
-                content_info.content_id = tmd.GetContentIDByIndex(index);
-                content_info.size = tmd.GetContentSizeByIndex(index);
-                content_info.ownership = ticket.HasRights(index) ? OWNERSHIP_OWNED : 0;
-
-                if (FileUtil::Exists(GetTitleContentPath(am->importing_title->media_type,
-                                                         am->importing_title->title_id, index))) {
-                    bool pending = false;
-                    for (auto& import_ctx : am->import_content_contexts) {
-                        if (import_ctx.first == am->importing_title->title_id &&
-                            import_ctx.second.index == index &&
-                            (import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_IMPORT ||
-                             import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_COMMIT ||
-                             import_ctx.second.state == ImportTitleContextState::RESUMABLE)) {
-                            LOG_DEBUG(Service_AM, "content pending commit index={:016X}", index);
-                            pending = true;
-                            break;
-                        }
-                    }
-                    if (!pending) {
-                        content_info.ownership |= OWNERSHIP_DOWNLOADED;
-                    }
-                }
-                async_data->out_vec.push_back(content_info);
             }
             return 0;
         },
@@ -4768,56 +5001,46 @@ void Module::Interface::ListCurrentContentInfos(Kernel::HLERequestContext& ctx) 
     }
 
     struct AsyncData {
-        u32 content_count;
-        u32 start_index;
+        Service::FS::MediaType media_type;
+        u64 title_id;
+        std::set<u16> pending_indices;
 
         std::vector<ContentInfo> out_vec;
         Kernel::MappedBuffer* content_info_out;
         Result res{0};
     };
     auto async_data = std::make_shared<AsyncData>();
-    async_data->content_count = rp.Pop<u32>();
-    async_data->start_index = rp.Pop<u32>();
+    const u32 content_count = rp.Pop<u32>();
+    const u32 start_index = rp.Pop<u32>();
 
     async_data->content_info_out = &rp.PopMappedBuffer();
 
+    async_data->media_type = am->importing_title->media_type;
+    async_data->title_id = am->importing_title->title_id;
+    async_data->pending_indices = am->GetPendingImportContentIndices(async_data->title_id);
+
+    const FileSys::TitleMetadata& tmd = am->importing_title->cia_file.GetTMD();
+    FileSys::Ticket& ticket = am->importing_title->cia_file.GetTicket();
+    u32 end_index = std::min(start_index + content_count, static_cast<u32>(tmd.GetContentCount()));
+    for (u32 i = start_index; i < end_index; i++) {
+        ContentInfo content_info = {};
+        content_info.index = static_cast<u16>(i);
+        content_info.type = tmd.GetContentTypeByIndex(i);
+        content_info.content_id = tmd.GetContentIDByIndex(i);
+        content_info.size = tmd.GetContentSizeByIndex(i);
+        content_info.ownership = ticket.HasRights(static_cast<u16>(i)) ? OWNERSHIP_OWNED : 0;
+        async_data->out_vec.push_back(content_info);
+    }
+
     ctx.RunAsync(
-        [this, async_data](Kernel::HLERequestContext& ctx) {
-            const FileSys::TitleMetadata& tmd = am->importing_title->cia_file.GetTMD();
-            FileSys::Ticket& ticket = am->importing_title->cia_file.GetTicket();
-            u32 end_index = std::min(async_data->start_index + async_data->content_count,
-                                     static_cast<u32>(tmd.GetContentCount()));
-            for (u32 i = async_data->start_index; i < end_index; i++) {
-                ContentInfo content_info = {};
-                content_info.index = static_cast<u16>(i);
-                content_info.type = tmd.GetContentTypeByIndex(i);
-                content_info.content_id = tmd.GetContentIDByIndex(i);
-                content_info.size = tmd.GetContentSizeByIndex(i);
-                content_info.ownership =
-                    ticket.HasRights(static_cast<u16>(i)) ? OWNERSHIP_OWNED : 0;
-
-                if (FileUtil::Exists(GetTitleContentPath(am->importing_title->media_type,
-                                                         am->importing_title->title_id, i))) {
-                    bool pending = false;
-                    for (auto& import_ctx : am->import_content_contexts) {
-                        if (import_ctx.first == am->importing_title->title_id &&
-                            import_ctx.second.index == i &&
-                            (import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_IMPORT ||
-                             import_ctx.second.state ==
-                                 ImportTitleContextState::WAITING_FOR_COMMIT ||
-                             import_ctx.second.state == ImportTitleContextState::RESUMABLE)) {
-                            LOG_DEBUG(Service_AM, "content pending commit index={:016X}", i);
-                            pending = true;
-                            break;
-                        }
-                    }
-                    if (!pending) {
-                        content_info.ownership |= OWNERSHIP_DOWNLOADED;
-                    }
+        [async_data](Kernel::HLERequestContext& ctx) {
+            for (auto& content_info : async_data->out_vec) {
+                const u16 index = content_info.index;
+                if (FileUtil::Exists(
+                        GetTitleContentPath(async_data->media_type, async_data->title_id, index)) &&
+                    !async_data->pending_indices.contains(index)) {
+                    content_info.ownership |= OWNERSHIP_DOWNLOADED;
                 }
-
-                async_data->out_vec.push_back(content_info);
             }
             return 0;
         },
@@ -4891,7 +5114,8 @@ void Module::Interface::UpdateImportContentContexts(Kernel::HLERequestContext& c
     auto content_buf = rp.PopMappedBuffer();
 
     std::vector<u16> content_indices(content_count);
-    content_buf.Read(content_indices.data(), 0, content_buf.GetSize());
+    content_buf.Read(content_indices.data(), 0,
+                     std::min(content_indices.size() * sizeof(u16), content_buf.GetSize()));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -4942,8 +5166,9 @@ void Module::Interface::ExportTicketWrapped(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    std::vector<u8> ticket_data(Common::AlignUp(ticket.GetSerializedSize(), 0x10));
-    memcpy(ticket_data.data(), ticket.Serialize().data(), ticket.GetSerializedSize());
+    const std::vector<u8> serialized_ticket = ticket.Serialize();
+    std::vector<u8> ticket_data(Common::AlignUp(serialized_ticket.size(), 0x10));
+    memcpy(ticket_data.data(), serialized_ticket.data(), serialized_ticket.size());
 
     std::vector<u8> key(0x10);
     std::vector<u8> iv(0x10);
@@ -4982,6 +5207,38 @@ void Module::Interface::ExportTicketWrapped(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
     rb.Push(static_cast<u32>(ticket_data.size()));
     rb.Push(static_cast<u32>(rsa_out.size()));
+}
+
+ImportContentContext* Module::FindImportContentContext(u64 title_id, u16 index) {
+    auto range = import_content_contexts.equal_range(title_id);
+    for (auto it = range.first; it != range.second; it++) {
+        if (it->second.index == index) {
+            return &it->second;
+        }
+    }
+    return nullptr;
+}
+
+static bool IsImportPending(ImportTitleContextState state) {
+    return state == ImportTitleContextState::WAITING_FOR_IMPORT ||
+           state == ImportTitleContextState::WAITING_FOR_COMMIT ||
+           state == ImportTitleContextState::RESUMABLE;
+}
+
+std::set<u16> Module::GetPendingImportContentIndices(u64 title_id) const {
+    std::set<u16> indices;
+    auto range = import_content_contexts.equal_range(title_id);
+    for (auto it = range.first; it != range.second; it++) {
+        if (IsImportPending(it->second.state)) {
+            indices.insert(it->second.index);
+        }
+    }
+    return indices;
+}
+
+bool Module::IsTitleImportPending(u64 title_id) const {
+    auto it = import_title_contexts.find(title_id);
+    return it != import_title_contexts.end() && IsImportPending(it->second.state);
 }
 
 Module::Module(Core::System& _system) : system(_system) {

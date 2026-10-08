@@ -355,7 +355,7 @@ public:
         return file->GetType().HasCompressedType();
     }
 
-    NCCH_Header ncch_header;
+    NCCH_Header ncch_header{};
     ExeFs_Header exefs_header;
     ExHeader_Header exheader_header;
 

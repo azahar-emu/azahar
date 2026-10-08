@@ -40,6 +40,9 @@ u64 GetModId(u64 program_id) {
  * @return Size of decompressed buffer
  */
 static std::size_t LZSS_GetDecompressedSize(std::span<const u8> buffer) {
+    if (buffer.size() < sizeof(u32)) {
+        return buffer.size();
+    }
     u32 offset_size;
     std::memcpy(&offset_size, buffer.data() + buffer.size() - sizeof(u32), sizeof(u32));
     return offset_size + buffer.size();
@@ -54,14 +57,24 @@ static std::size_t LZSS_GetDecompressedSize(std::span<const u8> buffer) {
  * @return True on success, otherwise false
  */
 static bool LZSS_Decompress(std::span<const u8> compressed, std::span<u8> decompressed) {
+    if (compressed.size() < 8 || decompressed.size() < compressed.size()) {
+        return false;
+    }
+
     const u8* footer = compressed.data() + compressed.size() - 8;
 
     u32 buffer_top_and_bottom;
     std::memcpy(&buffer_top_and_bottom, footer, sizeof(u32));
 
+    const std::size_t top = (buffer_top_and_bottom >> 24) & 0xFF;
+    const std::size_t bottom = buffer_top_and_bottom & 0xFFFFFF;
+    if (top > compressed.size() || bottom > compressed.size()) {
+        return false;
+    }
+
     std::size_t out = decompressed.size();
-    std::size_t index = compressed.size() - ((buffer_top_and_bottom >> 24) & 0xFF);
-    std::size_t stop_index = compressed.size() - (buffer_top_and_bottom & 0xFFFFFF);
+    std::size_t index = compressed.size() - top;
+    std::size_t stop_index = compressed.size() - bottom;
 
     std::memset(decompressed.data(), 0, decompressed.size());
     std::memcpy(decompressed.data(), compressed.data(), compressed.size());
