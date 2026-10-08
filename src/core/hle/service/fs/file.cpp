@@ -1,7 +1,8 @@
 // Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
+#include <algorithm>
 #include <boost/serialization/unique_ptr.hpp>
 #include "common/archives.h"
 #include "common/logging/log.h"
@@ -90,9 +91,11 @@ void File::Read(Kernel::HLERequestContext& ctx) {
             rb.Push(read.Code());
             rb.Push<u32>(0);
         } else {
-            buffer.Write(data.get(), 0, *read);
+            // Never copy more than was requested, even if the backend reports more.
+            const std::size_t read_size = std::min<std::size_t>(*read, length);
+            buffer.Write(data.get(), 0, read_size);
             rb.Push(ResultSuccess);
-            rb.Push<u32>(static_cast<u32>(*read));
+            rb.Push<u32>(static_cast<u32>(read_size));
         }
         rb.PushMappedBuffer(buffer);
 
@@ -136,7 +139,8 @@ void File::Read(Kernel::HLERequestContext& ctx) {
                 async_data->read_size = 0;
             } else {
                 async_data->ret = ResultSuccess;
-                async_data->read_size = *read;
+                // Never copy more than was requested, even if the backend reports more.
+                async_data->read_size = std::min<std::size_t>(*read, async_data->length);
             }
 
             const auto read_delay = static_cast<s64>(backend->GetReadDelayNs(async_data->length));

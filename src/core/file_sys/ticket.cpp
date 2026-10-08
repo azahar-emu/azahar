@@ -1,6 +1,6 @@
-// Copyright 2018-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <cryptopp/aes.h>
@@ -63,6 +63,9 @@ Loader::ResultStatus Ticket::DoTitlekeyFixup() {
 }
 
 Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t offset) {
+    if (offset > file_data.size()) {
+        return Loader::ResultStatus::Error;
+    }
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     serialized_size = total_size;
     if (total_size < sizeof(u32))
@@ -104,7 +107,7 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
     content_index_vec.resize(content_index_size);
     std::memcpy(content_index_vec.data(), &file_data[offset + content_index_start],
                 content_index_size);
-    content_index.Load(this, content_index_vec);
+    content_index.Load(GetTitleID(), GetTicketID(), content_index_vec);
 
     return Loader::ResultStatus::Success;
 }
@@ -186,7 +189,7 @@ bool Ticket::IsPersonal() const {
 }
 
 void Ticket::ContentIndex::Initialize() {
-    if (!parent || initialized) {
+    if (!loaded || initialized) {
         return;
     }
 
@@ -206,25 +209,42 @@ void Ticket::ContentIndex::Initialize() {
                   "Ticket content index has unexpected parameters title_id={}, ticket_id={}, "
                   "always1={}, header_size={}, "
                   "size={}, index_header_size={}",
-                  parent->GetTitleID(), parent->GetTicketID(), always1, header_size,
-                  context_index_size, index_header_size);
+                  title_id, ticket_id, always1, header_size, context_index_size, index_header_size);
         return;
     }
-    for (u32 i = 0; i < main_header->index_headers_count; i++) {
+    const std::size_t size = content_index.size();
+    const std::size_t headers_offset = main_header->index_headers_offset;
+    const std::size_t headers_count = main_header->index_headers_count;
+    if (headers_offset > size || headers_count > (size - headers_offset) / sizeof(IndexHeader)) {
+        LOG_ERROR(Service_FS,
+                  "Ticket content index headers out of bounds title_id={}, ticket_id={}", title_id,
+                  ticket_id);
+        return;
+    }
+    for (u32 i = 0; i < headers_count; i++) {
         IndexHeader* curr_header = reinterpret_cast<IndexHeader*>(
-            content_index.data() + main_header->index_headers_offset +
-            main_header->index_header_size * i);
+            content_index.data() + headers_offset + sizeof(IndexHeader) * i);
         if (curr_header->type != 3 || curr_header->entry_size != sizeof(RightsField)) {
             u16 type = curr_header->type;
             LOG_WARNING(Service_FS,
                         "Found unsupported index header type, skiping... title_id={}, "
                         "ticket_id={}, type={}",
-                        parent->GetTitleID(), parent->GetTicketID(), type);
+                        title_id, ticket_id, type);
             continue;
         }
-        for (u32 j = 0; j < curr_header->entry_count; j++) {
-            RightsField* field = reinterpret_cast<RightsField*>(
-                content_index.data() + curr_header->data_offset + curr_header->entry_size * j);
+        const std::size_t data_offset = curr_header->data_offset;
+        const std::size_t entry_count = curr_header->entry_count;
+        if (data_offset > size || entry_count > (size - data_offset) / sizeof(RightsField)) {
+            LOG_ERROR(Service_FS,
+                      "Ticket content index entries out of bounds title_id={}, "
+                      "ticket_id={}",
+                      title_id, ticket_id);
+            rights.clear();
+            return;
+        }
+        for (u32 j = 0; j < entry_count; j++) {
+            RightsField* field = reinterpret_cast<RightsField*>(content_index.data() + data_offset +
+                                                                sizeof(RightsField) * j);
             rights.push_back(*field);
         }
     }
