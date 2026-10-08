@@ -213,8 +213,8 @@ void Ticket::ContentIndex::Initialize() {
         return;
     }
     const std::size_t size = content_index.size();
-    const std::size_t headers_offset = main_header->index_headers_offset;
-    const std::size_t headers_count = main_header->index_headers_count;
+    const std::size_t headers_offset = static_cast<u32>(main_header->index_headers_offset);
+    const std::size_t headers_count = static_cast<u16>(main_header->index_headers_count);
     if (headers_offset > size || headers_count > (size - headers_offset) / sizeof(IndexHeader)) {
         LOG_ERROR(Service_FS,
                   "Ticket content index headers out of bounds title_id={}, ticket_id={}", title_id,
@@ -232,8 +232,8 @@ void Ticket::ContentIndex::Initialize() {
                         title_id, ticket_id, type);
             continue;
         }
-        const std::size_t data_offset = curr_header->data_offset;
-        const std::size_t entry_count = curr_header->entry_count;
+        const std::size_t data_offset = static_cast<u32>(curr_header->data_offset);
+        const std::size_t entry_count = static_cast<u32>(curr_header->entry_count);
         if (data_offset > size || entry_count > (size - data_offset) / sizeof(RightsField)) {
             LOG_ERROR(Service_FS,
                       "Ticket content index entries out of bounds title_id={}, "
