@@ -20,7 +20,6 @@
 Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is toegevoegd!</string>
     <string name="share_log_not_found">Geen logbestand gevonden</string>
     <string name="about">Over</string>
-    <string name="citra_description">Een open-source 3DS-emulator</string>
     <string name="about_description">Bouwversie, credits en meer</string>
     <string name="theme_and_color_description">Wijzig het uiterlijk van de app</string>
     <string name="install_cia_title">Installeer CIA</string>

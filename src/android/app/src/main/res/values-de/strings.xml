@@ -25,7 +25,6 @@
     <string name="select_games_folder">Wähle einen Ordner für die Anwendung</string>
     <string name="select_games_folder_description">Ermöglicht Azahar die Anwendungs Liste zu veröffentlichen</string>
     <string name="about">Über uns</string>
-    <string name="citra_description">Ein quelloffener 3DS-Emulator</string>
     <string name="about_description">Aktuelle Version, Mitwirkende und mehr</string>
     <string name="games_dir_selected">App Verzeichnis ausgewählt</string>
     <string name="select_citra_user_folder_home_description">Ändere die Dateien, die Azahar nutzt, um Anwendungen zu laden</string>

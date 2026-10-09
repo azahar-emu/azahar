@@ -25,7 +25,6 @@
     <string name="select_games_folder">Wybierz folder aplikacji</string>
     <string name="select_games_folder_description">Pozwala Azahar rozszerzyć listę aplikacji.</string>
     <string name="about">O</string>
-    <string name="citra_description">Emulator 3DS na licencji open source</string>
     <string name="about_description">Wersja kompilacji, kredyty i nie tylko</string>
     <string name="games_dir_selected">Wybrano katalog z aplikacjami</string>
     <string name="select_citra_user_folder_home_description">Zmienia pliki, których Azahar używa do ładowania aplikacji</string>

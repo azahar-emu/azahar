@@ -26,7 +26,6 @@
     <string name="select_games_folder">Seleccionar la carpeta d\'aplicacions</string>
     <string name="select_games_folder_description">Permet a Azahar omplir la llista d\'aplicacions</string>
     <string name="about">Sobre</string>
-    <string name="citra_description">Un emulador de 3DS de codi obert</string>
     <string name="about_description">Versió de compilació, crèdits i més</string>
     <string name="games_dir_selected">Directori d\'aplicacions seleccionat</string>
     <string name="select_citra_user_folder_home_description">Canvia els fitxers que Azahar utilitza per a carregar aplicacions</string>

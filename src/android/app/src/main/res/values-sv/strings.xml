@@ -26,7 +26,6 @@
     <string name="select_games_folder">Välj applikationsmapp</string>
     <string name="select_games_folder_description">Låter Azahar fylla i programlistan</string>
     <string name="about">Om</string>
-    <string name="citra_description">En 3DS-emulator med öppen källkod</string>
     <string name="about_description">Byggversion, krediter och mer</string>
     <string name="games_dir_selected">Applikationskatalog vald</string>
     <string name="select_citra_user_folder_home_description">Ändrar de filer som Azahar använder för att ladda applikationer</string>
@@ -349,6 +348,8 @@
     <!-- Debug settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Använder JIT-kompilatorn (Just-in-Time) för CPU-emulering. När den är aktiverad kommer spelprestanda att förbättras avsevärt.</string>
+    <string name="use_fastinterp">Använd snabb tolk</string>
+    <string name="use_fastinterp_description">När CPU:ns JIT är inaktiverad används den snabba tolken i stället för den äldre tolken. Omstart krävs.</string>
     <string name="hw_shaders">Aktivera hårdvaru-shader</string>
     <string name="hw_shaders_description">Använder hårdvara för att emulera 3DS-shaders. När detta är aktiverat kommer spelprestanda att förbättras avsevärt.</string>
     <string name="cpu_clock_speed">CPU-klockhastighet</string>

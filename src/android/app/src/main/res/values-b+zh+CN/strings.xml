@@ -25,7 +25,6 @@
     <string name="select_games_folder">选择应用文件夹</string>
     <string name="select_games_folder_description">允许 Azahar 填充应用列表</string>
     <string name="about">关于</string>
-    <string name="citra_description">一款开源的 3DS 模拟器</string>
     <string name="about_description">构建版本、贡献者以及更多</string>
     <string name="games_dir_selected">已选择应用目录</string>
     <string name="select_citra_user_folder_home_description">更改 Azahar 用于加载应用的相关文件</string>
