@@ -22,10 +22,14 @@ SERIALIZE_EXPORT_IMPL(Service::FS::FileSessionSlot)
 namespace Service::FS {
 
 template <class Archive>
-void File::serialize(Archive& ar, const unsigned int) {
+void File::serialize(Archive& ar, const unsigned int file_version) {
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar & path;
     ar & backend;
+    if (file_version >= 1) {
+        ar & save_data_archive;
+        ar & save_data_on_sd;
+    }
 }
 
 File::File() : File(Core::Global<Kernel::KernelSystem>()) {}
@@ -174,6 +178,12 @@ void File::Read(Kernel::HLERequestContext& ctx) {
         really_async);
 }
 
+void File::MarkSaveDataWritten() {
+    if (save_data_archive != 0) {
+        Core::Global<Core::System>().NotifyGuestSaveWritten(save_data_archive, save_data_on_sd);
+    }
+}
+
 void File::Write(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u64 offset = rp.Pop<u64>();
@@ -202,6 +212,11 @@ void File::Write(Kernel::HLERequestContext& ctx) {
         buffer.Read(data.data(), 0, data.size());
         ResultVal<std::size_t> written =
             backend->Write(offset, data.size(), flush, update_timestamp, data.data());
+        // A write that failed changed nothing, so it must not put the save at risk for the rest
+        // of the session.
+        if (written.Succeeded()) {
+            MarkSaveDataWritten();
+        }
 
         // Update file size
         file->size = backend->GetSize();
@@ -243,6 +258,9 @@ void File::Write(Kernel::HLERequestContext& ctx) {
             async_data->buffer->Read(data.data(), 0, data.size());
             async_data->written = backend->Write(async_data->offset, data.size(), async_data->flush,
                                                  async_data->update_timestamp, data.data());
+            if (async_data->written.Succeeded()) {
+                MarkSaveDataWritten();
+            }
 
             // Update file size
             async_data->file->size = backend->GetSize();
@@ -288,7 +306,10 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
     if (!backend->AllowsCachedReads() && !Settings::values.async_fs_operations) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         file->size = size;
-        backend->SetSize(size);
+        // Truncating or extending a save file changes it just as a write does.
+        if (backend->SetSize(size)) {
+            MarkSaveDataWritten();
+        }
         rb.Push(ResultSuccess);
         return;
     }
@@ -296,7 +317,9 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
     ctx.RunAsync(
         [file, size, this](Kernel::HLERequestContext& ctx) {
             file->size = size;
-            backend->SetSize(size);
+            if (backend->SetSize(size)) {
+                MarkSaveDataWritten();
+            }
             return 0;
         },
         [](Kernel::HLERequestContext& ctx) {
