@@ -115,11 +115,13 @@ jobs:
       CCACHE_SLOPPINESS: time_macros
       OS: linux
       TARGET: ${{ matrix.target }}
+      CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
+        if: ${{ env.CACHE_ENABLED == 'true' }}
         uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -333,7 +335,7 @@ jobs:
         with:
           submodules: recursive
       - name: Set up cache
-        if: ${{ env.SHOULD_RUN == 'true' && env.CACHE_ENABLED == 'true' }}
+        if: ${{ env.CACHE_ENABLED == 'true' && env.SHOULD_RUN == 'true' }}
         uses: actions/cache@v5
         with:
           path: |
