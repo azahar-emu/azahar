@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model
 
@@ -94,4 +94,21 @@ enum class IntSetting(
 
         fun clear() = IntSetting.values().forEach { it.int = it.defaultValue }
     }
+}
+
+// The following must match what is defined in src/common/settings.h
+
+enum class GraphicsAPI(val int: Int) {
+    SOFTWARE(0),
+    OPENGL(1),
+    VULKAN(2)
+}
+
+enum class TextureFilter(val int: Int) {
+    NOFILTER(0),
+    ANIME4K(1),
+    BICUBIC(2),
+    SCALEFORCE(3),
+    XBRZ(4),
+    MMPX(5)
 }

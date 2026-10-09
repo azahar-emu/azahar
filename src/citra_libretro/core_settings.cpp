@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <boost/hana/string.hpp>
 
@@ -417,7 +417,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::category::graphics,
         {
             { "none", "None" },
-            { "Anime4K Ultrafast", "Anime4K Ultrafast" },
+            { "Anime4K", "Anime4K (OpenGL only)" },
             { "Bicubic", "Bicubic" },
             { "ScaleForce", "ScaleForce" },
             { "xBRZ", "xBRZ" },
@@ -937,8 +937,14 @@ static void ParseAudioOptions(void) {
 }
 
 static Settings::TextureFilter GetTextureFilter(const std::string& name) {
-    if (name == "Anime4K Ultrafast")
-        return Settings::TextureFilter::Anime4K;
+    if (name == "Anime4K") {
+        const auto graphics_api = LibRetro::FetchVariable(config::graphics::graphics_api, "auto");
+        if (graphics_api == "Vulkan") {
+            return Settings::TextureFilter::NoFilter;
+        } else {
+            return Settings::TextureFilter::Anime4K;
+        }
+    }
     if (name == "Bicubic")
         return Settings::TextureFilter::Bicubic;
     if (name == "ScaleForce")

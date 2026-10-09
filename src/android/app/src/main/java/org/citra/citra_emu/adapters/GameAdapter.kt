@@ -1,10 +1,11 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.adapters
 
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ShortcutInfo
@@ -53,6 +54,11 @@ import org.citra.citra_emu.adapters.GameAdapter.GameViewHolder
 import org.citra.citra_emu.databinding.CardGameBinding
 import org.citra.citra_emu.databinding.DialogShortcutBinding
 import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
+import org.citra.citra_emu.features.settings.model.GraphicsAPI
+import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.TextureFilter
+import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.IndeterminateProgressDialogFragment
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
@@ -64,6 +70,7 @@ import org.citra.citra_emu.viewmodel.GamesViewModel
 class GameAdapter(
     private val activity: AppCompatActivity,
     private val inflater: LayoutInflater,
+    private val settings: Settings,
     private val openImageLauncher: ActivityResultLauncher<String>?,
     private val onRequestCompressOrDecompress: (
         (inputPath: String, suggestedName: String, shouldCompress: Boolean) -> Unit
@@ -114,6 +121,29 @@ class GameAdapter(
             return
         }
         lastClickTime = SystemClock.elapsedRealtime()
+
+        // NOTE: We could make this check not hardcoded, but it's a temp thing anyway so probs not worth. -OS
+        if (
+            IntSetting.GRAPHICS_API.int == GraphicsAPI.VULKAN.int &&
+            IntSetting.TEXTURE_FILTER.int == TextureFilter.ANIME4K.int
+        ) {
+            MaterialAlertDialogBuilder(view.context)
+                .setTitle(R.string.incompatible_texture_filter)
+                .setMessage(R.string.incompatible_texture_filter_description)
+                .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
+                    IntSetting.TEXTURE_FILTER.int = TextureFilter.NOFILTER.int
+                    settings.saveSetting(
+                        IntSetting.TEXTURE_FILTER,
+                        SettingsFile.FILE_NAME_CONFIG
+                    )
+                    this.onClick(view)
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+
+            // We're re-running the function above if dialog accepted, so exit this call early
+            return
+        }
 
         val holder = view.tag as GameViewHolder
         gameExists(holder)

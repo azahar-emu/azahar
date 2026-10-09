@@ -823,12 +823,14 @@
     <string name="opengles" translatable="false">OpenGLES</string>
     <string name="vulkan" translatable="false">Vulkan</string>
 
-    <!-- Texture filter names -->
-    <string name="anime4k" translatable="false">Anime4K</string>
+    <!-- Texture filters -->
+    <string name="anime4k">Anime4K (OpenGL only)</string>
     <string name="bicubic" translatable="false">Bicubic</string>
     <string name="scaleforce" translatable="false">ScaleForce</string>
     <string name="xbrz" translatable="false">xBRZ</string>
     <string name="mmpx" translatable="false">MMPX</string>
+    <string name="incompatible_texture_filter">Incompatible texture filter</string>
+    <string name="incompatible_texture_filter_description">The selected texture filter (Anime4K) is not compatible with the Vulkan renderer.\nThe texture filter will be set to None.\nProceed?</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Game Controlled</string>
