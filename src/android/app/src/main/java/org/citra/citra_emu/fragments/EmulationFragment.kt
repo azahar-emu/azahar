@@ -564,7 +564,10 @@ class EmulationFragment :
     }
 
     override fun onDetach() {
-        NativeLibrary.clearEmulationActivity()
+        // A replacement fragment has already registered the same activity.
+        if (!isRemoving) {
+            NativeLibrary.clearEmulationActivity()
+        }
         super.onDetach()
     }
 

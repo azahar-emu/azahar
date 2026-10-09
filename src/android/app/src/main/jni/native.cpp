@@ -3,6 +3,7 @@
 // Refer to the LICENSE.txt file included.
 
 #include <algorithm>
+#include <chrono>
 #include <codecvt>
 #include <thread>
 #include <dlfcn.h>
@@ -220,6 +221,11 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // surfaceChanged/surfaceDestroyed callback from the UI thread cannot release or replace
     // s_surface/s_secondary_surface while they're still being used.
     std::unique_lock<std::recursive_mutex> surface_lock(surface_mutex);
+
+    // The secondary presentation is recreated on activity restart, and its surface can arrive
+    // after the main one. Bound the wait so a failed presentation does not hang the boot.
+    surface_cv.wait_for(surface_lock, std::chrono::seconds(2),
+                        [] { return s_surface != nullptr && s_secondary_surface != nullptr; });
 
     // We also need to lock the surface mutex when System::Init() is called.
     // This is because save state saving and loading may call System::Init
@@ -467,6 +473,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv* env
     if (!s_secondary_surface) {
         return;
     }
+    surface_cv.notify_all();
 
     bool notify = false;
     if (secondary_window) {
