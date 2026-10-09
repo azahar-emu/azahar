@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "video_core/shader/generator/pica_fs_config.h"
 
@@ -37,10 +37,22 @@ void FramebufferConfig::ApplyProfile(const Profile& profile) {
         logic_op.Assign(requested_logic_op);
     }
 
+    if (!alphablend_enable) {
+        return;
+    }
+
     // Check if we don't need blend min/max emulation.
-    if ((profile.has_blend_minmax_factor || profile.is_vulkan) && alphablend_enable) {
+    if (profile.has_blend_minmax_factor) {
         requested_rgb_blend.SetMinMaxEmulationDisabled();
         requested_alpha_blend.SetMinMaxEmulationDisabled();
+    } else if (profile.is_vulkan) {
+        // VK_BLEND_OP_MIN/MAX ignore the blend factors, unlike the PICA hardware.
+        if (requested_rgb_blend.UsesNoOpFactors()) {
+            requested_rgb_blend.SetMinMaxEmulationDisabled();
+        }
+        if (requested_alpha_blend.UsesNoOpFactors()) {
+            requested_alpha_blend.SetMinMaxEmulationDisabled();
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "video_core/shader/generator/glsl_fs_shader_gen.h"
 
@@ -1314,6 +1314,10 @@ void FragmentModule::DefineBindingsVK() {
         const auto num_descriptors = i == 0 && texture_type == TextureType::ShadowCube ? "[6]" : "";
         out += fmt::format("layout(set = 1, binding = {0}) uniform {1} tex{0}{2};\n", i, sampler,
                            num_descriptors);
+    }
+
+    if (use_blend_fallback) {
+        out += "layout(set = 1, binding = 3) uniform sampler2D tex_color;\n";
     }
 
     // Utility textures

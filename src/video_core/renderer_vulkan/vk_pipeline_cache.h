@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -87,6 +87,10 @@ public:
 
     /// Binds a fragment shader generated from PICA state
     void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
+
+    /// Queries which channels need min/max blend emulation in the fragment shader
+    void QueryBlendEmulation(const Pica::RegsInternal& regs, bool& rgb_emulation,
+                             bool& alpha_emulation) const;
 
     /// Gets the current program ID
     u64 GetProgramID() const {
