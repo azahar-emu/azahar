@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -38,6 +39,7 @@ import org.citra.citra_emu.databinding.FragmentGamesBinding
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
@@ -52,6 +54,9 @@ class GamesFragment : Fragment() {
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
     private lateinit var gameAdapter: GameAdapter
+
+    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val settings get() = settingsViewModel.settings
 
     private val openImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -149,6 +154,7 @@ class GamesFragment : Fragment() {
         gameAdapter = GameAdapter(
             requireActivity() as AppCompatActivity,
             inflater,
+            settings,
             openImageLauncher,
             onRequestCompressOrDecompress = { inputPath, suggestedName, shouldCompress ->
                 pendingCompressInvocation = inputPath

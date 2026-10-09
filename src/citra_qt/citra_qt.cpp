@@ -1478,6 +1478,23 @@ void GMainWindow::BootGame(const QString& filename) {
         ShutdownGame();
     }
 
+    // NOTE: We could make this not hardcoded, but it's a temp thing anyway so probs not worth. -OS
+    if (Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Vulkan &&
+        Settings::values.texture_filter.GetValue() == Settings::TextureFilter::Anime4K) {
+        const auto answer = QMessageBox::warning(
+            this, tr("Incompatible texture filter"),
+            tr("The selected texture filter (Anime4K) is not compatible with the Vulkan "
+               "renderer.\nThe texture filter will be set to None.\nProceed?"),
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (answer == QMessageBox::No) {
+            return;
+        }
+        if (answer == QMessageBox::Yes) {
+            Settings::values.texture_filter = Settings::TextureFilter::NoFilter;
+        }
+    }
+
     const bool is_artic = filename.startsWith(QString::fromStdString("articbase:/")) ||
                           filename.startsWith(QString::fromStdString("articinio:/")) ||
                           filename.startsWith(QString::fromStdString("articinin:/"));
