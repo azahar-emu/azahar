@@ -1687,21 +1687,33 @@ void FragmentModule::DefineTexUnitSampler(u32 texture_unit) {
     if (texture_unit < 3) {
         const u32 texcoord_num =
             texture_unit == 2 && config.texture.texture2_use_coord1 ? 1 : texture_unit;
+        // For projective texture types the hardware wraps the coordinate *after* dividing by w,
+        // so the border test must use the divided coordinate as well. The sampling calls below
+        // (textureProj / shadowTexture) still receive the raw texcoord and divide themselves.
+        // See https://github.com/azahar-emu/azahar/issues/1186
+        const auto tex0_type = config.texture.texture0_type;
+        const bool projective =
+            texture_unit == 0 && (tex0_type == TexturingRegs::TextureConfig::Projection2D ||
+                                  (tex0_type == TexturingRegs::TextureConfig::Shadow2D &&
+                                   !config.texture.shadow_texture_orthographic));
+        const std::string border_coord =
+            projective ? fmt::format("(texcoord{} / texcoord0_w)", texcoord_num)
+                       : fmt::format("texcoord{}", texcoord_num);
         if (config.texture.texture_border_color[texture_unit].enable_s) {
             out += fmt::format(R"(
-                if (texcoord{}.x < 0 || texcoord{}.x > 1) {{
+                if ({}.x < 0 || {}.x > 1) {{
                     return tex_border_color[{}];
                 }}
                 )",
-                               texcoord_num, texcoord_num, texture_unit);
+                               border_coord, border_coord, texture_unit);
         }
         if (config.texture.texture_border_color[texture_unit].enable_t) {
             out += fmt::format(R"(
-                if (texcoord{}.y < 0 || texcoord{}.y > 1) {{
+                if ({}.y < 0 || {}.y > 1) {{
                     return tex_border_color[{}];
                 }}
                 )",
-                               texcoord_num, texcoord_num, texture_unit);
+                               border_coord, border_coord, texture_unit);
         }
     }
 

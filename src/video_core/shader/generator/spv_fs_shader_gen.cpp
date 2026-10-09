@@ -943,8 +943,24 @@ void FragmentModule::DefineTexSampler(u32 texture_unit) {
 
     const auto& texture_border_color = config.texture.texture_border_color[texture_unit];
     if (texture_border_color.enable_s || texture_border_color.enable_t) {
-        const Id texcoord_s{OpCompositeExtract(f32_id, texcoord, 0)};
-        const Id texcoord_t{OpCompositeExtract(f32_id, texcoord, 1)};
+        // For projective texture types the hardware wraps the coordinate *after* dividing by w,
+        // so the border test must use the divided coordinate as well. The raw texcoord is still
+        // what gets sampled below (OpImageSampleProj* / SampleShadow perform the division).
+        // See https://github.com/azahar-emu/azahar/issues/1186
+        Id border_texcoord{texcoord};
+        if (texture_unit == 0) {
+            const auto tex0_type = config.texture.texture0_type;
+            const bool projective = tex0_type == TexturingRegs::TextureConfig::Projection2D ||
+                                    (tex0_type == TexturingRegs::TextureConfig::Shadow2D &&
+                                     !config.texture.shadow_texture_orthographic);
+            if (projective) {
+                const Id texcoord0_w{OpLoad(f32_id, texcoord0_w_id)};
+                const Id w_vec{OpCompositeConstruct(vec_ids.Get(2), texcoord0_w, texcoord0_w)};
+                border_texcoord = OpFDiv(vec_ids.Get(2), texcoord, w_vec);
+            }
+        }
+        const Id texcoord_s{OpCompositeExtract(f32_id, border_texcoord, 0)};
+        const Id texcoord_t{OpCompositeExtract(f32_id, border_texcoord, 1)};
 
         const Id s_lt_zero{OpFOrdLessThan(bool_id, texcoord_s, ConstF32(0.0f))};
         const Id s_gt_one{OpFOrdGreaterThan(bool_id, texcoord_s, ConstF32(1.0f))};
