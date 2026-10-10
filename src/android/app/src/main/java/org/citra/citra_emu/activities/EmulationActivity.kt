@@ -27,6 +27,7 @@ import androidx.core.os.BundleCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
@@ -184,6 +185,11 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        val launchUri = getLaunchUri(intent)
+        if (launchUri != null && launchUri != Uri.EMPTY && launchUri == getLaunchUri(this.intent)) {
+            Log.info("[EmulationActivity] Ignoring relaunch of the running game")
+            return
+        }
         setIntent(intent)
 
         NativeLibrary.stopEmulation()
@@ -203,7 +209,24 @@ class EmulationActivity : AppCompatActivity() {
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
-        navHostFragment.navController.setGraph(R.navigation.emulation_navigation, intent.extras)
+        navHostFragment.navController.navigate(
+            R.id.emulationFragment,
+            intent.extras,
+            NavOptions.Builder().setPopUpTo(R.id.emulationFragment, true).build()
+        )
+    }
+
+    private fun getLaunchUri(intent: Intent): Uri? = try {
+        val game = intent.extras?.let { extras ->
+            BundleCompat.getParcelable(extras, "game", Game::class.java)
+        }
+        if (game != null) {
+            game.launchIntent.data
+        } else {
+            intent.data ?: intent.getStringExtra("SelectedGame")?.toUri()
+        }
+    } catch (e: Exception) {
+        null
     }
 
     // On some devices, the system bars will not disappear on first boot or after some
