@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <span>
 #include <boost/container/static_vector.hpp>
@@ -450,6 +450,8 @@ bool Instance::CreateDevice() {
 
     add_extension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     image_format_list = add_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
+    create_renderpass2 = add_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME);
+    depth_stencil_resolve = add_extension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
     shader_stencil_export = add_extension(VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
     external_memory_host = add_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
     tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME, is_moltenvk,
@@ -521,9 +523,11 @@ bool Instance::CreateDevice() {
             .features{
                 .robustBufferAccess = features.robustBufferAccess,
                 .geometryShader = features.geometryShader,
+                .sampleRateShading = features.sampleRateShading,
                 .logicOp = features.logicOp,
                 .samplerAnisotropy = features.samplerAnisotropy,
                 .fragmentStoresAndAtomics = features.fragmentStoresAndAtomics,
+                .shaderStorageImageMultisample = features.shaderStorageImageMultisample,
                 .shaderClipDistance = features.shaderClipDistance,
             },
         },

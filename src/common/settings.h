@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -113,6 +113,29 @@ enum class AudioEmulation : u32 {
     LLE = 1,
     LLEMultithreaded = 2,
 };
+
+enum class AntiAliasingMethod : u32 {
+    None = 0,
+    MSAAx2 = 1,
+    MSAAx4 = 2,
+    MSAAx8 = 3,
+    MSAAx16 = 4,
+};
+
+static inline u8 GetAntiAliasingSampleCount(AntiAliasingMethod antialiasing_method) {
+    switch (antialiasing_method) {
+    case AntiAliasingMethod::MSAAx2:
+        return 2;
+    case AntiAliasingMethod::MSAAx4:
+        return 4;
+    case AntiAliasingMethod::MSAAx8:
+        return 8;
+    case AntiAliasingMethod::MSAAx16:
+        return 16;
+    default:
+        return 1;
+    }
+}
 
 enum class TextureFilter : u32 {
     NoFilter = 0,
@@ -550,6 +573,8 @@ struct Values {
         true, Keys::use_display_refresh_rate_detection};
     Setting<bool> use_shader_jit{true, Keys::use_shader_jit};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 18, Keys::resolution_factor};
+    SwitchableSetting<AntiAliasingMethod> antialiasing{AntiAliasingMethod::None,
+                                                       Keys::antialiasing};
     SwitchableSetting<bool> use_integer_scaling{false, Keys::use_integer_scaling};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, Keys::frame_limit};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};

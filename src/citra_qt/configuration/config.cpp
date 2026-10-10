@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <array>
@@ -726,6 +726,7 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.use_skip_duplicate_frames);
     ReadGlobalSetting(Settings::values.use_display_refresh_rate_detection);
     ReadGlobalSetting(Settings::values.resolution_factor);
+    ReadGlobalSetting(Settings::values.antialiasing);
     ReadGlobalSetting(Settings::values.use_integer_scaling);
     ReadGlobalSetting(Settings::values.frame_limit);
     ReadGlobalSetting(Settings::values.turbo_limit);
@@ -1279,6 +1280,7 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.use_skip_duplicate_frames);
     WriteGlobalSetting(Settings::values.use_display_refresh_rate_detection);
     WriteGlobalSetting(Settings::values.resolution_factor);
+    WriteGlobalSetting(Settings::values.antialiasing);
     WriteGlobalSetting(Settings::values.use_integer_scaling);
     WriteGlobalSetting(Settings::values.frame_limit);
     WriteGlobalSetting(Settings::values.turbo_limit);

@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/settings.h"
 #include "core/core.h"
@@ -27,6 +27,10 @@ u32 RendererBase::GetResolutionScaleFactor() {
     const u32 scale_factor = Settings::values.resolution_factor.GetValue();
     return scale_factor != 0 ? scale_factor
                              : render_window.GetFramebufferLayout().GetScalingRatio();
+}
+
+u8 RendererBase::GetSampleCount() const {
+    return Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
 }
 
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
