@@ -1,6 +1,6 @@
 // Copyright Citra Emulator Project / Lime3DS Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <QCameraDevice>
 #include <QDirIterator>
@@ -194,7 +194,7 @@ void ConfigureCamera::StartPreviewing() {
     preview_width = ui->preview_box->size().width();
     preview_height = static_cast<int>(preview_width * 0.75);
     ui->preview_box->setToolTip(
-        tr("Resolution: %1*%2")
+        tr("Resolution: %1x%2")
             .arg(QString::number(preview_width), QString::number(preview_height)));
     // Load previewing camera
     previewing_camera = Camera::CreateCameraPreview(

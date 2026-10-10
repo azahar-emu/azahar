@@ -1,6 +1,6 @@
 ﻿// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #pragma once
 
@@ -26,7 +26,7 @@ public:
 
     static const std::array<int, Settings::NativeButton::NumButtons> default_buttons;
     static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs;
-    static const std::array<UISettings::Shortcut, 41> default_hotkeys;
+    static const std::vector<UISettings::Shortcut> default_hotkeys;
 
 private:
     void Initialize(const std::string& config_name);

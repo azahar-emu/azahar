@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 package org.citra.citra_emu.utils
 
@@ -33,6 +33,7 @@ object DiskShaderCacheProgress {
         emulationActivity.runOnUiThread {
             when (stage) {
                 LoadCallbackStage.Prepare -> prepareViewModel()
+
                 LoadCallbackStage.Decompile -> emulationViewModel.updateProgress(
                     emulationActivity.getString(R.string.preparing_shaders),
                     progress,
@@ -40,7 +41,7 @@ object DiskShaderCacheProgress {
                 )
 
                 LoadCallbackStage.Build -> emulationViewModel.updateProgress(
-                    emulationActivity.getString(R.string.building_shaders, obj ),
+                    emulationActivity.getString(R.string.building_shaders, obj),
                     progress,
                     max
                 )

@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 /*  armdefs.h -- ARMulator common definitions:  ARM6 Instruction Emulator.
     Copyright (C) 1994 Advanced RISC Machines Ltd.
@@ -147,7 +147,7 @@ enum : u32 {
 enum {
     STOP = 0,       // Stop
     CHANGEMODE = 1, // Change mode
-    ONCE = 2,       // Execute just one iteration
+    ONCE = 2,       // execute just one iteration
     RUN = 3         // Continuous execution
 };
 

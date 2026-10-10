@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <chrono>
@@ -28,6 +28,8 @@ constexpr double FRAME_LENGTH = 1.0 / SCREEN_REFRESH_RATE;
 constexpr std::size_t IgnoreFrames = 5;
 
 namespace Core {
+
+bool PerfStats::game_frames_updated = true;
 
 PerfStats::PerfStats(u64 title_id) : title_id(title_id) {}
 
@@ -109,6 +111,7 @@ void PerfStats::EndGameFrame() {
     std::scoped_lock lock{object_mutex};
 
     game_frames += 1;
+    PerfStats::game_frames_updated = true;
 }
 
 double PerfStats::GetMeanFrametime() const {
@@ -204,19 +207,33 @@ double PerfStats::GetStableFrameTimeScale() const {
     return stable_previous_frame_length / FRAME_LENGTH;
 }
 
+void FrameLimiter::WaitForFrameAdvance() {
+    if (wait_callback) {
+        // Let the callback wait in short steps, checking for the frame advance in between
+        constexpr auto check_interval = std::chrono::milliseconds(2);
+        while (!frame_advance_event.IsSet()) {
+            wait_callback(std::chrono::steady_clock::now() + check_interval);
+        }
+    }
+    frame_advance_event.Wait();
+    frame_advance_event.Reset();
+}
+
+void FrameLimiter::SetWaitCallback(WaitCallback callback) {
+    wait_callback = std::move(callback);
+}
+
 void FrameLimiter::WaitOnce() {
     if (frame_advancing_enabled) {
         // Frame advancing is enabled: wait on event instead of doing framelimiting
-        frame_advance_event.Wait();
-        frame_advance_event.Reset();
+        WaitForFrameAdvance();
     }
 }
 
 void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
     if (frame_advancing_enabled) {
         // Frame advancing is enabled: wait on event instead of doing framelimiting
-        frame_advance_event.Wait();
-        frame_advance_event.Reset();
+        WaitForFrameAdvance();
         return;
     }
 
@@ -240,7 +257,11 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
         std::clamp(frame_limiting_delta_err, -max_lag_time_us, max_lag_time_us);
 
     if (frame_limiting_delta_err > microseconds::zero()) {
-        std::this_thread::sleep_for(frame_limiting_delta_err);
+        if (wait_callback) {
+            wait_callback(std::chrono::steady_clock::now() + frame_limiting_delta_err);
+        } else {
+            std::this_thread::sleep_for(frame_limiting_delta_err);
+        }
         auto now_after_sleep = Clock::now();
         frame_limiting_delta_err -= duration_cast<microseconds>(now_after_sleep - now);
         now = now_after_sleep;

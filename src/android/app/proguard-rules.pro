@@ -23,3 +23,8 @@
 -dontwarn java.beans.Introspector
 -dontwarn java.beans.VetoableChangeListener
 -dontwarn java.beans.VetoableChangeSupport
+
+# Don't include VERBOSE log calls in release builds
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+}

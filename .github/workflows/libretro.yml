@@ -11,19 +11,24 @@ on:
 env:
   CORE_ARGS: -DENABLE_LIBRETRO=ON
 
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+
 jobs:
-  android:
+  libretro-android:
     runs-on: ubuntu-22.04
     env:
       OS: android
       TARGET: arm64-v8a
       API_LEVEL: 21
-      ANDROID_NDK_VERSION: 26.2.11394342
+      ANDROID_NDK_VERSION: 29.0.14206865
       ANDROID_ABI: arm64-v8a
       BUILD_DIR: build/android-arm64-v8a
       EXTRA_PATH: bin/Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set tag name
@@ -48,12 +53,30 @@ jobs:
           llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-android.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
-  linux:
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-android.spdx.json
+
+  libretro-linux:
     runs-on: ubuntu-22.04
     env:
       OS: linux
@@ -62,7 +85,7 @@ jobs:
       EXTRA_PATH: bin/Release
       EXTRA_CORE_ARGS: -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 -DENABLE_LTO=OFF
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Install tools
@@ -72,16 +95,34 @@ jobs:
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
+          cmake --build $BUILD_DIR --target citra_libretro --config Release -j $(nproc)
           llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-linux.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
-  windows:
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-linux.spdx.json
+
+  libretro-windows:
     runs-on: ubuntu-latest
     env:
       OS: windows
@@ -92,7 +133,7 @@ jobs:
       IMAGE: reallibretroretroarch/libretro-build-mxe-win-cross-cores:mingw12
       EXTRA_PATH: bin/Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Build in cross-container
@@ -104,18 +145,36 @@ jobs:
               $IMAGE \
               bash -lc "\
                   ${CMAKE} $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR && \
-                  ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc) && \
+                  ${CMAKE} --build $BUILD_DIR --target citra_libretro --config Release -j $(nproc) && \
                   x86_64-w64-mingw32.static-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*"
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-windows.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
-  macos:
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-windows.spdx.json
+  libretro-macos:
     runs-on: macos-26
     strategy:
+      fail-fast: false
       matrix:
         target: ["x86_64", "arm64"]
     env:
@@ -125,7 +184,7 @@ jobs:
       BUILD_DIR: build/osx-${{ matrix.target }}
       EXTRA_PATH: bin/Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Install tools
@@ -133,16 +192,34 @@ jobs:
       - name: Build
         run: |
           cmake $CORE_ARGS -DCMAKE_OSX_ARCHITECTURES=$TARGET . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          cmake --build $BUILD_DIR --target citra_libretro --config Release
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-macos-${{ matrix.target }}.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
-  ios:
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-macos-${{ matrix.target }}.spdx.json
+
+  libretro-ios:
     runs-on: macos-26
     env:
       OS: ios
@@ -151,22 +228,40 @@ jobs:
       EXTRA_PATH: bin/Release
       EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          cmake --build $BUILD_DIR --target citra_libretro --config Release
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-ios.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
-  tvos:
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-ios.spdx.json
+
+  libretro-tvos:
     runs-on: macos-26
     env:
       OS: tvos
@@ -175,18 +270,35 @@ jobs:
       EXTRA_PATH: bin/Release
       EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=tvOS -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          cmake --build $BUILD_DIR --target citra_libretro --config Release
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-tvos.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-tvos.spdx.json

@@ -4,13 +4,20 @@ if [ "$GITHUB_REF_TYPE" == "tag" ]; then
 	export EXTRA_CMAKE_FLAGS=(-DENABLE_QT_UPDATE_CHECKER=ON)
 fi
 
+if [ "$BUILD_ARCH" == "x86_64" ]; then
+    export EXTRA_CMAKE_FLAGS=("${EXTRA_CMAKE_FLAGS[@]}" -DENABLE_FFMPEG=OFF)
+fi
+
+if [ "$BUILD_ARCH" == "arm64" ]; then
+    export EXTRA_CMAKE_FLAGS=("${EXTRA_CMAKE_FLAGS[@]}" -DCMAKE_TOOLCHAIN_FILE=$HOME/conan/conan_toolchain.cmake)
+fi
+
 mkdir -p build/$BUILD_ARCH && cd build/$BUILD_ARCH
 cmake ../.. -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_OSX_ARCHITECTURES="$BUILD_ARCH" \
-    -DENABLE_QT_TRANSLATION=ON \
     -DENABLE_ROOM_STANDALONE=OFF \
-    -DUSE_DISCORD_PRESENCE=ON \
+    -DENABLE_DISCORD_RPC=ON \
 	"${EXTRA_CMAKE_FLAGS[@]}"
 ninja
 ninja bundle

@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <stdexcept>
 #include <utility>
@@ -10,6 +10,7 @@
 #include "audio_core/lle/lle.h"
 #include "common/arch.h"
 #include "common/logging/log.h"
+#include "common/scope_exit.h"
 #include "common/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/exclusive_monitor.h"
@@ -20,6 +21,9 @@
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #endif
 #include "core/arm/dyncom/arm_dyncom.h"
+#ifdef HAVE_FASTINTERP
+#include "core/arm/fastinterp/fastinterp.h"
+#endif
 #include "core/cheats/cheats.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -48,6 +52,7 @@
 #include "core/hw/aes/key.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
+#include "core/savestate.h"
 #ifdef ENABLE_SCRIPTING
 #include "core/rpc/server.h"
 #endif
@@ -75,12 +80,39 @@ Core::Timing& Global() {
     return System::GetInstance().CoreTiming();
 }
 
-System::System() : movie{*this}, cheat_engine{*this} {}
+System::System() : movie{*this}, cheat_engine{*this} {
+    // Process pending work instead of just sleeping while waiting for the next frame
+    frame_limiter.SetWaitCallback([this](std::chrono::steady_clock::time_point deadline) {
+        ProcessPendingWorkUntil(deadline);
+    });
+}
 
 System::~System() = default;
 
+/**
+ * Executes the thread currently scheduled on the given core. Runs a full slice when tight_loop is
+ * set, a single instruction otherwise, or a single instruction if a debugger asked to step it.
+ */
+static void ExecuteCore(ARM_Interface& core, Kernel::Thread* thread, bool tight_loop) {
+#ifdef ENABLE_GDBSTUB
+    if (thread->gdb_single_step) [[unlikely]] {
+        // Keep a reference to the thread in case it just exits.
+        const auto thread_ref = Kernel::SharedFrom(thread);
+        core.Step();
+        GDBStub::OnSingleStepComplete(thread);
+        return;
+    }
+#endif
+    if (tight_loop) {
+        core.Run();
+    } else {
+        core.Step();
+    }
+}
+
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
+
     if (!IsPoweredOn()) {
         return ResultStatus::ErrorNotInitialized;
     }
@@ -93,9 +125,10 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         for (auto& cpu_core : cpu_cores) {
             cpu_core->ClearBreakFlag();
         }
-        GDBStub::HandlePacket(*this);
     }
 #endif
+
+    ProcessPendingWork();
 
     Signal signal{Signal::None};
     u32 param{};
@@ -123,6 +156,20 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             LOG_ERROR(Core, "A pending save state operation has not finished yet");
             status_details = "A pending save state operation has not finished yet";
             return ResultStatus::ErrorSavestate;
+        }
+        u64 title_id{};
+        if (app_loader) {
+            app_loader->ReadProgramId(title_id);
+        }
+        auto info = GetSaveStateInfo(title_id, movie.GetCurrentMovieID(), param);
+        if (info.slot == std::numeric_limits<u32>::max()) {
+            // Should not happen
+            status_details = "Failed to load savestate";
+            return ResultStatus::ErrorSavestate;
+        }
+        if (info.status == Core::SaveStateInfo::ValidationStatus::BuildMismatch) {
+            status_details = info.build_name;
+            return ResultStatus::ErrorSavestateBuildMismatch;
         }
         save_state_slot = param;
         save_state_request_time = std::chrono::steady_clock::now();
@@ -217,17 +264,15 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             running_core = current_core_to_execute;
             kernel->SetRunningCPU(running_core);
         }
-        if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
+        Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
+        if (thread == nullptr) {
             LOG_TRACE(Core_ARM11, "Core {} idling", current_core_to_execute->GetID());
             current_core_to_execute->GetTimer().Idle();
             PrepareReschedule();
         } else {
-            if (tight_loop) {
-                current_core_to_execute->Run();
-            } else {
-                current_core_to_execute->Step();
-            }
+            ExecuteCore(*current_core_to_execute, thread, tight_loop);
         }
+        Reschedule();
     } else {
         // Now all cores are at the same global time. So we will run them one after the other
         // with a max slice that is the minimum of all max slices of all cores
@@ -250,26 +295,51 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             kernel->SetRunningCPU(running_core);
             // If we don't have a currently active thread then don't execute instructions,
             // instead advance to the next event and try to yield to the next thread
-            if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
+            Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
+            if (thread == nullptr) {
                 LOG_TRACE(Core_ARM11, "Core {} idling", cpu_core->GetID());
                 cpu_core->GetTimer().Idle();
                 PrepareReschedule();
             } else {
                 // In the rare case the break flag is set (due to exception thrown)
                 // there is probably no need to adjust the timer accordingly.
-                if (tight_loop) {
-                    cpu_core->Run();
-                } else {
-                    cpu_core->Step();
-                }
+                ExecuteCore(*cpu_core, thread, tight_loop);
             }
             max_slice = cpu_core->GetTimer().GetTicks() - start_ticks;
+            Reschedule();
         }
     }
 
-    Reschedule();
-
     return status;
+}
+
+void System::ProcessPendingWork() {
+    // Processes work that needs to run on the emulation thread. This function is called from
+    // two places, the RunLoop slice and during the frame limiter wait period.
+    // To wake up the frame limiter so that it processes more work, other threads must call
+    // NotifyPendingWork.
+
+#ifdef ENABLE_GDBSTUB
+    if (GDBStub::IsServerEnabled()) {
+        GDBStub::HandlePackets(*this);
+    }
+#endif
+
+#ifdef ENABLE_SCRIPTING
+    if (rpc_server) {
+        rpc_server->ProcessCoreRequests();
+    }
+#endif
+}
+
+void System::ProcessPendingWorkUntil(std::chrono::steady_clock::time_point deadline) {
+    do {
+        ProcessPendingWork();
+    } while (pending_work_event.WaitUntil(deadline));
+}
+
+void System::NotifyPendingWork() {
+    pending_work_event.Set();
 }
 
 bool System::SendSignal(System::Signal signal, u32 param) {
@@ -476,7 +546,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
 
 void System::PrepareReschedule() {
     running_core->PrepareReschedule();
-    reschedule_pending = true;
+    curr_core_reschedule_pending = true;
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
@@ -493,20 +563,27 @@ double System::GetStableFrameTimeScale() {
 }
 
 void System::Reschedule() {
-    if (!reschedule_pending) {
+    if (!curr_core_reschedule_pending) {
         return;
     }
 
-    reschedule_pending = false;
-    for (const auto& core : cpu_cores) {
-        LOG_TRACE(Core_ARM11, "Reschedule core {}", core->GetID());
-        kernel->GetThreadManager(core->GetID()).Reschedule();
-    }
+    curr_core_reschedule_pending = false;
+    kernel->GetThreadManager(running_core->GetID()).Reschedule();
 }
 
 System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
                                   Frontend::EmuWindow* secondary_window,
                                   Kernel::MemoryMode memory_mode, u32 num_cores) {
+    // Notification for system initialization (either boot or savestate).
+    if (on_init_callback) {
+        on_init_callback(true);
+    }
+    SCOPE_EXIT({
+        if (on_init_callback) {
+            on_init_callback(false);
+        }
+    });
+
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     memory = std::make_unique<Memory::MemorySystem>(*this);
@@ -533,6 +610,13 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         }
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
+#ifdef HAVE_FASTINTERP
+    } else if (Settings::values.use_fastinterp) {
+        for (u32 i = 0; i < num_cores; ++i) {
+            cpu_cores.push_back(std::make_shared<FastInterp::ARM_FastInterp>(*this, *memory, i,
+                                                                             timing->GetTimer(i)));
+        }
+#endif
     } else {
         for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
@@ -555,12 +639,6 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     dsp_core->SetSink(Settings::values.output_type.GetValue(),
                       Settings::values.output_device.GetValue());
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
-
-#ifdef ENABLE_SCRIPTING
-    if (Settings::values.enable_rpc_server.GetValue()) {
-        rpc_server = std::make_unique<RPC::Server>(*this);
-    }
-#endif
 
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
@@ -596,6 +674,13 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     LOG_DEBUG(Core, "Initialized OK");
 
     is_powered_on = true;
+
+#ifdef ENABLE_SCRIPTING
+    // Started last and stopped first in Shutdown, so requests never see a partially built system
+    if (Settings::values.enable_rpc_server.GetValue()) {
+        rpc_server = std::make_unique<RPC::Server>(*this);
+    }
+#endif
 
     return ResultStatus::Success;
 }
@@ -690,6 +775,11 @@ void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> im
 
 void System::Shutdown(bool is_deserializing) {
 
+#ifdef ENABLE_SCRIPTING
+    // Stop the RPC server before anything its requests may touch is torn down
+    rpc_server.reset();
+#endif
+
     // Shutdown emulation session
     is_powered_on = false;
 
@@ -703,9 +793,6 @@ void System::Shutdown(bool is_deserializing) {
         app_loader.reset();
     }
     custom_tex_manager.reset();
-#ifdef ENABLE_SCRIPTING
-    rpc_server.reset();
-#endif
     archive_manager.reset();
     service_manager.reset();
     dsp_core.reset();
@@ -762,8 +849,13 @@ void System::Reset() {
 
 void System::ApplySettings() {
 #ifdef ENABLE_GDBSTUB
-    GDBStub::SetServerPort(Settings::values.gdbstub_port.GetValue());
-    GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
+    if (override_gdb_port != -1) {
+        GDBStub::SetServerPort(override_gdb_port);
+        GDBStub::ToggleServer(true);
+    } else {
+        GDBStub::SetServerPort(Settings::values.gdbstub_port.GetValue());
+        GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
+    }
 #endif
 
     if (gpu) {
@@ -831,6 +923,19 @@ void System::EjectCartridge() {
 
 bool System::IsInitialSetup() {
     return app_loader && app_loader->DoingInitialSetup();
+}
+
+void System::DebugUnscheduleAllThreadsFromFrontend(bool unschedule) {
+    if (!is_powered_on)
+        return;
+
+    for (auto proc : kernel->GetProcessList()) {
+        if (unschedule) {
+            proc->SetUnscheduleMode(Kernel::UnscheduleMode::FRONTEND);
+        } else {
+            proc->ClearUnscheduleMode(Kernel::UnscheduleMode::FRONTEND);
+        }
+    }
 }
 
 template <class Archive>

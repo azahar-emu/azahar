@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -21,6 +21,7 @@ import androidx.core.view.updatePadding
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -28,19 +29,17 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import info.debatty.java.stringsimilarity.Jaccard
 import info.debatty.java.stringsimilarity.JaroWinkler
-import kotlinx.coroutines.Dispatchers
+import java.time.temporal.ChronoField
+import java.util.Locale
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
-import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentSearchBinding
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.model.Game
-import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
-import java.time.temporal.ChronoField
-import java.util.Locale
 
 class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
@@ -49,6 +48,9 @@ class SearchFragment : Fragment() {
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
     private lateinit var gameAdapter: GameAdapter
+
+    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val settings get() = settingsViewModel.settings
 
     private val openImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -61,7 +63,13 @@ class SearchFragment : Fragment() {
     private val onCompressDecompressLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri: Uri? ->
-        GamesFragment.doCompression(this, gamesViewModel, pendingCompressInvocation, uri, shouldCompress)
+        GamesFragment.doCompression(
+            this,
+            gamesViewModel,
+            pendingCompressInvocation,
+            uri,
+            shouldCompress
+        )
         pendingCompressInvocation = null
     }
 
@@ -97,6 +105,7 @@ class SearchFragment : Fragment() {
         gameAdapter = GameAdapter(
             requireActivity() as AppCompatActivity,
             inflater,
+            settings,
             openImageLauncher,
             onRequestCompressOrDecompress = { inputPath, suggestedName, shouldCompress ->
                 pendingCompressInvocation = inputPath
@@ -184,14 +193,16 @@ class SearchFragment : Fragment() {
             R.id.chip_recently_played -> {
                 baseList.filter {
                     val lastPlayedTime = preferences.getLong(it.keyLastPlayedTime, 0L)
-                    lastPlayedTime > (System.currentTimeMillis() - ChronoField.MILLI_OF_DAY.range().maximum)
+                    lastPlayedTime >
+                        (System.currentTimeMillis() - ChronoField.MILLI_OF_DAY.range().maximum)
                 }
             }
 
             R.id.chip_recently_added -> {
                 baseList.filter {
                     val addedTime = preferences.getLong(it.keyAddedToLibraryTime, 0L)
-                    addedTime > (System.currentTimeMillis() - ChronoField.MILLI_OF_DAY.range().maximum)
+                    addedTime >
+                        (System.currentTimeMillis() - ChronoField.MILLI_OF_DAY.range().maximum)
                 }
             }
 
@@ -242,54 +253,53 @@ class SearchFragment : Fragment() {
         }
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { view: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            val extraListSpacing = resources.getDimensionPixelSize(R.dimen.spacing_med)
-            val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
-            val spacingNavigationRail =
-                resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
-            val chipSpacing = resources.getDimensionPixelSize(R.dimen.spacing_chip)
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { view: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+        val extraListSpacing = resources.getDimensionPixelSize(R.dimen.spacing_med)
+        val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
+        val spacingNavigationRail =
+            resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
+        val chipSpacing = resources.getDimensionPixelSize(R.dimen.spacing_chip)
 
-            binding.constraintSearch.updatePadding(
-                left = barInsets.left + cutoutInsets.left,
-                top = barInsets.top,
-                right = barInsets.right + cutoutInsets.right
+        binding.constraintSearch.updatePadding(
+            left = barInsets.left + cutoutInsets.left,
+            top = barInsets.top,
+            right = barInsets.right + cutoutInsets.right
+        )
+
+        binding.gridGamesSearch.updatePadding(
+            top = extraListSpacing,
+            bottom = barInsets.bottom + spacingNavigation + extraListSpacing
+        )
+        binding.noResultsView.updatePadding(bottom = spacingNavigation + barInsets.bottom)
+
+        val mlpDivider = binding.divider.layoutParams as ViewGroup.MarginLayoutParams
+        if (view.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
+            binding.frameSearch.updatePadding(left = spacingNavigationRail)
+            binding.gridGamesSearch.updatePadding(left = spacingNavigationRail)
+            binding.noResultsView.updatePadding(left = spacingNavigationRail)
+            binding.chipGroup.updatePadding(
+                left = chipSpacing + spacingNavigationRail,
+                right = chipSpacing
             )
-
-            binding.gridGamesSearch.updatePadding(
-                top = extraListSpacing,
-                bottom = barInsets.bottom + spacingNavigation + extraListSpacing
+            mlpDivider.leftMargin = chipSpacing + spacingNavigationRail
+            mlpDivider.rightMargin = chipSpacing
+        } else {
+            binding.frameSearch.updatePadding(right = spacingNavigationRail)
+            binding.gridGamesSearch.updatePadding(right = spacingNavigationRail)
+            binding.noResultsView.updatePadding(right = spacingNavigationRail)
+            binding.chipGroup.updatePadding(
+                left = chipSpacing,
+                right = chipSpacing + spacingNavigationRail
             )
-            binding.noResultsView.updatePadding(bottom = spacingNavigation + barInsets.bottom)
-
-            val mlpDivider = binding.divider.layoutParams as ViewGroup.MarginLayoutParams
-            if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
-                binding.frameSearch.updatePadding(left = spacingNavigationRail)
-                binding.gridGamesSearch.updatePadding(left = spacingNavigationRail)
-                binding.noResultsView.updatePadding(left = spacingNavigationRail)
-                binding.chipGroup.updatePadding(
-                    left = chipSpacing + spacingNavigationRail,
-                    right = chipSpacing
-                )
-                mlpDivider.leftMargin = chipSpacing + spacingNavigationRail
-                mlpDivider.rightMargin = chipSpacing
-            } else {
-                binding.frameSearch.updatePadding(right = spacingNavigationRail)
-                binding.gridGamesSearch.updatePadding(right = spacingNavigationRail)
-                binding.noResultsView.updatePadding(right = spacingNavigationRail)
-                binding.chipGroup.updatePadding(
-                    left = chipSpacing,
-                    right = chipSpacing + spacingNavigationRail
-                )
-                mlpDivider.leftMargin = chipSpacing
-                mlpDivider.rightMargin = chipSpacing + spacingNavigationRail
-            }
-            binding.divider.layoutParams = mlpDivider
-
-            windowInsets
+            mlpDivider.leftMargin = chipSpacing
+            mlpDivider.rightMargin = chipSpacing + spacingNavigationRail
         }
+        binding.divider.layoutParams = mlpDivider
+
+        windowInsets
+    }
 }

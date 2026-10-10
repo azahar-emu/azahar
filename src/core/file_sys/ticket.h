@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -108,9 +108,13 @@ public:
 
         ContentIndex() {}
 
-        void Load(Ticket* p, const std::vector<u8>& data) {
-            parent = p;
+        void Load(u64 title_id_, u64 ticket_id_, const std::vector<u8>& data) {
+            title_id = title_id_;
+            ticket_id = ticket_id_;
             content_index = data;
+            loaded = true;
+            initialized = false;
+            rights.clear();
         }
 
         const std::vector<u8>& GetRaw() const {
@@ -125,7 +129,9 @@ public:
         bool initialized = false;
         std::vector<u8> content_index;
         std::vector<RightsField> rights;
-        Ticket* parent = nullptr;
+        u64 title_id = 0;
+        u64 ticket_id = 0;
+        bool loaded = false;
     };
 
 private:

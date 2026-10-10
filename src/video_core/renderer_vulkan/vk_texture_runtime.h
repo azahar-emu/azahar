@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #pragma once
 
@@ -125,8 +125,12 @@ public:
         return renderpass_cache;
     }
 
-    /// Returns the removal threshold ticks for the garbage collector
-    u32 RemoveThreshold();
+    /// Gets an opaque tick-value used to indicate to the garbage collector when a surface was made.
+    u64 GetResourceTick();
+
+    /// Gets an opaque tick-value used to indicate to the garbage collector what surfaces can be
+    /// safely deleted.
+    u64 GetResourceFreeTick();
 
     /// Submits and waits for current GPU work.
     void Finish();

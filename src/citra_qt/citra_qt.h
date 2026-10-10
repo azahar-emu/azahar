@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -67,7 +67,7 @@ namespace Camera {
 class QtMultimediaCameraHandlerFactory;
 }
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 namespace DiscordRPC {
 class DiscordInterface;
 }
@@ -103,6 +103,9 @@ class GMainWindow : public QMainWindow {
 
 public:
     void filterBarSetChecked(bool state);
+#ifdef _WIN32
+    void UpdateScrollBarStyle();
+#endif
     void UpdateUITheme();
 
     explicit GMainWindow(Core::System& system);
@@ -110,7 +113,7 @@ public:
 
     GameList* game_list;
     std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 #endif
 
@@ -151,6 +154,7 @@ signals:
     void InfoLEDColorChanged();
     // Signal that tells widgets to update icons to use the current theme
     void UpdateThemedIcons();
+    void InstalledTitlesChanged();
 
 private:
     void InitializeWidgets();
@@ -174,7 +178,7 @@ private:
     void BootGame(const QString& filename);
     void ShutdownGame();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     void SetDiscordEnabled(bool state);
 #endif
     void LoadAmiibo(const QString& filename);
@@ -228,7 +232,6 @@ private:
                             const bool& skip_tryexec);
 
     void ShowCommandOutput(std::string title, std::string message);
-    void ShowFFmpegErrorMessage();
 
 private slots:
     void OnResumeGame(bool first_start);
@@ -264,6 +267,8 @@ private slots:
     void OnLoadAmiibo();
     void OnRemoveAmiibo();
     void OnOpenCitraFolder();
+    void OnOpenNANDFolder();
+    void OnOpenSDMCFolder();
     void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
     void InitializeHotkeys();
@@ -290,16 +295,16 @@ private slots:
     void OnCloseMovie();
     void OnSaveMovie();
     void OnCaptureScreenshot();
-    void OnDumpVideo();
     void OnCompressFile();
     void OnDecompressFile();
-#ifdef _WIN32
-    void OnOpenFFmpeg();
-#endif
+#ifdef ENABLE_FFMPEG
+    void OnDumpVideo();
     void OnStartVideoDumping();
     void StartVideoDumping(const QString& path);
     void OnStopVideoDumping();
+#endif
     void OnCoreError(Core::System::ResultStatus, std::string);
+    bool ShowExceptionDialog(Core::System::ResultStatus result, const std::string& details);
     /// Called whenever a user selects Help->About Azahar
     void OnMenuAboutCitra();
 
@@ -406,23 +411,25 @@ private:
     // Whether game was paused due to stopping video dumping
     bool game_paused_for_dumping = false;
 
+    int gdbport_from_arg = -1;
+
     QString gl_renderer;
     std::vector<QString> physical_devices;
 
     // Debugger panes
-    ProfilerWidget* profilerWidget;
+    ProfilerWidget* profilerWidget{};
 #if MICROPROFILE_ENABLED
-    MicroProfileDialog* microProfileDialog;
+    MicroProfileDialog* microProfileDialog{};
 #endif
-    RegistersWidget* registersWidget;
-    GPUCommandStreamWidget* graphicsWidget;
-    GPUCommandListWidget* graphicsCommandsWidget;
-    GraphicsBreakPointsWidget* graphicsBreakpointsWidget;
-    GraphicsVertexShaderWidget* graphicsVertexShaderWidget;
-    GraphicsTracingWidget* graphicsTracingWidget;
-    IPCRecorderWidget* ipcRecorderWidget;
-    LLEServiceModulesWidget* lleServiceModulesWidget;
-    WaitTreeWidget* waitTreeWidget;
+    RegistersWidget* registersWidget{};
+    GPUCommandStreamWidget* graphicsWidget{};
+    GPUCommandListWidget* graphicsCommandsWidget{};
+    GraphicsBreakPointsWidget* graphicsBreakpointsWidget{};
+    GraphicsVertexShaderWidget* graphicsVertexShaderWidget{};
+    GraphicsTracingWidget* graphicsTracingWidget{};
+    IPCRecorderWidget* ipcRecorderWidget{};
+    LLEServiceModulesWidget* lleServiceModulesWidget{};
+    WaitTreeWidget* waitTreeWidget{};
 
     QAction* actions_recent_files[max_recent_files_item];
     std::array<QAction*, Core::SaveStateSlotCount> actions_load_state;
@@ -439,7 +446,8 @@ private:
     QAction* action_secondary_swap_screen;
     QAction* action_secondary_rotate_screen;
 
-    QTranslator translator;
+    QTranslator qtTranslator;
+    QTranslator citraTranslator;
 
     // stores default icon theme search paths for the platform
     QStringList default_theme_paths;
@@ -459,6 +467,9 @@ private:
 #endif
 
 protected:
+#ifdef _WIN32
+    void changeEvent(QEvent* event) override;
+#endif
     void dropEvent(QDropEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dragMoveEvent(QDragMoveEvent* event) override;

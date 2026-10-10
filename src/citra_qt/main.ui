@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Azahar</string>
+   <string notr="true">Azahar</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -76,6 +76,14 @@
      <addaction name="action_Load_Amiibo"/>
      <addaction name="action_Remove_Amiibo"/>
     </widget>
+    <widget class="QMenu" name="menu_Open_Folder">
+     <property name="title">
+      <string>Open Azahar Folder</string>
+     </property>
+     <addaction name="action_Open_Citra_Folder"/>
+     <addaction name="action_Open_NAND_Folder"/>
+     <addaction name="action_Open_SDMC_Folder"/>
+    </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
     <addaction name="action_Connect_Artic"/>
@@ -87,7 +95,7 @@
     <addaction name="separator"/>
     <addaction name="menu_Amiibo"/>
     <addaction name="separator"/>
-    <addaction name="action_Open_Citra_Folder"/>
+    <addaction name="menu_Open_Folder"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
@@ -213,6 +221,9 @@
      <addaction name="action_Debug_Pause"/>
      <addaction name="action_Debug_Resume"/>
      <addaction name="action_Debug_Step"/>
+     <addaction name="separator"/>
+     <addaction name="action_Debug_Unschedule_All"/>
+     <addaction name="action_Debug_Schedule_All"/>
     </widget>
      <addaction name="menu_Debug"/>
     <addaction name="separator"/>
@@ -262,37 +273,37 @@
   </action>
   <action name="action_Boot_Home_Menu_JPN">
    <property name="text">
-    <string>JPN</string>
+    <string notr="true">JPN</string>
    </property>
   </action>
   <action name="action_Boot_Home_Menu_USA">
    <property name="text">
-    <string>USA</string>
+    <string notr="true">USA</string>
    </property>
   </action>
   <action name="action_Boot_Home_Menu_EUR">
    <property name="text">
-    <string>EUR</string>
+    <string notr="true">EUR</string>
    </property>
   </action>
   <action name="action_Boot_Home_Menu_AUS">
    <property name="text">
-    <string>AUS</string>
+    <string notr="true">AUS</string>
    </property>
   </action>
   <action name="action_Boot_Home_Menu_CHN">
    <property name="text">
-    <string>CHN</string>
+    <string notr="true">CHN</string>
    </property>
   </action>
   <action name="action_Boot_Home_Menu_KOR">
    <property name="text">
-    <string>KOR</string>
+    <string notr="true">KOR</string>
    </property>
   </action>
   <action name="action_Boot_Home_Menu_TWN">
    <property name="text">
-    <string>TWN</string>
+    <string notr="true">TWN</string>
    </property>
   </action>
   <action name="action_Exit">
@@ -487,6 +498,22 @@
     <string>Debug Step</string>
    </property>
   </action>
+   <action name="action_Debug_Unschedule_All">
+     <property name="enabled">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Debug Unschedule All</string>
+     </property>
+   </action>
+   <action name="action_Debug_Schedule_All">
+     <property name="enabled">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Debug Schedule All</string>
+     </property>
+   </action>
   <action name="action_Dump_Video">
    <property name="checkable">
     <bool>true</bool>
@@ -725,7 +752,17 @@
   </action>
   <action name="action_Open_Citra_Folder">
    <property name="text">
-    <string>Open Azahar Folder</string>
+    <string>User Folder</string>
+   </property>
+  </action>
+  <action name="action_Open_NAND_Folder">
+   <property name="text">
+    <string>NAND Folder</string>
+   </property>
+  </action>
+  <action name="action_Open_SDMC_Folder">
+   <property name="text">
+    <string>SDMC Folder</string>
    </property>
   </action>
   <action name="action_Configure_Current_Game">

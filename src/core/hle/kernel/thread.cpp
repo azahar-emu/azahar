@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <algorithm>
 #include <climits>
@@ -80,7 +80,7 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
         }
     }
     ar & wakeup_callback;
-    ar & debug_break;
+    ar & unschedule_mode;
 }
 SERIALIZE_IMPL(Thread)
 
@@ -148,6 +148,14 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
     std::shared_ptr<Process> previous_process = nullptr;
 
     Core::Timing& timing = kernel.timing;
+
+    // On real ARM11 a thread context switch (exception entry/return) clears the CPU's local
+    // exclusive monitor, so a LDREX reservation never survives a reschedule. The HLE switch
+    // replaces that exception path, so we must clear the reservation explicitly. Without this,
+    // a thread preempted between LDREX and STREX can have its STREX spuriously succeed (or a
+    // stale reservation corrupt another thread's atomic), breaking guest LightLocks/mutexes and
+    // desyncing multi-threaded scheduling.
+    cpu->ClearExclusiveState();
 
     // Save context for previous thread
     if (previous_thread) {
@@ -545,12 +553,20 @@ VAddr Thread::GetCommandBufferAddress() const {
     return GetTLSAddress() + command_header_offset;
 }
 
-bool Thread::SetDebugBreak(bool _debug_break) {
-    if (debug_break == _debug_break) {
-        return false;
-    }
-    debug_break = _debug_break;
-    return true;
+bool Thread::SetUnscheduleMode(UnscheduleMode mode) {
+    UnscheduleMode old = unschedule_mode;
+
+    unschedule_mode |= mode;
+
+    return unschedule_mode != old;
+}
+
+bool Thread::ClearUnscheduleMode(UnscheduleMode mode) {
+    UnscheduleMode old = unschedule_mode;
+
+    unschedule_mode &= ~mode;
+
+    return unschedule_mode != old;
 }
 
 CpuLimiter::~CpuLimiter() {}

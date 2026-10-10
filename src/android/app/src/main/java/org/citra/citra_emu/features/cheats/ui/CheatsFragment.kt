@@ -1,6 +1,6 @@
-// Copyright 2023 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.cheats.ui
 
@@ -32,7 +32,9 @@ import org.citra.citra_emu.ui.TwoPaneOnBackPressedCallback
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
-class CheatsFragment : Fragment(), SlidingPaneLayout.PanelSlideListener {
+class CheatsFragment :
+    Fragment(),
+    SlidingPaneLayout.PanelSlideListener {
     private var cheatListLastFocus: View? = null
     private var cheatDetailsLastFocus: View? = null
 
@@ -141,12 +143,12 @@ class CheatsFragment : Fragment(), SlidingPaneLayout.PanelSlideListener {
 
     override fun onPanelSlide(panel: View, slideOffset: Float) {}
     override fun onPanelOpened(panel: View) {
-        val rtl = ViewCompat.getLayoutDirection(panel) == ViewCompat.LAYOUT_DIRECTION_RTL
+        val rtl = panel.layoutDirection == View.LAYOUT_DIRECTION_RTL
         cheatDetailsLastFocus!!.requestFocus(if (rtl) View.FOCUS_LEFT else View.FOCUS_RIGHT)
     }
 
     override fun onPanelClosed(panel: View) {
-        val rtl = ViewCompat.getLayoutDirection(panel) == ViewCompat.LAYOUT_DIRECTION_RTL
+        val rtl = panel.layoutDirection == View.LAYOUT_DIRECTION_RTL
         cheatListLastFocus!!.requestFocus(if (rtl) View.FOCUS_RIGHT else View.FOCUS_LEFT)
     }
 
@@ -157,12 +159,15 @@ class CheatsFragment : Fragment(), SlidingPaneLayout.PanelSlideListener {
     }
 
     private fun onSelectedCheatChanged(selectedCheat: Cheat?) {
-        val cheatSelected = selectedCheat != null || cheatsViewModel.isEditing.value!!
+        val cheatSelected = selectedCheat != null || cheatsViewModel.isEditing.value
         if (!cheatSelected && binding.slidingPaneLayout.isOpen) {
             binding.slidingPaneLayout.close()
         }
-        binding.slidingPaneLayout.lockMode =
-            if (cheatSelected) SlidingPaneLayout.LOCK_MODE_UNLOCKED else SlidingPaneLayout.LOCK_MODE_LOCKED_CLOSED
+        binding.slidingPaneLayout.lockMode = if (cheatSelected) {
+            SlidingPaneLayout.LOCK_MODE_UNLOCKED
+        } else {
+            SlidingPaneLayout.LOCK_MODE_LOCKED_CLOSED
+        }
     }
 
     fun onListViewFocusChange(hasFocus: Boolean) {
@@ -203,7 +208,8 @@ class CheatsFragment : Fragment(), SlidingPaneLayout.PanelSlideListener {
             val keyboardInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
 
             // Set keyboard insets if the system supports smooth keyboard animations
-            val mlpDetails = binding.cheatDetailsContainer.layoutParams as ViewGroup.MarginLayoutParams
+            val mlpDetails = binding.cheatDetailsContainer.layoutParams
+                as ViewGroup.MarginLayoutParams
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
                 if (keyboardInsets.bottom > 0) {
                     mlpDetails.bottomMargin = keyboardInsets.bottom
@@ -231,14 +237,16 @@ class CheatsFragment : Fragment(), SlidingPaneLayout.PanelSlideListener {
                         runningAnimations: List<WindowInsetsAnimationCompat>
                     ): WindowInsetsCompat {
                         val mlpDetails =
-                            binding.cheatDetailsContainer.layoutParams as ViewGroup.MarginLayoutParams
+                            binding.cheatDetailsContainer.layoutParams
+                                as ViewGroup.MarginLayoutParams
                         keyboardInsets = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
                         barInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
                         mlpDetails.bottomMargin = keyboardInsets.coerceAtLeast(barInsets)
                         binding.cheatDetailsContainer.layoutParams = mlpDetails
                         return insets
                     }
-                })
+                }
+            )
         }
     }
 }

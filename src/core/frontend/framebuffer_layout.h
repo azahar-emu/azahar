@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #pragma once
 
@@ -32,13 +32,14 @@ struct FramebufferLayout {
     bool bottom_screen_enabled;
     Common::Rectangle<u32> top_screen;
     Common::Rectangle<u32> bottom_screen;
+    // is_rotated is true when the screen is in landscape mode - not sure why!
     bool is_rotated = true;
-    bool is_portrait = false;
-    bool additional_screen_enabled;
+    bool additional_screen_enabled = false;
+    // top_opacity is currently not used but could be used in the future
     float top_opacity = 1.0f;
     float bottom_opacity = 1.0f;
+    bool additional_screen_is_bottom = false;
     Common::Rectangle<u32> additional_screen;
-
     CardboardSettings cardboard;
 
     /**
@@ -46,6 +47,15 @@ struct FramebufferLayout {
      * screen.
      */
     u32 GetScalingRatio() const;
+
+    /**
+     * Check if the given x/y coordinates are within the touchpad specified by the framebuffer
+     * layout
+     * @param framebuffer_x Framebuffer x-coordinate to check
+     * @param framebuffer_y Framebuffer y-coordinate to check
+     * @return True if the coordinates are within the touchpad, otherwise false
+     */
+    bool IsWithinTouchscreen(unsigned framebuffer_x, unsigned framebuffer_y) const;
 
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
 

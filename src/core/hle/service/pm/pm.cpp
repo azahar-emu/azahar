@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "core/core.h"
 #include "core/hle/service/pm/pm.h"
@@ -12,7 +12,7 @@ namespace Service::PM {
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     std::make_shared<PM_APP>(system)->InstallAsService(service_manager);
-    std::make_shared<PM_DBG>()->InstallAsService(service_manager);
+    std::make_shared<PM_DBG>(system)->InstallAsService(service_manager);
 }
 
 } // namespace Service::PM

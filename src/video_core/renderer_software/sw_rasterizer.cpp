@@ -1,6 +1,6 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <boost/container/static_vector.hpp>
 #include "common/logging/log.h"
@@ -243,7 +243,8 @@ void RasterizerSoftware::ProcessTriangle(const Vertex& v0, const Vertex& v1, con
         screen_to_rasterizer_coords(v2.screenpos),
     };
 
-    if (regs.rasterizer.cull_mode == RasterizerRegs::CullMode::KeepAll) {
+    if (regs.rasterizer.cull_mode == RasterizerRegs::CullMode::KeepAll ||
+        regs.rasterizer.cull_mode == RasterizerRegs::CullMode::KeepAll2) {
         // Make sure we always end up with a triangle wound counter-clockwise
         if (!reversed && SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0) {
             ProcessTriangle(v0, v2, v1, true);

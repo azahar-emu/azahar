@@ -68,9 +68,7 @@
     <string name="preferences_graphics">Grafikk</string>
     <string name="preferences_audio">Lyd</string>
     <string name="preferences_debug">Feilsøk</string>
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Ditt ROM er kryptert</string>
-    <string name="loader_error_invalid_format">Ugyldig ROM format </string>
     <string name="emulation_show_fps">Vis FPS</string>
     <string name="emulation_configure_controls">Konfigurer Kontroller</string>
     <string name="emulation_edit_layout">Endre Utseende </string>

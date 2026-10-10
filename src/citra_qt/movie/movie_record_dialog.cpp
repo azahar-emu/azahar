@@ -1,6 +1,6 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright 2020-2025 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <QFileDialog>
 #include <QPushButton>
@@ -47,7 +47,7 @@ QString MovieRecordDialog::GetAuthor() const {
 void MovieRecordDialog::OnToolButtonClicked() {
     const QString path =
         QFileDialog::getSaveFileName(this, tr("Record Movie"), UISettings::values.movie_record_path,
-                                     tr("Citra TAS Movie (*.ctm)"));
+                                     tr("Citra TAS Movie") + QStringLiteral(" (*.ctm)"));
     if (path.isEmpty()) {
         return;
     }

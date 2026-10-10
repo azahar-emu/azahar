@@ -1,13 +1,13 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
 import org.citra.citra_emu.databinding.ListItemSettingBinding
-import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
+import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
@@ -42,13 +42,13 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             is MultiChoiceSetting -> {
                 val resMgr = binding.textSettingDescription.context.resources
                 val values = resMgr.getIntArray(item.valuesId)
-                var resList:List<String> = emptyList();
+                var resList: List<String> = emptyList()
                 values.forEachIndexed { i: Int, value: Int ->
                     if ((setting as MultiChoiceSetting).selectedValues.contains(value)) {
-                     resList = resList + resMgr.getStringArray(item.choicesId)[i];
+                        resList = resList + resMgr.getStringArray(item.choicesId)[i]
                     }
                 }
-                return resList.joinToString();
+                return resList.joinToString()
             }
 
             else -> return ""
@@ -57,7 +57,7 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
 
     override fun onClick(clicked: View) {
         if (!setting.isEditable || !setting.isEnabled) {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting.disabledMessage)
             return
         }
 
@@ -73,7 +73,7 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
         if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting.disabledMessage)
         }
         return false
     }

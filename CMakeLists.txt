@@ -108,7 +108,8 @@ endif()
 # Track which options were explicitly set by the user (for libretro conflict detection)
 set(_LIBRETRO_INCOMPATIBLE_OPTIONS
     ENABLE_SDL2 ENABLE_QT ENABLE_WEB_SERVICE ENABLE_SCRIPTING ENABLE_GDBSTUB
-    ENABLE_OPENAL ENABLE_ROOM ENABLE_ROOM_STANDALONE ENABLE_CUBEB ENABLE_LIBUSB)
+    ENABLE_OPENAL ENABLE_ROOM ENABLE_ROOM_STANDALONE ENABLE_CUBEB ENABLE_LIBUSB
+    ENABLE_FFMPEG)
 set(_USER_SET_OPTIONS "")
 foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
     if(DEFINED ${_opt})
@@ -117,11 +118,14 @@ foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
 endforeach()
 
 option(ENABLE_SDL2 "Enable using SDL2" ON)
+option(USE_SYSTEM_FAAD "Use the system faad2 lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_SPIRV_TOOLS "Use the system SPIRV-Tools lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_XXHASH "Use the system xxHash lib (instead of the bundled one)" OFF)
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
-option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
+option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" ON)
 option(ENABLE_QT_UPDATE_CHECKER "Enable built-in update checker for the Qt frontend" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
@@ -130,6 +134,7 @@ CMAKE_DEPENDENT_OPTION(ENABLE_ROOM_STANDALONE "Enable generating a standalone de
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(ENABLE_SCRIPTING "Enable RPC server for scripting" ON)
+CMAKE_DEPENDENT_OPTION(ENABLE_SCRIPTING_SYNC "Run scripting RPC requests that access emulated state on the emulation thread, in sync with the core" ON "ENABLE_SCRIPTING" OFF)
 option(ENABLE_GDBSTUB "Enable GDB stub for emulated applications" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT IOS" OFF)
@@ -137,12 +142,14 @@ option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
 
+CMAKE_DEPENDENT_OPTION(ENABLE_FFMPEG "Enable features which require FFmpeg to function" ON "ENABLE_QT" OFF)
+
 CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" ON "NOT ANDROID" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENABLE_OPENGL} "NOT APPLE" OFF)
 # NetBSD doesn't support Vulkan yet, remove this check when it does.
 CMAKE_DEPENDENT_OPTION(ENABLE_VULKAN "Enables the Vulkan renderer" ON "NOT (BSD MATCHES \"NetBSD\")" OFF)
 
-option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
+option(ENABLE_DISCORD_RPC "Enables Discord Rich Presence" OFF)
 
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 
@@ -158,6 +165,8 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via -march=native" OFF)
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+option(CITRA_ADDRESS_SANITIZE "Enable address sanitizer" OFF)
+option(ENABLE_CCACHE "Use ccache to speed up subsequent builds" OFF)
 
 # Handle incompatible options for libretro builds
 if(ENABLE_LIBRETRO)
@@ -205,6 +214,8 @@ if(ENABLE_SSE42 AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64"))
     else()
         SET(SSE42_COMPILE_OPTION -msse4.1 -msse4.2)
     endif()
+    add_compile_options(${SSE42_COMPILE_OPTION})
+    add_compile_definitions(CITRA_HAS_SSE42)
 endif()
 
 include(CitraHandleSystemLibs)
@@ -225,12 +236,20 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
         DESTINATION ${PROJECT_SOURCE_DIR}/.git/hooks)
 endif()
 
-# Use ccache for android if available
+# Use ccache if the user requests it, or if NDK_CCACHE is set on Android
 # =======================================================================
 if (NOT $ENV{NDK_CCACHE} EQUAL "")
-    set(CCACHE_EXE $ENV{NDK_CCACHE})
-    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_EXE})
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_EXE})
+    set(CMAKE_C_COMPILER_LAUNCHER ${NDK_CCACHE})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${NDK_CCACHE})
+elseif (ENABLE_CCACHE)
+    find_program(CCACHE_BINARY ccache)
+    if (CCACHE_BINARY)
+        message(STATUS "Found ccache")
+        set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_BINARY})
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_BINARY})
+    else()
+        message(FATAL_ERROR "ENABLE_CCACHE is on, but ccache was not found.")
+    endif()
 endif()
 
 # Check for LTO support
@@ -247,6 +266,17 @@ if (ENABLE_LTO)
     endif()
 else()
     message(STATUS "LTO disabled")
+endif()
+
+# Address sanitizer
+# =======================================================================
+if (CITRA_ADDRESS_SANITIZE)
+    if (MSVC)
+        add_compile_options(/fsanitize=address)
+    else()
+        add_compile_options(-fsanitize=address)
+        add_link_options(-fsanitize=address)
+    endif()
 endif()
 
 # Check for march=native support
@@ -362,9 +392,16 @@ endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+if (ENABLE_FFMPEG)
+    include(FindFFmpeg)
+    # Currently, specifically FFmpeg 7.x is required. No older, no newer.
+    find_package(FFmpeg 59 REQUIRED COMPONENTS AVUTIL) # 58 is FFmpeg 6.x, 60 is FFmpeg 8.x
+    find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVFILTER SWRESAMPLE)
+endif()
+
 if (ENABLE_QT)
     if (NOT USE_SYSTEM_QT)
-        download_qt(6.9.3)
+        download_qt(6.10.3)
     endif()
 
     find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent)
@@ -411,13 +448,21 @@ if (APPLE)
     endif()
     find_library(AVFOUNDATION_LIBRARY AVFoundation REQUIRED)
     find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
-    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
+    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY})
 
     if (ENABLE_VULKAN AND NOT ENABLE_LIBRETRO)
-        if (NOT USE_SYSTEM_MOLTENVK)
+        if (USE_SYSTEM_MOLTENVK)
+            find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+        else()
             download_moltenvk()
+            if (IOS)
+                set(MOLTENVK_RELATIVE_LIBPATH "static/MoltenVK.xcframework/ios-arm64/libMoltenVK.a")
+            else()
+                set(MOLTENVK_RELATIVE_LIBPATH "dynamic/dylib/macOS/libMoltenVK.dylib")
+            endif()
+            set(MOLTENVK_LIBRARY "${CMAKE_BINARY_DIR}/externals/MoltenVK/MoltenVK/${MOLTENVK_RELATIVE_LIBPATH}")
         endif()
-        find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+
         message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
         set(PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} ${MOLTENVK_LIBRARY})
     endif()
@@ -555,6 +600,16 @@ if (USE_SYSTEM_SOUNDTOUCH)
     add_library(SoundTouch INTERFACE)
     target_link_libraries(SoundTouch INTERFACE "${SOUNDTOUCH_LIBRARIES}")
     target_include_directories(SoundTouch INTERFACE "${SOUNDTOUCH_INCLUDE_DIRS}")
+endif()
+
+if (USE_SYSTEM_XXHASH)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(libxxhash_PKGCONFIG IMPORTED_TARGET libxxhash REQUIRED)
+endif()
+
+if (USE_SYSTEM_FAAD)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(libfaad_PKGCONFIG IMPORTED_TARGET faad2 REQUIRED)
 endif()
 
 add_subdirectory(src)

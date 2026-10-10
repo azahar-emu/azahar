@@ -1,6 +1,6 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include "common/archives.h"
 #include "core/hle/service/cfg/cfg_i.h"
@@ -20,7 +20,7 @@ CFG_I::CFG_I(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "c
         {0x0005, &CFG_I::GetSystemModel, "GetSystemModel"},
         {0x0006, &CFG_I::GetModelNintendo2DS, "GetModelNintendo2DS"},
         {0x0007, nullptr, "WriteToFirstByteCfgSavegame"},
-        {0x0008, nullptr, "TranslateCountryInfo"},
+        {0x0008, &CFG_I::TranslateCountryInfo, "TranslateCountryInfo"},
         {0x0009, &CFG_I::GetCountryCodeString, "GetCountryCodeString"},
         {0x000A, &CFG_I::GetCountryCodeID, "GetCountryCodeID"},
         {0x000B, nullptr, "IsFangateSupported"},

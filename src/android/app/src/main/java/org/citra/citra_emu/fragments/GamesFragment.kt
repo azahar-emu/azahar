@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -29,12 +30,17 @@ import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
+import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
+import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
@@ -49,6 +55,9 @@ class GamesFragment : Fragment() {
     private val homeViewModel: HomeViewModel by activityViewModels()
     private lateinit var gameAdapter: GameAdapter
 
+    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val settings get() = settingsViewModel.settings
+
     private val openImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -59,7 +68,13 @@ class GamesFragment : Fragment() {
     private var pendingCompressInvocation: String? = null
 
     companion object {
-        fun doCompression(fragment: Fragment, gamesViewModel: GamesViewModel, inputPath: String?, outputUri: Uri?, shouldCompress: Boolean) {
+        fun doCompression(
+            fragment: Fragment,
+            gamesViewModel: GamesViewModel,
+            inputPath: String?,
+            outputUri: Uri?,
+            shouldCompress: Boolean
+        ) {
             if (outputUri != null) {
                 val outputPath: String =
                     if (!BuildUtil.isGooglePlayBuild) {
@@ -83,6 +98,7 @@ class GamesFragment : Fragment() {
 
                     fragment.requireActivity().runOnUiThread {
                         dialog.dismiss()
+                        @Suppress("ktlint:standard:max-line-length")
                         val resId = when (status) {
                             NativeLibrary.CompressStatus.SUCCESS -> if (shouldCompress) R.string.compress_success else R.string.decompress_success
                             NativeLibrary.CompressStatus.COMPRESS_UNSUPPORTED -> R.string.compress_unsupported
@@ -138,6 +154,7 @@ class GamesFragment : Fragment() {
         gameAdapter = GameAdapter(
             requireActivity() as AppCompatActivity,
             inflater,
+            settings,
             openImageLauncher,
             onRequestCompressOrDecompress = { inputPath, suggestedName, shouldCompress ->
                 pendingCompressInvocation = inputPath
@@ -226,6 +243,57 @@ class GamesFragment : Fragment() {
         setInsets()
     }
 
+    private fun getMajorVersion(version: String): Int? = version.split('.')[0].toIntOrNull()
+
+    private fun isPrereleaseBuild(): Boolean {
+        val version = BuildConfig.GIT_VERSION
+        return (
+            version.contains("alpha") ||
+                version.contains("beta") ||
+                version.contains("rc") ||
+                version.contains("test")
+            )
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Perform update check
+        @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
+        if (!BuildConfig.DEBUG &&
+            !BuildUtil.isGooglePlayBuild &&
+            BooleanSetting.CHECK_FOR_UPDATES.boolean &&
+            !homeViewModel.updatePromptShown
+        ) {
+            Thread({
+                val checkForPrereleaseUpdates =
+                    isPrereleaseBuild() || (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
+                val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
+
+                if (!latestReleaseTag.isNullOrEmpty() &&
+                    latestReleaseTag != BuildConfig.GIT_VERSION
+                ) {
+                    val latestMajorVersion = getMajorVersion(latestReleaseTag)
+                    val currentMajorVersion = getMajorVersion(BuildConfig.GIT_VERSION)
+                    if (latestMajorVersion != null &&
+                        currentMajorVersion != null &&
+                        currentMajorVersion <= latestMajorVersion
+                    ) {
+                        UpdateAvailableNotificationFragment.newInstance(
+                            latestReleaseTag,
+                            checkForPrereleaseUpdates
+                        )
+                            .show(
+                                requireActivity().supportFragmentManager,
+                                UpdateAvailableNotificationFragment.TAG
+                            )
+                    }
+                }
+            }).start()
+            homeViewModel.updatePromptShown = true
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -247,41 +315,40 @@ class GamesFragment : Fragment() {
         }
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { view: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            val extraListSpacing = resources.getDimensionPixelSize(R.dimen.spacing_large)
-            val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
-            val spacingNavigationRail =
-                resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { view: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+        val extraListSpacing = resources.getDimensionPixelSize(R.dimen.spacing_large)
+        val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
+        val spacingNavigationRail =
+            resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
 
-            binding.gridGames.updatePadding(
-                top = barInsets.top + extraListSpacing,
-                bottom = barInsets.bottom + spacingNavigation + extraListSpacing
-            )
+        binding.gridGames.updatePadding(
+            top = barInsets.top + extraListSpacing,
+            bottom = barInsets.bottom + spacingNavigation + extraListSpacing
+        )
 
-            binding.swipeRefresh.setProgressViewEndTarget(
-                false,
-                barInsets.top + resources.getDimensionPixelSize(R.dimen.spacing_refresh_end)
-            )
+        binding.swipeRefresh.setProgressViewEndTarget(
+            false,
+            barInsets.top + resources.getDimensionPixelSize(R.dimen.spacing_refresh_end)
+        )
 
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
-            val mlpSwipe = binding.swipeRefresh.layoutParams as MarginLayoutParams
-            if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
-                mlpSwipe.leftMargin = leftInsets + spacingNavigationRail
-                mlpSwipe.rightMargin = rightInsets
-            } else {
-                mlpSwipe.leftMargin = leftInsets
-                mlpSwipe.rightMargin = rightInsets + spacingNavigationRail
-            }
-            binding.swipeRefresh.layoutParams = mlpSwipe
-
-            binding.noticeText.updatePadding(bottom = spacingNavigation)
-
-            windowInsets
+        val leftInsets = barInsets.left + cutoutInsets.left
+        val rightInsets = barInsets.right + cutoutInsets.right
+        val mlpSwipe = binding.swipeRefresh.layoutParams as MarginLayoutParams
+        if (view.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
+            mlpSwipe.leftMargin = leftInsets + spacingNavigationRail
+            mlpSwipe.rightMargin = rightInsets
+        } else {
+            mlpSwipe.leftMargin = leftInsets
+            mlpSwipe.rightMargin = rightInsets + spacingNavigationRail
         }
+        binding.swipeRefresh.layoutParams = mlpSwipe
+
+        binding.noticeText.updatePadding(bottom = spacingNavigation)
+
+        windowInsets
+    }
 }
