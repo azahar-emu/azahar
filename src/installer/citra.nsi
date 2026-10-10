@@ -1,6 +1,10 @@
-; Copyright Dolphin Emulator Project / Azahar Emulator Project
+; Copyright Azahar Emulator Project
+; Licensed under GPLv3 or any later version
+; Refer to the LICENSE.txt file included.
+
+; Copyright Dolphin Emulator Project
 ; Licensed under GPLv2 or any later version
-; Refer to the license.txt file included.
+; Refer to the misc/licenses/gplv2.txt file included.
 
 ; Usage:
 ;   get the latest nsis: https://nsis.sourceforge.io/Download
@@ -52,7 +56,7 @@ ShowUnInstDetails show
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 
 ; License page
-!insertmacro MUI_PAGE_LICENSE "..\..\license.txt"
+!insertmacro MUI_PAGE_LICENSE "..\..\LICENSE.txt"
 ; All/Current user selection page
 !insertmacro MULTIUSER_PAGE_INSTALLMODE
 ; Desktop Shortcut page
