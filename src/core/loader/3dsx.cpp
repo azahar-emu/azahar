@@ -14,6 +14,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/loader/3dsx.h"
+#include "core/loader/smdh.h"
 #include "core/memory.h"
 
 namespace Loader {
@@ -346,6 +347,27 @@ ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>
     return ResultStatus::ErrorNotUsed;
 }
 
+ResultStatus Loader::AppLoader_THREEDSX::ReadTitle(std::string& title, bool prefer_update_title) {
+    std::vector<u8> data;
+    Loader::SMDH smdh;
+    ResultStatus result = ReadIcon(data, prefer_update_title);
+    if (result != ResultStatus::Success) {
+        return result;
+    }
+
+    if (!Loader::IsValidSMDH(data)) {
+        return ResultStatus::ErrorInvalidFormat;
+    }
+
+    std::memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
+
+    const auto& short_title = smdh.GetShortTitle(SMDH::TitleLanguage::English);
+    auto title_end = std::find(short_title.begin(), short_title.end(), u'\0');
+    title = Common::UTF16ToUTF8(std::u16string{short_title.begin(), title_end});
+
+    return ResultStatus::Success;
+}
+
 AppLoader::CompressFileInfo AppLoader_THREEDSX::GetCompressFileInfo() {
     CompressFileInfo info;
     info.is_supported = true;
@@ -360,7 +382,8 @@ bool AppLoader_THREEDSX::IsFileCompressed() {
     return file->GetType().HasCompressedType();
 }
 
-ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {
+ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer,
+                                          [[maybe_unused]] bool prefer_update_icon) {
     if (!file->IsOpen())
         return ResultStatus::Error;
 
