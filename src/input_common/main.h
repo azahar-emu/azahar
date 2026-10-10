@@ -1,6 +1,6 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -45,6 +45,13 @@ Common::ParamPackage GetControllerAnalogBinds(const Common::ParamPackage& params
 
 /// Reloads the input devices
 void ReloadInputDevices();
+
+struct BatteryState {
+    float percentage = 1.0f;
+    bool charging = true;
+};
+
+BatteryState GetSystemBatteryState();
 
 namespace Polling {
 

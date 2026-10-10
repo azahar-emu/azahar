@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <iomanip>
 #include <memory>
@@ -271,6 +271,9 @@ void Config::ReadValues() {
     }
     ReadSetting("System", Settings::values.init_ticks_type);
     ReadSetting("System", Settings::values.init_ticks_override);
+    ReadSetting("System", Settings::values.battery_state_source);
+    ReadSetting("System", Settings::values.battery_charging);
+    ReadSetting("System", Settings::values.battery_level);
     ReadSetting("System", Settings::values.plugin_loader_enabled);
     ReadSetting("System", Settings::values.allow_plugin_loader);
     ReadSetting("System", Settings::values.steps_per_hour);

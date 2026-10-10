@@ -1,6 +1,6 @@
-// Copyright 2018 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -30,12 +30,19 @@ public:
     virtual ~State() = default;
 
     virtual Pollers GetPollers(Polling::DeviceType type) = 0;
+
+    virtual void GetSystemBatteryState(float& percentage, bool& charging) = 0;
 };
 
 class NullState : public State {
 public:
     Pollers GetPollers(Polling::DeviceType type) override {
         return {};
+    }
+
+    void GetSystemBatteryState(float& percentage, bool& charging) override {
+        percentage = 1.0f;
+        charging = true;
     }
 };
 

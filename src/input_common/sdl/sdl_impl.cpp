@@ -1,6 +1,6 @@
 // Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <atomic>
@@ -1220,6 +1220,19 @@ SDLState::Pollers SDLState::GetPollers(InputCommon::Polling::DeviceType type) {
     }
 
     return pollers;
+}
+
+void SDLState::GetSystemBatteryState(float& percentage, bool& charging) {
+    int battery_percent;
+    const SDL_PowerState power_state = SDL_GetPowerInfo(nullptr, &battery_percent);
+
+    if (battery_percent >= 0) {
+        percentage = static_cast<float>(battery_percent) / 100.0f;
+    } else {
+        percentage = 1.0f;
+    }
+
+    charging = power_state != SDL_POWERSTATE_ON_BATTERY;
 }
 
 } // namespace SDL
