@@ -162,6 +162,7 @@ jobs:
                --build=missing
                -s os.version=13.4
                -o "*:shared=True"
+               -o "*:with_libfdk_aac=False"
                --requires=ffmpeg/7.1.5
                -c "ffmpeg/*:tools.build:sharedlinkflags+=['-Wl,-flat_namespace']"
                -c "ffmpeg/*:tools.build:exelinkflags+=['-Wl,-flat_namespace']"
