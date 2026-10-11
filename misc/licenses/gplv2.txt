@@ -337,24 +337,3 @@ proprietary programs.  If your program is a subroutine library, you may
 consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
-
-
-The icons used in this project have the following licenses:
-
-Icon Name                          | License       | Origin/Author
----                                | ---           | ---
-checked.png                        | CC BY-ND 3.0  | https://icons8.com
-connected.png                      | CC BY-ND 3.0  | https://icons8.com
-connected_notification.png         | CC BY-ND 3.0  | https://icons8.com
-disconnected.png                   | CC BY-ND 3.0  | https://icons8.com
-failed.png                         | CC BY-ND 3.0  | https://icons8.com
-lock.png                           | CC BY-ND 3.0  | https://icons8.com
-plus_folder.png                    | CC BY-ND 3.0  | https://icons8.com
-bad_folder.png                     | CC BY-ND 3.0  | https://icons8.com
-chip.png                           | CC BY-ND 3.0  | https://icons8.com
-folder.png                         | CC BY-ND 3.0  | https://icons8.com
-plus.png (Default, Dark)           | CC0 1.0       | Designed by BreadFish64 from the Citra team
-plus.png (Colorful, Colorful Dark) | CC BY-ND 3.0  | https://icons8.com
-sd_card.png                        | CC BY-ND 3.0  | https://icons8.com
-star.png                           | CC BY-ND 3.0  | https://icons8.com
-cartridge.png                      | CC0 1.0       | Designed by PabloMK7

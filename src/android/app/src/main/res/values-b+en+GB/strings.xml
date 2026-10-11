@@ -26,7 +26,7 @@
     <string name="select_games_folder">Select Applications Folder</string>
     <string name="select_games_folder_description">Allows Azahar to populate the application list</string>
     <string name="about">About</string>
-    <string name="citra_description">An open-source 3DS emulator</string>
+    <string name="citra_description">An open-source 3DS emulator\nLicensed under GPLv3 or any later version</string>
     <string name="about_description">Build version, credits, and more</string>
     <string name="games_dir_selected">Application directory selected</string>
     <string name="select_citra_user_folder_home_description">Changes the files that Azahar uses to load applications</string>
@@ -349,6 +349,8 @@
     <!-- Debug settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Uses the Just-in-Time (JIT) compiler for CPU emulation. When enabled, game performance is significantly improved.</string>
+    <string name="use_fastinterp">Use Fast Interpreter</string>
+    <string name="use_fastinterp_description">When the CPU JIT is disabled, use the fast interpreter instead of the legacy interpreter. Restart required.</string>
     <string name="hw_shaders">Enable Hardware Shader</string>
     <string name="hw_shaders_description">Uses hardware to emulate 3DS shaders. When enabled, game performance is significantly improved.</string>
     <string name="cpu_clock_speed">CPU Clock Speed</string>
@@ -782,6 +784,11 @@
     <string name="anaglyph">Anaglyph</string>
     <string name="interlaced">Interlaced</string>
     <string name="reverse_interlaced">Reverse Interlaced</string>
+
+    <!-- Texture filters -->
+    <string name="anime4k">Anime4K (OpenGL only)</string>
+    <string name="incompatible_texture_filter">Incompatible texture filter</string>
+    <string name="incompatible_texture_filter_description">The selected texture filter (Anime4K) is not compatible with the Vulkan renderer.\nThe texture filter will be set to None.\nProceed?</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Game Controlled</string>

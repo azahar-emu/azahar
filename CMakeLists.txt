@@ -108,7 +108,8 @@ endif()
 # Track which options were explicitly set by the user (for libretro conflict detection)
 set(_LIBRETRO_INCOMPATIBLE_OPTIONS
     ENABLE_SDL2 ENABLE_QT ENABLE_WEB_SERVICE ENABLE_SCRIPTING ENABLE_GDBSTUB
-    ENABLE_OPENAL ENABLE_ROOM ENABLE_ROOM_STANDALONE ENABLE_CUBEB ENABLE_LIBUSB)
+    ENABLE_OPENAL ENABLE_ROOM ENABLE_ROOM_STANDALONE ENABLE_CUBEB ENABLE_LIBUSB
+    ENABLE_FFMPEG)
 set(_USER_SET_OPTIONS "")
 foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
     if(DEFINED ${_opt})
@@ -133,12 +134,15 @@ CMAKE_DEPENDENT_OPTION(ENABLE_ROOM_STANDALONE "Enable generating a standalone de
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(ENABLE_SCRIPTING "Enable RPC server for scripting" ON)
+CMAKE_DEPENDENT_OPTION(ENABLE_SCRIPTING_SYNC "Run scripting RPC requests that access emulated state on the emulation thread, in sync with the core" ON "ENABLE_SCRIPTING" OFF)
 option(ENABLE_GDBSTUB "Enable GDB stub for emulated applications" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT IOS" OFF)
 option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
+
+CMAKE_DEPENDENT_OPTION(ENABLE_FFMPEG "Enable features which require FFmpeg to function" ON "ENABLE_QT" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" ON "NOT ANDROID" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENABLE_OPENGL} "NOT APPLE" OFF)
@@ -387,6 +391,13 @@ endif()
 # Prefer the -pthread flag on Linux.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+
+if (ENABLE_FFMPEG)
+    include(FindFFmpeg)
+    # Currently, specifically FFmpeg 7.x is required. No older, no newer.
+    find_package(FFmpeg 59 REQUIRED COMPONENTS AVUTIL) # 58 is FFmpeg 6.x, 60 is FFmpeg 8.x
+    find_package(FFmpeg REQUIRED COMPONENTS AVCODEC AVFORMAT AVFILTER SWRESAMPLE)
+endif()
 
 if (ENABLE_QT)
     if (NOT USE_SYSTEM_QT)

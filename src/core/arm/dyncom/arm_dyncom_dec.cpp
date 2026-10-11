@@ -1,6 +1,6 @@
 // Copyright 2012 Michael Kang, 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include "core/arm/dyncom/arm_dyncom_dec.h"
 #include "core/arm/skyeye_common/armsupp.h"

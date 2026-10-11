@@ -1,6 +1,6 @@
 // Copyright 2012 Michael Kang, 2015 Citra Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 /* Notice: this file should not be compiled as is, and is meant to be
    included in other files only. */

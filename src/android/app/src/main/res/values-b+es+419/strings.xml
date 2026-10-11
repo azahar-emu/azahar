@@ -25,7 +25,6 @@
     <string name="select_games_folder">Selecciona el directorio de aplicaciones</string>
     <string name="select_games_folder_description">Permite que Azahar llene la lista de aplicaciones</string>
     <string name="about">Acerca de</string>
-    <string name="citra_description">Un emulador de 3DS de código abierto</string>
     <string name="about_description">Versión de compilación, créditos y más</string>
     <string name="games_dir_selected">Directorio de aplicaciones seleccionado</string>
     <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>

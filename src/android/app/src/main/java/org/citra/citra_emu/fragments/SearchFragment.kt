@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -21,6 +21,7 @@ import androidx.core.view.updatePadding
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -35,6 +36,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentSearchBinding
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
@@ -46,6 +48,9 @@ class SearchFragment : Fragment() {
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
     private lateinit var gameAdapter: GameAdapter
+
+    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val settings get() = settingsViewModel.settings
 
     private val openImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -100,6 +105,7 @@ class SearchFragment : Fragment() {
         gameAdapter = GameAdapter(
             requireActivity() as AppCompatActivity,
             inflater,
+            settings,
             openImageLauncher,
             onRequestCompressOrDecompress = { inputPath, suggestedName, shouldCompress ->
                 pendingCompressInvocation = inputPath
@@ -271,7 +277,7 @@ class SearchFragment : Fragment() {
         binding.noResultsView.updatePadding(bottom = spacingNavigation + barInsets.bottom)
 
         val mlpDivider = binding.divider.layoutParams as ViewGroup.MarginLayoutParams
-        if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
+        if (view.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
             binding.frameSearch.updatePadding(left = spacingNavigationRail)
             binding.gridGamesSearch.updatePadding(left = spacingNavigationRail)
             binding.noResultsView.updatePadding(left = spacingNavigationRail)

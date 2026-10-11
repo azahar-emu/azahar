@@ -1,6 +1,6 @@
 // Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <codecvt>
@@ -24,7 +24,7 @@
 #endif
 
 #include "common/common_paths.h"
-#include "common/dynamic_library/dynamic_library.h"
+#include "common/dynamic_library.h"
 #include "common/file_derived.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"

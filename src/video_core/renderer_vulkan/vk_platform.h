@@ -1,6 +1,6 @@
-// Copyright 2023 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include <variant>
 
 #include "common/common_types.h"
-#include "common/dynamic_library/dynamic_library.h"
+#include "common/dynamic_library.h"
 #include "video_core/renderer_vulkan/vk_common.h"
 
 namespace Frontend {

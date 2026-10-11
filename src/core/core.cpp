@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <stdexcept>
 #include <utility>
@@ -80,9 +80,35 @@ Core::Timing& Global() {
     return System::GetInstance().CoreTiming();
 }
 
-System::System() : movie{*this}, cheat_engine{*this} {}
+System::System() : movie{*this}, cheat_engine{*this} {
+    // Process pending work instead of just sleeping while waiting for the next frame
+    frame_limiter.SetWaitCallback([this](std::chrono::steady_clock::time_point deadline) {
+        ProcessPendingWorkUntil(deadline);
+    });
+}
 
 System::~System() = default;
+
+/**
+ * Executes the thread currently scheduled on the given core. Runs a full slice when tight_loop is
+ * set, a single instruction otherwise, or a single instruction if a debugger asked to step it.
+ */
+static void ExecuteCore(ARM_Interface& core, Kernel::Thread* thread, bool tight_loop) {
+#ifdef ENABLE_GDBSTUB
+    if (thread->gdb_single_step) [[unlikely]] {
+        // Keep a reference to the thread in case it just exits.
+        const auto thread_ref = Kernel::SharedFrom(thread);
+        core.Step();
+        GDBStub::OnSingleStepComplete(thread);
+        return;
+    }
+#endif
+    if (tight_loop) {
+        core.Run();
+    } else {
+        core.Step();
+    }
+}
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
@@ -99,9 +125,10 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         for (auto& cpu_core : cpu_cores) {
             cpu_core->ClearBreakFlag();
         }
-        GDBStub::HandlePacket(*this);
     }
 #endif
+
+    ProcessPendingWork();
 
     Signal signal{Signal::None};
     u32 param{};
@@ -237,16 +264,13 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             running_core = current_core_to_execute;
             kernel->SetRunningCPU(running_core);
         }
-        if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
+        Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
+        if (thread == nullptr) {
             LOG_TRACE(Core_ARM11, "Core {} idling", current_core_to_execute->GetID());
             current_core_to_execute->GetTimer().Idle();
             PrepareReschedule();
         } else {
-            if (tight_loop) {
-                current_core_to_execute->Run();
-            } else {
-                current_core_to_execute->Step();
-            }
+            ExecuteCore(*current_core_to_execute, thread, tight_loop);
         }
         Reschedule();
     } else {
@@ -271,18 +295,15 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             kernel->SetRunningCPU(running_core);
             // If we don't have a currently active thread then don't execute instructions,
             // instead advance to the next event and try to yield to the next thread
-            if (kernel->GetCurrentThreadManager().GetCurrentThread() == nullptr) {
+            Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
+            if (thread == nullptr) {
                 LOG_TRACE(Core_ARM11, "Core {} idling", cpu_core->GetID());
                 cpu_core->GetTimer().Idle();
                 PrepareReschedule();
             } else {
                 // In the rare case the break flag is set (due to exception thrown)
                 // there is probably no need to adjust the timer accordingly.
-                if (tight_loop) {
-                    cpu_core->Run();
-                } else {
-                    cpu_core->Step();
-                }
+                ExecuteCore(*cpu_core, thread, tight_loop);
             }
             max_slice = cpu_core->GetTimer().GetTicks() - start_ticks;
             Reschedule();
@@ -290,6 +311,35 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     }
 
     return status;
+}
+
+void System::ProcessPendingWork() {
+    // Processes work that needs to run on the emulation thread. This function is called from
+    // two places, the RunLoop slice and during the frame limiter wait period.
+    // To wake up the frame limiter so that it processes more work, other threads must call
+    // NotifyPendingWork.
+
+#ifdef ENABLE_GDBSTUB
+    if (GDBStub::IsServerEnabled()) {
+        GDBStub::HandlePackets(*this);
+    }
+#endif
+
+#ifdef ENABLE_SCRIPTING
+    if (rpc_server) {
+        rpc_server->ProcessCoreRequests();
+    }
+#endif
+}
+
+void System::ProcessPendingWorkUntil(std::chrono::steady_clock::time_point deadline) {
+    do {
+        ProcessPendingWork();
+    } while (pending_work_event.WaitUntil(deadline));
+}
+
+void System::NotifyPendingWork() {
+    pending_work_event.Set();
 }
 
 bool System::SendSignal(System::Signal signal, u32 param) {
@@ -590,12 +640,6 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
                       Settings::values.output_device.GetValue());
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
-#ifdef ENABLE_SCRIPTING
-    if (Settings::values.enable_rpc_server.GetValue()) {
-        rpc_server = std::make_unique<RPC::Server>(*this);
-    }
-#endif
-
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
@@ -630,6 +674,13 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     LOG_DEBUG(Core, "Initialized OK");
 
     is_powered_on = true;
+
+#ifdef ENABLE_SCRIPTING
+    // Started last and stopped first in Shutdown, so requests never see a partially built system
+    if (Settings::values.enable_rpc_server.GetValue()) {
+        rpc_server = std::make_unique<RPC::Server>(*this);
+    }
+#endif
 
     return ResultStatus::Success;
 }
@@ -724,6 +775,11 @@ void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> im
 
 void System::Shutdown(bool is_deserializing) {
 
+#ifdef ENABLE_SCRIPTING
+    // Stop the RPC server before anything its requests may touch is torn down
+    rpc_server.reset();
+#endif
+
     // Shutdown emulation session
     is_powered_on = false;
 
@@ -737,9 +793,6 @@ void System::Shutdown(bool is_deserializing) {
         app_loader.reset();
     }
     custom_tex_manager.reset();
-#ifdef ENABLE_SCRIPTING
-    rpc_server.reset();
-#endif
     archive_manager.reset();
     service_manager.reset();
     dsp_core.reset();

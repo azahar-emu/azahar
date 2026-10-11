@@ -25,10 +25,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     common_precompiled_headers.h
     common_types.h
     construct.h
-    dynamic_library/dynamic_library.cpp
-    dynamic_library/dynamic_library.h
-    dynamic_library/ffmpeg.cpp
-    dynamic_library/ffmpeg.h
+    dynamic_library.cpp
+    dynamic_library.h
     error.cpp
     error.h
     expected.h
@@ -155,7 +153,7 @@ endif()
 
 create_target_directory_groups(citra_common)
 
-target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)
+target_link_libraries(citra_common PUBLIC fmt microprofile Boost::boost Boost::serialization Boost::iostreams)
 target_link_libraries(citra_common PRIVATE cryptopp zstd)
 
 if ("x86_64" IN_LIST ARCHITECTURE)

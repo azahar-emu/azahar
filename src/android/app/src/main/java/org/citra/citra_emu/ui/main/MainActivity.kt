@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.ui.main
 
@@ -112,10 +112,14 @@ class MainActivity :
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 
-        window.statusBarColor =
-            ContextCompat.getColor(applicationContext, android.R.color.transparent)
-        window.navigationBarColor =
-            ContextCompat.getColor(applicationContext, android.R.color.transparent)
+        @Suppress("DEPRECATION")
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // ^- These are set to transparent automatically on Vanilla Ice Cream and up.
+            window.statusBarColor =
+                ContextCompat.getColor(applicationContext, android.R.color.transparent)
+            window.navigationBarColor =
+                ContextCompat.getColor(applicationContext, android.R.color.transparent)
+        }
 
         binding.statusBarShade.setBackgroundColor(
             ThemeUtil.getColorWithOpacity(
@@ -327,8 +331,8 @@ class MainActivity :
                         binding.navigationView.height.toFloat() * 2
                     translationY(0f)
                 } else {
-                    if (ViewCompat.getLayoutDirection(binding.navigationView) ==
-                        ViewCompat.LAYOUT_DIRECTION_LTR
+                    if (binding.navigationView.layoutDirection ==
+                        View.LAYOUT_DIRECTION_LTR
                     ) {
                         binding.navigationView.translationX =
                             binding.navigationView.width.toFloat() * -2
@@ -346,8 +350,8 @@ class MainActivity :
                 if (smallLayout) {
                     translationY(binding.navigationView.height.toFloat() * 2)
                 } else {
-                    if (ViewCompat.getLayoutDirection(binding.navigationView) ==
-                        ViewCompat.LAYOUT_DIRECTION_LTR
+                    if (binding.navigationView.layoutDirection ==
+                        View.LAYOUT_DIRECTION_LTR
                     ) {
                         translationX(binding.navigationView.width.toFloat() * -2)
                     } else {

@@ -25,7 +25,6 @@
     <string name="select_games_folder">Vælg applikationsmappe</string>
     <string name="select_games_folder_description">Tillad at Azahar udfylder applikationslisten</string>
     <string name="about">Om</string>
-    <string name="citra_description">En open source 3DS-emulator</string>
     <string name="about_description">Version, krediteringer og mere</string>
     <string name="games_dir_selected">Applikationsmappen er valgt</string>
     <string name="select_citra_user_folder_home_description">Ændrer de filer, som Azahar bruger til at indlæse applikationer</string>

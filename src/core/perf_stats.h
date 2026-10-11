@@ -1,6 +1,6 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <mutex>
 #include "common/bit_field.h"
 #include "common/common_types.h"
@@ -193,7 +194,20 @@ public:
     void AdvanceFrame();
     void WaitOnce();
 
+    using WaitCallback = std::function<void(std::chrono::steady_clock::time_point deadline)>;
+
+    /**
+     * Sets a function the emulation thread calls instead of sleeping when the frame limiter
+     * blocks (frame limiting sleeps and frame advance waits). It must return at the deadline,
+     * and may do work on the emulation thread while waiting.
+     */
+    void SetWaitCallback(WaitCallback callback);
+
 private:
+    void WaitForFrameAdvance();
+
+    WaitCallback wait_callback;
+
     /// Emulated system time (in microseconds) at the last limiter invocation
     std::chrono::microseconds previous_system_time_us{0};
     /// Walltime at the last limiter invocation
