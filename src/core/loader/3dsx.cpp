@@ -368,11 +368,13 @@ ResultStatus Loader::AppLoader_THREEDSX::ReadTitle(std::string& title, bool pref
     return ResultStatus::Success;
 }
 
-AppLoader::CompressFileInfo AppLoader_THREEDSX::GetCompressFileInfo() {
-    CompressFileInfo info;
-    info.is_supported = true;
+AppLoader::LoaderFileInfo AppLoader_THREEDSX::GetLoaderFileInfo() {
+    LoaderFileInfo info{};
+    info.is_valid = true;
+    info.is_compress_supported = true;
+    info.is_bundle_supported = false;
     info.recommended_compressed_extension = "z3dsx";
-    info.recommended_uncompressed_extension = "3dsx";
+    info.recommended_plain_extension = "3dsx";
     info.underlying_magic = std::array<u8, 4>({'3', 'D', 'S', 'X'});
     info.is_compressed = file->GetType().HasCompressedType();
     return info;

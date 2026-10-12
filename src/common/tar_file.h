@@ -67,6 +67,11 @@ public:
 
     std::unique_ptr<FileUtil::IOFileBase> OpenSubFile(const std::string& filename);
 
+    static bool CreateTarFile(const std::string& out_file,
+                              const std::vector<std::pair<std::string, std::string>>& in_files,
+                              Z3DSMetadata&& metadata,
+                              std::function<ProgressCallback>&& progress_callback);
+
 private:
     std::unique_ptr<TarArchiveImpl> impl;
 };

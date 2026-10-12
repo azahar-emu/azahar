@@ -79,6 +79,7 @@ enum class InstallStatus : u32 {
     ErrorAborted,
     ErrorInvalid,
     ErrorEncrypted,
+    ErrorCannotCheckBundle,
 };
 
 enum class ImportTitleContextState : u8 {
@@ -450,8 +451,7 @@ InstallStatus InstallCIA(const std::string& path,
  * that can be installed.
  * @param path file path of the CIA file to check to install
  */
-InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
-                                bool check_encryption);
+InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed, bool& is_bundle);
 
 /**
  * Get CIA metadata information from file.

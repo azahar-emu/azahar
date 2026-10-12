@@ -1404,14 +1404,26 @@ InstallStatus InstallCIA(const std::string& path,
     }
 }
 
-InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
-                                bool check_encryption) {
+InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed, bool& is_bundle) {
     if (!FileUtil::Exists(path)) {
         LOG_ERROR(Service_AM, "File {} does not exist!", path);
         return InstallStatus::ErrorFileNotFound;
     }
 
     std::unique_ptr<FileUtil::IOFileBase> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
+
+    if (auto tar = FileUtil::TarArchive::OpenTarArchive(in_file->OpenCopy())) {
+        auto files = tar->GetFileList();
+        for (const auto& f : files) {
+            if (!f.name.ends_with(".cia") && !f.name.ends_with(".zcia")) {
+                return InstallStatus::ErrorInvalid;
+            }
+        }
+        is_bundle = true;
+        is_compressed = false;
+        return InstallStatus::ErrorCannotCheckBundle;
+    }
+
     is_compressed = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(in_file.get()) != std::nullopt;
     if (is_compressed) {
         in_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(in_file));
@@ -1422,24 +1434,22 @@ InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
         in_file->Seek(0, SEEK_SET);
         const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
 
-        if (check_encryption) {
-            if (tmd.HasEncryptedContent(container.GetHeader())) {
-                return InstallStatus::ErrorEncrypted;
-            }
+        if (tmd.HasEncryptedContent(container.GetHeader())) {
+            return InstallStatus::ErrorEncrypted;
+        }
 
-            for (size_t i = 0; i < tmd.GetContentCount(); i++) {
-                u64 offset = container.GetContentOffset(i);
-                NCCH_Header ncch;
-                const auto read = in_file->ReadAtBytes(&ncch, sizeof(ncch), offset);
-                if (read != sizeof(ncch)) {
-                    return InstallStatus::ErrorInvalid;
-                }
-                if (ncch.magic != FileUtil::MakeMagic('N', 'C', 'C', 'H')) {
-                    return InstallStatus::ErrorInvalid;
-                }
-                if (!ncch.no_crypto) {
-                    return InstallStatus::ErrorEncrypted;
-                }
+        for (size_t i = 0; i < tmd.GetContentCount(); i++) {
+            u64 offset = container.GetContentOffset(i);
+            NCCH_Header ncch;
+            const auto read = in_file->ReadAtBytes(&ncch, sizeof(ncch), offset);
+            if (read != sizeof(ncch)) {
+                return InstallStatus::ErrorInvalid;
+            }
+            if (ncch.magic != FileUtil::MakeMagic('N', 'C', 'C', 'H')) {
+                return InstallStatus::ErrorInvalid;
+            }
+            if (!ncch.no_crypto) {
+                return InstallStatus::ErrorEncrypted;
             }
         }
 

@@ -1112,6 +1112,7 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
     connect(this, &GMainWindow::CompressFinished, this, &GMainWindow::OnCompressFinished);
+    connect(this, &GMainWindow::BundleFinished, this, &GMainWindow::OnBundleFinished);
     connect(this, &GMainWindow::UpdateThemedIcons, multiplayer_state,
             &MultiplayerState::UpdateThemedIcons);
 }
@@ -1232,6 +1233,8 @@ void GMainWindow::ConnectMenuEvents() {
     // Tools
     connect_menu(ui->action_Compress_ROM_File, &GMainWindow::OnCompressFile);
     connect_menu(ui->action_Decompress_ROM_File, &GMainWindow::OnDecompressFile);
+    connect_menu(ui->action_Create_ROM_Bundle, &GMainWindow::OnCreateBundle);
+    connect_menu(ui->action_Extract_ROM_Bundle, &GMainWindow::OnExtractBundle);
 
     // Help
     connect_menu(ui->action_Open_Log_Folder, []() {
@@ -2472,7 +2475,7 @@ void GMainWindow::InstallCIA(QStringList filepaths) {
 
     emit UpdateProgress(0, 0);
 
-    (void)QtConcurrent::run([&, filepaths] {
+    (void)QtConcurrent::run([this, filepaths] {
         Service::AM::InstallStatus status;
         const auto cia_progress = [&](std::size_t written, std::size_t total) {
             emit UpdateProgress(written, total);
@@ -2525,6 +2528,8 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString 
         QMessageBox::critical(this, tr("Unable to find File"),
                               tr("Could not find %1").arg(filename));
         break;
+    case Service::AM::InstallStatus::ErrorCannotCheckBundle:
+        break;
     }
 }
 
@@ -2547,6 +2552,29 @@ void GMainWindow::OnCompressFinished(bool is_compress, bool success) {
         } else {
             QMessageBox::information(this, tr("Z3DS Compression"),
                                      tr("All files have been decompressed successfully."));
+        }
+    }
+}
+
+void GMainWindow::OnBundleFinished(bool is_bundle, bool success) {
+    progress_bar->hide();
+    progress_bar->setValue(0);
+
+    if (!success) {
+        if (is_bundle) {
+            QMessageBox::critical(this, tr("Bundle File"),
+                                  tr("Failed to create the bundle, check log for details."));
+        } else {
+            QMessageBox::critical(this, tr("Bundle File"),
+                                  tr("Failed to extract the bundle, check log for details."));
+        }
+    } else {
+        if (is_bundle) {
+            QMessageBox::information(this, tr("Bundle File"),
+                                     tr("Bundle has been created successfully."));
+        } else {
+            QMessageBox::information(this, tr("Bundle File"),
+                                     tr("Bundle has been extracted successfully."));
         }
     }
 }
@@ -3309,21 +3337,31 @@ void GMainWindow::OnCompressFile() {
     bool single_file = filepaths.size() == 1;
     if (single_file) {
         // If it's a single file, ask the user for the output file.
-        auto compress_info = Loader::GetCompressFileInfo(filepaths[0].toStdString(), true);
-        if (!compress_info.has_value()) {
+        auto compress_info = Loader::GetLoaderFileInfo(filepaths[0].toStdString());
+        if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+            LOG_ERROR(Frontend,
+                      "Error compressing file {}, the selected file is not a compatible 3DS ROM "
+                      "format or is encrypted or bundled.",
+                      filepaths[0].toStdString());
+            emit CompressFinished(true, false);
+            return;
+        }
+        if (compress_info.is_compressed) {
+            LOG_ERROR(Frontend,
+                      "Error compressing file {}, the selected file is already compressed.",
+                      filepaths[0].toStdString());
             emit CompressFinished(true, false);
             return;
         }
 
         QFileInfo fileinfo(filepaths[0]);
-        QString final_path =
-            fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
-            QStringLiteral(".") +
-            QString::fromStdString(compress_info.value().first.recommended_compressed_extension);
+        QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) +
+                             fileinfo.completeBaseName() + QStringLiteral(".") +
+                             QString::fromStdString(compress_info.recommended_compressed_extension);
 
-        QString out_filter = tr("3DS Compressed ROM File") +
-                             QStringLiteral(" (*.%1)").arg(QString::fromStdString(
-                                 compress_info.value().first.recommended_compressed_extension));
+        QString out_filter =
+            tr("3DS Compressed ROM File") + QStringLiteral(" (*.%1)").arg(QString::fromStdString(
+                                                compress_info.recommended_compressed_extension));
         out_path = QFileDialog::getSaveFileName(this, tr("Save 3DS Compressed ROM File"),
                                                 final_path, out_filter);
         if (out_path.isEmpty()) {
@@ -3339,7 +3377,7 @@ void GMainWindow::OnCompressFile() {
         }
     }
 
-    (void)QtConcurrent::run([&, filepaths, out_path] {
+    (void)QtConcurrent::run([this, filepaths, out_path] {
         bool single_file = filepaths.size() == 1;
         QString out_filepath;
         bool total_success = true;
@@ -3349,8 +3387,20 @@ void GMainWindow::OnCompressFile() {
             std::string in_path = filepath.toStdString();
 
             // Identify file type
-            auto compress_info = Loader::GetCompressFileInfo(filepath.toStdString(), true);
-            if (!compress_info.has_value()) {
+            auto compress_info = Loader::GetLoaderFileInfo(filepath.toStdString());
+            if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+                LOG_ERROR(
+                    Frontend,
+                    "Error decompressing file {}, the selected file is not a compatible 3DS ROM "
+                    "format or is encrypted or bundled.",
+                    in_path);
+                total_success = false;
+                continue;
+            }
+            if (compress_info.is_compressed) {
+                LOG_ERROR(Frontend,
+                          "Error compressing file {}, the selected file is already compressed.",
+                          in_path);
                 total_success = false;
                 continue;
             }
@@ -3359,10 +3409,10 @@ void GMainWindow::OnCompressFile() {
                 out_filepath = out_path;
             } else {
                 QFileInfo fileinfo(filepath);
-                out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
-                               QStringLiteral(".") +
-                               QString::fromStdString(
-                                   compress_info.value().first.recommended_compressed_extension);
+                out_filepath =
+                    out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                    QStringLiteral(".") +
+                    QString::fromStdString(compress_info.recommended_compressed_extension);
             }
 
             std::string out_path = out_filepath.toStdString();
@@ -3372,10 +3422,10 @@ void GMainWindow::OnCompressFile() {
             const auto progress = [&](std::size_t written, std::size_t total) {
                 emit UpdateProgress(written, total);
             };
-            bool success = FileUtil::CompressZ3DSFile(in_path, out_path,
-                                                      compress_info.value().first.underlying_magic,
-                                                      compress_info.value().second, progress,
-                                                      compress_info.value().first.default_metadata);
+            bool success =
+                FileUtil::CompressZ3DSFile(in_path, out_path, compress_info.underlying_magic,
+                                           compress_info.default_compress_frame_size, progress,
+                                           compress_info.default_metadata);
             if (!success) {
                 total_success = false;
                 FileUtil::Delete(out_path);
@@ -3402,21 +3452,31 @@ void GMainWindow::OnDecompressFile() {
     bool single_file = filepaths.size() == 1;
     if (single_file) {
         // If it's a single file, ask the user for the output file.
-        auto compress_info = Loader::GetCompressFileInfo(filepaths[0].toStdString(), false);
-        if (!compress_info.has_value()) {
+        auto compress_info = Loader::GetLoaderFileInfo(filepaths[0].toStdString());
+        if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+            LOG_ERROR(Frontend,
+                      "Error decompressing file {}, the selected file is not a compatible 3DS ROM "
+                      "format.",
+                      filepaths[0].toStdString());
+            emit CompressFinished(false, false);
+            return;
+        }
+        if (!compress_info.is_compressed) {
+            LOG_ERROR(Frontend,
+                      "Error decompressing file {}, the selected file is already decompressed",
+                      filepaths[0].toStdString());
             emit CompressFinished(false, false);
             return;
         }
 
         QFileInfo fileinfo(filepaths[0]);
-        QString final_path =
-            fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
-            QStringLiteral(".") +
-            QString::fromStdString(compress_info.value().first.recommended_uncompressed_extension);
+        QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) +
+                             fileinfo.completeBaseName() + QStringLiteral(".") +
+                             QString::fromStdString(compress_info.recommended_plain_extension);
 
         QString out_filter = tr("3DS ROM File") +
-                             QStringLiteral(" (*.%1)").arg(QString::fromStdString(
-                                 compress_info.value().first.recommended_uncompressed_extension));
+                             QStringLiteral(" (*.%1)").arg(
+                                 QString::fromStdString(compress_info.recommended_plain_extension));
         out_path =
             QFileDialog::getSaveFileName(this, tr("Save 3DS ROM File"), final_path, out_filter);
         if (out_path.isEmpty()) {
@@ -3432,7 +3492,7 @@ void GMainWindow::OnDecompressFile() {
         }
     }
 
-    (void)QtConcurrent::run([&, filepaths, out_path] {
+    (void)QtConcurrent::run([this, filepaths, out_path] {
         bool single_file = filepaths.size() == 1;
         QString out_filepath;
         bool total_success = true;
@@ -3442,8 +3502,20 @@ void GMainWindow::OnDecompressFile() {
             std::string in_path = filepath.toStdString();
 
             // Identify file type
-            auto compress_info = Loader::GetCompressFileInfo(filepath.toStdString(), false);
-            if (!compress_info.has_value()) {
+            auto compress_info = Loader::GetLoaderFileInfo(filepath.toStdString());
+            if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+                LOG_ERROR(
+                    Frontend,
+                    "Error decompressing file {}, the selected file is not a compatible 3DS ROM "
+                    "format.",
+                    in_path);
+                total_success = false;
+                continue;
+            }
+            if (!compress_info.is_compressed) {
+                LOG_ERROR(Frontend,
+                          "Error decompressing file {}, the selected file is already decompressed.",
+                          in_path);
                 total_success = false;
                 continue;
             }
@@ -3454,8 +3526,7 @@ void GMainWindow::OnDecompressFile() {
                 QFileInfo fileinfo(filepath);
                 out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
                                QStringLiteral(".") +
-                               QString::fromStdString(
-                                   compress_info.value().first.recommended_uncompressed_extension);
+                               QString::fromStdString(compress_info.recommended_plain_extension);
             }
 
             std::string out_path = out_filepath.toStdString();
@@ -3476,6 +3547,100 @@ void GMainWindow::OnDecompressFile() {
 
         emit CompressFinished(false, total_success);
     });
+}
+
+void GMainWindow::OnCreateBundle() {
+    QString filepath = QFileDialog::getOpenFileName(
+        this, tr("Load Main 3DS ROM File"), UISettings::values.roms_path,
+        tr("3DS ROM Files") + QStringLiteral(" (*.cci *.zcci *.cia *.zcia *.cxi *.3ds);;") +
+            tr("All Files") + QStringLiteral(" (*.*)"));
+
+    if (filepath.isEmpty()) {
+        return;
+    }
+
+    std::string in_path = filepath.toStdString();
+
+    auto file_info = Loader::GetLoaderFileInfo(filepath.toStdString());
+    if (!file_info.is_valid || !file_info.is_bundle_supported) {
+        LOG_ERROR(Frontend,
+                  "Error bundling file {}, the selected file is not a compatible 3DS ROM "
+                  "format.",
+                  in_path);
+        emit BundleFinished(true, false);
+        return;
+    }
+    if (file_info.is_bundled) {
+        LOG_ERROR(Frontend, "Error bundling file {}, the selected file is already bundled.",
+                  in_path);
+        emit BundleFinished(true, false);
+        return;
+    }
+
+    QFileInfo fileinfo(filepath);
+    QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                         QStringLiteral(".") +
+                         QString::fromStdString(file_info.recommended_bundle_extension);
+
+    QString out_filter = tr("3DS Bundle ROM File") +
+                         QStringLiteral(" (*.%1)").arg(
+                             QString::fromStdString(file_info.recommended_bundle_extension));
+
+    QString out_path = QFileDialog::getSaveFileName(this, tr("Select Output 3DS Bundled ROM File"),
+                                                    final_path, out_filter);
+    if (out_path.isEmpty()) {
+        return;
+    }
+
+    QStringList depends = QFileDialog::getOpenFileNames(
+        this, tr("Load CIA File Dependencies"), UISettings::values.roms_path,
+        tr("3DS ROM Files") + QStringLiteral(" (*.cia *.zcia);;") + tr("All Files") +
+            QStringLiteral(" (*.*)"));
+
+    if (depends.isEmpty()) {
+        return;
+    }
+
+    std::vector<std::string> depends_vector;
+
+    for (const QString& dep : depends) {
+
+        std::string dep_path = dep.toStdString();
+
+        // Identify file type
+        auto dep_file_info = Loader::GetLoaderFileInfo(dep_path);
+        if (!dep_file_info.is_valid || !dep_file_info.is_bundle_supported ||
+            dep_file_info.is_bundled ||
+            dep_file_info.underlying_magic != std::array<u8, 4>({'C', 'I', 'A', '\0'})) {
+            LOG_ERROR(Frontend,
+                      "Error processing dependency file {}, the selected file is not a compatible "
+                      "CIA file.",
+                      dep_path);
+            emit BundleFinished(true, false);
+            return;
+        }
+
+        depends_vector.push_back(dep_path);
+    }
+
+    emit UpdateProgress(0, 0);
+
+    (void)QtConcurrent::run([this, out_path, in_path, depends_vector] {
+        const auto progress = [&](std::size_t written, std::size_t total) {
+            emit UpdateProgress(written, total);
+        };
+
+        [[maybe_unused]] auto result =
+            Loader::CreateBundleFile(out_path.toStdString(), in_path, depends_vector, progress);
+        emit BundleFinished(true, result == Loader::ResultStatus::Success);
+    });
+}
+
+void GMainWindow::OnExtractBundle() {
+    // TODO(PabloMK7): Implement before 2127 release, do not translate temporary strings.
+    QMessageBox::warning(
+        this, tr("Bundle File"),
+        QStringLiteral("Bundle extraction is not implemented yet, please use a TAR file browser."));
 }
 
 #ifdef ENABLE_FFMPEG

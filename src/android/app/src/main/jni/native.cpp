@@ -589,84 +589,25 @@ jstring Java_org_citra_citra_1emu_NativeLibrary_getHomeMenuPath(JNIEnv* env,
     return ToJString(env, "");
 }
 
-static CompressionStatus GetCompressFileInfo(Loader::AppLoader::CompressFileInfo& out_info,
-                                             size_t& out_frame_size, const std::string& filepath,
-                                             bool compress) {
-
-    if (Service::FS::IsInstalledApplication(filepath)) {
-        return CompressionStatus::Installed_Application;
-    }
-
-    Loader::AppLoader::CompressFileInfo compress_info{};
-    compress_info.is_supported = false;
-    size_t frame_size{};
-    auto loader = Loader::GetLoader(filepath);
-    if (loader) {
-        compress_info = loader->GetCompressFileInfo();
-        frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE;
-    } else {
-        bool is_compressed = false;
-        if (Service::AM::CheckCIAToInstall(filepath, is_compressed, compress ? true : false) ==
-            Service::AM::InstallStatus::Success) {
-            compress_info.is_supported = true;
-            compress_info.is_compressed = is_compressed;
-            compress_info.recommended_compressed_extension = "zcia";
-            compress_info.recommended_uncompressed_extension = "cia";
-            compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
-            frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_CIA_FRAME_SIZE;
-            if (compress) {
-                auto meta_info = Service::AM::GetCIAInfos(filepath);
-                if (meta_info.Succeeded()) {
-                    const auto& meta_info_val = meta_info.Unwrap();
-                    std::vector<u8> value(sizeof(Service::AM::TitleInfo));
-                    memcpy(value.data(), &meta_info_val.first, sizeof(Service::AM::TitleInfo));
-                    compress_info.default_metadata.emplace("titleinfo", value);
-                    if (meta_info_val.second) {
-                        value.resize(sizeof(Loader::SMDH));
-                        memcpy(value.data(), meta_info_val.second.get(), sizeof(Loader::SMDH));
-                        compress_info.default_metadata.emplace("smdh", value);
-                    }
-                }
-            }
-        }
-    }
-
-    if (!compress_info.is_supported) {
-        LOG_ERROR(Frontend,
-                  "Error {} file {}, the selected file is not a compatible 3DS ROM format or is "
-                  "encrypted.",
-                  compress ? "compressing" : "decompressing", filepath);
-        return compress ? CompressionStatus::Compress_Unsupported
-                        : CompressionStatus::Decompress_Unsupported;
-    }
-    if (compress_info.is_compressed && compress) {
-        LOG_ERROR(Frontend, "Error compressing file {}, the selected file is already compressed",
-                  filepath);
-        return CompressionStatus::Compress_AlreadyCompressed;
-    }
-    if (!compress_info.is_compressed && !compress) {
-        LOG_ERROR(Frontend,
-                  "Error decompressing file {}, the selected file is already decompressed",
-                  filepath);
-        return CompressionStatus::Decompress_NotCompressed;
-    }
-
-    out_info = compress_info;
-    out_frame_size = frame_size;
-    return CompressionStatus::Success;
-}
-
 jint Java_org_citra_citra_1emu_NativeLibrary_compressFileNative(JNIEnv* env, jobject obj,
                                                                 jstring j_input_path,
                                                                 jstring j_output_path) {
     const std::string input_path = GetJString(env, j_input_path);
     const std::string output_path = GetJString(env, j_output_path);
 
-    Loader::AppLoader::CompressFileInfo compress_info{};
-    size_t frame_size{};
-    CompressionStatus stat = GetCompressFileInfo(compress_info, frame_size, input_path, true);
-    if (stat != CompressionStatus::Success) {
-        return static_cast<jint>(stat);
+    auto loader_info = Loader::GetLoaderFileInfo(input_path);
+    if (!loader_info.is_valid || !loader_info.is_compress_supported) {
+        LOG_ERROR(
+            Frontend,
+            "Error compressing file {}, the selected file is not a compatible 3DS ROM format or is "
+            "encrypted.",
+            input_path);
+        return static_cast<jint>(CompressionStatus::Compress_Unsupported);
+    }
+    if (loader_info.is_compressed) {
+        LOG_ERROR(Frontend, "Error compressing file {}, the selected file is already compressed",
+                  input_path);
+        return static_cast<jint>(CompressionStatus::Compress_AlreadyCompressed);
     }
 
     auto progress = [](std::size_t processed, std::size_t total) {
@@ -676,9 +617,9 @@ jint Java_org_citra_citra_1emu_NativeLibrary_compressFileNative(JNIEnv* env, job
                                   static_cast<jlong>(processed));
     };
 
-    bool success =
-        FileUtil::CompressZ3DSFile(input_path, output_path, compress_info.underlying_magic,
-                                   frame_size, progress, compress_info.default_metadata);
+    bool success = FileUtil::CompressZ3DSFile(input_path, output_path, loader_info.underlying_magic,
+                                              loader_info.default_compress_frame_size, progress,
+                                              loader_info.default_metadata);
     if (!success) {
         FileUtil::Delete(output_path);
         return static_cast<jint>(CompressionStatus::Compress_Failed);
@@ -693,11 +634,20 @@ jint Java_org_citra_citra_1emu_NativeLibrary_decompressFileNative(JNIEnv* env, j
     const std::string input_path = GetJString(env, j_input_path);
     const std::string output_path = GetJString(env, j_output_path);
 
-    Loader::AppLoader::CompressFileInfo compress_info{};
-    size_t frame_size{};
-    CompressionStatus stat = GetCompressFileInfo(compress_info, frame_size, input_path, false);
-    if (stat != CompressionStatus::Success) {
-        return static_cast<jint>(stat);
+    auto loader_info = Loader::GetLoaderFileInfo(input_path);
+    if (!loader_info.is_valid || !loader_info.is_compress_supported) {
+        LOG_ERROR(Frontend,
+                  "Error decompressing file {}, the selected file is not a compatible 3DS ROM "
+                  "format or is "
+                  "encrypted.",
+                  input_path);
+        return static_cast<jint>(CompressionStatus::Decompress_Unsupported);
+    }
+    if (!loader_info.is_compressed) {
+        LOG_ERROR(Frontend,
+                  "Error decompressing file {}, the selected file is already decompressed",
+                  input_path);
+        return static_cast<jint>(CompressionStatus::Decompress_NotCompressed);
     }
 
     auto progress = [](std::size_t processed, std::size_t total) {
@@ -725,14 +675,15 @@ jstring Java_org_citra_citra_1emu_NativeLibrary_getRecommendedExtension(
 
     auto loader = Loader::GetLoader(input_path);
     if (loader) {
-        auto compress_info = loader->GetCompressFileInfo();
-        if (compress_info.is_supported) {
-            compressed_ext = compress_info.recommended_compressed_extension;
-            uncompressed_ext = compress_info.recommended_uncompressed_extension;
+        auto loader_info = loader->GetLoaderFileInfo();
+        if (loader_info.is_valid && loader_info.is_compress_supported) {
+            compressed_ext = loader_info.recommended_compressed_extension;
+            uncompressed_ext = loader_info.recommended_plain_extension;
         }
     } else {
         bool is_compressed = false;
-        if (Service::AM::CheckCIAToInstall(input_path, is_compressed, true) ==
+        bool is_bundled = false;
+        if (Service::AM::CheckCIAToInstall(input_path, is_compressed, is_bundled) ==
             Service::AM::InstallStatus::Success) {
             compressed_ext = "zcia";
             uncompressed_ext = "cia";

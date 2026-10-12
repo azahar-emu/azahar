@@ -40,7 +40,7 @@ public:
 
     ResultStatus ReadTitle(std::string& title, bool prefer_update_title) override;
 
-    CompressFileInfo GetCompressFileInfo() override;
+    LoaderFileInfo GetLoaderFileInfo() override;
 
     bool IsFileCompressed() override;
 

@@ -457,22 +457,28 @@ ResultStatus AppLoader_NCCH::ReadTitle(std::string& title, bool prefer_update_ti
     return ResultStatus::Success;
 }
 
-AppLoader::CompressFileInfo AppLoader_NCCH::GetCompressFileInfo() {
-    CompressFileInfo info{};
+AppLoader::LoaderFileInfo AppLoader_NCCH::GetLoaderFileInfo() {
+    LoaderFileInfo info{};
+    info.is_valid = true;
     if (base_ncch.LoadHeader() != ResultStatus::Success) {
-        info.is_supported = false;
+        info.is_compress_supported = false;
+        info.is_bundle_supported = false;
         return info;
     }
-    info.is_supported = true;
+    info.is_compress_supported = !base_ncch.IsFileBundle();
+    info.is_bundle_supported = true;
     info.is_compressed = base_ncch.IsFileCompressed();
+    info.is_bundled = base_ncch.IsFileBundle();
     if (base_ncch.IsNCSD()) {
         info.underlying_magic = std::array<u8, 4>({'N', 'C', 'S', 'D'});
         info.recommended_compressed_extension = "zcci";
-        info.recommended_uncompressed_extension = "cci";
+        info.recommended_bundle_extension = "bcci";
+        info.recommended_plain_extension = "cci";
     } else {
         info.underlying_magic = std::array<u8, 4>({'N', 'C', 'C', 'H'});
         info.recommended_compressed_extension = "zcxi";
-        info.recommended_uncompressed_extension = "cxi";
+        info.recommended_bundle_extension = "bcxi";
+        info.recommended_plain_extension = "cxi";
     }
     std::vector<u8> title_info_vec(sizeof(Service::AM::TitleInfo));
     Service::AM::TitleInfo* title_info =

@@ -7,6 +7,7 @@
 #include "common/file_derived.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "common/tar_file.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/hle/kernel/process.h"
@@ -182,62 +183,132 @@ std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
     return GetFileLoader(system, std::move(file), type, filename_filename, filename);
 }
 
-std::optional<std::pair<Loader::AppLoader::CompressFileInfo, size_t>> GetCompressFileInfo(
-    const std::string& filepath, bool compress) {
-    Loader::AppLoader::CompressFileInfo compress_info{};
-    compress_info.is_supported = false;
-    size_t frame_size{};
+Loader::AppLoader::LoaderFileInfo GetLoaderFileInfo(const std::string& filepath) {
+    Loader::AppLoader::LoaderFileInfo loader_info{};
     auto loader = Loader::GetLoader(filepath);
     if (loader) {
-        compress_info = loader->GetCompressFileInfo();
-        frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE;
+        loader_info = loader->GetLoaderFileInfo();
+        loader_info.default_compress_frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE;
     } else {
         bool is_compressed = false;
-        if (Service::AM::CheckCIAToInstall(filepath, is_compressed, compress ? true : false) ==
-            Service::AM::InstallStatus::Success) {
-            compress_info.is_supported = true;
-            compress_info.is_compressed = is_compressed;
-            compress_info.recommended_compressed_extension = "zcia";
-            compress_info.recommended_uncompressed_extension = "cia";
-            compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
-            frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_CIA_FRAME_SIZE;
-            if (compress) {
+        bool is_bundled = false;
+        auto check_status = Service::AM::CheckCIAToInstall(filepath, is_compressed, is_bundled);
+        if (check_status == Service::AM::InstallStatus::Success ||
+            check_status == Service::AM::InstallStatus::ErrorCannotCheckBundle) {
+            loader_info.is_valid = true;
+            loader_info.is_compress_supported = !is_bundled;
+            loader_info.is_bundle_supported = true;
+            loader_info.is_compressed = is_compressed;
+            loader_info.is_bundled = is_bundled;
+            loader_info.recommended_compressed_extension = "zcia";
+            loader_info.recommended_bundle_extension = "bcia";
+            loader_info.recommended_plain_extension = "cia";
+            loader_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
+            loader_info.default_compress_frame_size =
+                FileUtil::Z3DSWriteIOFile::DEFAULT_CIA_FRAME_SIZE;
+            if (!is_bundled) {
                 auto meta_info = Service::AM::GetCIAInfos(filepath);
                 if (meta_info.Succeeded()) {
                     const auto& meta_info_val = meta_info.Unwrap();
                     std::vector<u8> value(sizeof(Service::AM::TitleInfo));
                     memcpy(value.data(), &meta_info_val.first, sizeof(Service::AM::TitleInfo));
-                    compress_info.default_metadata.emplace("titleinfo", value);
+                    loader_info.default_metadata.emplace("titleinfo", value);
                     if (meta_info_val.second) {
                         value.resize(sizeof(Loader::SMDH));
                         memcpy(value.data(), meta_info_val.second.get(), sizeof(Loader::SMDH));
-                        compress_info.default_metadata.emplace("smdh", value);
+                        loader_info.default_metadata.emplace("smdh", value);
                     }
                 }
             }
         }
     }
 
-    if (!compress_info.is_supported) {
-        LOG_ERROR(Frontend,
-                  "Error {} file {}, the selected file is not a compatible 3DS ROM format or is "
-                  "encrypted.",
-                  compress ? "compressing" : "decompressing", filepath);
-        return {};
-    }
-    if (compress_info.is_compressed && compress) {
-        LOG_ERROR(Frontend, "Error compressing file {}, the selected file is already compressed",
-                  filepath);
-        return {};
-    }
-    if (!compress_info.is_compressed && !compress) {
-        LOG_ERROR(Frontend,
-                  "Error decompressing file {}, the selected file is already decompressed",
-                  filepath);
-        return {};
+    return loader_info;
+}
+
+ResultStatus CreateBundleFile(const std::string& out_path, const std::string& main_file,
+                              const std::vector<std::string>& dependencies,
+                              std::function<FileUtil::ProgressCallback>&& progress_callback) {
+
+    auto main_file_info = GetLoaderFileInfo(main_file);
+
+    if (!main_file_info.is_valid || !main_file_info.is_bundle_supported ||
+        main_file_info.is_bundled) {
+        // Should never happen in well formed frontends.
+        return ResultStatus::ErrorInvalidFormat;
     }
 
-    return std::pair(compress_info, frame_size);
+    FileUtil::Z3DSMetadata metadata;
+    auto default_metadata = main_file_info.default_metadata;
+    default_metadata.erase("smdh"); // Exclude SMDH as its not needed
+    for (auto it : default_metadata) {
+        metadata.Add(it.first, it.second);
+    }
+
+    std::vector<u8> smdh_buffer(sizeof(Loader::SMDH));
+    Loader::SMDH* smdh = reinterpret_cast<Loader::SMDH*>(smdh_buffer.data());
+
+    std::vector<std::pair<std::string, std::string>> in_files;
+
+    auto process_file = [&smdh_buffer, &smdh, &in_files](const std::string& filename) {
+        auto file_info = GetLoaderFileInfo(filename);
+
+        if (!file_info.is_valid || !file_info.is_bundle_supported || file_info.is_bundled) {
+            // Should never happen in well formed frontends.
+            return ResultStatus::ErrorInvalidFormat;
+        }
+
+        memset(smdh_buffer.data(), 0, sizeof(Loader::SMDH));
+
+        bool good = false;
+        auto it = file_info.default_metadata.find("smdh");
+        if (it != file_info.default_metadata.end()) {
+            memcpy(smdh_buffer.data(), it->second.data(),
+                   std::min(sizeof(Loader::SMDH), it->second.size()));
+            good = smdh->IsValid();
+        } else {
+            auto loader = Loader::GetLoader(filename);
+            if (loader && loader->ReadIcon(smdh_buffer, false) == ResultStatus::Success) {
+                good = smdh->IsValid();
+            }
+        }
+
+        Service::AM::TitleInfo title_info{};
+        it = file_info.default_metadata.find("titleinfo");
+        if (it != file_info.default_metadata.end()) {
+            memcpy(&title_info, it->second.data(),
+                   std::min(sizeof(Service::AM::TitleInfo), it->second.size()));
+        }
+
+        std::string name = fmt::format("{:016X}", title_info.tid);
+        if (good) {
+            const auto& short_title = smdh->GetShortTitle(SMDH::TitleLanguage::English);
+            auto title_end = std::find(short_title.begin(), short_title.end(), u'\0');
+            name += " - " + Common::UTF16ToUTF8(std::u16string{short_title.begin(), title_end});
+        }
+        name += "." + ((file_info.is_compress_supported && file_info.is_compressed)
+                           ? file_info.recommended_compressed_extension
+                           : file_info.recommended_plain_extension);
+
+        in_files.push_back(std::make_pair(filename, name));
+        return ResultStatus::Success;
+    };
+
+    ResultStatus res = ResultStatus::Success;
+
+    if ((res = process_file(main_file)) != ResultStatus::Success) {
+        return res;
+    }
+    for (const auto& dep : dependencies) {
+        if ((res = process_file(dep)) != ResultStatus::Success) {
+            return res;
+        }
+    }
+
+    return FileUtil::TarArchive::CreateTarFile(out_path, in_files, std::move(metadata),
+                                               std::move(progress_callback))
+               ? ResultStatus::Success
+               : ResultStatus::Error;
 }
 
 } // namespace Loader
