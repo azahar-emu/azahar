@@ -79,6 +79,10 @@ public:
         return content_index.HasRights(index);
     }
 
+    Loader::ResultStatus LoadResult() {
+        return load_result;
+    }
+
     class ContentIndex {
     public:
         struct MainHeader {
@@ -139,6 +143,7 @@ private:
     u32_be signature_type;
     std::vector<u8> ticket_signature;
     ContentIndex content_index;
+    Loader::ResultStatus load_result;
 
     size_t serialized_size = 0;
 };
