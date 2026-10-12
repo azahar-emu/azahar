@@ -997,7 +997,7 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
     }
 
     // Sync the proctex lut
-    if (pica.proctex.lut_dirty) {
+    if (pica.proctex.color_lut_dirty) {
         Common::Vec4f* new_data = reinterpret_cast<Common::Vec4f*>(buffer + bytes_used);
         for (u32 i = 0; i < proctex.color_table.size(); i++) {
             new_data[i] = proctex.color_table[i].ToVector() / 255.0f;
@@ -1009,7 +1009,7 @@ void RasterizerVulkan::SyncAndUploadLUTs() {
     }
 
     // Sync the proctex difference lut
-    if (pica.proctex.diff_lut_dirty) {
+    if (pica.proctex.color_diff_lut_dirty) {
         Common::Vec4f* new_data = reinterpret_cast<Common::Vec4f*>(buffer + bytes_used);
         for (u32 i = 0; i < proctex.color_diff_table.size(); i++) {
             new_data[i] = proctex.color_diff_table[i].ToVector() / 255.0f;
