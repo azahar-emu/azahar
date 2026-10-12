@@ -564,8 +564,16 @@ class EmulationFragment :
         super.onPause()
     }
 
+    override fun onDestroyView() {
+        perfStatsUpdater?.let { perfStatsUpdateHandler.removeCallbacks(it) }
+        perfStatsUpdater = null
+        super.onDestroyView()
+    }
+
     override fun onDetach() {
-        NativeLibrary.clearEmulationActivity()
+        if (!isRemoving) {
+            NativeLibrary.clearEmulationActivity()
+        }
         super.onDetach()
     }
 
