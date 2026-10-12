@@ -299,6 +299,9 @@ ResultStatus CreateBundleFile(const std::string& out_path, const std::string& ma
     if ((res = process_file(main_file)) != ResultStatus::Success) {
         return res;
     }
+
+    metadata.Add("mainfile", in_files[0].second);
+
     for (const auto& dep : dependencies) {
         if ((res = process_file(dep)) != ResultStatus::Success) {
             return res;
