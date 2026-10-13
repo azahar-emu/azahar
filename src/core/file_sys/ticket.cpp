@@ -62,16 +62,20 @@ Loader::ResultStatus Ticket::DoTitlekeyFixup() {
     return Loader::ResultStatus::Success;
 }
 
+Loader::ResultStatus Ticket::LoadResult() const {
+    return load_result.value_or(Loader::ResultStatus::Error);
+}
+
 Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t offset) {
     if (offset > file_data.size()) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     serialized_size = total_size;
     if (total_size < sizeof(u32)) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     std::memcpy(&signature_type, &file_data[offset], sizeof(u32));
@@ -80,7 +84,7 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
     u32 signature_size = GetSignatureSize(signature_type);
     if (signature_size == 0) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     // The ticket body start position is rounded to the nearest 0x40 after the signature
@@ -89,7 +93,7 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
 
     if (total_size < body_end) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     // Read signature + ticket body
@@ -100,7 +104,7 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
     std::size_t content_index_start = body_end;
     if (total_size < content_index_start + (2 * sizeof(u32))) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     // Read content index size from the second u32 into it. Actual format is undocumented.
@@ -111,7 +115,7 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
 
     if (total_size < content_index_end) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
     std::vector<u8> content_index_vec;
     content_index_vec.resize(content_index_size);
@@ -120,14 +124,14 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
     content_index.Load(GetTitleID(), GetTicketID(), content_index_vec);
 
     load_result = Loader::ResultStatus::Success;
-    return load_result;
+    return *load_result;
 }
 
 Loader::ResultStatus Ticket::Load(u64 title_id, u64 ticket_id) {
     FileUtil::IOFile f(Service::AM::GetTicketPath(title_id, ticket_id), "rb");
     if (!f.IsOpen()) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     std::vector<u8> ticket_data(f.GetSize());

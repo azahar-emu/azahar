@@ -17,14 +17,14 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     FileUtil::IOFile file(file_path, "rb");
     if (!file.IsOpen()) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     std::vector<u8> file_data(file.GetSize());
 
     if (!file.ReadBytes(file_data.data(), file.GetSize())) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     Loader::ResultStatus result = Load(file_data);
@@ -34,14 +34,19 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     return result;
 }
 
+Loader::ResultStatus TitleMetadata::LoadResult() const {
+    return load_result.value_or(Loader::ResultStatus::Error);
+}
+
 Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::size_t offset) {
     if (offset > file_data.size()) {
-        return Loader::ResultStatus::Error;
+        load_result = Loader::ResultStatus::Error;
+        return *load_result;
     }
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     if (total_size < sizeof(u32_be)) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     std::memcpy(&signature_type, &file_data[offset], sizeof(u32_be));
@@ -50,7 +55,7 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
     u32 signature_size = GetSignatureSize(signature_type);
     if (signature_size == 0) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     // The TMD body start position is rounded to the nearest 0x40 after the signature
@@ -59,7 +64,7 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
 
     if (total_size < body_end) {
         load_result = Loader::ResultStatus::Error;
-        return load_result;
+        return *load_result;
     }
 
     // Read signature + TMD body, then load the amount of ContentChunks specified
@@ -73,7 +78,7 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
         LOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
                   total_size);
         load_result = Loader::ResultStatus::ErrorInvalidFormat;
-        return load_result;
+        return *load_result;
     }
 
     tmd_chunks.clear();
@@ -86,7 +91,7 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
     }
 
     load_result = Loader::ResultStatus::Success;
-    return load_result;
+    return *load_result;
 }
 
 Loader::ResultStatus TitleMetadata::Save(const std::string& file_path) {

@@ -2,6 +2,7 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include "common/file_derived.h"
@@ -280,17 +281,53 @@ ResultStatus CreateBundleFile(const std::string& out_path, const std::string& ma
                    std::min(sizeof(Service::AM::TitleInfo), it->second.size()));
         }
 
+        const std::string extension =
+            "." + ((file_info.is_compress_supported && file_info.is_compressed)
+                       ? file_info.recommended_compressed_extension
+                       : file_info.recommended_plain_extension);
+
         std::string name = fmt::format("{:016X}", title_info.tid);
         if (good) {
             const auto& short_title = smdh->GetShortTitle(SMDH::TitleLanguage::English);
             auto title_end = std::find(short_title.begin(), short_title.end(), u'\0');
-            name += " - " + Common::UTF16ToUTF8(std::u16string{short_title.begin(), title_end});
-        }
-        name += "." + ((file_info.is_compress_supported && file_info.is_compressed)
-                           ? file_info.recommended_compressed_extension
-                           : file_info.recommended_plain_extension);
+            std::string title = Common::UTF16ToUTF8(std::u16string{short_title.begin(), title_end});
 
-        in_files.push_back(std::make_pair(filename, name));
+            // Escape any special characters from the SMDH title.
+            for (char& c : title) {
+                const u8 uc = static_cast<u8>(c);
+                if (uc < 0x20 || uc == 0x7F ||
+                    std::string_view("/\\:*?\"<>|").find(c) != std::string_view::npos) {
+                    c = '_';
+                }
+            }
+
+            // Limit the name of the file so that it doesn't cut the extension or duplicate
+            // file markers. Maximum length is 100 bytes including the terminator.
+            constexpr std::size_t MAX_TAR_NAME = 99;
+            constexpr std::size_t UNIQUE_SUFFIX_SIZE = 5;
+            const std::size_t fixed_size = name.size() + 3 + extension.size() + UNIQUE_SUFFIX_SIZE;
+            std::size_t title_size = std::min(title.size(), MAX_TAR_NAME - fixed_size);
+            if (title_size < title.size()) {
+                while (title_size > 0 && (static_cast<u8>(title[title_size]) & 0xC0) == 0x80) {
+                    title_size--;
+                }
+                title.resize(title_size);
+            }
+            if (!title.empty()) {
+                name += " - " + title;
+            }
+        }
+
+        const auto name_taken = [&in_files](const std::string& candidate) {
+            return std::ranges::any_of(
+                in_files, [&candidate](const auto& f) { return f.second == candidate; });
+        };
+        std::string unique_name = name + extension;
+        for (int i = 1; name_taken(unique_name); i++) {
+            unique_name = fmt::format("{} ({}){}", name, i, extension);
+        }
+
+        in_files.push_back(std::make_pair(filename, unique_name));
         return ResultStatus::Success;
     };
 
