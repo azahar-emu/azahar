@@ -79,9 +79,8 @@ public:
         return content_index.HasRights(index);
     }
 
-    Loader::ResultStatus LoadResult() {
-        return load_result;
-    }
+    /// Result of the last Load, Error if nothing was loaded.
+    Loader::ResultStatus LoadResult() const;
 
     class ContentIndex {
     public:
@@ -143,7 +142,7 @@ private:
     u32_be signature_type;
     std::vector<u8> ticket_signature;
     ContentIndex content_index;
-    Loader::ResultStatus load_result;
+    std::optional<Loader::ResultStatus> load_result;
 
     size_t serialized_size = 0;
 };

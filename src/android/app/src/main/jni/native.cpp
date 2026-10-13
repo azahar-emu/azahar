@@ -595,6 +595,10 @@ jint Java_org_citra_citra_1emu_NativeLibrary_compressFileNative(JNIEnv* env, job
     const std::string input_path = GetJString(env, j_input_path);
     const std::string output_path = GetJString(env, j_output_path);
 
+    if (Service::FS::IsInstalledApplication(input_path)) {
+        return static_cast<jint>(CompressionStatus::Installed_Application);
+    }
+
     auto loader_info = Loader::GetLoaderFileInfo(input_path);
     if (!loader_info.is_valid || !loader_info.is_compress_supported) {
         LOG_ERROR(
@@ -633,6 +637,10 @@ jint Java_org_citra_citra_1emu_NativeLibrary_decompressFileNative(JNIEnv* env, j
                                                                   jstring j_output_path) {
     const std::string input_path = GetJString(env, j_input_path);
     const std::string output_path = GetJString(env, j_output_path);
+
+    if (Service::FS::IsInstalledApplication(input_path)) {
+        return static_cast<jint>(CompressionStatus::Installed_Application);
+    }
 
     auto loader_info = Loader::GetLoaderFileInfo(input_path);
     if (!loader_info.is_valid || !loader_info.is_compress_supported) {
