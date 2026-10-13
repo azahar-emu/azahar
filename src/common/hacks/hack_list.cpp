@@ -130,6 +130,17 @@ HackManager hack_manager = {
                      0x00040000001D1800,
                      0x00040000001D1900,
                      0x00040000001D1A00,
+
+                     // Added from Citra MMJ config-games.ini [accurate_mul_fast] (no region labels)
+                     // Kid Icarus: Uprising
+                     0x0004000000030000,
+                     0x0004000000030100,
+                     0x0004000000030200,
+
+                     // Ever Oasis
+                     0x0004000000164A00,
+                     0x00040000001A4800,
+                     0x00040000001A4900,
                  },
              // clang-format on
          }},
@@ -294,10 +305,10 @@ HackManager hack_manager = {
                      // My Hero Academia
                      0x000400000018E900,
 
-                     // Dragon Quest Monsters: Joker 3
+                     // Dragon Quest Monsters Joker 3
                      0x000400000016AD00,
 
-                     // Dragon Quest Monsters: Joker 3 Professional
+                     // Dragon Quest Monsters Joker 3 Professional
                      0x00040000001ACB00,
                  },
              // clang-format on
@@ -311,11 +322,38 @@ HackManager hack_manager = {
              // clang-format off
              .affected_title_ids =
                  {
+                     // Kid Icarus: Uprising
+                     0x0004000000030000,
+                     0x0004000000030100,
+                     0x0004000000030200,
+
+                     // Metroid Prime: Federation Force
+                     0x000400000016CE00,
+                     0x000400000016E300,
+                     0x0004000000175200,
+
+                     // Batman: Arkham Origins Blackgate
+                     0x00040000000D6B00,
+                     0x00040000000D7000,
+
                      // Mario Kart 7
-                     0x000400000008B400,
                      0x0004000000030600,
-                     0x0004000000030800,
                      0x0004000000030700,
+                     0x0004000000030800,
+                     0x000400000008B400,
+
+                     // Luigi's Mansion: Dark Moon
+                     0x0004000000055F00,
+                     0x0004000000076400,
+                     0x0004000000076500,
+                     0x00040000000D0000,
+
+                     // Professor Layton and the Miracle Mask
+                     0x0004000000031F00,
+                     0x00040000000A8500,
+
+                     // Professor Layton and the Miracle Mask Plus
+                     0x00040000000C9200,
                  },
              // clang-format on
          }},
@@ -328,14 +366,20 @@ HackManager hack_manager = {
              // clang-format off
              .affected_title_ids =
                  {
-                     // Star Fox 64 (as labeled in Citra MMJ)
-                     0x0004000000049100,
+                     // Star Fox 64
                      0x0004000000030400,
                      0x0004000000049000,
+                     0x0004000000049100,
 
-                     // Picross 2 (as labeled in Citra MMJ)
-                     0x0004000000187E00,
+                     // Picross 2
                      0x0004000000169A00,
+                     0x0004000000187D00,
+                     0x0004000000187E00,
+
+                     // Art of Balance
+                     0x000400000008F000,
+                     0x000400000008FF00,
+                     0x00040000000E8900,
                  },
              // clang-format on
          }},
@@ -367,15 +411,16 @@ HackManager hack_manager = {
              // clang-format off
              .affected_title_ids =
                  {
-                     // Attack on Titan (as labeled in Citra MMJ)
-                     0x00040000000DF800,
+                     // Attack On Titan 2
+                     0x00040000001AA200,
 
-                     // Attack on Titan: Humanity in Chain (as labeled in Citra MMJ)
+                     // Attack On Titan 1 CHAIN
+                     0x0004000000131E00,
                      0x0004000000134500,
                      0x0004000000152000,
 
-                     // Attack on Titan 2 (as labeled in Citra MMJ)
-                     0x00040000001AA200,
+                     // Attack On Titan 1
+                     0x00040000000DF800,
                  },
              // clang-format on
          }},
