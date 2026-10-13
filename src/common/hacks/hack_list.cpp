@@ -218,18 +218,15 @@ HackManager hack_manager = {
         // Ported from Citra MMJ (skip_slow_draw): these games crash or stall when a draw cannot
         // be hardware accelerated and falls back to the software vertex path, so the draw is
         // skipped instead.
+        // NOTE: MMJ also listed Tales of the Abyss / Pac-Man Party 3D here to avoid a crash in
+        // the geometry pipeline reconfiguration. That was fixed at the root in Azahar (#7381),
+        // so those titles are intentionally not included.
         {HackType::SKIP_SLOW_DRAW,
          HackEntry{
              .mode = HackAllowMode::FORCE,
              // clang-format off
              .affected_title_ids =
                  {
-                     // Tales of the Abyss / Pac-Man Party 3D
-                     0x0004000000068B00,
-                     0x0004000000061300,
-                     0x000400000004A700,
-                     0x000400000005D700,
-
                      // New Atelier Rorona
                      0x000400000015CB00,
 
