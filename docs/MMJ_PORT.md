@@ -56,3 +56,23 @@ La primera version del port solo uso (1). Ahora las listas se regeneran desde (2
 | Super Mario 3D Land | accurate_mul_fast | ACCURATE_MULTIPLICATION (+ DELAY_TEXTURE_COPY_COMPLETION de Azahar) |
 | Kid Icarus: Uprising | accurate_mul_fast, skip_texture_copy | ambos |
 | Animal Crossing, Smash, Monster Hunter, Kirby | sin entradas | sin hack |
+
+## Procedencia (commits originales de MMJ)
+
+GitHub permite un solo repositorio padre por fork (aqui, Azahar), asi que la relacion con Citra MMJ
+(https://github.com/weihuoya/citra) se documenta con enlaces permanentes. Cada fila es el primer commit de MMJ donde
+aparece por primera vez el nombre del ajuste (verificado con `git log -S<nombre>` sobre el historial completo, 8715
+commits, HEAD `302b0c3`). Los mensajes de MMJ son muy breves y un commit puede agrupar otros cambios.
+
+| Ajuste de MMJ | Commit | Autor | Fecha | Mensaje original |
+|---|---|---|---|---|
+| `skip_slow_draw` | e85a43cf92e446b4ac4af99a22b53655ea12b92e | weihuoya | 2020-07-06 | android project |
+| `disable_clip_coef` | 0467d74465a73aba30b8ab712243f9f14b7bcb2d | weihuoya | 2020-09-21 | minor fx |
+| `y2r_perform_hack` | 965594b140bf6c5c3f5caf6a674d5d3a8a44f5a7 | weihuoya | 2020-12-25 | compress shader cache |
+| `use_linear_filter` | 21c231fbc2e1d1523a250330b2543b3c96c0875f | weihuoya | 2021-01-18 | use linear filter |
+| `skip_texture_copy` | 3c93fb489497dd49b58afa5187e735609b149a53 | weihuoya | 2022-01-20 | skip texture copy |
+| `config-games.ini` (creacion) | 79564b5f34fec812c6750b7165099023f83086a7 | weihuoya | 2022-04-19 | fx |
+| version usada como fuente | 302b0c3bc4312bc96489c11584a97664894b343f | zhangwei | 2025-11-14 | cache |
+
+URL de cada commit: `https://github.com/weihuoya/citra/commit/<hash>`.
+Historial local: `git remote add mmj https://github.com/weihuoya/citra.git && git fetch mmj`.
