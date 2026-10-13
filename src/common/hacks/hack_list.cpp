@@ -69,6 +69,67 @@ HackManager hack_manager = {
                      0x0004000000132700, // USA
                      0x0004000000132800, // EUR
                      0x000400000018A100, // EUR (Demo)
+
+                     // Added from Citra MMJ's accurate multiplication list (no region labels)
+                     // Attack on Titan
+                     0x00040000000DF800,
+                     0x0004000000134500,
+                     0x0004000000152000,
+                     0x00040000001AA200,
+
+                     // Super Mario 3D Land
+                     0x0004000000053F00,
+                     0x0004000000054000,
+                     0x0004000000054100,
+                     0x0004000000089E00,
+                     0x0004000000089F00,
+
+                     // Captain Toad: Treasure Tracker
+                     0x00040000001CB000,
+                     0x00040000001CB100,
+                     0x00040000001CB200,
+
+                     // The Legend of Zelda: A Link Between Worlds
+                     0x00040000000EC200,
+                     0x00040000000EC300,
+                     0x00040000000EC400,
+
+                     // New Super Mario Bros. 2
+                     0x000400000007AD00,
+                     0x000400000007AE00,
+                     0x000400000007AF00,
+                     0x00040000000B8A00,
+
+                     // Jett Rocket II
+                     0x0004000000079600,
+
+                     // Cut the Rope
+                     0x0004000000112600,
+                     0x0004000000116700,
+
+                     // Luigi's Mansion: Dark Moon
+                     0x0004000000055F00,
+                     0x0004000000076400,
+                     0x0004000000076500,
+                     0x00040000000D0000,
+
+                     // Digimon World Re:Digitize Decode
+                     0x00040000000AFC00,
+
+                     // The Legend of Zelda: Majoras Mask 3D
+                     0x00040000000D6E00,
+                     0x0004000000125500,
+                     0x0004000000125600,
+
+                     // Lego City Undercover
+                     0x00040000000AD500,
+                     0x00040000000AD600,
+                     0x0004000000154700,
+
+                     // Luigi's Mansion
+                     0x00040000001D1800,
+                     0x00040000001D1900,
+                     0x00040000001D1A00,
                  },
              // clang-format on
          }},
