@@ -398,7 +398,7 @@ typename T::Sampler& RasterizerCache<T>::GetSampler(SamplerId sampler_id) {
 
 template <class T>
 typename T::Sampler& RasterizerCache<T>::GetSampler(
-    const Pica::TexturingRegs::TextureConfig& config) {
+    const Pica::TexturingRegs::TextureConfig& config, bool force_linear_mag_filter) {
     using TextureFilter = Pica::TexturingRegs::TextureConfig::TextureFilter;
 
     const auto get_filter = [](TextureFilter filter) {
@@ -414,8 +414,14 @@ typename T::Sampler& RasterizerCache<T>::GetSampler(
         }
     };
 
+    TextureFilter mag_filter = get_filter(config.mag_filter);
+    // Per-title hack (ported from Citra MMJ): promote nearest magnification to linear.
+    if (force_linear_mag_filter && mag_filter == TextureFilter::Nearest) {
+        mag_filter = TextureFilter::Linear;
+    }
+
     const SamplerParams params = {
-        .mag_filter = get_filter(config.mag_filter),
+        .mag_filter = mag_filter,
         .min_filter = get_filter(config.min_filter),
         .mip_filter = get_filter(config.mip_filter),
         .wrap_s = config.wrap_s,

@@ -693,7 +693,7 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
             switch (texture.config.type.Value()) {
             case TextureType::Shadow2D: {
                 Surface& surface = res_cache.GetTextureSurface(texture);
-                Sampler& sampler = res_cache.GetSampler(texture.config);
+                Sampler& sampler = res_cache.GetSampler(texture.config, force_linear_mag_filter);
                 surface.flags |= VideoCore::SurfaceFlagBits::ShadowSource;
                 update_queue.AddImageSampler(texture_set, texture_index, 0, surface.StorageView(),
                                              sampler.Handle());
@@ -714,7 +714,7 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
 
         // Bind the texture provided by the rasterizer cache
         Surface& surface = res_cache.GetTextureSurface(texture);
-        Sampler& sampler = res_cache.GetSampler(texture.config);
+        Sampler& sampler = res_cache.GetSampler(texture.config, force_linear_mag_filter);
         const vk::ImageView color_view = framebuffer->ImageView(SurfaceType::Color);
         const bool is_feedback_loop = color_view == surface.FramebufferView();
         const vk::ImageView texture_view =
@@ -773,7 +773,7 @@ void RasterizerVulkan::BindShadowCube(const Pica::TexturingRegs::FullTextureConf
         CubeFace::NegativeY, CubeFace::PositiveZ, CubeFace::NegativeZ,
     };
 
-    Sampler& sampler = res_cache.GetSampler(texture.config);
+    Sampler& sampler = res_cache.GetSampler(texture.config, force_linear_mag_filter);
 
     for (CubeFace face : faces) {
         const u32 binding = static_cast<u32>(face);
@@ -803,7 +803,7 @@ void RasterizerVulkan::BindTextureCube(const Pica::TexturingRegs::FullTextureCon
     };
 
     Surface& surface = res_cache.GetTextureCube(config);
-    Sampler& sampler = res_cache.GetSampler(texture.config);
+    Sampler& sampler = res_cache.GetSampler(texture.config, force_linear_mag_filter);
     update_queue.AddImageSampler(texture_set, 0, 0, surface.ImageView(), sampler.Handle());
 }
 

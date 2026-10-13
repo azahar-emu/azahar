@@ -357,5 +357,27 @@ HackManager hack_manager = {
                  },
              // clang-format on
          }},
+
+        // Ported from Citra MMJ (use_linear_filter): these games request nearest magnification
+        // filtering but look better with linear filtering. Only the magnification filter is
+        // promoted to linear, as in Citra MMJ.
+        {HackType::FORCE_LINEAR_MAG_FILTER,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             // clang-format off
+             .affected_title_ids =
+                 {
+                     // Attack on Titan (as labeled in Citra MMJ)
+                     0x00040000000DF800,
+
+                     // Attack on Titan: Humanity in Chain (as labeled in Citra MMJ)
+                     0x0004000000134500,
+                     0x0004000000152000,
+
+                     // Attack on Titan 2 (as labeled in Citra MMJ)
+                     0x00040000001AA200,
+                 },
+             // clang-format on
+         }},
     }};
 }

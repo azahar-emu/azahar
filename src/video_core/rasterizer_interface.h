@@ -98,10 +98,15 @@ public:
         disable_clip_coef = disable_clip_coef_;
     }
 
+    void SetForceLinearMagFilter(bool force_linear_mag_filter_) {
+        force_linear_mag_filter = force_linear_mag_filter_;
+    }
+
 protected:
     bool accurate_mul = false;
     bool skip_texture_copy = false;
     bool disable_clip_coef = false;
+    bool force_linear_mag_filter = false;
 
     // Rasterizer gets destroyed on reboot, so make the callback
     // static until a better solution is found.

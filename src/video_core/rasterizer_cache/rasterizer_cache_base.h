@@ -98,7 +98,8 @@ public:
     Surface& GetSurface(SurfaceId surface_id);
 
     /// Returns a reference to the sampler object matching the provided configuration
-    Sampler& GetSampler(const Pica::TexturingRegs::TextureConfig& config);
+    Sampler& GetSampler(const Pica::TexturingRegs::TextureConfig& config,
+                        bool force_linear_mag_filter = false);
     Sampler& GetSampler(SamplerId sampler_id);
 
     /// Copy one surface's region to another

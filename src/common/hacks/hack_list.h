@@ -21,6 +21,7 @@ enum class HackType : int {
     SKIP_TEXTURE_COPY,
     DISABLE_CLIP_COEF,
     SKIP_REDUNDANT_Y2R_CONVERSION,
+    FORCE_LINEAR_MAG_FILTER,
 };
 
 class UserHackData {};

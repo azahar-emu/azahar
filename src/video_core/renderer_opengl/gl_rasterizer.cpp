@@ -726,7 +726,7 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
         }
 
         // Sync texture unit sampler
-        Sampler& sampler = res_cache.GetSampler(texture.config);
+        Sampler& sampler = res_cache.GetSampler(texture.config, force_linear_mag_filter);
         state.texture_units[texture_index].sampler = sampler.Handle();
 
         // Bind the texture provided by the rasterizer cache
@@ -777,7 +777,7 @@ void RasterizerOpenGL::BindTextureCube(const Pica::TexturingRegs::FullTextureCon
     };
 
     Surface& surface = res_cache.GetTextureCube(config);
-    Sampler& sampler = res_cache.GetSampler(texture.config);
+    Sampler& sampler = res_cache.GetSampler(texture.config, force_linear_mag_filter);
     state.texture_units[0].target = GL_TEXTURE_CUBE_MAP;
     state.texture_units[0].texture_2d = surface.Handle();
     state.texture_units[0].sampler = sampler.Handle();
