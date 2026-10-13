@@ -6,6 +6,7 @@
 #include <cstring>
 #include "common/archives.h"
 #include "common/common_funcs.h"
+#include "common/hacks/hack_manager.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
 #include "core/core.h"
@@ -521,7 +522,14 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
     system.Memory().RasterizerFlushVirtualRegion(conversion.dst.address, total_output_size,
                                                  Memory::FlushMode::FlushAndInvalidate);
 
-    HW::Y2R::PerformConversion(system.Memory(), conversion);
+    // Per-title hack (ported from Citra MMJ): skip the conversion if the completion event of a
+    // previous conversion is still signaled.
+    const u64 caller_tid = ctx.ClientThread()->owner_process.lock()->codeset->program_id;
+    const bool skip_redundant = Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::SKIP_REDUNDANT_Y2R_CONVERSION, caller_tid, false);
+    if (!skip_redundant || completion_event->ShouldWait(nullptr)) {
+        HW::Y2R::PerformConversion(system.Memory(), conversion);
+    }
 
     if (is_busy_conversion) {
         system.CoreTiming().RemoveEvent(completion_signal_event);

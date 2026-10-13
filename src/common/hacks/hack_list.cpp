@@ -278,5 +278,23 @@ HackManager hack_manager = {
                  },
              // clang-format on
          }},
+
+        // Ported from Citra MMJ (y2r_perform_hack): these games start a new Y2R conversion while
+        // the completion event of the previous one is still signaled. The redundant conversion
+        // is skipped.
+        {HackType::SKIP_REDUNDANT_Y2R_CONVERSION,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             // clang-format off
+             .affected_title_ids =
+                 {
+                     // Danball Senki W Chou Custom (as labeled in Citra MMJ)
+                     0x00040000000DCA00,
+
+                     // Danball Senki WARS (as labeled in Citra MMJ)
+                     0x00040000000F4000,
+                 },
+             // clang-format on
+         }},
     }};
 }
