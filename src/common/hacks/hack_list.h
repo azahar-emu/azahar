@@ -19,6 +19,7 @@ enum class HackType : int {
     DELAY_TEXTURE_COPY_COMPLETION,
     SKIP_SLOW_DRAW,
     SKIP_TEXTURE_COPY,
+    DISABLE_CLIP_COEF,
 };
 
 class UserHackData {};

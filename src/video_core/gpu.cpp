@@ -398,6 +398,8 @@ void GPU::ApplyPerProgramSettings(u64 program_ID) {
         Common::Hacks::HackType::SKIP_SLOW_DRAW, program_ID, false);
     impl->rasterizer->SetSkipTextureCopy(Common::Hacks::hack_manager.OverrideBooleanSetting(
         Common::Hacks::HackType::SKIP_TEXTURE_COPY, program_ID, false));
+    impl->rasterizer->SetDisableClipCoef(Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::DISABLE_CLIP_COEF, program_ID, false));
 }
 
 void GPU::SubmitCmdList(u32 index) {

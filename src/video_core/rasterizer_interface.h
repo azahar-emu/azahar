@@ -94,9 +94,14 @@ public:
         skip_texture_copy = skip_texture_copy_;
     }
 
+    void SetDisableClipCoef(bool disable_clip_coef_) {
+        disable_clip_coef = disable_clip_coef_;
+    }
+
 protected:
     bool accurate_mul = false;
     bool skip_texture_copy = false;
+    bool disable_clip_coef = false;
 
     // Rasterizer gets destroyed on reboot, so make the callback
     // static until a better solution is found.

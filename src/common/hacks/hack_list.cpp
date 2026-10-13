@@ -261,5 +261,25 @@ HackManager hack_manager = {
                  },
              // clang-format on
          }},
+
+        // Ported from Citra MMJ (disable_clip_coef): these games render incorrectly when the
+        // user clip plane (clip_coef) is applied, so the second clip plane is disabled.
+        {HackType::DISABLE_CLIP_COEF,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             // clang-format off
+             .affected_title_ids =
+                 {
+                     // Star Fox 64 (as labeled in Citra MMJ)
+                     0x0004000000049100,
+                     0x0004000000030400,
+                     0x0004000000049000,
+
+                     // Picross 2 (as labeled in Citra MMJ)
+                     0x0004000000187E00,
+                     0x0004000000169A00,
+                 },
+             // clang-format on
+         }},
     }};
 }
