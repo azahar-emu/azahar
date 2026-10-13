@@ -85,7 +85,8 @@ public:
     void TickFrame();
 
     /// Perform hardware accelerated texture copy according to the provided configuration
-    bool AccelerateTextureCopy(const Pica::DisplayTransferConfig& config);
+    bool AccelerateTextureCopy(const Pica::DisplayTransferConfig& config,
+                               bool skip_if_no_source = false);
 
     /// Perform hardware accelerated display transfer according to the provided configuration
     bool AccelerateDisplayTransfer(const Pica::DisplayTransferConfig& config);

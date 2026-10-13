@@ -182,7 +182,8 @@ void RasterizerCache<T>::RemoveTextureCubeFace(SurfaceId surface_id) {
 }
 
 template <class T>
-bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) {
+bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config,
+                                               bool skip_if_no_source) {
     const DebugScope scope{runtime, Common::Vec4f{0.f, 0.f, 1.f, 1.f},
                            "RasterizerCache::AccelerateTextureCopy ({})", config.DebugName()};
 
@@ -228,7 +229,8 @@ bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig
 
     const auto [src_surface_id, src_rect] = GetTexCopySurface(src_params);
     if (!src_surface_id) {
-        return false;
+        // Returning true marks the copy as handled, so the software fallback is skipped.
+        return skip_if_no_source;
     }
 
     const SurfaceParams src_info = slot_surfaces[src_surface_id];

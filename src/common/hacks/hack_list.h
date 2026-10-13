@@ -17,6 +17,8 @@ enum class HackType : int {
     REQUIRES_SHADER_FIXUP,
     SPOOF_FRIEND_CODE_SEED,
     DELAY_TEXTURE_COPY_COMPLETION,
+    SKIP_SLOW_DRAW,
+    SKIP_TEXTURE_COPY,
 };
 
 class UserHackData {};

@@ -214,5 +214,52 @@ HackManager hack_manager = {
                  },
              // clang-format on
          }},
+
+        // Ported from Citra MMJ (skip_slow_draw): these games crash or stall when a draw cannot
+        // be hardware accelerated and falls back to the software vertex path, so the draw is
+        // skipped instead.
+        {HackType::SKIP_SLOW_DRAW,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             // clang-format off
+             .affected_title_ids =
+                 {
+                     // Tales of the Abyss / Pac-Man Party 3D
+                     0x0004000000068B00,
+                     0x0004000000061300,
+                     0x000400000004A700,
+                     0x000400000005D700,
+
+                     // New Atelier Rorona
+                     0x000400000015CB00,
+
+                     // My Hero Academia
+                     0x000400000018E900,
+
+                     // Dragon Quest Monsters: Joker 3
+                     0x000400000016AD00,
+
+                     // Dragon Quest Monsters: Joker 3 Professional
+                     0x00040000001ACB00,
+                 },
+             // clang-format on
+         }},
+
+        // Ported from Citra MMJ (skip_texture_copy): when the source of a texture copy is not
+        // present in the GPU surface cache, skip the (slow) software copy entirely.
+        {HackType::SKIP_TEXTURE_COPY,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             // clang-format off
+             .affected_title_ids =
+                 {
+                     // Mario Kart 7
+                     0x000400000008B400,
+                     0x0004000000030600,
+                     0x0004000000030800,
+                     0x0004000000030700,
+                 },
+             // clang-format on
+         }},
     }};
 }

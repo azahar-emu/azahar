@@ -369,6 +369,9 @@ public:
 
     DelayGenerator delay_generator{};
 
+    /// Per-title hack: drop draws that cannot be hardware accelerated (ported from Citra MMJ).
+    bool skip_slow_draw{};
+
 private:
     friend class boost::serialization::access;
     template <class Archive>

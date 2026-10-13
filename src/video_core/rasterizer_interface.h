@@ -90,8 +90,13 @@ public:
         accurate_mul = accurate_mul_;
     }
 
+    void SetSkipTextureCopy(bool skip_texture_copy_) {
+        skip_texture_copy = skip_texture_copy_;
+    }
+
 protected:
     bool accurate_mul = false;
+    bool skip_texture_copy = false;
 
     // Rasterizer gets destroyed on reboot, so make the callback
     // static until a better solution is found.

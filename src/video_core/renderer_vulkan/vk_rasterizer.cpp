@@ -833,7 +833,7 @@ bool RasterizerVulkan::AccelerateDisplayTransfer(const Pica::DisplayTransferConf
 }
 
 bool RasterizerVulkan::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) {
-    return res_cache.AccelerateTextureCopy(config);
+    return res_cache.AccelerateTextureCopy(config, skip_texture_copy);
 }
 
 bool RasterizerVulkan::AccelerateFill(const Pica::MemoryFillConfig& config) {

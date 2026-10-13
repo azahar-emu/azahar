@@ -850,7 +850,7 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const Pica::DisplayTransferConf
 }
 
 bool RasterizerOpenGL::AccelerateTextureCopy(const Pica::DisplayTransferConfig& config) {
-    return res_cache.AccelerateTextureCopy(config);
+    return res_cache.AccelerateTextureCopy(config, skip_texture_copy);
 }
 
 bool RasterizerOpenGL::AccelerateFill(const Pica::MemoryFillConfig& config) {

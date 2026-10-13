@@ -393,6 +393,11 @@ void GPU::ApplyPerProgramSettings(u64 program_ID) {
         }
     }
     impl->rasterizer->SetAccurateMul(use_accurate_mul);
+
+    impl->pica.skip_slow_draw = Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::SKIP_SLOW_DRAW, program_ID, false);
+    impl->rasterizer->SetSkipTextureCopy(Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::SKIP_TEXTURE_COPY, program_ID, false));
 }
 
 void GPU::SubmitCmdList(u32 index) {

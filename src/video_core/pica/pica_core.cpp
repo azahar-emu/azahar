@@ -1083,6 +1083,11 @@ void PicaCore::DrawArrays(bool is_indexed) {
         return;
     }
 
+    // Per-title hack: skip draws that would fall back to the slow software vertex path.
+    if (skip_slow_draw) {
+        return;
+    }
+
     // We cannot accelerate the draw, so load and execute the vertex shader for each vertex.
     LoadVertices(is_indexed);
 
