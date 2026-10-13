@@ -1,141 +1,148 @@
-![Azahar Emulator](https://azahar-emu.org/resources/images/logo/azahar-name-and-logo.svg)
+# Azahar MMJ Port
 
-![Current Release](https://img.shields.io/github/v/release/azahar-emu/azahar?label=Current%20Release)
-![Current Prerelease](https://img.shields.io/github/v/release/azahar-emu/azahar?include_prereleases&label=Current%20Prerelease)
+> **Fork no oficial y experimental de [Azahar](https://github.com/azahar-emu/azahar).**
+> Lleva a Azahar los arreglos por juego que acumuló **Citra MMJ**, un fork de Citra pensado para Android.
+>
+> *English summary at the [bottom](#english-summary).*
 
-![GitHub Downloads](https://img.shields.io/github/downloads/azahar-emu/azahar/total?logo=github&label=GitHub%20Downloads)
-![Google Play Downloads](https://playbadges.pavi2410.com/badge/downloads?id=io.github.lime3ds.android&pretty&label=Play%20Store%20Downloads)
-![Flathub Downloads](https://img.shields.io/flathub/downloads/org.azahar_emu.Azahar?logo=flathub&label=Flathub%20Downloads)
-![CI Build Status](https://github.com/azahar-emu/azahar/actions/workflows/build.yml/badge.svg)
+> [!WARNING]
+> **Estado: compila, pero todavía no está probado en juegos.**
+> No es una versión oficial de Azahar, no publica binarios y no está afiliado ni respaldado por el equipo de
+> Azahar, por el de Citra, por el de Lime3DS, por el autor de Citra MMJ ni por Nintendo.
 
-**Azahar** is a free and open-source high level Nintendo 3DS emulator for PC and mobile devices. Our goal is to give 3DS owners a place to enjoy their library of titles with improvements to the original hardware, such as higher resolutions, modern controllers or save states. The emulator also serves as a debugging hub for homebrew developers and as a research and preservation platform for the 3DS ecosystem.
+## Qué buscamos
 
-The project continues the legacy of **Citra** and is actively developed by a community of contributors.
+Durante años, [Citra MMJ](https://github.com/weihuoya/citra) (de *weihuoya*) fue acumulando conocimiento práctico
+sobre juegos concretos de 3DS: qué títulos necesitan una multiplicación más precisa en los shaders, cuáles se
+rompen con cierto recorte de geometría, cuáles se benefician de saltarse una copia de texturas lenta, etc.
+Ese conocimiento vive sobre todo en listas de *title IDs* dentro de su código y de un archivo de configuración
+(`config-games.ini`).
 
-*Azahar is not affiliated with or endorsed by Nintendo.*
+El problema es que MMJ se separó de Citra en 2020, no puede fusionarse con el código actual de Azahar y su último
+commit es de noviembre de 2025. **Si nadie lo rescata, ese conocimiento se pierde.** Este proyecto intenta:
 
-# Installation
+1. **Rescatar y documentar** qué problema resuelve cada hack de MMJ y en qué juegos.
+2. **Traducir a la arquitectura actual de Azahar** los que siguen teniendo sentido, reutilizando su
+   `HackManager` (`src/common/hacks/`), un hack por commit.
+3. **Descartar, explicando por qué,** lo que Azahar ya resolvió mejor, lo que no se puede validar sin el juego
+   o lo que MMJ nunca llegó a usar de verdad.
+4. **Validar en dispositivos Android reales**, juego por juego, comparando contra Azahar oficial.
 
-### Windows
+### Principios
 
-Azahar is available as both an installer and a zip archive.
+- **Precisión primero.** Cada hack actúa únicamente sobre los títulos listados por ID. Para cualquier otro juego
+  el comportamiento es idéntico al de Azahar.
+- **Reversible.** Los hacks son independientes. Si un juego va peor que en Azahar oficial, se quita su ID de
+  `src/common/hacks/hack_list.cpp` y listo.
+- **Honestidad sobre el estado.** Se dice qué está verificado y qué no (ver abajo).
 
-Download the latest release in your preferred format from the [Releases](https://github.com/azahar-emu/azahar/releases) page.
+### Lo que *no* buscamos
 
-If you are unsure of whether you want to use MSVC or MXE, use MXE.
+- Reemplazar o competir con Azahar. Es un experimento sobre su base.
+- Reescribir el motor ni mezclar mejoras de rendimiento generales.
+- Enviar estos cambios a Azahar como pull request (ver [Transparencia sobre el uso de IA](#transparencia-sobre-el-uso-de-ia)).
+- Facilitar la piratería. Ver [Aviso legal](#aviso-legal).
 
----
+## Estado actual
 
-### MacOS
+Base: Azahar `master` en `bfa768727` (2026-10-12). Origen de los datos: Citra MMJ en `302b0c3` (2025-11-14).
 
-To download a build that will work on all Macs, you can download the `macos-universal` build on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
+| Hack de MMJ | Hack en Azahar | IDs | Juegos (ejemplos) |
+|---|---|---:|---|
+| `skip_texture_copy` | `SKIP_TEXTURE_COPY` | 19 | Mario Kart 7, Kid Icarus: Uprising, Metroid Prime: Federation Force |
+| `disable_clip_coef` | `DISABLE_CLIP_COEF` | 9 | Star Fox 64, Picross 2, Art of Balance |
+| `use_linear_filter` | `FORCE_LINEAR_MAG_FILTER` | 5 | Attack on Titan |
+| `skip_slow_draw` | `SKIP_SLOW_DRAW` | 4 | Dragon Quest Monsters: Joker 3, New Atelier Rorona |
+| `y2r_perform_hack` | `SKIP_REDUNDANT_Y2R_CONVERSION` | 2 | Danball Senki |
+| lista de multiplicación precisa | `ACCURATE_MULTIPLICATION` (ampliada) | 57 | Zelda: Ocarina of Time 3D, Super Mario 3D Land |
 
-Alternatively, if you wish to download a build specifically for your Mac, you can choose either:
+**Qué está verificado y qué no:**
 
-- `macos-arm64` for Apple Silicon Macs
-- `macos-x86_64` for Intel Macs
+- ✅ Los 38 archivos fuente afectados compilan con la configuración real del proyecto, sin errores ni advertencias.
+- ✅ Una prueba contra el `HackManager` real comprueba que cada título recibe (o no) su hack, sin IDs duplicados.
+- ❌ **No se ha ejecutado ningún juego.** No hay ninguna garantía de que un hack mejore (o no empeore) un título.
+- ❌ No se ha compilado el proyecto completo ni el APK de Android.
 
----
+Detalle completo, notas de fidelidad frente a MMJ y la lista de lo que **no** se portó y por qué:
+**[`docs/MMJ_PORT.md`](docs/MMJ_PORT.md)**.
 
-### Android
+## Compilar y probar
 
-There are two variants of Azahar available on Android, those being the Vanilla and Google Play builds.
-
-The Vanilla build is technically superior, as it uses an alternative method of file management which is faster, but isn't permitted on the Google Play store.
-
-For most users, we currently recommended downloading Azahar on Android via the Google Play Store for ease of accessibility:
-
-<a href='https://play.google.com/store/apps/details?id=io.github.lime3ds.android'><img width='180' alt='Get it on Google Play' src='https://raw.githubusercontent.com/pioug/google-play-badges/06ccd9252af1501613da2ca28eaffe31307a4e6d/svg/English.svg'/></a>
-
-Alternatively, you can install the app using Obtainium, allowing you to use the Vanilla variant:
-1. Download and install Obtainium from [here](https://github.com/ImranR98/Obtainium/releases) (use the file named `app-release.apk`)
-2. Open Obtainium and click 'Add App'
-3. Type `https://github.com/azahar-emu/azahar` into the 'App Source URL' section
-4. Click 'Add'
-5. Click 'Install', and select the preferred variant
-
-If you wish, you can also simply install the latest APK from the [Releases](https://github.com/azahar-emu/azahar/releases) page.
-
-Keep in mind that you will not recieve automatic updates when installing via the APK.
-
----
-
-### Linux
-
-The recommended format for using Azahar on Linux is the Flatpak available on Flathub:
-
-<a href='https://flathub.org/apps/org.azahar_emu.Azahar'><img width='180' alt='Download on Flathub' src='https://dl.flathub.org/assets/badges/flathub-badge-en.png'/></a>
-
-Azahar is also available as an AppImage on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
-
-There are two variants of the AppImage available, those being `azahar.AppImage` and `azahar-wayland.AppImage`.
-
-If you are unsure of which variant to use, we recommend using the default `azahar.AppImage`. This is because of upstream issues in the Wayland ecosystem which may cause problems when running the emulator (e.g. [#1162](https://github.com/azahar-emu/azahar/issues/1162)).
-
-Unless you explicitly require native Wayland support (e.g. you are running a system with no Xwayland), the non-Wayland variant is recommended.
-
-The Flatpak build of Azahar also has native Wayland support disabled by default. If you require native Wayland support, it can be enabled using [Flatseal](https://flathub.org/en/apps/com.github.tchx84.Flatseal).
-
-# Build instructions
-
-Please refer this repository's [wiki](https://github.com/azahar-emu/azahar/wiki/Building-From-Source) for build instructions
-
-# How can I contribute?
-
-### Pull requests
-
-If you want to implement a change and have the technical capability to do so, we would be happy to accept your contributions.
-
-If you are contributing a new feature, it is highly suggested that you first make a Feature Request issue to discuss the addition before writing any code. This is to ensure that your time isn't wasted working on a feature which isn't deemed appropriate for the project.
-
-After creating a pull request, please don't repeatedly merge `master` into your branch. A maintainer will update the branch for you if/ when it is appropriate to do so.
-
-### Language translations
-
-Additionally, we are accepting language translations on [Transifex](https://app.transifex.com/azahar/azahar). If you know a non-english language listed on our Transifex page, please feel free to contribute.
+- Guía para Android Studio y tabla de qué mirar en cada juego: **[`docs/ANDROID_TEST.md`](docs/ANDROID_TEST.md)**.
+- Instrucciones generales de compilación (escritorio): [wiki de Azahar](https://github.com/azahar-emu/azahar/wiki/Building-From-Source).
+- Los cambios de este fork, aislados del resto: `git diff master...mmj-hacks-port -- src/`.
+- README original de Azahar, conservado íntegro: [`docs/UPSTREAM_README.md`](docs/UPSTREAM_README.md).
 
 > [!NOTE]
-> We are not currently accepting new languages for translation. Please do not request for new languages or language variants to be added.
+> El trabajo vive en la rama **`mmj-hacks-port`**. La rama `master` es un espejo del Azahar oficial.
 
-### Compatibility reports
+## Transparencia sobre el uso de IA
 
-Even if you don't wish to contribute code or translations, you can help the project by reporting game compatibility data to our compatibility list.
+El código y la documentación de este fork fueron escritos con **Claude (Anthropic)**, siguiendo la dirección y las
+decisiones del propietario del repositorio. Los commits más recientes lo declaran con un trailer `Co-Authored-By`.
 
-To do so, simply read https://github.com/azahar-emu/compatibility-list/blob/master/CONTRIBUTING.md and follow the instructions.
+Esto tiene consecuencias que conviene decir en voz alta:
 
-Contributing compatibility data helps more accurately reflect the current capabilities of the emulator, so it would be highly appreciated if you could go through the reporting process after completing a game.
+- Azahar publica una [política de uso de IA](AI-POLICY.md) que **prohíbe enviar como contribución código escrito
+  total o sustancialmente por IA**. Por eso **este fork no se propone como pull request a Azahar**, y se pide que
+  nadie lo haga en su nombre. Si a los mantenedores les interesa alguna idea, pueden reimplementarla a mano a partir
+  de la documentación en [`docs/MMJ_PORT.md`](docs/MMJ_PORT.md).
+- Una IA puede equivocarse. **Revisa el diff antes de confiar en él**, sobre todo en `video_core`.
 
-# Minimum requirements
+## Créditos
 
-Below are the minimum requirements to run Azahar:
+Este proyecto no existiría sin el trabajo de otras personas. Casi todo lo valioso aquí es suyo:
 
-### Desktop
+- **[Azahar Emulator Project](https://github.com/azahar-emu/azahar)** y todas las personas que lo desarrollan: la
+  base sobre la que se construye este fork, incluido el `HackManager` que hace posible el enfoque por título.
+- **Citra Emulator Project** y sus colaboradores, creadores del emulador original del que descienden todos los
+  demás, incluidos Azahar y MMJ.
+- **Lime3DS** y sus colaboradores, cuyo trabajo continúa hoy dentro de Azahar.
+- **[weihuoya](https://github.com/weihuoya)** (y **zhangwei**), autores de
+  **[Citra MMJ](https://github.com/weihuoya/citra)**. Los hacks, los *title IDs* y las observaciones por juego que
+  este fork traduce son fruto de **su** trabajo y de sus pruebas con juegos reales. Aquí solo se adaptan a una
+  base nueva.
+- Los autores de las bibliotecas externas que incluye Azahar (Dynarmic, entre otras), con sus propias licencias.
 
-```
-Operating System: Windows 10 (64-bit), MacOS 13.4 (Ventura), or modern 64-bit Linux
-CPU: x86-64/ARM64 CPU (Windows for ARM not supported).
-     Single core performance higher than 1,800 on Passmark.
-     SSE4.2 required on x86_64.
-GPU: OpenGL 4.3 or Vulkan 1.1 support
-Memory: 2GB of RAM. 4GB is recommended
-```
-### Android
+Si eres autor de alguno de estos proyectos y quieres que se corrija o retire algo de aquí, abre un issue.
 
-```
-Operating System: Android 10.0+ (64-bit)
-CPU: Snapdragon 835 SoC or better
-GPU: OpenGL ES 3.2 or Vulkan 1.1 support
-Memory: 2GB of RAM. 4GB is recommended
-```
+## Licencia
 
-# What's next?
+Azahar, Citra y Citra MMJ se distribuyen bajo licencias GPL. Cada archivo conserva su aviso de copyright y su
+licencia original (la mayoría **GPLv2 o posterior**; algunos archivos más recientes, **GPLv3 o posterior**).
+Consulta las cabeceras de cada archivo, [`LICENSE.txt`](LICENSE.txt) y [`misc/licenses/`](misc/licenses/).
+Los cambios de este fork se publican bajo los mismos términos.
 
-We share public roadmaps for upcoming releases in the form of GitHub milestones.
+## Reportar problemas
 
-You can find these at https://github.com/azahar-emu/azahar/milestones.
+- **Problemas de este fork** (un hack que rompe un juego, un error de compilación): abre un issue **aquí**.
+- **No** reportes en el repositorio de Azahar fallos observados con compilaciones de este fork: no son suyos
+  y les harías perder tiempo.
+- Si un problema también ocurre en Azahar oficial, repórtalo allí siguiendo sus guías.
 
-# Join the conversation
+## Aviso legal
 
-We have a community Discord server where you can chat about the project, keep up to date with the latest announcements, or coordinate emulator development.
+Este proyecto es un emulador y no incluye juegos, claves ni firmware de Nintendo, ni ayuda a obtenerlos.
+Úsalo únicamente con copias de juegos que hayas obtenido legalmente de tu propia consola.
+Nintendo y Nintendo 3DS son marcas de Nintendo.
 
-Join at https://discord.gg/4ZjMpAp3M6
+---
+
+## English summary
+
+**Unofficial, experimental fork of [Azahar](https://github.com/azahar-emu/azahar)** (a Nintendo 3DS emulator) that
+ports the per-game compatibility hacks accumulated in **[Citra MMJ](https://github.com/weihuoya/citra)** (an
+Android-focused Citra fork by *weihuoya*, last updated Nov 2025) onto Azahar's current `HackManager`.
+
+- **Goal:** preserve MMJ's per-title knowledge before it is lost, one hack per commit, with each hack active
+  *only* for its listed title IDs (all other games behave exactly like upstream Azahar) and individually revertible.
+- **Status:** the 38 affected source files compile cleanly and a data test against the real `HackManager` passes.
+  **No game has been run yet.** No binaries are published. Not affiliated with Azahar, Citra, Lime3DS, Citra MMJ's
+  author, or Nintendo.
+- **AI disclosure:** the code was written with Claude (Anthropic) under the repository owner's direction. Azahar's
+  [AI policy](AI-POLICY.md) forbids submitting substantially AI-written code upstream, so **this fork is not
+  intended as a pull request to Azahar**.
+- **Credits:** Azahar Emulator Project, Citra Emulator Project, Lime3DS, and above all **weihuoya / zhangwei
+  (Citra MMJ)**, whose per-game research this fork adapts.
+- **Details:** [`docs/MMJ_PORT.md`](docs/MMJ_PORT.md), [`docs/ANDROID_TEST.md`](docs/ANDROID_TEST.md),
+  original README in [`docs/UPSTREAM_README.md`](docs/UPSTREAM_README.md).
