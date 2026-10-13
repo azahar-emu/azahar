@@ -393,7 +393,7 @@
     <string name="shader_jit_description">Use the JIT engine instead of the interpreter for software shader emulation.</string>
     <string name="logging">Logging</string>
     <string name="log_filter_name">Log Level</string>
-    <string name="log_filter_description">Select the level of verbosity to display in the log files. Ranges from <i>None</i> to <i>Trace</i> (i.e. everything). Default is <i>Info</i>.</string>
+    <string name="log_filter_description">Select the level of verbosity to display in the log files. Ranges from <i>None</i> to <i>Trace</i> (i.e. everything) and the logs will include everything from the selected level and below. Default is <i>Info</i>.</string>
     <string name="log_none">None</string>
     <string name="log_critical">Critical</string>
     <string name="log_error">Error</string>
