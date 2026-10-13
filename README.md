@@ -11,8 +11,9 @@
 > Azahar, por el de Citra, por el de Lime3DS, por los autores de Citra MMJ ni por Nintendo.
 
 > [!NOTE]
-> **Dónde está cada cosa.** La rama `master` es el código de Azahar más este README. Los cambios de código y toda
-> la documentación están en la rama **[`mmj-hacks-port`](https://github.com/axelconde7w7-gif/azahar-mmj/tree/mmj-hacks-port)**.
+> **Dónde está cada cosa.** La rama `master` contiene Azahar **más** los cambios de este port (todo el código y la
+> documentación). La rama [`mmj-hacks-port`](https://github.com/axelconde7w7-gif/azahar-mmj/tree/mmj-hacks-port) conserva
+> el mismo trabajo como historial aparte, para poder compararlo con Azahar oficial.
 
 ## Qué buscamos
 
@@ -49,7 +50,7 @@ Este proyecto intenta:
 
 ## Estado actual
 
-Base: Azahar `master` en `bfa768727` (2026-10-12). Origen de los datos: Citra MMJ en [`302b0c3`](https://github.com/weihuoya/citra/commit/302b0c3bc4312bc96489c11584a97664894b343f) (2025-11-14).
+Base: Azahar `master` en `bfa768727` (2026-10-12). Resolución interna limitada a un máximo de **8x** (Azahar oficial permite hasta 18x). Origen de los datos: Citra MMJ en [`302b0c3`](https://github.com/weihuoya/citra/commit/302b0c3bc4312bc96489c11584a97664894b343f) (2025-11-14).
 
 | Hack de MMJ | Hack en Azahar | IDs | Juegos (ejemplos) |
 |---|---|---:|---|
@@ -92,7 +93,7 @@ Para consultar el historial completo en local: `git remote add mmj https://githu
 
 - Guía para Android Studio y tabla de qué mirar en cada juego: **[`docs/ANDROID_TEST.md`](https://github.com/axelconde7w7-gif/azahar-mmj/blob/mmj-hacks-port/docs/ANDROID_TEST.md)**.
 - Instrucciones generales de compilación (escritorio): [wiki de Azahar](https://github.com/azahar-emu/azahar/wiki/Building-From-Source).
-- Los cambios de código de este fork, aislados del resto: `git diff master...mmj-hacks-port -- src/`.
+- Los cambios de código de este fork, aislados del resto: `git diff bfa768727 HEAD -- src/`.
 - README original de Azahar, conservado íntegro: [`docs/UPSTREAM_README.md`](https://github.com/axelconde7w7-gif/azahar-mmj/blob/mmj-hacks-port/docs/UPSTREAM_README.md).
 
 ## Transparencia sobre el uso de IA

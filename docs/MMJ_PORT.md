@@ -76,3 +76,8 @@ commits, HEAD `302b0c3`). Los mensajes de MMJ son muy breves y un commit puede a
 
 URL de cada commit: `https://github.com/weihuoya/citra/commit/<hash>`.
 Historial local: `git remote add mmj https://github.com/weihuoya/citra.git && git fetch mmj`.
+
+## Otros cambios de este fork (no vienen de MMJ)
+
+- **Resolución interna limitada a 8x.** `Settings::values.resolution_factor` pasa de 0..18 a 0..8 y se quitan las
+  opciones 9x-18x de Android, Qt y libretro. Las configuraciones antiguas con valores mayores se acotan a 8 solas.
