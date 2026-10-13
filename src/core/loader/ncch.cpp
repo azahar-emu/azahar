@@ -289,7 +289,9 @@ bool AppLoader_NCCH::IsGbaVirtualConsole(std::span<const u8> code) {
 
 ResultStatus AppLoader_NCCH::OpenUpdateNCCH() {
     u64 program_id;
-    ReadProgramId(program_id);
+    if (ReadProgramId(program_id) != ResultStatus::Success) {
+        return ResultStatus::ErrorNotFound;
+    }
 
     bool is_dlp_child = (program_id & 0xFFFFFFFF00000000) == DLP_CHILD_TID_HIGH;
     if (is_dlp_child) {
@@ -390,7 +392,7 @@ ResultStatus AppLoader_NCCH::ReadIcon(std::vector<u8>& buffer, bool prefer_updat
         }
     }
 
-    return base_ncch.LoadSectionExeFS("icon", buffer);
+    return overlay_ncch->LoadSectionExeFS("icon", buffer);
 }
 
 ResultStatus AppLoader_NCCH::ReadBanner(std::vector<u8>& buffer) {

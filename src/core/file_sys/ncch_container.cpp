@@ -153,7 +153,8 @@ std::unique_ptr<FileUtil::IOFileBase> NCCHContainer::AutoOpenNCCHNCSD(
     if (auto tar = FileUtil::TarArchive::OpenTarArchive(file->OpenCopy())) {
         auto files = tar->GetFileList();
         for (const auto& f : files) {
-            if (f.name.ends_with(".cci") || f.name.ends_with(".zcci") || f.name.ends_with(".3ds")) {
+            if (f.name.ends_with(".cci") || f.name.ends_with(".zcci") || f.name.ends_with(".3ds") ||
+                f.name.ends_with(".cxi") || f.name.ends_with(".zcxi") || f.name.ends_with(".app")) {
                 file = tar->OpenSubFile(f.name);
                 if (has_ncch_magic(file.get())) {
                     return std::move(file);

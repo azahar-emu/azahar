@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -111,16 +112,15 @@ public:
     void AddContentChunk(const ContentChunk& chunk);
 
     void Print() const;
-    Loader::ResultStatus LoadResult() {
-        return load_result;
-    }
+    /// Result of the last Load, Error if nothing was loaded.
+    Loader::ResultStatus LoadResult() const;
 
 private:
     Body tmd_body;
     u32_be signature_type;
     std::vector<u8> tmd_signature;
     std::vector<ContentChunk> tmd_chunks;
-    Loader::ResultStatus load_result;
+    std::optional<Loader::ResultStatus> load_result;
 };
 
 } // namespace FileSys

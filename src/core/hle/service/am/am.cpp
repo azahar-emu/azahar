@@ -1218,6 +1218,8 @@ bool BundleCIAHandler::RegisterBundle(const std::string& filename) {
             if (res != Loader::ResultStatus::Success) {
                 LOG_ERROR(Service_AM, "Failed to parse bundled cia file {}: (error {})", f.name,
                           res);
+                cia_containers.clear();
+                return false;
             }
             if (cia_containers.back().GetTitleMetadata().HasEncryptedContent(
                     cia_containers.back().GetHeader())) {
@@ -1294,6 +1296,7 @@ std::unique_ptr<FileUtil::IOFileBase> BundleCIAHandler::OpenContentFile(u64 titl
             return c.GetContentFile(content_index);
         }
     }
+    return std::make_unique<FileUtil::NullIOFile>();
 }
 
 InstallStatus InstallCIA(const std::string& path,
@@ -1387,7 +1390,8 @@ InstallStatus InstallCIA(const std::string& path,
             if (f.name.ends_with(".cia") || f.name.ends_with(".zcia")) {
                 auto sub_file = tar->OpenSubFile(f.name);
                 if (!sub_file->IsGood()) {
-                    LOG_ERROR(Service_AM, "Failed to open sub file");
+                    LOG_ERROR(Service_AM, "Failed to open sub file {}", f.name);
+                    return InstallStatus::ErrorInvalid;
                 }
                 auto res = install_single_cia(std::move(sub_file), path + ":" + f.name);
                 if (res != InstallStatus::Success) {
@@ -1414,10 +1418,17 @@ InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed, bo
 
     if (auto tar = FileUtil::TarArchive::OpenTarArchive(in_file->OpenCopy())) {
         auto files = tar->GetFileList();
+        bool has_cia = false;
         for (const auto& f : files) {
-            if (!f.name.ends_with(".cia") && !f.name.ends_with(".zcia")) {
+            if (f.name.ends_with(".cia") || f.name.ends_with(".zcia")) {
+                has_cia = true;
+            } else if (f.name != "metadata") {
+                // Bundles only contain CIA files, besides the metadata written by the bundler.
                 return InstallStatus::ErrorInvalid;
             }
+        }
+        if (!has_cia) {
+            return InstallStatus::ErrorInvalid;
         }
         is_bundle = true;
         is_compressed = false;

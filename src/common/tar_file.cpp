@@ -46,12 +46,12 @@ struct TarArchiveImpl {
         tar.read = [](mtar_t* tar, void* data, size_t size) {
             size_t res = reinterpret_cast<TarArchiveImpl*>(tar->stream)
                              ->file->ReadBytes(reinterpret_cast<char*>(data), size);
-            return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EWRITEFAIL);
+            return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EREADFAIL);
         };
         tar.write = [](mtar_t* tar, const void* data, size_t size) {
             size_t res = reinterpret_cast<TarArchiveImpl*>(tar->stream)
                              ->file->WriteBytes(reinterpret_cast<const char*>(data), size);
-            return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EREADFAIL);
+            return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EWRITEFAIL);
         };
         tar.seek = [](mtar_t* tar, size_t set_offset) {
             return static_cast<int>(
@@ -70,28 +70,32 @@ struct TarArchiveImpl {
         m_good = mtar_read_header(&tar, &h) == 0;
     }
 
+    const std::vector<TarArchive::TarFileInfo>& Fail() {
+        file_infos.clear();
+        m_good = false;
+        return file_infos;
+    }
+
     const std::vector<TarArchive::TarFileInfo>& GetFileList() {
         if (!m_good) {
-            return {};
+            return Fail();
         }
         if (!file_infos.empty()) {
             return file_infos;
         }
         if (mtar_rewind(&tar) != MTAR_ESUCCESS) {
-            m_good = false;
-            return {};
+            return Fail();
         }
 
         mtar_header_t h;
         int err = MTAR_ESUCCESS;
         constexpr size_t MAX_FILES = 50;
+        const u64 archive_size = file->GetSize();
 
         while ((err = mtar_read_header(&tar, &h)) != MTAR_ENULLRECORD &&
                file_infos.size() < MAX_FILES) {
             if (err != MTAR_ESUCCESS) {
-                file_infos.clear();
-                m_good = false;
-                return {};
+                return Fail();
             }
 
             constexpr size_t TAR_HEADER_SIZE = 512;
@@ -99,17 +103,18 @@ struct TarArchiveImpl {
             std::string_view name(h.name);
             // Ignore hidden files and Pax entries
             if (!name.starts_with(".") && h.type == MTAR_TREG) {
+                // File starts at the current header position plus TAR_HEADER_SIZE
+                const u64 position = file->Tell() + TAR_HEADER_SIZE;
+                // The file data must be fully inside the archive.
+                if (position > archive_size || h.size > archive_size - position) {
+                    return Fail();
+                }
                 file_infos.emplace_back(TarArchive::TarFileInfo{
-                    .name = std::string(name),
-                    // File starts at the current header position plus TAR_HEADER_SIZE
-                    .position = file->Tell() + TAR_HEADER_SIZE,
-                    .size = h.size});
+                    .name = std::string(name), .position = position, .size = h.size});
             }
 
             if (mtar_next(&tar) != MTAR_ESUCCESS) {
-                file_infos.clear();
-                m_good = false;
-                return {};
+                return Fail();
             }
         }
 
@@ -119,9 +124,7 @@ struct TarArchiveImpl {
                 return !temp.insert(file.name).second;
             });
         if (has_duplicates) {
-            file_infos.clear();
-            m_good = false;
-            return {};
+            return Fail();
         }
 
         return file_infos;
@@ -135,12 +138,12 @@ struct TarArchiveImpl {
             file_infos.begin(), file_infos.end(),
             [&filename](const TarArchive::TarFileInfo& info) { return info.name == filename; });
         if (it == file_infos.end()) {
-            return std::unique_ptr<FileUtil::NullIOFile>();
+            return std::make_unique<FileUtil::NullIOFile>();
         }
 
         auto ret = std::make_unique<FileUtil::TarIOFile>(file->OpenCopy(), it->position, it->size);
         if (!ret->IsGood()) {
-            return std::unique_ptr<FileUtil::NullIOFile>();
+            return std::make_unique<FileUtil::NullIOFile>();
         }
 
         return ret;
@@ -189,12 +192,12 @@ bool TarArchive::CreateTarFile(const std::string& out_file_name,
     tar.read = [](mtar_t* tar, void* data, size_t size) {
         size_t res =
             reinterpret_cast<IOFile*>(tar->stream)->ReadBytes(reinterpret_cast<char*>(data), size);
-        return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EWRITEFAIL);
+        return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EREADFAIL);
     };
     tar.write = [](mtar_t* tar, const void* data, size_t size) {
         size_t res = reinterpret_cast<IOFile*>(tar->stream)
                          ->WriteBytes(reinterpret_cast<const char*>(data), size);
-        return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EREADFAIL);
+        return static_cast<int>(res == size ? MTAR_ESUCCESS : MTAR_EWRITEFAIL);
     };
     tar.seek = [](mtar_t* tar, size_t set_offset) {
         return static_cast<int>(reinterpret_cast<IOFile*>(tar->stream)->Seek(set_offset, SEEK_SET)
