@@ -16,8 +16,8 @@ import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
-import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.TurboHelper
 
 class HotkeyUtility(
     private val screenAdjustmentUtil: ScreenAdjustmentUtil,
