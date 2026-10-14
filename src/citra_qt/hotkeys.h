@@ -5,6 +5,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <QAction>
 #include <QKeySequence>
 #include <QString>
@@ -24,6 +25,7 @@ struct Hotkey {
     std::unique_ptr<Input::ButtonDevice> button_device = nullptr;
     std::unique_ptr<Input::ButtonDevice> button_device2 = nullptr;
     QAction* action = nullptr;
+    std::function<void(bool)> hold_callback; // pass true when pressed, false when released
 };
 
 class HotkeyRegistry final {
@@ -103,6 +105,15 @@ public:
      *
      */
     static QString SequenceToString(QString controller_keyseq);
+
+    /**
+     * Sets a callback function for "Hold" shortcuts. The callback function takes
+     * a boolean input - true means the shortcut as pressed, false means it was released
+     */
+    void SetHoldCallback(const QString& group, const QString& action,
+                         std::function<void(bool)> callback);
+
+    std::set<Hotkey*> hold_hotkeys;
 
 private:
     using HotkeyMap = std::map<QString, Hotkey>;

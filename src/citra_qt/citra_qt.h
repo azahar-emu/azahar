@@ -6,6 +6,7 @@
 
 #include <array>
 #include <memory>
+#include <set>
 #include <vector>
 #ifdef __unix__
 #include <QDBusObjectPath>
@@ -99,7 +100,8 @@ class GApplicationEventFilter : public QObject {
     Q_OBJECT
 
 public:
-    std::set<QKeySequence> sequences_to_catch{};
+    /** Holds a pointer to the hotkey registry so we can catch held hotkeys */
+    HotkeyRegistry* hotkey_registry = nullptr;
 
 signals:
     void FileOpen(const QFileOpenEvent* event);
@@ -110,7 +112,7 @@ protected:
     bool eventFilter(QObject* object, QEvent* event) override;
 
 private:
-    std::set<QKeySequence> sequences_currently_pressed{};
+    std::set<Hotkey*> hotkeys_currently_held{};
 };
 
 class GMainWindow : public QMainWindow {
