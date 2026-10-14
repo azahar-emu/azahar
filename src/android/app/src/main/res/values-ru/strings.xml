@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_notification_channel_description">Уведомления 3DS эмулятора Azahar</string>
+    <string name="app_notification_running">Azahar запущен</string>
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Настройки</string>
-    <string name="home_options">Опции</string>
+    <string name="home_options">Параметры</string>
     <string name="home_search">Поиск</string>
+    <string name="home_games">Приложения</string>
     <string name="settings_description">Настроить параметры эмулятора</string>
     <string name="install_game_content">Установить файл CIA</string>
+    <string name="install_game_content_description">Установить приложения, обновления, либо дополнения</string>
     <string name="share_log">Поделиться логом</string>
     <string name="gpu_driver_manager">Менеджер драйверов GPU</string>
     <string name="install_gpu_driver">Установить драйвер GPU</string>
@@ -15,10 +19,16 @@
     <string name="custom_driver_not_supported">Кастомные драйверы не поддерживаются</string>
     <string name="custom_driver_not_supported_description">Загрузка кастомных драйверов для данного устройства в настоящее время не поддерживается.\nПроверьте данную опцию позднее, т.к. поддержка может появиться в будущем.</string>
     <string name="share_log_not_found">Лог-файл не найден</string>
+    <string name="select_games_folder">Выбор папки с приложениями</string>
+    <string name="select_games_folder_description">Разрешить Azahar наполнить список приложений</string>
     <string name="about">О приложении</string>
     <string name="about_description">Версия сборки, разработчики и другое</string>
     <string name="theme_and_color_description">Настройка внешнего вида приложения</string>
     <string name="install_cia_title">Установить CIA</string>
+
+    <!-- Network Settings-->
+    <string name="preferences_network">Настройки сети</string>
+    <string name="username_invalid">Неверное имя пользователя. Оно должно содержать от 4 до 20 буквенно-цифровых символов.</string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Выбрать драйвер GPU</string>
@@ -33,27 +43,40 @@
 
     <!-- About screen strings -->
     <string name="copied_to_clipboard">Скопировано в буфер обмена</string>
+    <string name="contributors">Участники</string>
+    <string name="licenses_description">Проекты, которые используются Azahar для Android</string>
     <string name="build">Сборка</string>
     <string name="licenses">Лицензии</string>
     <!-- Setup strings -->
     <string name="welcome">Добро пожаловать!</string>
     <string name="get_started">Начать</string>
     <string name="step_complete">Готово!</string>
+    <string name="games">Приложения</string>
     <string name="done">Завершено</string>
+    <string name="done_description">Всё готово.\nПриятной игры!</string>
     <string name="text_continue">Продолжить</string>
     <string name="notifications">Уведомления</string>
     <string name="notifications_description">С помощью кнопки внизу предоставьте разрешение для уведомлений.</string>
     <string name="give_permission">Предоставить разрешение</string>
     <string name="notification_warning">Пропустить выдачу разрешения для уведомлений?</string>
+    <string name="filesystem_permission_warning">Недостающие разрешения</string>
     <string name="camera_permission">Камера</string>
     <string name="camera_permission_description">С помощью кнопки внизу предоставьте разрешение для эмуляции камеры 3DS.</string>
     <string name="microphone_permission">Микрофон</string>
     <string name="microphone_permission_description">С помощью кнопки внизу предоставьте разрешение для эмуляции микрофона 3DS.</string>
+    <string name="filesystem_permission">Файловая система</string>
     <string name="permission_denied">Отказано в разрешении</string>
+    <string name="permissions">Разрешения</string>
     <string name="warning_help">Помощь</string>
     <string name="warning_skip">Пропустить</string>
     <string name="warning_cancel">Отмена</string>
+    <string name="select_citra_user_folder">Выберите пользовательскую папку</string>
+    <string name="use_prior_lime3ds_directory">Использовать предыдущий путь для Lime3DS</string>
     <string name="select">Выбрать</string>
+    <string name="cannot_skip">Вы не можете пропустить настройку пользовательской папки</string>
+    <string name="set_up_theme_settings">Настройки темы</string>
+    <string name="setup_set_theme">Задать тему</string>
+
     <string name="search_recently_played">Запущенные недавно</string>
     <string name="search_recently_added">Добавленные недавно</string>
     <string name="search_installed">Установленные</string>
@@ -64,13 +87,30 @@
     <string name="controller_triggers">Триггеры</string>
     <string name="controller_trigger">Триггер</string>
     <string name="controller_dpad">Крестовина</string>
+    <string name="direction_up">Вверх</string>
+    <string name="direction_down">Вниз</string>
+    <string name="direction_left">Влево</string>
+    <string name="direction_right">Вправо</string>
     <string name="input_dialog_title">Привязка %1$s %2$s</string>
     <string name="input_dialog_description">Нажмите или отклоните элемент управления.</string>
     <string name="input_binding">Привязки ввода</string>
     <string name="input_binding_description">Нажмите или отклоните орган управления для привязки %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Нажмите ВВЕРХ на джойстике.</string>
+    <string name="input_binding_description_horizontal_axis">Нажмите ВПРАВО на вашем джойстике.</string>
     <string name="button_home">HOME</string>
+    <string name="button_turbo">Турбо</string>
     <string name="input_message_analog_only">Данный элемент управления должен быть привязан к аналоговому стику или крестовине геймпада!</string>
     <string name="input_message_button_only">Данный элемент управления должен быть привязан к кнопке геймпада!</string>
+    <!-- System files strings -->
+    <string name="setup_system_files">Системные файлы</string>
+    <string name="setup_tool_connect">Подключиться к инструменту настройки Artic</string>
+    <string name="delete_system_files">Отвязать уникальные данные консоли</string>
+    <string name="setup_system_files_o3ds">Установка старой 3DS</string>
+    <string name="setup_system_files_n3ds">Установка новой 3DS</string>
+    <string name="setup_system_files_possible">Возможно осуществить установку.</string>
+    <string name="setup_system_files_o3ds_needed">Сначала требуется установка старой 3DS.</string>
+    <string name="setup_system_files_completed">Установка уже завершена</string>
+    <string name="setup_system_files_enter_address">Введите адрес инструмента настройки Azahar Artic:</string>
     <string name="boot_home_menu">Запуск меню HOME</string>
     <string name="run_system_setup">Запускать настройку системы при загрузке меню HOME</string>
     <string name="home_menu">Меню HOME</string>

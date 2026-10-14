@@ -444,7 +444,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error en carregar l\'aplicació!</string>
     <string name="loader_error_invalid_format">Format d\'aplicació invàlid</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[El format de l\'aplicació no està suportat.<br>Per favor assegura\'t d\'usar un dels formats compatibles:<ul><li>Imatges de cartutx:<b>.cci/.zcci/.3ds</b></li><li>Fitxers instal·lables:<b>.cia/.zcia</b></li><li>Títols Homebrew:<b>.3dsx/.z3dsx</b></li><li>Contenedors NCCH:<b>.cxi/.zcxi/.app</b></li><li>Fitxers ELF:<b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Mode de sistema no vàlid</string>
     <string name="loader_error_invalid_system_mode_description">Les aplicacions exclusives de New 3DS no es poden carregar sense activar el mode New 3DS.</string>
     <string name="loader_error_applying_patches">Error en aplicar pegats</string>

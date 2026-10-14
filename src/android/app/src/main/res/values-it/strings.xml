@@ -446,7 +446,6 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Errore nel caricamento dell\'applicazione</string>
     <string name="loader_error_invalid_format">Formato applicazione non valido</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[Formato del file dell\'applicazione non supportato.<br>Assicurati di utilizzare uno dei formati compatibili:<ul><li>Immagini schedine: <b>.cci/.zcci/.3ds</b></li><li>Archivi installabili: <b>.cia/.zcia</b></li><li>Titoli Homebrew: <b>.3dsx/.z3dsx</b></li><li>Container NCCH: <b>.cxi/.zcxi/.app</b></li><li>File ELF: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Modalità di sistema non valida</string>
     <string name="loader_error_invalid_system_mode_description">Le applicazioni esclusive per New 3DS non possono essere caricate senza aver abilitato la modalità New 3DS.</string>
     <string name="loader_error_applying_patches">Errore nell\'applicazione della patch</string>
