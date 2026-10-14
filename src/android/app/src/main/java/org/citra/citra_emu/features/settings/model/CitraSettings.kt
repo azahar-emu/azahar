@@ -224,7 +224,7 @@ class CitraSettings {
             R.string.emulation_quickload,
             R.string.turbo_limit_hotkey,
             R.string.turbo_hold_hotkey,
-            R.string.button_combo,
+            R.string.button_combo
         )
 
         // TODO: Move these in with the other setting keys in GenerateSettingKeys.cmake
