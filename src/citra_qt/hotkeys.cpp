@@ -90,6 +90,12 @@ void HotkeyRegistry::SetAction(const QString& group, const QString& action_name,
     hk.action = action;
 }
 
+void HotkeyRegistry::SetHoldCallback(const QString& group, const QString& action,
+                                     std::function<void(bool)> callback) {
+    hotkey_groups[group][action].hold_callback = std::move(callback);
+    hold_hotkeys.insert(&hotkey_groups[group][action]);
+}
+
 QString HotkeyRegistry::SequenceToString(QString controller_keyseq) {
     if (controller_keyseq.isEmpty())
         return controller_keyseq;
