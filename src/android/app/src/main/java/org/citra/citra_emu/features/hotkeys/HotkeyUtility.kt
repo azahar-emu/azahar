@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.hotkeys
 
@@ -16,8 +16,8 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
-import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.TurboHelper
 
 class HotkeyUtility(
     private val screenAdjustmentUtil: ScreenAdjustmentUtil,
