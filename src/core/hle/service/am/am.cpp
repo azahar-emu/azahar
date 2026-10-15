@@ -1213,6 +1213,9 @@ bool BundleCIAHandler::RegisterBundle(const std::string& filename) {
                 cia_containers.clear();
                 return false;
             }
+            if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(sub_file.get()) != std::nullopt) {
+                sub_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(sub_file));
+            }
             cia_containers.emplace_back();
             auto res = cia_containers.back().Load(std::move(sub_file));
             if (res != Loader::ResultStatus::Success) {
