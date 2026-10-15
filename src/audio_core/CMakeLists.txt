@@ -2,6 +2,8 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     audio_types.h
     codec.cpp
     codec.h
+    csnd.cpp
+    csnd.h
     dsp_interface.cpp
     dsp_interface.h
     hle/aac_decoder.cpp
