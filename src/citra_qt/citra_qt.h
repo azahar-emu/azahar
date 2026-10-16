@@ -104,7 +104,7 @@ class GMainWindow : public QMainWindow {
 public:
     void filterBarSetChecked(bool state);
 #ifdef _WIN32
-    void UpdateScrollBarStyle();
+    void SetCustomWindowsScrollbar();
 #endif
     void UpdateUITheme();
 
@@ -471,9 +471,6 @@ private:
 #endif
 
 protected:
-#ifdef _WIN32
-    void changeEvent(QEvent* event) override;
-#endif
     void dropEvent(QDropEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dragMoveEvent(QDragMoveEvent* event) override;
