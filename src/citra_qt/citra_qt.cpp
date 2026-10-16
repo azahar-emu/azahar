@@ -38,6 +38,7 @@
 #include <QtDBus/QtDBus>
 #include "common/linux/gamemode.h"
 #endif
+#include "audio_core/dsp_interface.h"
 #include "citra_meta/common_strings.h"
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/applets/mii_selector.h"
@@ -2667,6 +2668,9 @@ void GMainWindow::OnResumeGame(bool first_start) {
 
     emu_thread->SetRunning(true);
     system.frame_limiter.SetFrameAdvancing(false);
+    if (system.IsPoweredOn()) {
+        system.DSP().StreamBegin();
+    }
     graphics_api_button->setEnabled(false);
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
     qRegisterMetaType<std::string>("std::string");
@@ -2700,6 +2704,11 @@ void GMainWindow::OnRestartGame() {
 }
 
 void GMainWindow::OnPauseGame() {
+    // The emulation thread stays running, blocked in the frame limiter, so the audio stream is
+    // taken down here rather than in EmuThread::SetRunning() (citra_qt/bootmanager.cpp).
+    if (system.IsPoweredOn()) {
+        system.DSP().StreamEnd();
+    }
     system.frame_limiter.SetFrameAdvancing(true);
     qt_cameras->PauseCameras();
 

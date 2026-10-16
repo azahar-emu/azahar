@@ -639,6 +639,16 @@ struct Values {
     SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, Keys::audio_emulation};
     SwitchableSetting<bool> enable_audio_stretching{true, Keys::enable_audio_stretching};
     SwitchableSetting<bool> enable_realtime_audio{false, Keys::enable_realtime_audio};
+    // On by default. AudioCore::StreamRamp (audio_core/stream_ramp.h) ends the output stream on
+    // a synthesized tail and brings it back on a fade, so a pause, a state load, a reset or an
+    // underrun lands in silence instead of cutting the waveform where it stands. Off, those
+    // edges are hard cuts.
+    SwitchableSetting<bool> enable_audio_ramp{true, Keys::enable_audio_ramp};
+    // Reference cutoff in Hz for the fast-forward low-pass. The applied cutoff is this divided
+    // by the speed reached and clamped to 0.45 * sample rate, so the default is inaudible below
+    // about 1.5x and takes the edge off from there up. The top of the range is the "do not
+    // filter" sentinel - see AudioCore::kSpeedupLowPassOff in audio_core/speedup_lowpass.h.
+    SwitchableSetting<u16, true> speedup_lowpass{22000, 1000, 48000, Keys::speedup_lowpass};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, Keys::volume};
     Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, Keys::output_type};
     Setting<std::string> output_device{"Auto", Keys::output_device};

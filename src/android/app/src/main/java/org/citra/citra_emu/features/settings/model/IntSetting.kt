@@ -12,6 +12,10 @@ enum class IntSetting(
     override val defaultValue: Int
 ) : AbstractIntSetting {
     FRAME_LIMIT(SettingKeys.frame_limit(), Settings.SECTION_RENDERER, 100),
+
+    // Mirrors Settings::values.speedup_lowpass (common/settings.h); range and step are in
+    // SettingsFragmentPresenter.kt.
+    SPEEDUP_LOWPASS(SettingKeys.speedup_lowpass(), Settings.SECTION_AUDIO, 22000),
     EMULATED_REGION(SettingKeys.region_value(), Settings.SECTION_SYSTEM, -1),
     INIT_CLOCK(SettingKeys.init_clock(), Settings.SECTION_SYSTEM, 0),
     CAMERA_INNER_FLIP(SettingKeys.camera_inner_flip(), Settings.SECTION_CAMERA, 0),

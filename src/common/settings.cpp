@@ -144,6 +144,8 @@ void LogSettings() {
     log_setting("Audio_InputDevice", values.input_device.GetValue());
     log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching.GetValue());
     log_setting("Audio_EnableRealtime", values.enable_realtime_audio.GetValue());
+    log_setting("Audio_EnableAudioRamp", values.enable_audio_ramp.GetValue());
+    log_setting("Audio_SpeedupLowPass", values.speedup_lowpass.GetValue());
     using namespace Service::CAM;
     log_setting("Camera_OuterRightName", values.camera_name[OuterRightCamera]);
     log_setting("Camera_OuterRightConfig", values.camera_config[OuterRightCamera]);
@@ -200,6 +202,8 @@ void RestoreGlobalState(bool is_powered_on) {
     values.audio_emulation.SetGlobal(true);
     values.enable_audio_stretching.SetGlobal(true);
     values.enable_realtime_audio.SetGlobal(true);
+    values.enable_audio_ramp.SetGlobal(true);
+    values.speedup_lowpass.SetGlobal(true);
     values.volume.SetGlobal(true);
 
     // Core

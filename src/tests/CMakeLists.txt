@@ -13,6 +13,14 @@ add_executable(tests
     audio_core/lle/lle.cpp
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
+    audio_core/frame_buffers.cpp
+    audio_core/output_pipeline.cpp
+    audio_core/period_finder.cpp
+    audio_core/period_splicer.cpp
+    audio_core/speedup_lowpass.cpp
+    audio_core/stream_ramp.cpp
+    audio_core/stretch_gate.cpp
+    audio_core/time_stretch.cpp
     video_core/pica_types.cpp
     video_core/shader.cpp
     audio_core/merryhime_3ds_audio/merry_audio/merry_audio.cpp
