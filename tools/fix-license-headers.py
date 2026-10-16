@@ -258,7 +258,7 @@ DISCLAIMER = """\
 ================================================================================
                                    IMPORTANT
 ================================================================================
-This tool rewrites license headers. Changing a license haeder has legal
+This tool rewrites license headers. Changing a license header has legal
 implications, by applying these changes YOU are stating that the new header
 (GPLv3 or any later version, Citra Emulator Project / Azahar Emulator Project)
 correctly describes the licensing of each of the files listed above.
