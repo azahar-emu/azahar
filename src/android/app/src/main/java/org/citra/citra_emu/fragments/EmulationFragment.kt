@@ -768,7 +768,7 @@ class EmulationFragment :
                 R.id.menu_performance_overlay_show -> {
                     activeSettings.update(
                         BooleanSetting.PERF_OVERLAY_ENABLE,
-                        activeSettings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
+                        !activeSettings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
                     )
                     SettingsFile.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, activeSettings)
                     updateShowPerformanceOverlay()

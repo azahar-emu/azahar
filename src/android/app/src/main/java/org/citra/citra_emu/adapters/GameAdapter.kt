@@ -70,7 +70,6 @@ import org.citra.citra_emu.viewmodel.GamesViewModel
 class GameAdapter(
     private val activity: AppCompatActivity,
     private val inflater: LayoutInflater,
-    private val settings: Settings,
     private val openImageLauncher: ActivityResultLauncher<String>?,
     private val onRequestCompressOrDecompress: (
         (inputPath: String, suggestedName: String, shouldCompress: Boolean) -> Unit
@@ -123,19 +122,21 @@ class GameAdapter(
         lastClickTime = SystemClock.elapsedRealtime()
 
         // NOTE: We could make this check not hardcoded, but it's a temp thing anyway so probs not worth. -OS
+        // TODO: I think this will cause an issue if Graphics API is a per-game setting, since this hard checks
+        // before those settings are loaded.
         if (
-            IntSetting.GRAPHICS_API.int == GraphicsAPI.VULKAN.int &&
-            IntSetting.TEXTURE_FILTER.int == TextureFilter.ANIME4K.int
+            Settings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
+            Settings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
         ) {
             MaterialAlertDialogBuilder(view.context)
                 .setTitle(R.string.incompatible_texture_filter)
                 .setMessage(R.string.incompatible_texture_filter_description)
                 .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                    IntSetting.TEXTURE_FILTER.int = TextureFilter.NOFILTER.int
-                    settings.saveSetting(
+                    Settings.activeSettings.set(
                         IntSetting.TEXTURE_FILTER,
-                        SettingsFile.FILE_NAME_CONFIG
+                        TextureFilter.NOFILTER.int
                     )
+                    SettingsFile.saveSetting(IntSetting.TEXTURE_FILTER, Settings.activeSettings)
                     this.onClick(view)
                 }
                 .setNegativeButton(android.R.string.cancel, null)

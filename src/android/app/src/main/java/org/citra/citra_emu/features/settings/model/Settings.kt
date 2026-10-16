@@ -234,7 +234,7 @@ class Settings {
 
         private val configFileSectionsMap: MutableMap<String, List<String>> = HashMap()
 
-        /** Stores the settings as a singleton available everywhere.*/
+        /** The settings (global and per-game overrides) that are active right now.*/
         val activeSettings = Settings()
     }
 }
