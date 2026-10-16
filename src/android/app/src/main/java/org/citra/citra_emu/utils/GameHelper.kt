@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.utils
 
@@ -62,6 +62,10 @@ object GameHelper {
         }
 
         files.forEach {
+            val filename = FileUtil.getFilename(it.uri)
+            if (filename.startsWith(".")) {
+                return@forEach
+            }
             if (it.isDirectory) {
                 addGamesRecursive(games, FileUtil.listFiles(it.uri), depth - 1)
             } else {
