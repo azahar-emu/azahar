@@ -36,16 +36,19 @@ class Settings {
         perGameOverrides[setting.key] = value as Any
     }
 
-    /** Sets the per-game or global setting based on whether this file has ANY per-game setting.
-     * This should be used, for example, by the Settings Activity
+    /** The default "set" function. This updates the setting based on context - if
+     *  currently editing global settings, this edits the global setting, but if
+     *  currently editing per-game settings, it edits the global setting. Should
+     *  be used when editing settings in Settings submenu.
      */
     fun <T> set(setting: AbstractSetting<T>, value: T) {
         if (isPerGame()) setOverride(setting, value) else setGlobal(setting, value)
     }
 
     /**
-     * Updates an existing setting honoring whether it is *currently* global or local. This will
-     * be used by the Quick Menu
+     * Updates an existing setting in place - if this is *currently* a global setting,
+     * it updates the global setting, and if it is *currently* a per-game setting, it updates
+     * the per-game setting. Should be used at runtime by things such as the Quick Menu.
      */
     fun <T> update(setting: AbstractSetting<T>, value: T) {
         if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
