@@ -423,7 +423,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     statusBar()->hide();
 
     default_theme_paths = QIcon::themeSearchPaths();
-    UpdateUITheme();
 
 #ifdef ENABLE_DISCORD_RPC
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
@@ -492,6 +491,9 @@ GMainWindow::GMainWindow(Core::System& system_)
     secondary_window->setWindowIcon(azahar_icon);
 
     show();
+
+    // If the theme is updated before show() it doesn't apply properly, so do it here.
+    UpdateUITheme();
 
 #ifdef __APPLE__
     if (AppleUtils::IsRunningFromTerminal()) {
@@ -4259,17 +4261,21 @@ inline bool isDarkMode() {
 
 void GMainWindow::UpdateUITheme() {
     const QString icons_base_path = QStringLiteral(":/icons/");
+    const QString default_system_theme = QStringLiteral("default");
+    const QString light_icon_system_theme = QStringLiteral("default_with_light_icons");
+    const QString colorful_icon_system_theme = QStringLiteral("colorful");
+
     QString default_theme;
     if (!isDarkMode()) {
-        default_theme = QStringLiteral("default");
+        default_theme = default_system_theme;
     } else {
-        default_theme = QStringLiteral("default_with_light_icons");
+        default_theme = light_icon_system_theme;
     }
 
     const QString default_theme_path = icons_base_path + default_theme;
 
     const QString& current_theme = UISettings::values.theme;
-    const bool is_default_theme = current_theme == QString::fromUtf8(UISettings::themes[0].second);
+    const bool is_default_theme = (current_theme == default_system_theme);
     QStringList theme_paths(default_theme_paths);
 
     if (is_default_theme || current_theme.isEmpty()) {
@@ -4302,6 +4308,13 @@ void GMainWindow::UpdateUITheme() {
         theme_paths.append({default_theme_path, current_theme_path});
         QIcon::setThemeName(current_theme);
     }
+
+#ifdef _WIN32
+    if (current_theme == default_system_theme || current_theme == light_icon_system_theme ||
+        current_theme == colorful_icon_system_theme) {
+        SetCustomWindowsScrollbar();
+    }
+#endif
 
     QIcon::setThemeSearchPaths(theme_paths);
 }
@@ -4612,7 +4625,7 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 }
 
 #ifdef _WIN32
-void GMainWindow::UpdateScrollBarStyle() {
+void GMainWindow::SetCustomWindowsScrollbar() {
     constexpr auto customScrollbarStyleTemplate = (R"(
         QScrollBar:vertical {{
             background: palette(window);
@@ -4623,7 +4636,7 @@ void GMainWindow::UpdateScrollBarStyle() {
         QScrollBar::handle:vertical {{
             background: palette({1});
             border: none;
-            border-radius: 4.5px;
+            border-radius: 4px;
             margin: 3px;
         }}
         QScrollBar::handle:vertical:hover {{
@@ -4650,14 +4663,6 @@ void GMainWindow::UpdateScrollBarStyle() {
     } else {
         setStyleSheet(lightCustomScrollbarStyle);
     }
-}
-
-void GMainWindow::changeEvent(QEvent* event) {
-    if (event->type() == QEvent::PaletteChange ||
-        event->type() == QEvent::ApplicationPaletteChange) {
-        UpdateScrollBarStyle();
-    }
-    QMainWindow::changeEvent(event);
 }
 #endif
 
@@ -4718,10 +4723,6 @@ int LaunchQtFrontend(int argc, char* argv[]) {
     system.RegisterImageInterface(std::make_shared<QtImageInterface>());
 
     GMainWindow main_window(system);
-
-#ifdef _WIN32
-    main_window.UpdateScrollBarStyle();
-#endif
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets(system);
