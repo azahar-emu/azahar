@@ -446,6 +446,7 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Errore nel caricamento dell\'applicazione</string>
     <string name="loader_error_invalid_format">Formato applicazione non valido</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[Formato del file dell\'applicazione non supportato.<br>Assicurati di utilizzare uno dei formati compatibili:<ul><li>Immagini schedine: <b>.cci/.zcci/.bcci/.3ds</b></li><li>Archivi installabili: <b>.cia/.zcia/.bcia</b></li><li>Titoli Homebrew: <b>.3dsx/.z3dsx</b></li><li>Container NCCH: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>File ELF: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Modalità di sistema non valida</string>
     <string name="loader_error_invalid_system_mode_description">Le applicazioni esclusive per New 3DS non possono essere caricate senza aver abilitato la modalità New 3DS.</string>
     <string name="loader_error_applying_patches">Errore nell\'applicazione della patch</string>
@@ -784,6 +785,11 @@
     <string name="anaglyph">Anaglifo</string>
     <string name="interlaced">Interlacciato</string>
     <string name="reverse_interlaced">Interlacciato invertito</string>
+
+    <!-- Texture filters -->
+    <string name="anime4k">Anime4K (solo OpenGL)</string>
+    <string name="incompatible_texture_filter">Filtro texture non compatibile</string>
+    <string name="incompatible_texture_filter_description">Il filtro texture selezionato (Anime4K) non è compatibile con il renderer Vulkan.\nIl filtro texture verrà impostato su Nessuno.\nProcedere?</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Controllata dal gioco</string>
