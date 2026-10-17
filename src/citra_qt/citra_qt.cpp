@@ -423,6 +423,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     statusBar()->hide();
 
     default_theme_paths = QIcon::themeSearchPaths();
+    UpdateUITheme();
 
 #ifdef ENABLE_DISCORD_RPC
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
@@ -492,7 +493,9 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     show();
 
-    // If the theme is updated before show() it doesn't apply properly, so do it here.
+    // If the theme is updated before show() it doesn't apply properly, so do it again here.
+    // We still need the earlier call to make sure that the icons are set up correctly in the
+    // game list.
     UpdateUITheme();
 
 #ifdef __APPLE__
