@@ -6,7 +6,7 @@ package org.citra.citra_emu.features.settings.model
 
 import org.citra.citra_emu.R
 
-class Settings {
+class CitraSettings {
     private val globalValues = HashMap<String, Any>()
     private val perGameOverrides = HashMap<String, Any>()
 
@@ -55,7 +55,7 @@ class Settings {
     }
 
     /** Merge the globals from other into the current settings. Merge per-game if game id is the same. */
-    fun mergeSettings(other: Settings) {
+    fun mergeSettings(other: CitraSettings) {
         other.globalValues.forEach { (key, value) ->
             globalValues[key] = value
         }
@@ -235,6 +235,6 @@ class Settings {
         private val configFileSectionsMap: MutableMap<String, List<String>> = HashMap()
 
         /** The settings (global and per-game overrides) that are active right now.*/
-        val activeSettings = Settings()
+        val activeSettings = CitraSettings()
     }
 }

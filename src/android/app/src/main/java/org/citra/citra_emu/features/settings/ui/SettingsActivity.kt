@@ -26,7 +26,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ActivitySettingsBinding
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.DirectoryInitialization
@@ -43,7 +43,7 @@ class SettingsActivity :
     private val presenter by lazy { SettingsActivityPresenter(this, settingsViewModel) }
 
     // the activity will work with the fresh Settings() object created and stored in the viewmodel
-    override val editingSettings: Settings get() = settingsViewModel.editingSettings
+    override val editingSettings: CitraSettings get() = settingsViewModel.editingSettings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         RefreshRateUtil.enforceRefreshRate(this)
@@ -205,8 +205,10 @@ class SettingsActivity :
 
         presenter.onSettingsReset()
 
-        val controllerKeys = Settings.buttonKeys + Settings.circlePadKeys + Settings.cStickKeys +
-            Settings.dPadAxisKeys + Settings.dPadButtonKeys + Settings.triggerKeys
+        val controllerKeys =
+            CitraSettings.buttonKeys + CitraSettings.circlePadKeys + CitraSettings.cStickKeys +
+                CitraSettings.dPadAxisKeys + CitraSettings.dPadButtonKeys +
+                CitraSettings.triggerKeys
         val editor =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
         controllerKeys.forEach { editor.remove(it) }
@@ -231,9 +233,9 @@ class SettingsActivity :
         // clear the active setttings and reload them from the default, then merge them into the
         // currently edited settings. This mostly doesn't matter since the activity ends after this
         // function, but if we
-        Settings.activeSettings.clearAll()
+        CitraSettings.activeSettings.clearAll()
         editingSettings.clearAll()
-        SettingsFile.loadSettings(Settings.activeSettings)
+        SettingsFile.loadSettings(CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
 
         // Set default values for system config file

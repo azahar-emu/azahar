@@ -12,7 +12,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
@@ -33,7 +33,7 @@ class HotkeyUtility(
         val buttonSet = InputBindingSetting.getButtonSet(keyEvent)
         val enableButton =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-                .getString(Settings.HOTKEY_ENABLE, "")
+                .getString(CitraSettings.HOTKEY_ENABLE, "")
         val thisKeyIsEnableButton = buttonSet.contains(Hotkey.ENABLE.button)
         val thisKeyIsHotkey =
             !thisKeyIsEnableButton && Hotkey.entries.any { buttonSet.contains(it.button) }

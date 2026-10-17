@@ -4,7 +4,7 @@
 
 package org.citra.citra_emu.features.settings.ui
 
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 
 /**
  * Abstraction for the Activity that manages SettingsFragments.
@@ -25,7 +25,7 @@ interface SettingsActivityView {
      *
      * @return A HashMap of Settings.
      */
-    val editingSettings: Settings
+    val editingSettings: CitraSettings
 
     /**
      * Called when a load operation completes.

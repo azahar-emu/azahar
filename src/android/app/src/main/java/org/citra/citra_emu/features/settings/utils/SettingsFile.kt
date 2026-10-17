@@ -15,10 +15,10 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.ui.SettingsActivityView
 import org.citra.citra_emu.utils.DirectoryInitialization.userDirectory
@@ -53,7 +53,7 @@ object SettingsFile {
      */
     fun readFile(
         ini: DocumentFile,
-        settings: Settings,
+        settings: CitraSettings,
         isCustomGame: Boolean,
         view: SettingsActivityView?
     ) {
@@ -94,14 +94,14 @@ object SettingsFile {
     /**
      * Load global settings from the config file into the settings instance
      */
-    fun loadSettings(settings: Settings, view: SettingsActivityView? = null) {
+    fun loadSettings(settings: CitraSettings, view: SettingsActivityView? = null) {
         readFile(getSettingsFile(FILE_NAME_CONFIG), settings, false, view)
     }
 
     /**
      * Load global settings AND custom settings into the settings instance, sets gameId
      */
-    fun loadSettings(settings: Settings, gameId: String, view: SettingsActivityView? = null) {
+    fun loadSettings(settings: CitraSettings, gameId: String, view: SettingsActivityView? = null) {
         settings.gameId = gameId
         loadSettings(settings, view)
         val file = findCustomGameSettingsFile(gameId) ?: return
@@ -113,7 +113,7 @@ object SettingsFile {
      */
     @Suppress("UNCHECKED_CAST")
     private fun <T> loadSettingInto(
-        settings: Settings,
+        settings: CitraSettings,
         setting: AbstractSetting<T>,
         rawValue: String,
         isCustomGame: Boolean
@@ -134,7 +134,7 @@ object SettingsFile {
      * @param settings The Settings instance we are saving
      * @param view     The current view.
      */
-    fun saveGlobalFile(settings: Settings, view: SettingsActivityView? = null) {
+    fun saveGlobalFile(settings: CitraSettings, view: SettingsActivityView? = null) {
         val ini = getSettingsFile(FILE_NAME_CONFIG)
         try {
             val context: Context = CitraApplication.appContext
@@ -165,7 +165,7 @@ object SettingsFile {
      * Save the per-game overrides to a per-game config file
      */
 
-    fun saveCustomFile(settings: Settings, view: SettingsActivityView? = null) {
+    fun saveCustomFile(settings: CitraSettings, view: SettingsActivityView? = null) {
         if (!settings.isPerGame()) return
         val ini = getOrCreateCustomGameSettingsFile(settings.gameId!!)
         try {
@@ -190,7 +190,7 @@ object SettingsFile {
         }
     }
 
-    fun <T> saveSetting(setting: AbstractSetting<T>, settings: Settings) {
+    fun <T> saveSetting(setting: AbstractSetting<T>, settings: CitraSettings) {
         if (settings.hasOverride(setting)) {
             // Currently a per-game setting, keep it that way
             val ini = getOrCreateCustomGameSettingsFile(settings.gameId!!)

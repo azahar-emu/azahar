@@ -15,7 +15,7 @@ enum class IntListSetting(
 
     LAYOUTS_TO_CYCLE(
         SettingKeys.layouts_to_cycle(),
-        Settings.SECTION_LAYOUT,
+        CitraSettings.SECTION_LAYOUT,
         listOf(0, 1, 2, 3, 4, 5),
         canBeEmpty = false
     ),
@@ -25,7 +25,7 @@ enum class IntListSetting(
      */
     COMBO_BUTTON_BUTTONS(
         SettingKeys.combo_button_buttons(),
-        Settings.SECTION_CONTROLS,
+        CitraSettings.SECTION_CONTROLS,
         listOf(),
         canBeEmpty = true
     );

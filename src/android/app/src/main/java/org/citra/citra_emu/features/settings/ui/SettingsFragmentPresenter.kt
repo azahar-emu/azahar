@@ -23,10 +23,10 @@ import org.citra.citra_emu.display.StereoMode
 import org.citra.citra_emu.display.StereoWhichDisplay
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.HeaderSetting
@@ -51,7 +51,7 @@ import org.citra.citra_emu.utils.ThemeUtil
 
 class SettingsFragmentPresenter(
     private val fragmentView: SettingsFragmentView,
-    private val editingSettings: Settings
+    private val editingSettings: CitraSettings
 ) {
     private var menuTag: String? = null
     private lateinit var gameId: String
@@ -85,31 +85,31 @@ class SettingsFragmentPresenter(
         when (menuTag) {
             SettingsFile.FILE_NAME_CONFIG -> addConfigSettings(sl)
 
-            Settings.SECTION_CORE -> addGeneralSettings(sl)
+            CitraSettings.SECTION_CORE -> addGeneralSettings(sl)
 
-            Settings.SECTION_SYSTEM -> addSystemSettings(sl)
+            CitraSettings.SECTION_SYSTEM -> addSystemSettings(sl)
 
-            Settings.SECTION_CAMERA -> addCameraSettings(sl)
+            CitraSettings.SECTION_CAMERA -> addCameraSettings(sl)
 
-            Settings.SECTION_CONTROLS -> addControlsSettings(sl)
+            CitraSettings.SECTION_CONTROLS -> addControlsSettings(sl)
 
-            Settings.SECTION_RENDERER -> addGraphicsSettings(sl)
+            CitraSettings.SECTION_RENDERER -> addGraphicsSettings(sl)
 
-            Settings.SECTION_LAYOUT -> addLayoutSettings(sl)
+            CitraSettings.SECTION_LAYOUT -> addLayoutSettings(sl)
 
-            Settings.SECTION_NETWORK -> addNetworkSettings(sl)
+            CitraSettings.SECTION_NETWORK -> addNetworkSettings(sl)
 
-            Settings.SECTION_AUDIO -> addAudioSettings(sl)
+            CitraSettings.SECTION_AUDIO -> addAudioSettings(sl)
 
-            Settings.SECTION_DEBUG -> addDebugSettings(sl)
+            CitraSettings.SECTION_DEBUG -> addDebugSettings(sl)
 
-            Settings.SECTION_THEME -> addThemeSettings(sl)
+            CitraSettings.SECTION_THEME -> addThemeSettings(sl)
 
-            Settings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
+            CitraSettings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
 
-            Settings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
+            CitraSettings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
 
-            Settings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
+            CitraSettings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
 
             else -> {
                 fragmentView.showToastMessage("Unimplemented menu", false)
@@ -145,7 +145,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_general,
                     0,
                     R.drawable.ic_general_settings,
-                    Settings.SECTION_CORE
+                    CitraSettings.SECTION_CORE
                 )
             )
             add(
@@ -153,7 +153,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_system,
                     0,
                     R.drawable.ic_system_settings,
-                    Settings.SECTION_SYSTEM
+                    CitraSettings.SECTION_SYSTEM
                 )
             )
             add(
@@ -161,7 +161,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_camera,
                     0,
                     R.drawable.ic_camera_settings,
-                    Settings.SECTION_CAMERA
+                    CitraSettings.SECTION_CAMERA
                 )
             )
             add(
@@ -169,7 +169,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_controls,
                     0,
                     R.drawable.ic_controls_settings,
-                    Settings.SECTION_CONTROLS
+                    CitraSettings.SECTION_CONTROLS
                 )
             )
             add(
@@ -177,7 +177,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_graphics,
                     0,
                     R.drawable.ic_graphics,
-                    Settings.SECTION_RENDERER
+                    CitraSettings.SECTION_RENDERER
                 )
             )
             add(
@@ -185,7 +185,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_layout,
                     0,
                     R.drawable.ic_fit_screen,
-                    Settings.SECTION_LAYOUT
+                    CitraSettings.SECTION_LAYOUT
                 )
             )
             add(
@@ -193,7 +193,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_network,
                     0,
                     R.drawable.ic_network,
-                    Settings.SECTION_NETWORK
+                    CitraSettings.SECTION_NETWORK
                 )
             )
             add(
@@ -201,7 +201,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_audio,
                     0,
                     R.drawable.ic_audio,
-                    Settings.SECTION_AUDIO
+                    CitraSettings.SECTION_AUDIO
                 )
             )
             add(
@@ -209,7 +209,7 @@ class SettingsFragmentPresenter(
                     R.string.preferences_debug,
                     0,
                     R.drawable.ic_code,
-                    Settings.SECTION_DEBUG
+                    CitraSettings.SECTION_DEBUG
                 )
             )
 
@@ -823,21 +823,21 @@ class SettingsFragmentPresenter(
             )
 
             add(HeaderSetting(R.string.generic_buttons))
-            Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
+            CitraSettings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.buttonTitles[i]))
+                add(InputBindingSetting(button, CitraSettings.buttonTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_circlepad))
-            Settings.circlePadKeys.forEachIndexed { i: Int, key: String ->
+            CitraSettings.circlePadKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.axisTitles[i]))
+                add(InputBindingSetting(button, CitraSettings.axisTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_c))
-            Settings.cStickKeys.forEachIndexed { i: Int, key: String ->
+            CitraSettings.cStickKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.axisTitles[i]))
+                add(InputBindingSetting(button, CitraSettings.axisTitles[i]))
             }
 
             add(
@@ -846,9 +846,9 @@ class SettingsFragmentPresenter(
                     R.string.controller_dpad_axis_description
                 )
             )
-            Settings.dPadAxisKeys.forEachIndexed { i: Int, key: String ->
+            CitraSettings.dPadAxisKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.axisTitles[i]))
+                add(InputBindingSetting(button, CitraSettings.axisTitles[i]))
             }
             add(
                 HeaderSetting(
@@ -856,21 +856,21 @@ class SettingsFragmentPresenter(
                     R.string.controller_dpad_button_description
                 )
             )
-            Settings.dPadButtonKeys.forEachIndexed { i: Int, key: String ->
+            CitraSettings.dPadButtonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.dPadTitles[i]))
+                add(InputBindingSetting(button, CitraSettings.dPadTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_triggers))
-            Settings.triggerKeys.forEachIndexed { i: Int, key: String ->
+            CitraSettings.triggerKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.triggerTitles[i]))
+                add(InputBindingSetting(button, CitraSettings.triggerTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_hotkeys, R.string.controller_hotkeys_description))
-            Settings.hotKeys.forEachIndexed { i: Int, key: String ->
+            CitraSettings.hotKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
+                add(InputBindingSetting(button, CitraSettings.hotkeyTitles[i]))
             }
 
             add(HeaderSetting(R.string.miscellaneous))
@@ -903,7 +903,7 @@ class SettingsFragmentPresenter(
     private fun getInputObject(key: String): AbstractSetting<String> =
         object : AbstractSetting<String> {
             override val key = key
-            override val section = Settings.SECTION_CONTROLS
+            override val section = CitraSettings.SECTION_CONTROLS
             override val isRuntimeEditable = true
             override val defaultValue = ""
             override fun valueFromString(string: String): String = string
@@ -1430,7 +1430,7 @@ class SettingsFragmentPresenter(
                     R.string.performance_overlay_options,
                     R.string.performance_overlay_options_description,
                     R.drawable.ic_stats,
-                    Settings.SECTION_PERFORMANCE_OVERLAY
+                    CitraSettings.SECTION_PERFORMANCE_OVERLAY
                 )
             )
             add(
@@ -1438,7 +1438,7 @@ class SettingsFragmentPresenter(
                     R.string.emulation_landscape_custom_layout,
                     0,
                     R.drawable.ic_fit_screen,
-                    Settings.SECTION_CUSTOM_LANDSCAPE
+                    CitraSettings.SECTION_CUSTOM_LANDSCAPE
                 )
             )
             add(
@@ -1446,7 +1446,7 @@ class SettingsFragmentPresenter(
                     R.string.emulation_portrait_custom_layout,
                     0,
                     R.drawable.ic_portrait_fit_screen,
-                    Settings.SECTION_CUSTOM_PORTRAIT
+                    CitraSettings.SECTION_CUSTOM_PORTRAIT
                 )
             )
         }
@@ -2041,11 +2041,11 @@ class SettingsFragmentPresenter(
                         R.string.material_you,
                         R.string.material_you_description,
                         getValue = {
-                            preferences.getBoolean(Settings.PREF_MATERIAL_YOU, false)
+                            preferences.getBoolean(CitraSettings.PREF_MATERIAL_YOU, false)
                         },
                         setValue = {
                             preferences.edit()
-                                .putBoolean(Settings.PREF_MATERIAL_YOU, it)
+                                .putBoolean(CitraSettings.PREF_MATERIAL_YOU, it)
                                 .apply()
                             settingsActivity.recreate()
                         }
@@ -2061,11 +2061,11 @@ class SettingsFragmentPresenter(
                     R.array.staticThemeNames,
                     R.array.staticThemeValues,
                     getValue = {
-                        preferences.getInt(Settings.PREF_STATIC_THEME_COLOR, 0)
+                        preferences.getInt(CitraSettings.PREF_STATIC_THEME_COLOR, 0)
                     },
                     setValue = {
                         preferences.edit()
-                            .putInt(Settings.PREF_STATIC_THEME_COLOR, it)
+                            .putInt(CitraSettings.PREF_STATIC_THEME_COLOR, it)
                             .apply()
                         settingsActivity.recreate()
                     }
@@ -2080,11 +2080,11 @@ class SettingsFragmentPresenter(
                     R.array.themeModeEntries,
                     R.array.themeModeValues,
                     getValue = {
-                        preferences.getInt(Settings.PREF_THEME_MODE, -1)
+                        preferences.getInt(CitraSettings.PREF_THEME_MODE, -1)
                     },
                     setValue = {
                         preferences.edit()
-                            .putInt(Settings.PREF_THEME_MODE, it)
+                            .putInt(CitraSettings.PREF_THEME_MODE, it)
                             .apply()
                         ThemeUtil.setThemeMode(settingsActivity)
                         settingsActivity.recreate()
@@ -2097,10 +2097,12 @@ class SettingsFragmentPresenter(
                     null,
                     R.string.use_black_backgrounds,
                     R.string.use_black_backgrounds_description,
-                    getValue = { preferences.getBoolean(Settings.PREF_BLACK_BACKGROUNDS, false) },
+                    getValue = {
+                        preferences.getBoolean(CitraSettings.PREF_BLACK_BACKGROUNDS, false)
+                    },
                     setValue = {
                         preferences.edit()
-                            .putBoolean(Settings.PREF_BLACK_BACKGROUNDS, it)
+                            .putBoolean(CitraSettings.PREF_BLACK_BACKGROUNDS, it)
                             .apply()
                         settingsActivity.recreate()
                     }

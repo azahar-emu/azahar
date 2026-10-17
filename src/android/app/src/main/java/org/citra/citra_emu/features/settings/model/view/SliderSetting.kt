@@ -9,11 +9,11 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.utils.Log
 
 class SliderSetting(
-    val settings: Settings,
+    val settings: CitraSettings,
     setting: AbstractSetting<*>?,
     titleId: Int,
     descriptionId: Int,

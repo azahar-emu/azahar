@@ -6,11 +6,11 @@ package org.citra.citra_emu.features.settings.model.view
 import androidx.annotation.StringRes
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.IntListSetting
-import org.citra.citra_emu.features.settings.model.Settings
 
 class MultiChoiceSetting(
-    val settings: Settings,
+    val settings: CitraSettings,
     setting: AbstractSetting<List<Int>>?,
     titleId: Int,
     descriptionId: Int,

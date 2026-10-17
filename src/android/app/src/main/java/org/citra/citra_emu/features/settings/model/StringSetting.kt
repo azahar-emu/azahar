@@ -11,23 +11,31 @@ enum class StringSetting(
     override val section: String,
     override val defaultValue: String
 ) : AbstractSetting<String> {
-    INIT_TIME(SettingKeys.init_time(), Settings.SECTION_SYSTEM, "946731601"),
-    CAMERA_INNER_NAME(SettingKeys.camera_inner_name(), Settings.SECTION_CAMERA, "ndk"),
-    CAMERA_INNER_CONFIG(SettingKeys.camera_inner_config(), Settings.SECTION_CAMERA, "_front"),
-    CAMERA_OUTER_LEFT_NAME(SettingKeys.camera_outer_left_name(), Settings.SECTION_CAMERA, "ndk"),
+    INIT_TIME(SettingKeys.init_time(), CitraSettings.SECTION_SYSTEM, "946731601"),
+    CAMERA_INNER_NAME(SettingKeys.camera_inner_name(), CitraSettings.SECTION_CAMERA, "ndk"),
+    CAMERA_INNER_CONFIG(SettingKeys.camera_inner_config(), CitraSettings.SECTION_CAMERA, "_front"),
+    CAMERA_OUTER_LEFT_NAME(
+        SettingKeys.camera_outer_left_name(),
+        CitraSettings.SECTION_CAMERA,
+        "ndk"
+    ),
     CAMERA_OUTER_LEFT_CONFIG(
         SettingKeys.camera_outer_left_config(),
-        Settings.SECTION_CAMERA,
+        CitraSettings.SECTION_CAMERA,
         "_back"
     ),
-    CAMERA_OUTER_RIGHT_NAME(SettingKeys.camera_outer_right_name(), Settings.SECTION_CAMERA, "ndk"),
+    CAMERA_OUTER_RIGHT_NAME(
+        SettingKeys.camera_outer_right_name(),
+        CitraSettings.SECTION_CAMERA,
+        "ndk"
+    ),
     CAMERA_OUTER_RIGHT_CONFIG(
         SettingKeys.camera_outer_right_config(),
-        Settings.SECTION_CAMERA,
+        CitraSettings.SECTION_CAMERA,
         "_back"
     ),
-    WEB_API_URL(SettingKeys.web_api_url(), Settings.SECTION_NETWORK, ""),
-    NETWORK_TOKEN(SettingKeys.network_token(), Settings.SECTION_NETWORK, "");
+    WEB_API_URL(SettingKeys.web_api_url(), CitraSettings.SECTION_NETWORK, ""),
+    NETWORK_TOKEN(SettingKeys.network_token(), CitraSettings.SECTION_NETWORK, "");
 
     override fun valueFromString(string: String) = string
 

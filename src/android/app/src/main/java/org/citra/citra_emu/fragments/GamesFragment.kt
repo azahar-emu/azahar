@@ -36,8 +36,8 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
@@ -256,13 +256,13 @@ class GamesFragment : Fragment() {
         @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
         if (!BuildConfig.DEBUG &&
             !BuildUtil.isGooglePlayBuild &&
-            Settings.activeSettings.get(BooleanSetting.CHECK_FOR_UPDATES) &&
+            CitraSettings.activeSettings.get(BooleanSetting.CHECK_FOR_UPDATES) &&
             !homeViewModel.updatePromptShown
         ) {
             Thread({
                 val checkForPrereleaseUpdates =
                     isPrereleaseBuild() ||
-                        (Settings.activeSettings.get(IntSetting.UPDATE_CHECK_CHANNEL) == 1)
+                        (CitraSettings.activeSettings.get(IntSetting.UPDATE_CHECK_CHANNEL) == 1)
                 val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
 
                 if (!latestReleaseTag.isNullOrEmpty() &&
@@ -296,7 +296,7 @@ class GamesFragment : Fragment() {
 
     private fun setAdapter(games: List<Game>) {
         val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        if (preferences.getBoolean(Settings.PREF_SHOW_HOME_APPS, false)) {
+        if (preferences.getBoolean(CitraSettings.PREF_SHOW_HOME_APPS, false)) {
             (binding.gridGames.adapter as GameAdapter).submitList(games)
         } else {
             val filteredList = games.filter { !it.isSystemTitle }

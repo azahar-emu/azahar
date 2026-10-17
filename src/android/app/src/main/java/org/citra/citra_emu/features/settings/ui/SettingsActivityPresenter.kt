@@ -10,7 +10,7 @@ import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.DirectoryInitialization
@@ -24,7 +24,7 @@ class SettingsActivityPresenter(
     private val activityView: SettingsActivityView,
     private val viewModel: SettingsViewModel
 ) {
-    val editingSettings: Settings get() = viewModel.editingSettings
+    val editingSettings: CitraSettings get() = viewModel.editingSettings
 
     private var shouldSave = false
     private lateinit var menuTag: String
@@ -34,7 +34,7 @@ class SettingsActivityPresenter(
         this.menuTag = menuTag
         this.gameId = gameId
         // merge the active settings into the local settings activity instance
-        editingSettings.mergeSettings(Settings.activeSettings)
+        editingSettings.mergeSettings(CitraSettings.activeSettings)
 
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)
@@ -104,7 +104,7 @@ class SettingsActivityPresenter(
                 SettingsFile.saveGlobalFile(editingSettings, activityView)
             }
             // merge the edited settings back into the active settings
-            Settings.activeSettings.mergeSettings(editingSettings)
+            CitraSettings.activeSettings.mergeSettings(editingSettings)
             NativeLibrary.reloadSettings()
             applyChangedSettings()
         }

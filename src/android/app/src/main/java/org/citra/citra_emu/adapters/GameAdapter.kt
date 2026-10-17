@@ -54,9 +54,9 @@ import org.citra.citra_emu.adapters.GameAdapter.GameViewHolder
 import org.citra.citra_emu.databinding.CardGameBinding
 import org.citra.citra_emu.databinding.DialogShortcutBinding
 import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.GraphicsAPI
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.TextureFilter
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.IndeterminateProgressDialogFragment
@@ -125,18 +125,21 @@ class GameAdapter(
         // TODO: I think this will cause an issue if Graphics API is a per-game setting, since this hard checks
         // before those settings are loaded.
         if (
-            Settings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
-            Settings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
+            CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
+            CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
         ) {
             MaterialAlertDialogBuilder(view.context)
                 .setTitle(R.string.incompatible_texture_filter)
                 .setMessage(R.string.incompatible_texture_filter_description)
                 .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                    Settings.activeSettings.set(
+                    CitraSettings.activeSettings.set(
                         IntSetting.TEXTURE_FILTER,
                         TextureFilter.NOFILTER.int
                     )
-                    SettingsFile.saveSetting(IntSetting.TEXTURE_FILTER, Settings.activeSettings)
+                    SettingsFile.saveSetting(
+                        IntSetting.TEXTURE_FILTER,
+                        CitraSettings.activeSettings
+                    )
                     this.onClick(view)
                 }
                 .setNegativeButton(android.R.string.cancel, null)

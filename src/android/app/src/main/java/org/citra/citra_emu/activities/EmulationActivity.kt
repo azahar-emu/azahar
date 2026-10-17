@@ -41,8 +41,8 @@ import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.EmulationFragment
@@ -130,8 +130,8 @@ class EmulationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // load global settings if for some reason they aren't (should be loaded in MainActivity)
-        if (Settings.activeSettings.getAllGlobal().isEmpty()) {
-            SettingsFile.loadSettings(Settings.activeSettings)
+        if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
+            SettingsFile.loadSettings(CitraSettings.activeSettings)
         }
         // once per-game settings are added, load them here!
 
@@ -288,7 +288,7 @@ class EmulationActivity : AppCompatActivity() {
         secondaryDisplayManager.releasePresentation()
         secondaryDisplayManager.releaseVD()
 
-        Settings.activeSettings.removePerGameSettings()
+        CitraSettings.activeSettings.removePerGameSettings()
 
         super.onDestroy()
     }
@@ -358,7 +358,7 @@ class EmulationActivity : AppCompatActivity() {
         val attributes = window.attributes
 
         attributes.layoutInDisplayCutoutMode =
-            if (Settings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
+            if (CitraSettings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             } else {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
@@ -376,7 +376,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     fun applyOrientationSettings() {
-        requestedOrientation = Settings.activeSettings.get(IntSetting.ORIENTATION_OPTION)
+        requestedOrientation = CitraSettings.activeSettings.get(IntSetting.ORIENTATION_OPTION)
     }
 
     // Gets button presses

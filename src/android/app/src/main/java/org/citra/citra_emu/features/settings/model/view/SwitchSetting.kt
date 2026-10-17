@@ -7,10 +7,10 @@ package org.citra.citra_emu.features.settings.model.view
 import androidx.annotation.StringRes
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 
 class SwitchSetting(
-    val settings: Settings,
+    val settings: CitraSettings,
     setting: AbstractSetting<Boolean>?,
     titleId: Int,
     descriptionId: Int,

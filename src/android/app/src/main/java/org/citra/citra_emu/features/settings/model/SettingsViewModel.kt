@@ -8,5 +8,5 @@ import androidx.lifecycle.ViewModel
 
 class SettingsViewModel : ViewModel() {
     /** a local copy of settings that is used while editing, but not currently active */
-    val editingSettings = Settings()
+    val editingSettings = CitraSettings()
 }

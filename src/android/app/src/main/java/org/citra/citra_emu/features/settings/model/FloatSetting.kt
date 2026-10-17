@@ -12,16 +12,20 @@ enum class FloatSetting(
     override val defaultValue: Float,
     val scale: Int = 1
 ) : AbstractSetting<Float> {
-    LARGE_SCREEN_PROPORTION(SettingKeys.large_screen_proportion(), Settings.SECTION_LAYOUT, 2.25f),
+    LARGE_SCREEN_PROPORTION(
+        SettingKeys.large_screen_proportion(),
+        CitraSettings.SECTION_LAYOUT,
+        2.25f
+    ),
     SECOND_SCREEN_OPACITY(
         SettingKeys.custom_second_layer_opacity(),
-        Settings.SECTION_RENDERER,
+        CitraSettings.SECTION_RENDERER,
         100f
     ),
-    BACKGROUND_RED(SettingKeys.bg_red(), Settings.SECTION_RENDERER, 0f, 255),
-    BACKGROUND_BLUE(SettingKeys.bg_blue(), Settings.SECTION_RENDERER, 0f, 255),
-    BACKGROUND_GREEN(SettingKeys.bg_green(), Settings.SECTION_RENDERER, 0f, 255),
-    AUDIO_VOLUME(SettingKeys.volume(), Settings.SECTION_AUDIO, 100f, 100);
+    BACKGROUND_RED(SettingKeys.bg_red(), CitraSettings.SECTION_RENDERER, 0f, 255),
+    BACKGROUND_BLUE(SettingKeys.bg_blue(), CitraSettings.SECTION_RENDERER, 0f, 255),
+    BACKGROUND_GREEN(SettingKeys.bg_green(), CitraSettings.SECTION_RENDERER, 0f, 255),
+    AUDIO_VOLUME(SettingKeys.volume(), CitraSettings.SECTION_AUDIO, 100f, 100);
 
     // valueFromString reads raw setting from file, scales up for UI
     override fun valueFromString(string: String): Float? = string.toFloatOrNull()?.times(scale)
