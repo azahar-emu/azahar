@@ -1,6 +1,6 @@
-// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model
 
@@ -27,7 +27,9 @@ enum class StringSetting(
         "_back"
     ),
     WEB_API_URL(SettingKeys.web_api_url(), Settings.SECTION_NETWORK, ""),
-    NETWORK_TOKEN(SettingKeys.network_token(), Settings.SECTION_NETWORK, "");
+    NETWORK_TOKEN(SettingKeys.network_token(), Settings.SECTION_NETWORK, ""),
+    LOG_FILTER(SettingKeys.log_filter(), Settings.SECTION_DEBUG, "*:Info"),
+    LOG_REGEX_FILTER(SettingKeys.log_regex_filter(), Settings.SECTION_DEBUG, "");
 
     override var string: String = defaultValue
 
