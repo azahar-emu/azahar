@@ -50,7 +50,7 @@ class CitraSettings {
      * it updates the global setting, and if it is *currently* a per-game setting, it updates
      * the per-game setting. Should be used at runtime by things such as the Quick Menu.
      */
-    fun <T> update(setting: AbstractSetting<T>, value: T) {
+    fun <T> setActive(setting: AbstractSetting<T>, value: T) {
         if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
     }
 

@@ -52,7 +52,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     private var buttonBeingConfigured: InputOverlayDrawableButton? = null
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
-    private lateinit var settings: CitraSettings
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
     private var touchscreenPointerId = -1
@@ -76,10 +75,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
         // Request focus for the overlay so it has priority on presses.
         requestFocus()
-    }
-
-    fun initializeSettings(settings: CitraSettings) {
-        this.settings = settings
     }
 
     override fun draw(canvas: Canvas) {
@@ -137,7 +132,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             var xPosition = event.getX(pointerIndex).toInt()
             var yPosition = event.getY(pointerIndex).toInt()
 
-            if (settings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
+            if (CitraSettings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
                 val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
                 val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
                 val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0

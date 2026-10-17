@@ -766,7 +766,7 @@ class EmulationFragment :
                 }
 
                 R.id.menu_performance_overlay_show -> {
-                    activeSettings.update(
+                    activeSettings.setActive(
                         BooleanSetting.PERF_OVERLAY_ENABLE,
                         !activeSettings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
                     )
@@ -1116,7 +1116,7 @@ class EmulationFragment :
         if (selectedLayout == SecondaryDisplayLayout.NONE.int ||
             !activeSettings.get(BooleanSetting.ENABLE_SECONDARY_DISPLAY)
         ) {
-            activeSettings.update(BooleanSetting.ENABLE_SECONDARY_DISPLAY, false)
+            activeSettings.setActive(BooleanSetting.ENABLE_SECONDARY_DISPLAY, false)
             enableSecondaryCheckbox.isChecked = false
             chooserMenu.isVisible = false
             popupMenu.menu.setGroupEnabled(R.id.menu_secondary_layout_group, false)
