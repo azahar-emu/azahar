@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model.view
 
@@ -126,7 +126,8 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
                 Settings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
                 Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
                 Settings.HOTKEY_QUICKLOAD -> Hotkey.QUICKLOAD.button
-                Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
+                Settings.HOTKEY_TURBO_TOGGLE -> Hotkey.TURBO_TOGGLE.button
+                Settings.HOTKEY_TURBO_HOLD -> Hotkey.TURBO_HOLD.button
                 Settings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_BUTTON.button
                 else -> -1
             }

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model
 
@@ -142,8 +142,9 @@ class Settings {
         const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
         const val HOTKEY_QUICKLOAD = "hotkey_quickpause"
-        const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
         const val HOTKEY_BUTTON_COMBO = "hotkey_button_combo"
+        const val HOTKEY_TURBO_TOGGLE = "hotkey_turbo_limit"
+        const val HOTKEY_TURBO_HOLD = "hotkey_turbo_hold"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -211,7 +212,8 @@ class Settings {
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
             HOTKEY_QUICKLOAD,
-            HOTKEY_TURBO_LIMIT,
+            HOTKEY_TURBO_TOGGLE,
+            HOTKEY_TURBO_HOLD,
             HOTKEY_BUTTON_COMBO
         )
         val hotkeyTitles = listOf(
@@ -223,6 +225,7 @@ class Settings {
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
             R.string.turbo_limit_hotkey,
+            R.string.turbo_hold_hotkey,
             R.string.button_combo
         )
 

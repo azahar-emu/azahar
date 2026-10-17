@@ -554,6 +554,7 @@ GMainWindow::~GMainWindow() {
     if (!render_window->parent()) {
         delete render_window;
     }
+    filter->hotkey_registry = nullptr;
 
     Pica::g_debug_context.reset();
     Network::Shutdown();
@@ -961,6 +962,10 @@ void GMainWindow::InitializeHotkeys() {
     connect_shortcut(QStringLiteral("Toggle Turbo Mode"),
                      [&] { GMainWindow::SetTurboEnabled(!GMainWindow::IsTurboEnabled()); });
 
+    connect_shortcut(QStringLiteral("Enable Turbo"), [&] { GMainWindow::SetTurboEnabled(true); });
+
+    connect_shortcut(QStringLiteral("Disable Turbo"), [&] { GMainWindow::SetTurboEnabled(false); });
+
     connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] { AdjustSpeedLimit(true); });
     connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] { AdjustSpeedLimit(false); });
 
@@ -994,6 +999,17 @@ void GMainWindow::InitializeHotkeys() {
             UpdateStatusBar();
         }
     });
+
+    // handle the Turbo Hold hotkey (use the same pattern for others!)
+    const QString turbo_hold = QStringLiteral("Turbo Mode (Hold)");
+    const QKeySequence turbo_seq = hotkey_registry.GetKeySequence(main_window, turbo_hold);
+    auto turbo_callback = [this](bool held) {
+        if (held && !emulation_running) {
+            return;
+        }
+        SetTurboEnabled(held);
+    };
+    hotkey_registry.SetHoldCallback(main_window, turbo_hold, turbo_callback);
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -1068,16 +1084,83 @@ void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
     }
 }
 
+// helper method to check if a keyevent matches a key sequence.
+bool matchesKeyEvent(const QKeyEvent* event, const QKeySequence& seq) {
+    if (seq.isEmpty())
+        return false;
+
+    int seqKey = seq[0];
+    int eventKey = (event->key() | event->modifiers());
+    return eventKey == seqKey;
+}
+
+// Returns true if releasing the key in `event` should count as releasing `seq`,
+// i.e. the event is the sequence's main key or one of the sequence's modifiers.
+static bool releaseBreaksSequence(const QKeyEvent* event, const QKeySequence& seq) {
+    if (seq.isEmpty())
+        return false;
+
+    const int main_key = seq[0].key();
+    const Qt::KeyboardModifiers mods = seq[0].keyboardModifiers();
+
+    switch (event->key()) {
+    case Qt::Key_Control:
+        return mods.testFlag(Qt::ControlModifier);
+    case Qt::Key_Shift:
+        return mods.testFlag(Qt::ShiftModifier);
+    case Qt::Key_Alt:
+        return mods.testFlag(Qt::AltModifier);
+    case Qt::Key_Meta:
+        return mods.testFlag(Qt::MetaModifier);
+    default:
+        return event->key() == main_key;
+    }
+}
+
 bool GApplicationEventFilter::eventFilter(QObject* object, QEvent* event) {
     if (event->type() == QEvent::FileOpen) {
         emit FileOpen(static_cast<QFileOpenEvent*>(event));
         return true;
     }
+
+    if (hotkey_registry != nullptr &&
+        (event->type() == QEvent::ShortcutOverride || event->type() == QEvent::KeyPress)) {
+
+        QKeyEvent* key = static_cast<QKeyEvent*>(event);
+        for (auto const hk : hotkey_registry->hold_hotkeys) {
+            auto& seq = hk->keyseq;
+            if (seq.isEmpty() || !hk->hold_callback)
+                continue;
+            if (matchesKeyEvent(key, seq)) {
+                if (hotkeys_currently_held.insert(hk).second) {
+                    hk->hold_callback(true);
+                }
+                return true;
+            }
+        }
+    } else if (event->type() == QEvent::KeyRelease) {
+        QKeyEvent* key = static_cast<QKeyEvent*>(event);
+        if (key->isAutoRepeat()) {
+            return false;
+        }
+        const auto pressed = hotkeys_currently_held;
+        bool handled = false;
+        for (auto hk : pressed) {
+            auto& seq = hk->keyseq;
+            if (releaseBreaksSequence(key, seq)) {
+                hotkeys_currently_held.erase(hk);
+                if (hk->hold_callback)
+                    hk->hold_callback(false);
+                handled = true;
+            }
+        }
+        return handled;
+    }
     return false;
 }
 
 void GMainWindow::ConnectAppEvents() {
-    const auto filter = new GApplicationEventFilter();
+    filter->hotkey_registry = &hotkey_registry;
     QGuiApplication::instance()->installEventFilter(filter);
 
     connect(filter, &GApplicationEventFilter::FileOpen, this, &GMainWindow::OnFileOpen);
