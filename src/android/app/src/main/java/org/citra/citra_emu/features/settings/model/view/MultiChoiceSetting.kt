@@ -52,7 +52,7 @@ class MultiChoiceSetting(
             setValue(selection)
         } else {
             val intSetting = setting as IntListSetting
-            settings.set(intSetting, selection)
+            settings.setByScope(intSetting, selection)
         }
     }
 }

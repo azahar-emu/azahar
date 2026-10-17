@@ -48,7 +48,7 @@ class SwitchSetting(
         } else {
             @Suppress("UNCHECKED_CAST")
             val setting = setting as AbstractSetting<Boolean>
-            settings.set(setting, checked)
+            settings.setByScope(setting, checked)
         }
     }
 }

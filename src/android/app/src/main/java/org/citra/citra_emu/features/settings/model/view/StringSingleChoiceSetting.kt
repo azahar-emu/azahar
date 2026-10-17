@@ -71,7 +71,7 @@ class StringSingleChoiceSetting(
         } else {
             @Suppress("UNCHECKED_CAST")
             val stringSetting = setting as AbstractSetting<String>
-            settings.set(stringSetting, selection)
+            settings.setByScope(stringSetting, selection)
         }
     }
 }

@@ -387,7 +387,7 @@ class SettingsFragmentPresenter(
                         ret
                     },
                     setValue = {
-                        editingSettings.set(IntSetting.EMULATED_REGION, it)
+                        editingSettings.setByScope(IntSetting.EMULATED_REGION, it)
                         countryCompatibilityChanged = true
                         checkCountryCompatibility()
                     }

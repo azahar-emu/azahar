@@ -80,7 +80,7 @@ class SliderSetting(
     fun setSelectedValue(selection: Int): AbstractSetting<Int> {
         @Suppress("UNCHECKED_CAST")
         val intSetting = setting as AbstractSetting<Int>
-        settings.set(intSetting, selection)
+        settings.setByScope(intSetting, selection)
         return intSetting
     }
 
@@ -96,7 +96,7 @@ class SliderSetting(
         } else {
             @Suppress("UNCHECKED_CAST")
             val floatSetting = setting as AbstractSetting<Float>
-            settings.set(floatSetting, selection)
+            settings.setByScope(floatSetting, selection)
         }
     }
 }

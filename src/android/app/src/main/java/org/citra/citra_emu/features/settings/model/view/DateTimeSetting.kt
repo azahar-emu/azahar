@@ -39,7 +39,7 @@ class DateTimeSetting(
         } else {
             @Suppress("UNCHECKED_CAST")
             val stringSetting = setting as AbstractSetting<String>
-            settings.set(stringSetting, datetime)
+            settings.setByScope(stringSetting, datetime)
         }
     }
 }

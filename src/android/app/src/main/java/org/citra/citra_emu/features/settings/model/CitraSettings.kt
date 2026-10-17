@@ -36,21 +36,24 @@ class CitraSettings {
         perGameOverrides[setting.key] = value as Any
     }
 
-    /** The default "set" function. This updates the setting based on context - if
-     *  currently editing global settings, this edits the global setting, but if
-     *  currently editing per-game settings, it edits the global setting. Should
-     *  be used when editing settings in Settings submenu.
+    /**
+     * This updates a setting based on the Settings object scope. If the settings object is
+     * applied to a specific game either because a game is running or using a per-game settings menu,
+     * this will update the override for that game. Otherwise it will update the global value.
+     *
+     * This should be used by the Settings menus.
      */
-    fun <T> set(setting: AbstractSetting<T>, value: T) {
+    fun <T> setByScope(setting: AbstractSetting<T>, value: T) {
         if (isPerGame()) setOverride(setting, value) else setGlobal(setting, value)
     }
 
     /**
-     * Updates an existing setting in place - if this is *currently* a global setting,
-     * it updates the global setting, and if it is *currently* a per-game setting, it updates
-     * the per-game setting. Should be used at runtime by things such as the Quick Menu.
+     * Updates an existing setting in place. If this setting is currently a per-game setting,
+     * this changes the per-game value. If it is currently global, it will change the global value.
+     *
+     * This should be used by the Quick Menu, hotkeys, and other "instant" settings changes
      */
-    fun <T> update(setting: AbstractSetting<T>, value: T) {
+    fun <T> setByEffective(setting: AbstractSetting<T>, value: T) {
         if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
     }
 
