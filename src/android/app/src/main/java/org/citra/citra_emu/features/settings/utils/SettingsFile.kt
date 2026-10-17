@@ -111,7 +111,6 @@ object SettingsFile {
     /**
      * Uses the settings object to parse the raw string and store it in the correct map
      */
-    @Suppress("UNCHECKED_CAST")
     private fun <T> loadSettingInto(
         settings: CitraSettings,
         setting: AbstractSetting<T>,
@@ -222,8 +221,8 @@ object SettingsFile {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any) {
+        @Suppress("UNCHECKED_CAST")
         val typedValue = value as T
         writer.put(descriptor.section, descriptor.key, descriptor.valueToString(typedValue))
     }

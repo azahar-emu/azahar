@@ -29,7 +29,6 @@ class MultiChoiceSetting(
     val selectedValues: List<Int>
         get() {
             if (getValue != null) {
-                @Suppress("UNCHECKED_CAST")
                 return getValue.invoke()
             }
             if (setting == null) {

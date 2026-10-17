@@ -151,7 +151,6 @@ class InputBindingSetting(val abstractSetting: AbstractSetting<*>, titleId: Int)
     /**
      * Removes the old mapping for this key from the settings, e.g. on user clearing the setting.
      */
-    @Suppress("UNCHECKED_CAST")
     fun removeOldMapping() {
         // Try remove all possible keys we wrote for this setting
         val oldKey = preferences.getString(reverseKey, "")

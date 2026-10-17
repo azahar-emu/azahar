@@ -24,20 +24,20 @@ class DateTimeSetting(
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_DATETIME_SETTING
 
-    @Suppress("UNCHECKED_CAST")
     val value: String
         get() = getValue?.invoke()
             ?: if (setting != null) {
+                @Suppress("UNCHECKED_CAST")
                 settings.get(setting as AbstractSetting<String>)
             } else {
                 defaultValue!!
             }
 
-    @Suppress("UNCHECKED_CAST")
     fun setSelectedValue(datetime: String) {
         if (setValue != null) {
             setValue(datetime)
         } else {
+            @Suppress("UNCHECKED_CAST")
             val stringSetting = setting as AbstractSetting<String>
             settings.set(stringSetting, datetime)
         }
