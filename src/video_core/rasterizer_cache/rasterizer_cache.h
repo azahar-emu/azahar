@@ -1135,23 +1135,23 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
             return false;
         }
 
-        // A live slot may now hold another texture, or this one may have been unregistered. custom_format is left out of the compare because this upload is what sets it
+        // A live slot may now hold another texture, or this one may have been unregistered.
+        // custom_format is left out of the compare because this upload is what sets it
         Surface& target = slot_surfaces[surface_id];
-        const bool same_guest = target.addr == expected_surface.addr &&
-                                target.end == expected_surface.end &&
-                                target.width == expected_surface.width &&
-                                target.height == expected_surface.height &&
-                                target.stride == expected_surface.stride &&
-                                target.levels == expected_surface.levels &&
-                                target.is_tiled == expected_surface.is_tiled &&
-                                target.texture_type == expected_surface.texture_type &&
-                                target.pixel_format == expected_surface.pixel_format;
+        const bool same_guest =
+            target.addr == expected_surface.addr && target.end == expected_surface.end &&
+            target.width == expected_surface.width && target.height == expected_surface.height &&
+            target.stride == expected_surface.stride && target.levels == expected_surface.levels &&
+            target.is_tiled == expected_surface.is_tiled &&
+            target.texture_type == expected_surface.texture_type &&
+            target.pixel_format == expected_surface.pixel_format;
         if (False(target.flags & SurfaceFlagBits::Registered) || !same_guest ||
             !runtime.SupportsCustomFormat(material->format)) {
             return false;
         }
 
-        // Guest pixels can change without a new surface. Drop the material when they no longer match the hash captured at queue time
+        // Guest pixels can change without a new surface. Drop the material when they no longer
+        // match the hash captured at queue time
         MemoryRef source_ptr = memory.GetPhysicalRef(load_info.addr);
         if (!source_ptr) {
             return false;
@@ -1161,7 +1161,8 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
             return false;
         }
 
-        // Each mip is its own material and only the base material may allocate the image. A mip that arrives first would size that image to the mip
+        // Each mip is its own material and only the base material may allocate the image. A mip
+        // that arrives first would size that image to the mip
         if (level != 0) {
             if (!target.IsCustom()) {
                 return false;
@@ -1181,7 +1182,8 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
             }
         }
 
-        // Mark the surface custom only after the checks pass. A new base material replaces the image in this slot; the previous image is sentenced and the page table keeps surface_id
+        // Mark the surface custom only after the checks pass. A new base material replaces the
+        // image in this slot; the previous image is sentenced and the page table keeps surface_id
         target.flags |= SurfaceFlagBits::Custom;
         if (!target.IsCustom() || (level == 0 && target.material != material)) {
             const SurfaceBase old_surface{target};
