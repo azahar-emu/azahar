@@ -86,12 +86,18 @@ enum class IntSetting(
     ASPECT_RATIO(SettingKeys.aspect_ratio(), CitraSettings.SECTION_LAYOUT, 0),
     UPDATE_CHECK_CHANNEL(SettingKeys.update_check_channel(), CitraSettings.SECTION_MISC, 0);
 
-    override fun valueFromString(string: String): Int? =
-        string.toIntOrNull() ?: when (string.trim().lowercase()) {
-            "true" -> 1
-            "false" -> 0
-            else -> null
+    override fun valueFromString(string: String): Int? {
+        var value = string.toIntOrNull()
+        if (value == null) {
+            value = when (string.trim().lowercase()) {
+                "true" -> 1
+                "false" -> 0
+                else -> null
+            }
         }
+
+        return value
+    }
 
     override val isRuntimeEditable: Boolean
         get() {
