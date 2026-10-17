@@ -63,6 +63,7 @@ public:
     /// Returns the OpenGL format tuple associated with the provided pixel format
     const FormatTuple& GetFormatTuple(VideoCore::PixelFormat pixel_format) const;
     const FormatTuple& GetFormatTuple(VideoCore::CustomPixelFormat pixel_format);
+    bool SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const;
 
     /// Attempts to reinterpret a rectangle of source to another rectangle of dest
     bool Reinterpret(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
