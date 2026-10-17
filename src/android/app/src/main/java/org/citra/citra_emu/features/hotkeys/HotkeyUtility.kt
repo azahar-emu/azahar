@@ -5,6 +5,7 @@
 package org.citra.citra_emu.features.hotkeys
 
 import android.content.Context
+import android.text.format.DateUtils
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.preference.PreferenceManager
@@ -113,6 +114,21 @@ class HotkeyUtility(
         return handled
     }
 
+    private fun describeSlot(
+        slot: Int,
+        info: NativeLibrary.SaveStateInfo? = NativeLibrary.getSavestateInfo()
+            ?.firstOrNull { it.slot == slot }
+    ): String {
+        val time = info?.time
+            ?: return context.getString(R.string.emulation_slot_empty, slot)
+        val relative = DateUtils.getRelativeTimeSpanString(
+            time.time,
+            System.currentTimeMillis(),
+            DateUtils.MINUTE_IN_MILLIS
+        ).toString()
+        return context.getString(R.string.emulation_slot_time, slot, relative)
+    }
+
     fun handleHotkey(bindedButton: Int): Boolean {
         when (bindedButton) {
             Hotkey.SWAP_SCREEN.button -> screenAdjustmentUtil.swapScreen()
@@ -150,6 +166,38 @@ class HotkeyUtility(
 
             Hotkey.COMBO_BUTTON.button -> {
                 ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
+            }
+
+            Hotkey.SAVE_CURRENT_SLOT.button -> {
+                val slot = NativeLibrary.getCurrentSaveSlot()
+                NativeLibrary.saveState(slot)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.emulation_slot_saved, slot),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            Hotkey.LOAD_CURRENT_SLOT.button -> {
+                val slot = NativeLibrary.getCurrentSaveSlot()
+                val info = NativeLibrary.getSavestateInfo()?.firstOrNull { it.slot == slot }
+                val message = if (info != null) {
+                    NativeLibrary.loadState(slot)
+                    describeSlot(slot, info)
+                } else {
+                    context.getString(R.string.emulation_slot_empty, slot)
+                }
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+
+            Hotkey.NEXT_SAVE_SLOT.button -> {
+                val slot = NativeLibrary.advanceSaveSlot(1)
+                Toast.makeText(context, describeSlot(slot), Toast.LENGTH_SHORT).show()
+            }
+
+            Hotkey.PREV_SAVE_SLOT.button -> {
+                val slot = NativeLibrary.advanceSaveSlot(-1)
+                Toast.makeText(context, describeSlot(slot), Toast.LENGTH_SHORT).show()
             }
 
             else -> {}
