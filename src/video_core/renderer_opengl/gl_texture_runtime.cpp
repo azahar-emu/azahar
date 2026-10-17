@@ -172,6 +172,10 @@ const FormatTuple& TextureRuntime::GetFormatTuple(VideoCore::CustomPixelFormat p
     return CUSTOM_TUPLES[format_index];
 }
 
+bool TextureRuntime::SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const {
+    return driver.IsCustomFormatSupported(pixel_format);
+}
+
 bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
                                  const VideoCore::TextureCopy& copy) {
     const PixelFormat src_format = source.pixel_format;

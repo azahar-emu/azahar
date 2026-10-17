@@ -117,6 +117,10 @@ public:
         return instance;
     }
 
+    bool SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const {
+        return instance.GetTraits(pixel_format).transfer_support;
+    }
+
     Scheduler& GetScheduler() const {
         return scheduler;
     }
