@@ -1,6 +1,6 @@
 // Copyright 2025-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.display
 
@@ -17,6 +17,7 @@ import android.view.SurfaceView
 import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.utils.Log
 
@@ -88,8 +89,9 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
         val displayToUse = if (availableDisplays.isEmpty() ||
             // Theoretically, the NONE option is no longer selectable, but
             // I am leaving this in for backwards compatibility
-            IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int ||
-            !BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean
+            CitraSettings.activeSettings.get(IntSetting.SECONDARY_DISPLAY_LAYOUT) ==
+            SecondaryDisplayLayout.NONE.int ||
+            !CitraSettings.activeSettings.get(BooleanSetting.ENABLE_SECONDARY_DISPLAY)
         ) {
             currentDisplayId = -1
             vd.display

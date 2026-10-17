@@ -48,8 +48,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
-import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.features.settings.model.SettingsViewModel
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
@@ -75,7 +74,6 @@ class MainActivity :
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val gamesViewModel: GamesViewModel by viewModels()
-    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override var themeId: Int = 0
 
@@ -98,7 +96,8 @@ class MainActivity :
             DirectoryInitialization.areCitraDirectoriesReady() &&
             !CitraDirectoryUtils.needToUpdateManually()
         ) {
-            settingsViewModel.settings.loadSettings()
+            // load the global settings from the config file at program launch
+            SettingsFile.loadSettings(CitraSettings.activeSettings)
         }
 
         ThemeUtil.themeChangeListener(this)
@@ -233,7 +232,7 @@ class MainActivity :
 
     private fun checkUserPermissions() {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
+            .getBoolean(CitraSettings.PREF_FIRST_APP_LAUNCH, true)
 
         if (firstTimeSetup) {
             return
@@ -298,7 +297,7 @@ class MainActivity :
 
     private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
+            .getBoolean(CitraSettings.PREF_FIRST_APP_LAUNCH, true)
 
         if (firstTimeSetup && !homeViewModel.navigatedToSetup) {
             homeViewModel.setupCurrentPage = savedInstanceState?.getInt(KEY_SETUP_CURRENT_PAGE) ?: 0

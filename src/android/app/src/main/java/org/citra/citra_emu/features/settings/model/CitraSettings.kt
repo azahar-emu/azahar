@@ -1,99 +1,94 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model
 
-import android.text.TextUtils
-import java.util.TreeMap
-import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
-import org.citra.citra_emu.features.settings.ui.SettingsActivityView
-import org.citra.citra_emu.features.settings.utils.SettingsFile
 
-class Settings {
-    private var gameId: String? = null
+class CitraSettings {
+    private val globalValues = HashMap<String, Any>()
+    private val perGameOverrides = HashMap<String, Any>()
 
-    var isLoaded = false
+    var gameId: String? = null
+
+    fun isPerGame(): Boolean = (gameId != null && gameId != "")
+
+    fun <T> get(setting: AbstractSetting<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return (
+            perGameOverrides[setting.key]
+                ?: globalValues[setting.key]
+                ?: setting.defaultValue
+            ) as T
+    }
+
+    fun <T> getGlobal(setting: AbstractSetting<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return (globalValues[setting.key] ?: setting.defaultValue) as T
+    }
+
+    fun <T> setGlobal(setting: AbstractSetting<T>, value: T) {
+        globalValues[setting.key] = value as Any
+    }
+
+    fun <T> setOverride(setting: AbstractSetting<T>, value: T) {
+        perGameOverrides[setting.key] = value as Any
+    }
+
+    /** The default "set" function. This updates the setting based on context - if
+     *  currently editing global settings, this edits the global setting, but if
+     *  currently editing per-game settings, it edits the global setting. Should
+     *  be used when editing settings in Settings submenu.
+     */
+    fun <T> set(setting: AbstractSetting<T>, value: T) {
+        if (isPerGame()) setOverride(setting, value) else setGlobal(setting, value)
+    }
 
     /**
-     * A HashMap<String></String>, SettingSection> that constructs a new SettingSection instead of returning null
-     * when getting a key not already in the map
+     * Updates an existing setting in place - if this is *currently* a global setting,
+     * it updates the global setting, and if it is *currently* a per-game setting, it updates
+     * the per-game setting. Should be used at runtime by things such as the Quick Menu.
      */
-    class SettingsSectionMap : HashMap<String, SettingSection?>() {
-        override operator fun get(key: String): SettingSection? {
-            if (!super.containsKey(key)) {
-                val section = SettingSection(key)
-                super.put(key, section)
-                return section
-            }
-            return super.get(key)
+    fun <T> setActive(setting: AbstractSetting<T>, value: T) {
+        if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
+    }
+
+    /** Merge the globals from other into the current settings. Merge per-game if game id is the same. */
+    fun mergeSettings(other: CitraSettings) {
+        other.globalValues.forEach { (key, value) ->
+            globalValues[key] = value
+        }
+
+        if (gameId != other.gameId) {
+            return
+        }
+
+        perGameOverrides.clear()
+        other.perGameOverrides.forEach { (key, value) ->
+            perGameOverrides[key] = value
         }
     }
 
-    var sections: HashMap<String, SettingSection?> = SettingsSectionMap()
-
-    fun getSection(sectionName: String): SettingSection? = sections[sectionName]
-
-    val isEmpty: Boolean
-        get() = sections.isEmpty()
-
-    fun loadSettings(view: SettingsActivityView? = null) {
-        sections = SettingsSectionMap()
-        loadCitraSettings(view)
-        if (!TextUtils.isEmpty(gameId)) {
-            loadCustomGameSettings(gameId!!, view)
-        }
-        isLoaded = true
+    fun <T> clearOverride(setting: AbstractSetting<T>) {
+        perGameOverrides.remove(setting.key)
     }
 
-    private fun loadCitraSettings(view: SettingsActivityView?) {
-        for ((fileName) in configFileSectionsMap) {
-            sections.putAll(SettingsFile.readFile(fileName, view))
-        }
+    fun hasOverride(setting: AbstractSetting<*>): Boolean =
+        perGameOverrides.containsKey(setting.key)
+
+    fun getAllOverrides(): Map<String, Any> = perGameOverrides.toMap()
+
+    fun getAllGlobal(): Map<String, Any> = globalValues.toMap()
+
+    fun clearAll() {
+        globalValues.clear()
+        perGameOverrides.clear()
     }
 
-    private fun loadCustomGameSettings(gameId: String, view: SettingsActivityView?) {
-        // Custom game settings
-        mergeSections(SettingsFile.readCustomGameSettings(gameId, view))
-    }
-
-    private fun mergeSections(updatedSections: HashMap<String, SettingSection?>) {
-        for ((key, updatedSection) in updatedSections) {
-            if (sections.containsKey(key)) {
-                val originalSection = sections[key]
-                originalSection!!.mergeSection(updatedSection!!)
-            } else {
-                sections[key] = updatedSection
-            }
-        }
-    }
-
-    fun loadSettings(gameId: String, view: SettingsActivityView) {
-        this.gameId = gameId
-        loadSettings(view)
-    }
-
-    fun saveSettings(view: SettingsActivityView) {
-        if (TextUtils.isEmpty(gameId)) {
-            view.showToastMessage(
-                CitraApplication.appContext.getString(R.string.ini_saved),
-                false
-            )
-            for ((fileName, sectionNames) in configFileSectionsMap.entries) {
-                val iniSections = TreeMap<String, SettingSection?>()
-                for (section in sectionNames) {
-                    iniSections[section] = sections[section]
-                }
-                SettingsFile.saveFile(fileName, iniSections, view)
-            }
-        } else {
-            // TODO: Implement per game settings
-        }
-    }
-
-    fun saveSetting(setting: AbstractSetting, filename: String) {
-        SettingsFile.saveFile(filename, setting)
+    fun removePerGameSettings() {
+        perGameOverrides.clear()
+        gameId = null
     }
 
     companion object {
@@ -236,22 +231,7 @@ class Settings {
 
         private val configFileSectionsMap: MutableMap<String, List<String>> = HashMap()
 
-        init {
-            configFileSectionsMap[SettingsFile.FILE_NAME_CONFIG] =
-                listOf(
-                    SECTION_CORE,
-                    SECTION_SYSTEM,
-                    SECTION_CAMERA,
-                    SECTION_CONTROLS,
-                    SECTION_RENDERER,
-                    SECTION_LAYOUT,
-                    SECTION_NETWORK,
-                    SECTION_STORAGE,
-                    SECTION_UTILITY,
-                    SECTION_AUDIO,
-                    SECTION_DEBUG,
-                    SECTION_MISC
-                )
-        }
+        /** The settings (global and per-game overrides) that are active right now.*/
+        val activeSettings = CitraSettings()
     }
 }
