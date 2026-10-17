@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -598,10 +598,11 @@ SurfaceId RasterizerCache<T>::GetTextureSurface(const Pica::Texture::TextureInfo
         }
         const auto [src_surface_id, rect] =
             GetSurfaceSubRect(params, ScaleMatch::Ignore, true, initial_flags);
-        Surface& src_surface = slot_surfaces[src_surface_id];
 
-        params.res_scale = src_surface.res_scale;
+        // CreateSurface can grow slot_surfaces, so take Surface& after it returns
+        params.res_scale = slot_surfaces[src_surface_id].res_scale;
         SurfaceId tmp_surface_id = CreateSurface(params, initial_flags);
+        Surface& src_surface = slot_surfaces[src_surface_id];
         Surface& tmp_surface = slot_surfaces[tmp_surface_id];
         sentenced.emplace_back(tmp_surface_id, runtime.GetResourceTick());
 
@@ -769,18 +770,19 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         fb_rect = depth_rect;
     }
 
-    Surface* color_surface = color_id ? &slot_surfaces[color_id] : nullptr;
-    Surface* depth_surface = depth_id ? &slot_surfaces[depth_id] : nullptr;
-
     if (color_id) {
-        color_level = color_surface->LevelOf(color_params.addr);
-        color_surface->flags |= SurfaceFlagBits::RenderTarget;
+        // Validation can grow slot_surfaces, reference lifetime should expire after validation
+        Surface& color_surface = slot_surfaces[color_id];
+        color_level = color_surface.LevelOf(color_params.addr);
+        color_surface.flags |= SurfaceFlagBits::RenderTarget;
         ValidateSurface(color_id, boost::icl::first(color_vp_interval),
                         boost::icl::length(color_vp_interval));
     }
     if (depth_id) {
-        depth_level = depth_surface->LevelOf(depth_params.addr);
-        depth_surface->flags |= SurfaceFlagBits::RenderTarget;
+        // Validation can grow slot_surfaces, reference lifetime should expire after validation
+        Surface& depth_surface = slot_surfaces[depth_id];
+        depth_level = depth_surface.LevelOf(depth_params.addr);
+        depth_surface.flags |= SurfaceFlagBits::RenderTarget;
         ValidateSurface(depth_id, boost::icl::first(depth_vp_interval),
                         boost::icl::length(depth_vp_interval));
     }
@@ -795,6 +797,9 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
 
     auto [it, new_framebuffer] = framebuffers.try_emplace(fb_params);
     if (new_framebuffer) {
+        // Validation can grow slot_surfaces, so get fresh references here
+        Surface* color_surface = color_id ? &slot_surfaces[color_id] : nullptr;
+        Surface* depth_surface = depth_id ? &slot_surfaces[depth_id] : nullptr;
         it->second = slot_framebuffers.insert(runtime, fb_params, color_surface, depth_surface);
     }
 
@@ -967,23 +972,29 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
         return;
     }
 
-    Surface& surface = slot_surfaces[surface_id];
     const SurfaceInterval validate_interval(addr, addr + size);
+    SurfaceRegions validate_regions;
+    u32 level = 0;
+    SurfaceInterval level_interval{};
+    {
+        // Keep this reference out of the loop. A custom upload below can grow slot_surfaces
+        Surface& surface = slot_surfaces[surface_id];
+        if (surface.type == SurfaceType::Fill) {
+            ASSERT_MSG(surface.IsRegionValid(validate_interval),
+                       "Attempted to validate a non-valid fill surface");
+            return;
+        }
 
-    if (surface.type == SurfaceType::Fill) {
-        ASSERT_MSG(surface.IsRegionValid(validate_interval),
-                   "Attempted to validate a non-valid fill surface");
-        return;
-    }
-
-    SurfaceRegions validate_regions = surface.invalid_regions & validate_interval;
-
-    if (validate_regions.empty()) {
-        return;
+        validate_regions = surface.invalid_regions & validate_interval;
+        if (validate_regions.empty()) {
+            return;
+        }
+        level = surface.LevelOf(addr);
+        level_interval = surface.LevelInterval(level);
     }
 
     auto notify_validated = [&](SurfaceInterval interval) {
-        surface.MarkValid(interval);
+        slot_surfaces[surface_id].MarkValid(interval);
         validate_regions.erase(interval);
     };
 
@@ -991,9 +1002,10 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
                            "RasterizerCache::ValidateSurface (from {:#x} to {:#x})", addr,
                            addr + size};
 
-    u32 level = surface.LevelOf(addr);
-    SurfaceInterval level_interval = surface.LevelInterval(level);
     while (!validate_regions.empty()) {
+        // A synchronous custom upload can grow slot_surfaces and invalidate Surface&
+        Surface& surface = slot_surfaces[surface_id];
+
         // Take an invalid interval from the validation regions and clamp it
         // to the current level interval. If the interval is empty
         // then we have validated the entire level so move to the next.
@@ -1024,13 +1036,14 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
 
         FlushRegion(params.addr, params.size);
         if (!use_custom_textures || !UploadCustomSurface(surface_id, interval)) {
-            UploadSurface(surface, interval);
+            UploadSurface(slot_surfaces[surface_id], interval);
         }
         notify_validated(params.GetInterval());
     }
 
     // Filtered mipmaps often look really bad. We can achieve better quality by
     // generating them from the base level.
+    Surface& surface = slot_surfaces[surface_id];
     if (surface.res_scale != 1 && level != 0) {
         runtime.GenerateMipmaps(surface);
     }
@@ -1113,22 +1126,83 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
         return true;
     }
 
-    surface.flags |= SurfaceFlagBits::Custom;
+    // Decode finishes on a later frame, so the callback checks the slot again before uploading
+    const SurfaceParams expected_surface = surface;
 
-    const auto upload = [this, level, surface_id, material]() -> bool {
-        ASSERT_MSG(True(slot_surfaces[surface_id].flags & SurfaceFlagBits::Custom),
-                   "Surface is not suitable for custom upload, aborting!");
-        if (!slot_surfaces[surface_id].IsCustom()) {
-            const SurfaceBase old_surface{slot_surfaces[surface_id]};
+    const auto upload = [this, level, surface_id, material, expected_surface, load_info,
+                         hash]() -> bool {
+        if (!slot_surfaces.contains(surface_id)) {
+            return false;
+        }
+
+        // A live slot may now hold another texture, or this one may have been unregistered.
+        // custom_format is left out of the compare because this upload is what sets it
+        Surface& target = slot_surfaces[surface_id];
+        const bool same_guest =
+            target.addr == expected_surface.addr && target.end == expected_surface.end &&
+            target.width == expected_surface.width && target.height == expected_surface.height &&
+            target.stride == expected_surface.stride && target.levels == expected_surface.levels &&
+            target.is_tiled == expected_surface.is_tiled &&
+            target.texture_type == expected_surface.texture_type &&
+            target.pixel_format == expected_surface.pixel_format;
+        if (False(target.flags & SurfaceFlagBits::Registered) || !same_guest ||
+            !runtime.SupportsCustomFormat(material->format)) {
+            return false;
+        }
+
+        // Guest pixels can change without a new surface. Drop the material when they no longer
+        // match the hash captured at queue time
+        MemoryRef source_ptr = memory.GetPhysicalRef(load_info.addr);
+        if (!source_ptr) {
+            return false;
+        }
+        const auto upload_data = source_ptr.GetWriteBytes(load_info.end - load_info.addr);
+        if (ComputeHash(load_info, upload_data) != hash) {
+            return false;
+        }
+
+        // Each mip is its own material and only the base material may allocate the image. A mip
+        // that arrives first would size that image to the mip
+        if (level != 0) {
+            if (!target.IsCustom()) {
+                return false;
+            }
+            u32 mip_width = target.material->width >> level;
+            u32 mip_height = target.material->height >> level;
+            if (mip_width == 0) {
+                mip_width = 1;
+            }
+            if (mip_height == 0) {
+                mip_height = 1;
+            }
+            if (target.material != material &&
+                (material->format != target.custom_format || material->width != mip_width ||
+                 material->height != mip_height)) {
+                return false;
+            }
+        }
+
+        // Mark the surface custom only after the checks pass. A new base material replaces the
+        // image in this slot; the previous image is sentenced and the page table keeps surface_id
+        target.flags |= SurfaceFlagBits::Custom;
+        if (!target.IsCustom() || (level == 0 && target.material != material)) {
+            const SurfaceBase old_surface{target};
             const SurfaceId old_id =
                 slot_surfaces.swap_and_insert(surface_id, runtime, old_surface, material);
-            slot_surfaces[old_id].flags &= ~SurfaceFlagBits::Registered;
+            Surface& replaced = slot_surfaces[old_id];
+            replaced.flags &= ~SurfaceFlagBits::Registered;
+            // The sentenced copy inherited the flag set above. A guest image is not custom
+            if (!replaced.IsCustom()) {
+                replaced.flags &= ~SurfaceFlagBits::Custom;
+            }
             sentenced.emplace_back(old_id, runtime.GetResourceTick());
         }
-        Surface& surface = slot_surfaces[surface_id];
-        surface.UploadCustom(material, level);
+
+        // swap_and_insert can grow slot_surfaces, so the reference above may be dangling
+        Surface& custom_surface = slot_surfaces[surface_id];
+        custom_surface.UploadCustom(material, level);
         if (custom_tex_manager.SkipMipmaps()) {
-            runtime.GenerateMipmaps(surface);
+            runtime.GenerateMipmaps(custom_surface);
         }
         return true;
     };
