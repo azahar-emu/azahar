@@ -199,10 +199,8 @@ class SettingsActivity :
         // This function deletes the main config file AND any other config files
         // that will store per-game settings and reloads from the default.
 
-        // Prevents saving to a non-existent settings file
-
         // TODO: if in a per-game settings context, replace this with a ResetToGlobal option
-
+        // Prevents saving to a non-existent settings file
         presenter.onSettingsReset()
 
         val controllerKeys =

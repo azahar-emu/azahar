@@ -466,7 +466,9 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
                 val scSetting = clickedItem as? SingleChoiceSetting
                 scSetting?.let {
                     val value = getValueForSingleChoiceSelection(it, which)
-                    if (it.selectedValue != value) fragmentView?.onSettingChanged()
+                    if (it.selectedValue != value) {
+                        fragmentView?.onSettingChanged()
+                    }
                     it.setSelectedValue(value)
                     fragmentView.loadSettingsList()
                     closeDialog()
@@ -477,7 +479,9 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
                 val scSetting = clickedItem as? StringSingleChoiceSetting
                 scSetting?.let {
                     val value = it.getValueAt(which) ?: ""
-                    if (it.selectedValue != value) fragmentView?.onSettingChanged()
+                    if (it.selectedValue != value) {
+                        fragmentView?.onSettingChanged()
+                    }
                     it.setSelectedValue(value)
                     fragmentView.loadSettingsList()
                     closeDialog()
@@ -488,7 +492,9 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
                 val sliderSetting = clickedItem as? SliderSetting
                 sliderSetting?.let {
                     val sliderval = it.roundedFloat(sliderProgress)
-                    if (sliderval != it.selectedFloat) fragmentView.onSettingChanged()
+                    if (sliderval != it.selectedFloat) {
+                        fragmentView.onSettingChanged()
+                    }
                     val s = it.setting
                     when {
                         it.setting?.defaultValue is Int -> it.setSelectedValue(

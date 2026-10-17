@@ -32,7 +32,9 @@ class SliderSetting(
     override val type = TYPE_SLIDER
     val selectedFloat: Float
         get() {
-            if (getValue != null) return getValue.invoke()
+            if (getValue != null) {
+                return getValue.invoke()
+            }
             val s = setting ?: return defaultValue!!
 
             val ret = when (s.defaultValue) {

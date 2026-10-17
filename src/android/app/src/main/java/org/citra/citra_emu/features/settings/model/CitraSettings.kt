@@ -12,7 +12,7 @@ class CitraSettings {
 
     var gameId: String? = null
 
-    fun isPerGame(): Boolean = gameId != null && gameId != ""
+    fun isPerGame(): Boolean = (gameId != null && gameId != "")
 
     fun <T> get(setting: AbstractSetting<T>): T {
         @Suppress("UNCHECKED_CAST")
@@ -60,7 +60,9 @@ class CitraSettings {
             globalValues[key] = value
         }
 
-        if (gameId != other.gameId) return
+        if (gameId != other.gameId) {
+            return
+        }
 
         perGameOverrides.clear()
         other.perGameOverrides.forEach { (key, value) ->
@@ -84,17 +86,12 @@ class CitraSettings {
         perGameOverrides.clear()
     }
 
-    fun clearOverrides() {
-        perGameOverrides.clear()
-    }
-
     fun removePerGameSettings() {
-        clearOverrides()
+        perGameOverrides.clear()
         gameId = null
     }
 
     companion object {
-
         const val SECTION_CORE = "Core"
         const val SECTION_SYSTEM = "System"
         const val SECTION_CAMERA = "Camera"

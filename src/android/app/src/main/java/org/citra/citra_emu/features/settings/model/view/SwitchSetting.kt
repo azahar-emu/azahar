@@ -26,7 +26,9 @@ class SwitchSetting(
 
     val isChecked: Boolean
         get() {
-            if (getValue != null) return getValue.invoke()
+            if (getValue != null) {
+                return getValue.invoke()
+            }
             if (setting == null) {
                 return defaultValue
             }

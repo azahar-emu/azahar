@@ -28,7 +28,9 @@ class StringInputSetting(
     val selectedValue: String
         @Suppress("UNCHECKED_CAST")
         get() {
-            if (getValue != null) return getValue.invoke()
+            if (getValue != null) {
+                return getValue.invoke()
+            }
             setting ?: return defaultValue
             return settings.get(setting as AbstractSetting<String>)
         }

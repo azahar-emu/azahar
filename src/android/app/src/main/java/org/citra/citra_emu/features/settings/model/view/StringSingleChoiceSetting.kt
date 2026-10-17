@@ -27,7 +27,9 @@ class StringSingleChoiceSetting(
     override val type = TYPE_STRING_SINGLE_CHOICE
 
     fun getValueAt(index: Int): String? {
-        if (values == null) return null
+        if (values == null) {
+            return null
+        }
         return if (index >= 0 && index < values.size) {
             values[index]
         } else {
@@ -37,7 +39,9 @@ class StringSingleChoiceSetting(
 
     val selectedValue: String
         get() {
-            if (getValue != null) return getValue.invoke()
+            if (getValue != null) {
+                return getValue.invoke()
+            }
             if (setting == null) {
                 return defaultValue!!
             }

@@ -165,7 +165,9 @@ object SettingsFile {
      */
 
     fun saveCustomFile(settings: CitraSettings, view: SettingsActivityView? = null) {
-        if (!settings.isPerGame()) return
+        if (!settings.isPerGame()) {
+            return
+        }
         val ini = getOrCreateCustomGameSettingsFile(settings.gameId!!)
         try {
             val context: Context = CitraApplication.appContext
