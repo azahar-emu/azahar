@@ -22,7 +22,7 @@ class SliderSetting(
     val units: String,
     val key: String? = null,
     val defaultValue: Float? = null,
-    val rounding: Int = 2,
+    val decimals: Int = 2,
     override var isEnabled: Boolean = true,
     private val getValue: (() -> Float)? = null,
     private val setValue: ((Float) -> Unit)? = null,
@@ -54,7 +54,7 @@ class SliderSetting(
             return ret.coerceIn(min.toFloat(), max.toFloat())
         }
     fun roundedFloat(value: Float): Float {
-        val factor = 10f.pow(rounding)
+        val factor = 10f.pow(decimals)
         return (value * factor).roundToInt() / factor
     }
 

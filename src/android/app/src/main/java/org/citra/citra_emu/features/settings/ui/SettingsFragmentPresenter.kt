@@ -1398,7 +1398,7 @@ class SettingsFragmentPresenter(
                     0,
                     255,
                     "",
-                    rounding = 0
+                    decimals = 0
                 )
             )
             add(
@@ -1410,7 +1410,7 @@ class SettingsFragmentPresenter(
                     0,
                     255,
                     "",
-                    rounding = 0
+                    decimals = 0
                 )
             )
             add(
@@ -1422,7 +1422,7 @@ class SettingsFragmentPresenter(
                     0,
                     255,
                     "",
-                    rounding = 0
+                    decimals = 0
                 )
             )
             add(
@@ -1830,7 +1830,7 @@ class SettingsFragmentPresenter(
                     "%",
                     FloatSetting.AUDIO_VOLUME.key,
                     FloatSetting.AUDIO_VOLUME.defaultValue,
-                    rounding = 0
+                    decimals = 0
                 )
             )
             add(
