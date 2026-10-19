@@ -197,7 +197,9 @@ class EmulationFragment :
 
         // So this fragment doesn't restart on configuration changes; i.e. rotation.
         retainInstance = true
-        emulationState = EmulationState(game.path)
+        emulationState = EmulationState(game.path) {
+            activity?.runOnUiThread { updateRunState() }
+        }
         screenAdjustmentUtil =
             ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settings)
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
@@ -531,11 +533,25 @@ class EmulationFragment :
         }
     }
 
+    /**
+     * Keeps the screen on and presents frames only while the game is actually running, so a
+     * paused game lets the screen time out and doesn't wake the UI thread every vsync.
+     */
+    private fun updateRunState() {
+        val binding = _binding ?: return
+        val running = emulationState.isRunning
+        binding.root.keepScreenOn = running
+        Choreographer.getInstance().removeFrameCallback(this)
+        if (running && isResumed) {
+            Choreographer.getInstance().postFrameCallback(this)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        Choreographer.getInstance().postFrameCallback(this)
         startPerfStatsUpdater()
         emulationState.setInForeground(true)
+        updateRunState()
         if (NativeLibrary.isRunning()) {
             // If the overlay is enabled, we need to update the position if changed
             val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
@@ -1691,8 +1707,17 @@ class EmulationFragment :
         ViewCompat.setOnApplyWindowInsetsListener(binding.inGameMenu, applyCutoutInsets)
     }
 
-    private class EmulationState(private val gamePath: String) {
-        private var state: State
+    private class EmulationState(
+        private val gamePath: String,
+        private val onStateChanged: () -> Unit
+    ) {
+        private var state: State = State.STOPPED
+            set(value) {
+                if (field != value) {
+                    field = value
+                    onStateChanged()
+                }
+            }
         private var surface: Surface? = null
 
         // Native emulation only runs while the fragment is in the foreground and the user hasn't
@@ -1700,11 +1725,6 @@ class EmulationFragment :
         // resuming a game the user paused, or resuming a game behind the lock screen.
         private var userPaused = false
         private var inForeground = false
-
-        init {
-            // Starting state is stopped.
-            state = State.STOPPED
-        }
 
         @get:Synchronized
         val isStopped: Boolean
