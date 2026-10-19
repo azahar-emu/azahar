@@ -553,6 +553,7 @@ class EmulationFragment :
     }
 
     override fun onPause() {
+        // Pause even if the game is still booting, so it doesn't start running in the background.
         emulationState.setInForeground(false)
         Choreographer.getInstance().removeFrameCallback(this)
         stopPerfStatsUpdater()
@@ -1816,7 +1817,15 @@ class EmulationFragment :
             when (state) {
                 State.STOPPED -> {
                     TurboHelper.setTurboEnabled(false, false)
-                    state = State.RUNNING
+                    // Set the initial pause flag before the emulation thread starts, so a game
+                    // launched (or still booting) while in the background doesn't start running.
+                    if (shouldRun) {
+                        state = State.RUNNING
+                        NativeLibrary.unPauseEmulation()
+                    } else {
+                        state = State.PAUSED
+                        NativeLibrary.pauseEmulation()
+                    }
                     Thread({
                         Log.debug("[EmulationFragment] Starting emulation thread.")
                         NativeLibrary.run(gamePath)
