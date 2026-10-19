@@ -340,6 +340,11 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     }
 
     InputManager::Init();
+    // The frontend may have paused emulation before the motion factory existed (e.g. the game
+    // was launched in the background), so make sure the motion device doesn't start the sensors.
+    if (pause_emulation) {
+        InputManager::NDKMotionHandler()->DisableSensors();
+    }
 
     window->MakeCurrent();
 
@@ -389,8 +394,9 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                     // Frontend requests us to abort, return a shutdown request.
                     return Core::System::ResultStatus::ShutdownRequested;
                 }
+                // Emulation may have been paused while the error dialog was shown.
                 handler = InputManager::NDKMotionHandler();
-                if (handler) {
+                if (handler && !pause_emulation) {
                     handler->EnableSensors();
                 }
             }
