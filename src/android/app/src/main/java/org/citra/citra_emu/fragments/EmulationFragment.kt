@@ -308,23 +308,7 @@ class EmulationFragment :
         binding.inGameMenu.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.menu_emulation_pause -> {
-                    if (emulationState.isPaused) {
-                        emulationState.unpause()
-                        it.title = resources.getString(R.string.pause_emulation)
-                        it.icon = ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_pause,
-                            requireContext().theme
-                        )
-                    } else {
-                        emulationState.pause()
-                        it.title = resources.getString(R.string.resume_emulation)
-                        it.icon = ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_play,
-                            requireContext().theme
-                        )
-                    }
+                    togglePause()
                     true
                 }
 
@@ -526,6 +510,28 @@ class EmulationFragment :
         } else {
             emulationState.pause()
         }
+        updatePauseMenuItem()
+    }
+
+    private fun updatePauseMenuItem() {
+        val binding = _binding ?: return
+        binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
+            if (emulationState.isPaused) {
+                menuItem.title = resources.getString(R.string.resume_emulation)
+                menuItem.icon = ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.ic_play,
+                    requireContext().theme
+                )
+            } else {
+                menuItem.title = resources.getString(R.string.pause_emulation)
+                menuItem.icon = ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.ic_pause,
+                    requireContext().theme
+                )
+            }
+        }
     }
 
     override fun onResume() {
@@ -539,14 +545,7 @@ class EmulationFragment :
             val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
             updateStatsPosition(position)
 
-            binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
-                menuItem.title = resources.getString(R.string.pause_emulation)
-                menuItem.icon = ResourcesCompat.getDrawable(
-                    resources,
-                    R.drawable.ic_pause,
-                    requireContext().theme
-                )
-            }
+            updatePauseMenuItem()
             return
         }
 
