@@ -41,6 +41,7 @@
 #include "core/frontend/camera/factory.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hw/unique_data.h"
 #include "core/loader/loader.h"
@@ -383,13 +384,17 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                 }
             }
         } else {
-            // Ensure no audio bleeds out while game is paused
-            const float volume = Settings::values.volume.GetValue();
-            SCOPE_EXIT({ Settings::values.volume = volume; });
-            Settings::values.volume = 0;
-
-            std::unique_lock pause_lock{paused_mutex};
-            running_cv.wait(pause_lock, [] { return !pause_emulation || stop_run; });
+            // Stops host audio streams while emulation is paused.
+            system.DSP().SetSinkSuspended(true);
+            Service::MIC::SetMicSuspended(system, true);
+            {
+                std::unique_lock pause_lock{paused_mutex};
+                running_cv.wait(pause_lock, [] { return !pause_emulation || stop_run; });
+            }
+            if (!stop_run) {
+                Service::MIC::SetMicSuspended(system, false);
+                system.DSP().SetSinkSuspended(false);
+            }
             window->PollEvents();
         }
     }
