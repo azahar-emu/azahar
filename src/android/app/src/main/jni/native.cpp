@@ -40,6 +40,7 @@
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
 #include "core/hle/service/am/am.h"
+#include "core/hle/service/cam/cam.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/nfc/nfc.h"
@@ -394,14 +395,21 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                 }
             }
         } else {
-            // Stops host audio streams while emulation is paused.
+            // Stops host audio streams and camera while emulation is paused.
+            const auto cam = Service::CAM::GetModule(system);
             system.DSP().SetSinkSuspended(true);
             Service::MIC::SetMicSuspended(system, true);
+            if (cam) {
+                cam->SetSuspended(true);
+            }
             {
                 std::unique_lock pause_lock{paused_mutex};
                 running_cv.wait(pause_lock, [] { return !pause_emulation || stop_run; });
             }
             if (!stop_run) {
+                if (cam) {
+                    cam->SetSuspended(false);
+                }
                 Service::MIC::SetMicSuspended(system, false);
                 system.DSP().SetSinkSuspended(false);
             }
