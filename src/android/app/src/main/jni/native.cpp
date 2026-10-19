@@ -343,8 +343,9 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         return load_result;
     }
 
+    // pause_emulation is intentionally not reset here: if the frontend paused emulation while the
+    // game was booting (e.g. the app was sent to the background), it must stay paused.
     stop_run = false;
-    pause_emulation = false;
 
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
 
