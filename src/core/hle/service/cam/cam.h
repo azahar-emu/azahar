@@ -151,6 +151,12 @@ public:
     ~Module();
     void ReloadCameraDevices();
 
+    /**
+     * Stops (or restarts) host capture for all cameras in use, without changing the state seen
+     * by the application. Used to release the host cameras while emulation is paused.
+     */
+    void SetSuspended(bool suspended);
+
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> cam, const char* name, u32 max_session);
@@ -758,6 +764,8 @@ private:
     Core::TimingEventType* completion_event_callback;
     Core::TimingEventType* vsync_interrupt_event_callback;
     std::atomic<bool> is_camera_reload_pending{false};
+    /// True while host capture has been stopped by SetSuspended(true).
+    bool capture_suspended{false};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int file_version);

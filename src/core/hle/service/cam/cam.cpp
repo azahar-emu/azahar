@@ -1167,6 +1167,35 @@ void Module::ReloadCameraDevices() {
     is_camera_reload_pending.store(true);
 }
 
+void Module::SetSuspended(bool suspended) {
+    if (capture_suspended == suspended) {
+        return;
+    }
+    capture_suspended = suspended;
+
+    std::array<bool, NumCameras> in_use{};
+    for (auto& port : ports) {
+        if (port.is_busy) {
+            in_use[port.camera_id] = true;
+        }
+        // Don't stop a camera while a frame is still being received from it asynchronously.
+        if (suspended && port.capture_result.valid()) {
+            port.capture_result.wait();
+        }
+    }
+
+    for (int i = 0; i < NumCameras; i++) {
+        if (!in_use[i] || !cameras[i].impl) {
+            continue;
+        }
+        if (suspended) {
+            cameras[i].impl->StopCapture();
+        } else {
+            cameras[i].impl->StartCapture();
+        }
+    }
+}
+
 void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
     camera.impl = Camera::CreateCamera(
         Settings::values.camera_name[camera_id], Settings::values.camera_config[camera_id],
