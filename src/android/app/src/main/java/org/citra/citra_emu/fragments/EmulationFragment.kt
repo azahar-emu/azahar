@@ -531,6 +531,7 @@ class EmulationFragment :
     override fun onResume() {
         super.onResume()
         Choreographer.getInstance().postFrameCallback(this)
+        startPerfStatsUpdater()
         if (NativeLibrary.isRunning()) {
             emulationState.unpause()
 
@@ -561,6 +562,7 @@ class EmulationFragment :
             emulationState.pause()
         }
         Choreographer.getInstance().removeFrameCallback(this)
+        stopPerfStatsUpdater()
         super.onPause()
     }
 
@@ -1490,6 +1492,17 @@ class EmulationFragment :
         binding.surfaceInputOverlay.resetButtonPlacement()
     }
 
+    private fun startPerfStatsUpdater() {
+        perfStatsUpdater?.let {
+            perfStatsUpdateHandler.removeCallbacks(it)
+            perfStatsUpdateHandler.post(it)
+        }
+    }
+
+    private fun stopPerfStatsUpdater() {
+        perfStatsUpdater?.let { perfStatsUpdateHandler.removeCallbacks(it) }
+    }
+
     fun updateShowPerformanceOverlay() {
         if (perfStatsUpdater != null) {
             perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
@@ -1583,6 +1596,7 @@ class EmulationFragment :
             perfStatsUpdateHandler.post(perfStatsUpdater!!)
             binding.performanceOverlayShowText.visibility = View.VISIBLE
         } else {
+            perfStatsUpdater = null
             binding.performanceOverlayShowText.visibility = View.GONE
         }
     }
