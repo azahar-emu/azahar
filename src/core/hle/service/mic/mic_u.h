@@ -21,6 +21,12 @@ public:
 
     void ReloadMic();
 
+    /**
+     * Temporarily stops (or restarts) host microphone sampling without changing the state seen by
+     * the emulated application. Used while emulation is paused.
+     */
+    void SetSuspended(bool suspended);
+
 private:
     /**
      * MIC::MapSharedMem service function
@@ -197,6 +203,8 @@ private:
 };
 
 void ReloadMic(Core::System& system);
+
+void SetMicSuspended(Core::System& system, bool suspended);
 
 void InstallInterfaces(Core::System& system);
 

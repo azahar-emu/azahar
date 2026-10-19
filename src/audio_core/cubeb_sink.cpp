@@ -115,6 +115,18 @@ void CubebSink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
     impl->cb = cb;
 }
 
+void CubebSink::Pause() {
+    if (impl->stream && cubeb_stream_stop(impl->stream) != CUBEB_OK) {
+        LOG_ERROR(Audio_Sink, "Error pausing cubeb stream.");
+    }
+}
+
+void CubebSink::Resume() {
+    if (impl->stream && cubeb_stream_start(impl->stream) != CUBEB_OK) {
+        LOG_ERROR(Audio_Sink, "Error resuming cubeb stream.");
+    }
+}
+
 long CubebSink::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                                    void* output_buffer, long num_frames) {
     auto* impl = static_cast<Impl*>(user_data);

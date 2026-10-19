@@ -201,6 +201,20 @@ struct MIC_U::Impl {
                             static_cast<u32>(state.size)});
     }
 
+    void SetSuspended(bool suspended) {
+        if (suspended) {
+            if (mic && mic->IsSampling()) {
+                mic->StopSampling();
+                sampling_suspended = true;
+            }
+        } else if (sampling_suspended) {
+            sampling_suspended = false;
+            if (mic) {
+                StartSampling();
+            }
+        }
+    }
+
     void StartSampling(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp(ctx);
 
@@ -386,6 +400,8 @@ struct MIC_U::Impl {
     }
 
     std::atomic<bool> change_mic_impl_requested = false;
+    /// True while sampling has been stopped by SetSuspended(true) and should restart on resume.
+    bool sampling_suspended = false;
     std::shared_ptr<Kernel::Event> buffer_full_event;
     Core::TimingEventType* buffer_write_event = nullptr;
     std::shared_ptr<Kernel::SharedMemory> shared_memory;
@@ -412,9 +428,10 @@ private:
         ar & state;
         // Maintain the internal mic state
         ar & encoding;
-        bool is_sampling = mic && mic->IsSampling();
+        bool is_sampling = (mic && mic->IsSampling()) || sampling_suspended;
         ar & is_sampling;
         if (Archive::is_loading::value) {
+            sampling_suspended = false;
             if (is_sampling) {
                 CreateMic();
                 StartSampling();
@@ -527,11 +544,22 @@ void MIC_U::ReloadMic() {
     impl->change_mic_impl_requested.store(true);
 }
 
+void MIC_U::SetSuspended(bool suspended) {
+    impl->SetSuspended(suspended);
+}
+
 void ReloadMic(Core::System& system) {
     auto micu = system.ServiceManager().GetService<Service::MIC::MIC_U>("mic:u");
     if (!micu)
         return;
     micu->ReloadMic();
+}
+
+void SetMicSuspended(Core::System& system, bool suspended) {
+    auto micu = system.ServiceManager().GetService<Service::MIC::MIC_U>("mic:u");
+    if (!micu)
+        return;
+    micu->SetSuspended(suspended);
 }
 
 void InstallInterfaces(Core::System& system) {

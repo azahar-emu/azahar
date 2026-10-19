@@ -197,7 +197,9 @@ class EmulationFragment :
 
         // So this fragment doesn't restart on configuration changes; i.e. rotation.
         retainInstance = true
-        emulationState = EmulationState(game.path)
+        emulationState = EmulationState(game.path) {
+            activity?.runOnUiThread { updateRunState() }
+        }
         screenAdjustmentUtil =
             ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settings)
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
@@ -308,23 +310,7 @@ class EmulationFragment :
         binding.inGameMenu.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.menu_emulation_pause -> {
-                    if (emulationState.isPaused) {
-                        emulationState.unpause()
-                        it.title = resources.getString(R.string.pause_emulation)
-                        it.icon = ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_pause,
-                            requireContext().theme
-                        )
-                    } else {
-                        emulationState.pause()
-                        it.title = resources.getString(R.string.resume_emulation)
-                        it.icon = ResourcesCompat.getDrawable(
-                            resources,
-                            R.drawable.ic_play,
-                            requireContext().theme
-                        )
-                    }
+                    togglePause()
                     true
                 }
 
@@ -417,7 +403,8 @@ class EmulationFragment :
                 }
 
                 R.id.menu_exit -> {
-                    emulationState.pause()
+                    val wasPaused = emulationState.isUserPaused
+                    emulationState.setUserPaused(true)
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.emulation_close_game)
                         .setMessage(R.string.emulation_close_game_message)
@@ -425,9 +412,9 @@ class EmulationFragment :
                             EmulationLifecycleUtil.closeGame()
                         }
                         .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
-                            emulationState.unpause()
+                            emulationState.setUserPaused(wasPaused)
                         }
-                        .setOnCancelListener { emulationState.unpause() }
+                        .setOnCancelListener { emulationState.setUserPaused(wasPaused) }
                         .show()
                     true
                 }
@@ -521,24 +508,21 @@ class EmulationFragment :
     fun isDrawerOpen(): Boolean = binding.drawerLayout.isOpen
 
     private fun togglePause() {
-        if (emulationState.isPaused) {
-            emulationState.unpause()
-        } else {
-            emulationState.pause()
-        }
+        emulationState.setUserPaused(!emulationState.isUserPaused)
+        updatePauseMenuItem()
     }
 
-    override fun onResume() {
-        super.onResume()
-        Choreographer.getInstance().postFrameCallback(this)
-        if (NativeLibrary.isRunning()) {
-            emulationState.unpause()
-
-            // If the overlay is enabled, we need to update the position if changed
-            val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
-            updateStatsPosition(position)
-
-            binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
+    private fun updatePauseMenuItem() {
+        val binding = _binding ?: return
+        binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
+            if (emulationState.isUserPaused) {
+                menuItem.title = resources.getString(R.string.resume_emulation)
+                menuItem.icon = ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.ic_play,
+                    requireContext().theme
+                )
+            } else {
                 menuItem.title = resources.getString(R.string.pause_emulation)
                 menuItem.icon = ResourcesCompat.getDrawable(
                     resources,
@@ -546,6 +530,34 @@ class EmulationFragment :
                     requireContext().theme
                 )
             }
+        }
+    }
+
+    /**
+     * Keeps the screen on and presents frames only while the game is actually running, so a
+     * paused game lets the screen time out and doesn't wake the UI thread every vsync.
+     */
+    private fun updateRunState() {
+        val binding = _binding ?: return
+        val running = emulationState.isRunning
+        binding.root.keepScreenOn = running
+        Choreographer.getInstance().removeFrameCallback(this)
+        if (running && isResumed) {
+            Choreographer.getInstance().postFrameCallback(this)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startPerfStatsUpdater()
+        emulationState.setInForeground(true)
+        updateRunState()
+        if (NativeLibrary.isRunning()) {
+            // If the overlay is enabled, we need to update the position if changed
+            val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
+            updateStatsPosition(position)
+
+            updatePauseMenuItem()
             return
         }
 
@@ -557,10 +569,10 @@ class EmulationFragment :
     }
 
     override fun onPause() {
-        if (NativeLibrary.isRunning()) {
-            emulationState.pause()
-        }
+        // Pause even if the game is still booting, so it doesn't start running in the background.
+        emulationState.setInForeground(false)
         Choreographer.getInstance().removeFrameCallback(this)
+        stopPerfStatsUpdater()
         super.onPause()
     }
 
@@ -1490,6 +1502,17 @@ class EmulationFragment :
         binding.surfaceInputOverlay.resetButtonPlacement()
     }
 
+    private fun startPerfStatsUpdater() {
+        perfStatsUpdater?.let {
+            perfStatsUpdateHandler.removeCallbacks(it)
+            perfStatsUpdateHandler.post(it)
+        }
+    }
+
+    private fun stopPerfStatsUpdater() {
+        perfStatsUpdater?.let { perfStatsUpdateHandler.removeCallbacks(it) }
+    }
+
     fun updateShowPerformanceOverlay() {
         if (perfStatsUpdater != null) {
             perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
@@ -1583,6 +1606,7 @@ class EmulationFragment :
             perfStatsUpdateHandler.post(perfStatsUpdater!!)
             binding.performanceOverlayShowText.visibility = View.VISIBLE
         } else {
+            perfStatsUpdater = null
             binding.performanceOverlayShowText.visibility = View.GONE
         }
     }
@@ -1683,27 +1707,40 @@ class EmulationFragment :
         ViewCompat.setOnApplyWindowInsetsListener(binding.inGameMenu, applyCutoutInsets)
     }
 
-    private class EmulationState(private val gamePath: String) {
-        private var state: State
+    private class EmulationState(
+        private val gamePath: String,
+        private val onStateChanged: () -> Unit
+    ) {
+        private var state: State = State.STOPPED
+            set(value) {
+                if (field != value) {
+                    field = value
+                    onStateChanged()
+                }
+            }
         private var surface: Surface? = null
 
-        init {
-            // Starting state is stopped.
-            state = State.STOPPED
-        }
+        // Native emulation only runs while the fragment is in the foreground and the user hasn't
+        // paused it. Tracking both separately prevents lifecycle or surface callbacks from
+        // resuming a game the user paused, or resuming a game behind the lock screen.
+        private var userPaused = false
+        private var inForeground = false
 
         @get:Synchronized
         val isStopped: Boolean
             get() = state == State.STOPPED
 
+        /** Whether the user has paused emulation, regardless of the lifecycle state. */
         @get:Synchronized
-        val isPaused: Boolean
-            // Getters for the current state
-            get() = state == State.PAUSED
+        val isUserPaused: Boolean
+            get() = userPaused
 
         @get:Synchronized
         val isRunning: Boolean
             get() = state == State.RUNNING
+
+        private val shouldRun: Boolean
+            get() = inForeground && !userPaused
 
         @Synchronized
         fun stop() {
@@ -1716,38 +1753,50 @@ class EmulationFragment :
             }
         }
 
-        // State changing methods
         @Synchronized
-        fun pause() {
-            if (state != State.PAUSED) {
-                state = State.PAUSED
-                Log.debug("[EmulationFragment] Pausing emulation.")
-
-                NativeLibrary.pauseEmulation()
-                NativeLibrary.playTimeManagerStop()
-            } else {
-                Log.warning("[EmulationFragment] Pause called while already paused.")
-            }
+        fun setUserPaused(paused: Boolean) {
+            userPaused = paused
+            syncRunState()
         }
 
         @Synchronized
-        fun unpause() {
-            if (state != State.RUNNING) {
-                state = State.RUNNING
-                Log.debug("[EmulationFragment] Unpausing emulation.")
+        fun setInForeground(foreground: Boolean) {
+            inForeground = foreground
+            syncRunState()
+        }
 
-                NativeLibrary.unPauseEmulation()
-                NativeLibrary.playTimeManagerStart(NativeLibrary.playTimeManagerGetCurrentTitleId())
-            } else {
-                Log.warning("[EmulationFragment] Unpause called while already running.")
+        private fun syncRunState() {
+            if (state == State.RUNNING && !shouldRun) {
+                pause()
+            } else if (state == State.PAUSED && shouldRun) {
+                unpause()
             }
+        }
+
+        // Native pause/resume helpers
+        private fun pause() {
+            state = State.PAUSED
+            Log.debug("[EmulationFragment] Pausing emulation.")
+
+            NativeLibrary.pauseEmulation()
+            NativeLibrary.playTimeManagerStop()
+        }
+
+        private fun unpause() {
+            state = State.RUNNING
+            Log.debug("[EmulationFragment] Unpausing emulation.")
+
+            NativeLibrary.unPauseEmulation()
+            NativeLibrary.playTimeManagerStart(NativeLibrary.playTimeManagerGetCurrentTitleId())
         }
 
         @Synchronized
         fun run(isActivityRecreated: Boolean) {
             if (isActivityRecreated) {
                 if (NativeLibrary.isRunning()) {
+                    // Make sure native matches our state, syncRunState() resumes it if needed.
                     state = State.PAUSED
+                    NativeLibrary.pauseEmulation()
                 }
             } else {
                 Log.debug("[EmulationFragment] activity resumed or fresh start")
@@ -1775,20 +1824,10 @@ class EmulationFragment :
             } else {
                 surface = null
                 Log.debug("[EmulationFragment] Surface destroyed.")
-                when (state) {
-                    State.RUNNING -> {
-                        NativeLibrary.surfaceDestroyed()
-                        state = State.PAUSED
-                    }
-
-                    State.PAUSED -> {
-                        NativeLibrary.surfaceDestroyed()
-                        Log.warning("[EmulationFragment] Surface cleared while emulation paused.")
-                    }
-
-                    else -> {
-                        Log.warning("[EmulationFragment] Surface cleared while emulation stopped.")
-                    }
+                if (state != State.STOPPED) {
+                    NativeLibrary.surfaceDestroyed()
+                } else {
+                    Log.warning("[EmulationFragment] Surface cleared while emulation stopped.")
                 }
             }
         }
@@ -1798,6 +1837,15 @@ class EmulationFragment :
             when (state) {
                 State.STOPPED -> {
                     TurboHelper.setTurboEnabled(false, false)
+                    // Set the initial pause flag before the emulation thread starts, so a game
+                    // launched (or still booting) while in the background doesn't start running.
+                    if (shouldRun) {
+                        state = State.RUNNING
+                        NativeLibrary.unPauseEmulation()
+                    } else {
+                        state = State.PAUSED
+                        NativeLibrary.pauseEmulation()
+                    }
                     Thread({
                         Log.debug("[EmulationFragment] Starting emulation thread.")
                         NativeLibrary.run(gamePath)
@@ -1805,15 +1853,14 @@ class EmulationFragment :
                 }
 
                 State.PAUSED -> {
-                    Log.debug("[EmulationFragment] Resuming emulation.")
-                    unpause()
+                    // Only resumes if the fragment is in the foreground and not paused by the user.
+                    syncRunState()
                 }
 
                 else -> {
-                    Log.debug("[EmulationFragment] Bug, run called while already running.")
+                    Log.debug("[EmulationFragment] Surface changed while running.")
                 }
             }
-            state = State.RUNNING
         }
 
         private enum class State {

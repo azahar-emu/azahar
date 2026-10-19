@@ -143,6 +143,42 @@ void OpenALSink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
     impl->cb = cb;
 }
 
+void OpenALSink::Pause() {
+    if (!impl->device) {
+        return;
+    }
+    // Pausing the whole device (rather than just the source) also stops OpenAL Soft's mixer
+    // thread, which otherwise keeps waking up even with no playing sources.
+    if (alcIsExtensionPresent(impl->device, "ALC_SOFT_pause_device") == ALC_TRUE) {
+        auto alcDevicePauseSOFT = reinterpret_cast<LPALCDEVICEPAUSESOFT>(
+            alcGetProcAddress(impl->device, "alcDevicePauseSOFT"));
+        if (alcDevicePauseSOFT) {
+            alcDevicePauseSOFT(impl->device);
+            return;
+        }
+    }
+    if (impl->source) {
+        alSourcePause(impl->source);
+    }
+}
+
+void OpenALSink::Resume() {
+    if (!impl->device) {
+        return;
+    }
+    if (alcIsExtensionPresent(impl->device, "ALC_SOFT_pause_device") == ALC_TRUE) {
+        auto alcDeviceResumeSOFT = reinterpret_cast<LPALCDEVICERESUMESOFT>(
+            alcGetProcAddress(impl->device, "alcDeviceResumeSOFT"));
+        if (alcDeviceResumeSOFT) {
+            alcDeviceResumeSOFT(impl->device);
+            return;
+        }
+    }
+    if (impl->source) {
+        alSourcePlay(impl->source);
+    }
+}
+
 ALsizei OpenALSink::Impl::Callback(void* impl_, void* buffer, ALsizei buffer_size_in_bytes) {
     auto impl = reinterpret_cast<Impl*>(impl_);
     if (!impl || !impl->cb) {

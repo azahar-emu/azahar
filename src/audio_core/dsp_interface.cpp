@@ -35,6 +35,9 @@ void DspInterface::SetSink(AudioCore::SinkType sink_type, std::string_view audio
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
     time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
+    if (sink_suspended) {
+        sink->Pause();
+    }
 }
 
 Sink& DspInterface::GetSink() {
@@ -44,6 +47,20 @@ Sink& DspInterface::GetSink() {
 
 void DspInterface::EnableStretching(bool enable) {
     enable_time_stretching = enable;
+}
+
+void DspInterface::SetSinkSuspended(bool suspended) {
+    if (sink_suspended == suspended) {
+        return;
+    }
+    sink_suspended = suspended;
+    if (sink) {
+        if (suspended) {
+            sink->Pause();
+        } else {
+            sink->Resume();
+        }
+    }
 }
 
 void DspInterface::OutputFrame(StereoFrame16 frame) {

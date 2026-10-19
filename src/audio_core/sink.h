@@ -47,6 +47,15 @@ public:
      * @param num_samples Number of stereo samples
      */
     virtual void PushSamples(const void* data, std::size_t num_samples) {}
+
+    /**
+     * Stops the output stream so that the backend stops requesting samples and the output device
+     * can idle. Used while emulation is paused to avoid needless CPU wakeups and battery drain.
+     */
+    virtual void Pause() {}
+
+    /// Restarts the output stream after a call to Pause().
+    virtual void Resume() {}
 };
 
 } // namespace AudioCore

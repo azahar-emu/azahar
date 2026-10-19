@@ -20,6 +20,9 @@ public:
 
     void SetCallback(std::function<void(s16*, std::size_t)> cb) override;
 
+    void Pause() override;
+    void Resume() override;
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;

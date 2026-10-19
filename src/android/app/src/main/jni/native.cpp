@@ -40,7 +40,9 @@
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
 #include "core/hle/service/am/am.h"
+#include "core/hle/service/cam/cam.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hw/unique_data.h"
 #include "core/loader/loader.h"
@@ -203,6 +205,15 @@ static void WaitForEmulationSurfaces(std::unique_lock<std::recursive_mutex>& sur
     surface_cv.wait(surface_lock, [] { return s_surface != nullptr; });
 }
 
+/// Wakes the emulation thread if it is waiting in the paused branch of RunCitra. The mutex is
+/// taken so the notification can't be lost between the waiter checking its predicate and blocking.
+static void NotifyEmulationThread() {
+    {
+        std::scoped_lock lock{paused_mutex};
+    }
+    running_cv.notify_all();
+}
+
 static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Citra core only supports a single running instance
     std::scoped_lock lock(running_mutex);
@@ -329,6 +340,11 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     }
 
     InputManager::Init();
+    // The frontend may have paused emulation before the motion factory existed (e.g. the game
+    // was launched in the background), so make sure the motion device doesn't start the sensors.
+    if (pause_emulation) {
+        InputManager::NDKMotionHandler()->DisableSensors();
+    }
 
     window->MakeCurrent();
 
@@ -342,8 +358,9 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         return load_result;
     }
 
+    // pause_emulation is intentionally not reset here: if the frontend paused emulation while the
+    // game was booting (e.g. the app was sent to the background), it must stay paused.
     stop_run = false;
-    pause_emulation = false;
 
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
 
@@ -377,19 +394,31 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                     // Frontend requests us to abort, return a shutdown request.
                     return Core::System::ResultStatus::ShutdownRequested;
                 }
+                // Emulation may have been paused while the error dialog was shown.
                 handler = InputManager::NDKMotionHandler();
-                if (handler) {
+                if (handler && !pause_emulation) {
                     handler->EnableSensors();
                 }
             }
         } else {
-            // Ensure no audio bleeds out while game is paused
-            const float volume = Settings::values.volume.GetValue();
-            SCOPE_EXIT({ Settings::values.volume = volume; });
-            Settings::values.volume = 0;
-
-            std::unique_lock pause_lock{paused_mutex};
-            running_cv.wait(pause_lock, [] { return !pause_emulation || stop_run; });
+            // Stops host audio streams and camera while emulation is paused.
+            const auto cam = Service::CAM::GetModule(system);
+            system.DSP().SetSinkSuspended(true);
+            Service::MIC::SetMicSuspended(system, true);
+            if (cam) {
+                cam->SetSuspended(true);
+            }
+            {
+                std::unique_lock pause_lock{paused_mutex};
+                running_cv.wait(pause_lock, [] { return !pause_emulation || stop_run; });
+            }
+            if (!stop_run) {
+                if (cam) {
+                    cam->SetSuspended(false);
+                }
+                Service::MIC::SetMicSuspended(system, false);
+                system.DSP().SetSinkSuspended(false);
+            }
             window->PollEvents();
         }
     }
@@ -810,7 +839,7 @@ jboolean JNICALL Java_org_citra_citra_1emu_utils_GpuDriverHelper_supportsCustomD
 void Java_org_citra_citra_1emu_NativeLibrary_unPauseEmulation([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
     pause_emulation = false;
-    running_cv.notify_all();
+    NotifyEmulationThread();
     auto* handler = InputManager::NDKMotionHandler();
     if (handler) {
         handler->EnableSensors();
@@ -839,7 +868,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIE
     if (secondary_window) {
         secondary_window->StopPresenting();
     }
-    running_cv.notify_all();
+    NotifyEmulationThread();
 }
 
 jboolean Java_org_citra_citra_1emu_NativeLibrary_isRunning([[maybe_unused]] JNIEnv* env,
@@ -1021,7 +1050,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_run__Ljava_lang_String_2(JNIEnv* en
 
     if (!stop_run) {
         stop_run = true;
-        running_cv.notify_all();
+        NotifyEmulationThread();
     }
 
     const Core::System::ResultStatus result{RunCitra(path)};
