@@ -103,6 +103,12 @@ public:
     Sink& GetSink();
     /// Enable/Disable audio stretching.
     void EnableStretching(bool enable);
+    /**
+     * Pauses or resumes the output stream of the current sink. While suspended, the sink stops
+     * requesting samples so the output device can idle. The suspended state is carried over to
+     * sinks created later by SetSink.
+     */
+    void SetSinkSuspended(bool suspended);
 
     /**
      * Adds one frame of CSND output. On hardware CSND and the DSP reach the codec chip on separate
@@ -130,6 +136,7 @@ private:
     std::array<s16, 2> last_frame{};
     TimeStretcher time_stretcher;
     std::unique_ptr<Sink> sink;
+    std::atomic<bool> sink_suspended = false;
 
     std::mutex csnd_mutex;
     StereoBuffer16 csnd_pending;
