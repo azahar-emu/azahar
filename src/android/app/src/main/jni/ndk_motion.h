@@ -33,5 +33,8 @@ private:
 
     std::mutex device_mutex;
     NDKMotion* ndk_motion_device = nullptr;
+    /// Whether sensors should be running. Devices created while this is false (e.g. when input
+    /// settings are reloaded while emulation is paused) don't start the sensors.
+    bool sensors_enabled = true;
 };
 } // namespace InputManager

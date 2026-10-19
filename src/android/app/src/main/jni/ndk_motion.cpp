@@ -74,7 +74,7 @@ class NDKMotion final : public Input::MotionDevice {
         return out;
     }
 
-    void Construct() {
+    void Construct(bool enable_sensors) {
         sensor_manager = ASensorManager_getInstanceForPackage("org.citra.citra_emu");
         looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
         if (!sensor_manager || !looper) {
@@ -87,7 +87,9 @@ class NDKMotion final : public Input::MotionDevice {
             return;
         }
 
-        EnableSensors();
+        if (enable_sensors) {
+            EnableSensors();
+        }
     }
 
     void Destruct() {
@@ -120,11 +122,11 @@ class NDKMotion final : public Input::MotionDevice {
 
 public:
     NDKMotion(std::chrono::microseconds update_period_, NDKMotionFactory* owner_factory_,
-              bool asynchronous = false)
+              bool enable_sensors, bool asynchronous = false)
         : update_period(update_period_), owner_factory(owner_factory_) {
         if (asynchronous) {
-            poll_thread = std::thread([this] {
-                Construct();
+            poll_thread = std::thread([this, enable_sensors] {
+                Construct(enable_sensors);
                 auto start = std::chrono::high_resolution_clock::now();
                 while (!stop_polling) {
                     Update();
@@ -133,7 +135,7 @@ public:
                 Destruct();
             });
         } else {
-            Construct();
+            Construct(enable_sensors);
         }
     }
 
@@ -202,16 +204,18 @@ public:
 
 std::unique_ptr<Input::MotionDevice> NDKMotionFactory::Create(const Common::ParamPackage& params) {
     std::chrono::milliseconds update_period{params.Get("update_period", 4)};
-    std::unique_ptr<NDKMotion> ndk_motion = std::make_unique<NDKMotion>(update_period, this);
-    {
-        std::lock_guard lock{device_mutex};
-        ndk_motion_device = ndk_motion.get();
-    }
+    // Hold the lock while constructing, so EnableSensors()/DisableSensors() can't be missed
+    // between reading sensors_enabled and registering the new device.
+    std::lock_guard lock{device_mutex};
+    std::unique_ptr<NDKMotion> ndk_motion =
+        std::make_unique<NDKMotion>(update_period, this, sensors_enabled);
+    ndk_motion_device = ndk_motion.get();
     return std::move(ndk_motion);
 }
 
 void NDKMotionFactory::EnableSensors() {
     std::lock_guard lock{device_mutex};
+    sensors_enabled = true;
     if (ndk_motion_device) {
         ndk_motion_device->EnableSensors();
     }
@@ -219,6 +223,7 @@ void NDKMotionFactory::EnableSensors() {
 
 void NDKMotionFactory::DisableSensors() {
     std::lock_guard lock{device_mutex};
+    sensors_enabled = false;
     if (ndk_motion_device) {
         ndk_motion_device->DisableSensors();
     }
