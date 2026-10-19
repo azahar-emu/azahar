@@ -204,6 +204,15 @@ static void WaitForEmulationSurfaces(std::unique_lock<std::recursive_mutex>& sur
     surface_cv.wait(surface_lock, [] { return s_surface != nullptr; });
 }
 
+/// Wakes the emulation thread if it is waiting in the paused branch of RunCitra. The mutex is
+/// taken so the notification can't be lost between the waiter checking its predicate and blocking.
+static void NotifyEmulationThread() {
+    {
+        std::scoped_lock lock{paused_mutex};
+    }
+    running_cv.notify_all();
+}
+
 static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Citra core only supports a single running instance
     std::scoped_lock lock(running_mutex);
@@ -816,7 +825,7 @@ jboolean JNICALL Java_org_citra_citra_1emu_utils_GpuDriverHelper_supportsCustomD
 void Java_org_citra_citra_1emu_NativeLibrary_unPauseEmulation([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
     pause_emulation = false;
-    running_cv.notify_all();
+    NotifyEmulationThread();
     auto* handler = InputManager::NDKMotionHandler();
     if (handler) {
         handler->EnableSensors();
@@ -845,7 +854,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIE
     if (secondary_window) {
         secondary_window->StopPresenting();
     }
-    running_cv.notify_all();
+    NotifyEmulationThread();
 }
 
 jboolean Java_org_citra_citra_1emu_NativeLibrary_isRunning([[maybe_unused]] JNIEnv* env,
@@ -1027,7 +1036,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_run__Ljava_lang_String_2(JNIEnv* en
 
     if (!stop_run) {
         stop_run = true;
-        running_cv.notify_all();
+        NotifyEmulationThread();
     }
 
     const Core::System::ResultStatus result{RunCitra(path)};
