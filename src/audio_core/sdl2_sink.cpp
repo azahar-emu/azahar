@@ -67,6 +67,18 @@ SDL2Sink::~SDL2Sink() {
     SDL_CloseAudioDevice(impl->audio_device_id);
 }
 
+void SDL2Sink::Pause() {
+    if (impl->audio_device_id > 0) {
+        SDL_PauseAudioDevice(impl->audio_device_id, 1);
+    }
+}
+
+void SDL2Sink::Resume() {
+    if (impl->audio_device_id > 0) {
+        SDL_PauseAudioDevice(impl->audio_device_id, 0);
+    }
+}
+
 unsigned int SDL2Sink::GetNativeSampleRate() const {
     if (impl->audio_device_id <= 0)
         return native_sample_rate;
