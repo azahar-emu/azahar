@@ -46,7 +46,7 @@ class SingleChoiceSetting(
         } else {
             @Suppress("UNCHECKED_CAST")
             val backSetting = setting as AbstractSetting<Int>
-            settings.setByScope(backSetting, selection)
+            settings.setBySettingsContext(backSetting, selection)
         }
     }
 }

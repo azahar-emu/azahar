@@ -30,7 +30,7 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
             isEnabled,
             displayRotation
         )
-        CitraSettings.activeSettings.setByEffective(BooleanSetting.SWAP_SCREEN, isEnabled)
+        CitraSettings.activeSettings.setByCurrentState(BooleanSetting.SWAP_SCREEN, isEnabled)
         SettingsFile.saveSetting(BooleanSetting.SWAP_SCREEN, CitraSettings.activeSettings)
     }
 
@@ -62,21 +62,21 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
     }
 
     fun changePortraitOrientation(layoutOption: Int) {
-        CitraSettings.activeSettings.setByEffective(IntSetting.PORTRAIT_SCREEN_LAYOUT, layoutOption)
+        CitraSettings.activeSettings.setByCurrentState(IntSetting.PORTRAIT_SCREEN_LAYOUT, layoutOption)
         SettingsFile.saveSetting(IntSetting.PORTRAIT_SCREEN_LAYOUT, CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun changeScreenOrientation(layoutOption: Int) {
-        CitraSettings.activeSettings.setByEffective(IntSetting.SCREEN_LAYOUT, layoutOption)
+        CitraSettings.activeSettings.setByCurrentState(IntSetting.SCREEN_LAYOUT, layoutOption)
         SettingsFile.saveSetting(IntSetting.SCREEN_LAYOUT, CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun changeSecondaryOrientation(layoutOption: Int) {
-        CitraSettings.activeSettings.setByEffective(
+        CitraSettings.activeSettings.setByCurrentState(
             IntSetting.SECONDARY_DISPLAY_LAYOUT,
             layoutOption
         )
@@ -86,7 +86,7 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
     }
 
     fun enableSecondaryDisplay(layoutOption: Int) {
-        CitraSettings.activeSettings.setByEffective(BooleanSetting.ENABLE_SECONDARY_DISPLAY, true)
+        CitraSettings.activeSettings.setByCurrentState(BooleanSetting.ENABLE_SECONDARY_DISPLAY, true)
         SettingsFile.saveSetting(
             BooleanSetting.ENABLE_SECONDARY_DISPLAY,
             CitraSettings.activeSettings
@@ -95,7 +95,7 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
     }
 
     fun disableSecondaryDisplay() {
-        CitraSettings.activeSettings.setByEffective(BooleanSetting.ENABLE_SECONDARY_DISPLAY, false)
+        CitraSettings.activeSettings.setByCurrentState(BooleanSetting.ENABLE_SECONDARY_DISPLAY, false)
         SettingsFile.saveSetting(
             BooleanSetting.ENABLE_SECONDARY_DISPLAY,
             CitraSettings.activeSettings
@@ -104,7 +104,7 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
 
     fun toggleScreenUpright() {
         val uprightBoolean = CitraSettings.activeSettings.get(BooleanSetting.UPRIGHT_SCREEN)
-        CitraSettings.activeSettings.setByEffective(BooleanSetting.UPRIGHT_SCREEN, !uprightBoolean)
+        CitraSettings.activeSettings.setByCurrentState(BooleanSetting.UPRIGHT_SCREEN, !uprightBoolean)
         SettingsFile.saveSetting(BooleanSetting.UPRIGHT_SCREEN, CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())

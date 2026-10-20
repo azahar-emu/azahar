@@ -41,7 +41,7 @@ class StringInputSetting(
         } else {
             @Suppress("UNCHECKED_CAST")
             val stringSetting = setting as AbstractSetting<String>
-            settings.setByScope(stringSetting, selection)
+            settings.setBySettingsContext(stringSetting, selection)
         }
     }
 }

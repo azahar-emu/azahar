@@ -132,7 +132,7 @@ class GameAdapter(
                 .setTitle(R.string.incompatible_texture_filter)
                 .setMessage(R.string.incompatible_texture_filter_description)
                 .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                    CitraSettings.activeSettings.setByScope(
+                    CitraSettings.activeSettings.setBySettingsContext(
                         IntSetting.TEXTURE_FILTER,
                         TextureFilter.NOFILTER.int
                     )

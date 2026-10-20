@@ -43,7 +43,7 @@ class CitraSettings {
      *
      * This should be used by the Settings menus.
      */
-    fun <T> setByScope(setting: AbstractSetting<T>, value: T) {
+    fun <T> setBySettingsContext(setting: AbstractSetting<T>, value: T) {
         if (isPerGame()) setOverride(setting, value) else setGlobal(setting, value)
     }
 
@@ -53,7 +53,7 @@ class CitraSettings {
      *
      * This should be used by the Quick Menu, hotkeys, and other "instant" settings changes
      */
-    fun <T> setByEffective(setting: AbstractSetting<T>, value: T) {
+    fun <T> setByCurrentState(setting: AbstractSetting<T>, value: T) {
         if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
     }
 
