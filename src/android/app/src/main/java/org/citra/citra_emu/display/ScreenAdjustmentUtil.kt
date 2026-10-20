@@ -62,7 +62,10 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
     }
 
     fun changePortraitOrientation(layoutOption: Int) {
-        CitraSettings.activeSettings.setByCurrentState(IntSetting.PORTRAIT_SCREEN_LAYOUT, layoutOption)
+        CitraSettings.activeSettings.setByCurrentState(
+            IntSetting.PORTRAIT_SCREEN_LAYOUT,
+            layoutOption
+        )
         SettingsFile.saveSetting(IntSetting.PORTRAIT_SCREEN_LAYOUT, CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
@@ -86,7 +89,10 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
     }
 
     fun enableSecondaryDisplay(layoutOption: Int) {
-        CitraSettings.activeSettings.setByCurrentState(BooleanSetting.ENABLE_SECONDARY_DISPLAY, true)
+        CitraSettings.activeSettings.setByCurrentState(
+            BooleanSetting.ENABLE_SECONDARY_DISPLAY,
+            true
+        )
         SettingsFile.saveSetting(
             BooleanSetting.ENABLE_SECONDARY_DISPLAY,
             CitraSettings.activeSettings
@@ -95,7 +101,10 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
     }
 
     fun disableSecondaryDisplay() {
-        CitraSettings.activeSettings.setByCurrentState(BooleanSetting.ENABLE_SECONDARY_DISPLAY, false)
+        CitraSettings.activeSettings.setByCurrentState(
+            BooleanSetting.ENABLE_SECONDARY_DISPLAY,
+            false
+        )
         SettingsFile.saveSetting(
             BooleanSetting.ENABLE_SECONDARY_DISPLAY,
             CitraSettings.activeSettings
@@ -104,7 +113,10 @@ class ScreenAdjustmentUtil(private val context: Context, private val windowManag
 
     fun toggleScreenUpright() {
         val uprightBoolean = CitraSettings.activeSettings.get(BooleanSetting.UPRIGHT_SCREEN)
-        CitraSettings.activeSettings.setByCurrentState(BooleanSetting.UPRIGHT_SCREEN, !uprightBoolean)
+        CitraSettings.activeSettings.setByCurrentState(
+            BooleanSetting.UPRIGHT_SCREEN,
+            !uprightBoolean
+        )
         SettingsFile.saveSetting(BooleanSetting.UPRIGHT_SCREEN, CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())

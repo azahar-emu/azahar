@@ -560,7 +560,10 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
     }
 
     fun <T> resetSettingToDefault(setting: AbstractSetting<T>, position: Int) {
-        fragmentView.activityView?.editingSettings?.setBySettingsContext(setting, setting.defaultValue)
+        fragmentView.activityView?.editingSettings?.setBySettingsContext(
+            setting,
+            setting.defaultValue
+        )
         notifyItemChanged(position)
         fragmentView.onSettingChanged()
         fragmentView.loadSettingsList()
