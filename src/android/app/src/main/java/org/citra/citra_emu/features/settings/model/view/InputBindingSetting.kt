@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model.view
 
@@ -17,10 +17,9 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.AbstractStringSetting
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 
-class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
+class InputBindingSetting(val abstractSetting: AbstractSetting<*>, titleId: Int) :
     SettingsItem(abstractSetting, titleId, 0) {
     private val context: Context get() = CitraApplication.appContext
     private val preferences: SharedPreferences
@@ -38,8 +37,8 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
      * Returns true if this key is for the 3DS Circle Pad
      */
     fun isCirclePad(): Boolean = when (abstractSetting.key) {
-        Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
-        Settings.KEY_CIRCLEPAD_AXIS_VERTICAL -> true
+        CitraSettings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
+        CitraSettings.KEY_CIRCLEPAD_AXIS_VERTICAL -> true
 
         else -> false
     }
@@ -48,9 +47,9 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
      * Returns true if this key is for a horizontal axis for a 3DS analog stick or D-pad
      */
     fun isHorizontalOrientation(): Boolean = when (abstractSetting.key) {
-        Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
-        Settings.KEY_CSTICK_AXIS_HORIZONTAL,
-        Settings.KEY_DPAD_AXIS_HORIZONTAL -> true
+        CitraSettings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
+        CitraSettings.KEY_CSTICK_AXIS_HORIZONTAL,
+        CitraSettings.KEY_DPAD_AXIS_HORIZONTAL -> true
 
         else -> false
     }
@@ -59,8 +58,8 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
      * Returns true if this key is for the 3DS C-Stick
      */
     fun isCStick(): Boolean = when (abstractSetting.key) {
-        Settings.KEY_CSTICK_AXIS_HORIZONTAL,
-        Settings.KEY_CSTICK_AXIS_VERTICAL -> true
+        CitraSettings.KEY_CSTICK_AXIS_HORIZONTAL,
+        CitraSettings.KEY_CSTICK_AXIS_VERTICAL -> true
 
         else -> false
     }
@@ -69,8 +68,8 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
      * Returns true if this key is for the 3DS D-Pad
      */
     fun isDPad(): Boolean = when (abstractSetting.key) {
-        Settings.KEY_DPAD_AXIS_HORIZONTAL,
-        Settings.KEY_DPAD_AXIS_VERTICAL -> true
+        CitraSettings.KEY_DPAD_AXIS_HORIZONTAL,
+        CitraSettings.KEY_DPAD_AXIS_VERTICAL -> true
 
         else -> false
     }
@@ -80,10 +79,10 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
      * triggers on the 3DS, but we support them as such on a physical gamepad.
      */
     fun isTrigger(): Boolean = when (abstractSetting.key) {
-        Settings.KEY_BUTTON_L,
-        Settings.KEY_BUTTON_R,
-        Settings.KEY_BUTTON_ZL,
-        Settings.KEY_BUTTON_ZR -> true
+        CitraSettings.KEY_BUTTON_L,
+        CitraSettings.KEY_BUTTON_R,
+        CitraSettings.KEY_BUTTON_ZL,
+        CitraSettings.KEY_BUTTON_ZR -> true
 
         else -> false
     }
@@ -104,30 +103,30 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
     private val buttonCode: Int
         get() =
             when (abstractSetting.key) {
-                Settings.KEY_BUTTON_A -> NativeLibrary.ButtonType.BUTTON_A
-                Settings.KEY_BUTTON_B -> NativeLibrary.ButtonType.BUTTON_B
-                Settings.KEY_BUTTON_X -> NativeLibrary.ButtonType.BUTTON_X
-                Settings.KEY_BUTTON_Y -> NativeLibrary.ButtonType.BUTTON_Y
-                Settings.KEY_BUTTON_L -> NativeLibrary.ButtonType.TRIGGER_L
-                Settings.KEY_BUTTON_R -> NativeLibrary.ButtonType.TRIGGER_R
-                Settings.KEY_BUTTON_ZL -> NativeLibrary.ButtonType.BUTTON_ZL
-                Settings.KEY_BUTTON_ZR -> NativeLibrary.ButtonType.BUTTON_ZR
-                Settings.KEY_BUTTON_SELECT -> NativeLibrary.ButtonType.BUTTON_SELECT
-                Settings.KEY_BUTTON_START -> NativeLibrary.ButtonType.BUTTON_START
-                Settings.KEY_BUTTON_HOME -> NativeLibrary.ButtonType.BUTTON_HOME
-                Settings.KEY_BUTTON_UP -> NativeLibrary.ButtonType.DPAD_UP
-                Settings.KEY_BUTTON_DOWN -> NativeLibrary.ButtonType.DPAD_DOWN
-                Settings.KEY_BUTTON_LEFT -> NativeLibrary.ButtonType.DPAD_LEFT
-                Settings.KEY_BUTTON_RIGHT -> NativeLibrary.ButtonType.DPAD_RIGHT
-                Settings.HOTKEY_ENABLE -> Hotkey.ENABLE.button
-                Settings.HOTKEY_SCREEN_SWAP -> Hotkey.SWAP_SCREEN.button
-                Settings.HOTKEY_CYCLE_LAYOUT -> Hotkey.CYCLE_LAYOUT.button
-                Settings.HOTKEY_CLOSE_GAME -> Hotkey.CLOSE_GAME.button
-                Settings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
-                Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
-                Settings.HOTKEY_QUICKLOAD -> Hotkey.QUICKLOAD.button
-                Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
-                Settings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_BUTTON.button
+                CitraSettings.KEY_BUTTON_A -> NativeLibrary.ButtonType.BUTTON_A
+                CitraSettings.KEY_BUTTON_B -> NativeLibrary.ButtonType.BUTTON_B
+                CitraSettings.KEY_BUTTON_X -> NativeLibrary.ButtonType.BUTTON_X
+                CitraSettings.KEY_BUTTON_Y -> NativeLibrary.ButtonType.BUTTON_Y
+                CitraSettings.KEY_BUTTON_L -> NativeLibrary.ButtonType.TRIGGER_L
+                CitraSettings.KEY_BUTTON_R -> NativeLibrary.ButtonType.TRIGGER_R
+                CitraSettings.KEY_BUTTON_ZL -> NativeLibrary.ButtonType.BUTTON_ZL
+                CitraSettings.KEY_BUTTON_ZR -> NativeLibrary.ButtonType.BUTTON_ZR
+                CitraSettings.KEY_BUTTON_SELECT -> NativeLibrary.ButtonType.BUTTON_SELECT
+                CitraSettings.KEY_BUTTON_START -> NativeLibrary.ButtonType.BUTTON_START
+                CitraSettings.KEY_BUTTON_HOME -> NativeLibrary.ButtonType.BUTTON_HOME
+                CitraSettings.KEY_BUTTON_UP -> NativeLibrary.ButtonType.DPAD_UP
+                CitraSettings.KEY_BUTTON_DOWN -> NativeLibrary.ButtonType.DPAD_DOWN
+                CitraSettings.KEY_BUTTON_LEFT -> NativeLibrary.ButtonType.DPAD_LEFT
+                CitraSettings.KEY_BUTTON_RIGHT -> NativeLibrary.ButtonType.DPAD_RIGHT
+                CitraSettings.HOTKEY_ENABLE -> Hotkey.ENABLE.button
+                CitraSettings.HOTKEY_SCREEN_SWAP -> Hotkey.SWAP_SCREEN.button
+                CitraSettings.HOTKEY_CYCLE_LAYOUT -> Hotkey.CYCLE_LAYOUT.button
+                CitraSettings.HOTKEY_CLOSE_GAME -> Hotkey.CLOSE_GAME.button
+                CitraSettings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
+                CitraSettings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
+                CitraSettings.HOTKEY_QUICKLOAD -> Hotkey.QUICKLOAD.button
+                CitraSettings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
+                CitraSettings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_BUTTON.button
                 else -> -1
             }
 
@@ -156,7 +155,6 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
         // Try remove all possible keys we wrote for this setting
         val oldKey = preferences.getString(reverseKey, "")
         if (oldKey != "") {
-            (setting as AbstractStringSetting).string = ""
             preferences.edit()
                 .remove(abstractSetting.key) // Used for ui text
                 .remove(oldKey + "_GuestOrientation") // Used for axis orientation
@@ -297,22 +295,22 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
 
         private val xboxFaceButtonMappings = listOf(
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_A,
+                CitraSettings.KEY_BUTTON_A,
                 KeyEvent.KEYCODE_BUTTON_B,
                 NativeLibrary.ButtonType.BUTTON_A
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_B,
+                CitraSettings.KEY_BUTTON_B,
                 KeyEvent.KEYCODE_BUTTON_A,
                 NativeLibrary.ButtonType.BUTTON_B
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_X,
+                CitraSettings.KEY_BUTTON_X,
                 KeyEvent.KEYCODE_BUTTON_Y,
                 NativeLibrary.ButtonType.BUTTON_X
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_Y,
+                CitraSettings.KEY_BUTTON_Y,
                 KeyEvent.KEYCODE_BUTTON_X,
                 NativeLibrary.ButtonType.BUTTON_Y
             )
@@ -320,22 +318,22 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
 
         private val nintendoFaceButtonMappings = listOf(
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_A,
+                CitraSettings.KEY_BUTTON_A,
                 KeyEvent.KEYCODE_BUTTON_A,
                 NativeLibrary.ButtonType.BUTTON_A
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_B,
+                CitraSettings.KEY_BUTTON_B,
                 KeyEvent.KEYCODE_BUTTON_B,
                 NativeLibrary.ButtonType.BUTTON_B
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_X,
+                CitraSettings.KEY_BUTTON_X,
                 KeyEvent.KEYCODE_BUTTON_X,
                 NativeLibrary.ButtonType.BUTTON_X
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_Y,
+                CitraSettings.KEY_BUTTON_Y,
                 KeyEvent.KEYCODE_BUTTON_Y,
                 NativeLibrary.ButtonType.BUTTON_Y
             )
@@ -343,32 +341,32 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
 
         private val commonButtonMappings = listOf(
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_L,
+                CitraSettings.KEY_BUTTON_L,
                 KeyEvent.KEYCODE_BUTTON_L1,
                 NativeLibrary.ButtonType.TRIGGER_L
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_R,
+                CitraSettings.KEY_BUTTON_R,
                 KeyEvent.KEYCODE_BUTTON_R1,
                 NativeLibrary.ButtonType.TRIGGER_R
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_ZL,
+                CitraSettings.KEY_BUTTON_ZL,
                 KeyEvent.KEYCODE_BUTTON_L2,
                 NativeLibrary.ButtonType.BUTTON_ZL
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_ZR,
+                CitraSettings.KEY_BUTTON_ZR,
                 KeyEvent.KEYCODE_BUTTON_R2,
                 NativeLibrary.ButtonType.BUTTON_ZR
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_SELECT,
+                CitraSettings.KEY_BUTTON_SELECT,
                 KeyEvent.KEYCODE_BUTTON_SELECT,
                 NativeLibrary.ButtonType.BUTTON_SELECT
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_START,
+                CitraSettings.KEY_BUTTON_START,
                 KeyEvent.KEYCODE_BUTTON_START,
                 NativeLibrary.ButtonType.BUTTON_START
             )
@@ -376,22 +374,22 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
 
         private val dpadButtonMappings = listOf(
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_UP,
+                CitraSettings.KEY_BUTTON_UP,
                 KeyEvent.KEYCODE_DPAD_UP,
                 NativeLibrary.ButtonType.DPAD_UP
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_DOWN,
+                CitraSettings.KEY_BUTTON_DOWN,
                 KeyEvent.KEYCODE_DPAD_DOWN,
                 NativeLibrary.ButtonType.DPAD_DOWN
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_LEFT,
+                CitraSettings.KEY_BUTTON_LEFT,
                 KeyEvent.KEYCODE_DPAD_LEFT,
                 NativeLibrary.ButtonType.DPAD_LEFT
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_RIGHT,
+                CitraSettings.KEY_BUTTON_RIGHT,
                 KeyEvent.KEYCODE_DPAD_RIGHT,
                 NativeLibrary.ButtonType.DPAD_RIGHT
             )
@@ -399,28 +397,28 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
 
         private val stickAxisMappings = listOf(
             DefaultAxisMapping(
-                Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
+                CitraSettings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
                 MotionEvent.AXIS_X,
                 NativeLibrary.ButtonType.STICK_LEFT,
                 0,
                 false
             ),
             DefaultAxisMapping(
-                Settings.KEY_CIRCLEPAD_AXIS_VERTICAL,
+                CitraSettings.KEY_CIRCLEPAD_AXIS_VERTICAL,
                 MotionEvent.AXIS_Y,
                 NativeLibrary.ButtonType.STICK_LEFT,
                 1,
                 false
             ),
             DefaultAxisMapping(
-                Settings.KEY_CSTICK_AXIS_HORIZONTAL,
+                CitraSettings.KEY_CSTICK_AXIS_HORIZONTAL,
                 MotionEvent.AXIS_Z,
                 NativeLibrary.ButtonType.STICK_C,
                 0,
                 false
             ),
             DefaultAxisMapping(
-                Settings.KEY_CSTICK_AXIS_VERTICAL,
+                CitraSettings.KEY_CSTICK_AXIS_VERTICAL,
                 MotionEvent.AXIS_RZ,
                 NativeLibrary.ButtonType.STICK_C,
                 1,
@@ -430,14 +428,14 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
 
         private val dpadAxisMappings = listOf(
             DefaultAxisMapping(
-                Settings.KEY_DPAD_AXIS_HORIZONTAL,
+                CitraSettings.KEY_DPAD_AXIS_HORIZONTAL,
                 MotionEvent.AXIS_HAT_X,
                 NativeLibrary.ButtonType.DPAD,
                 0,
                 false
             ),
             DefaultAxisMapping(
-                Settings.KEY_DPAD_AXIS_VERTICAL,
+                CitraSettings.KEY_DPAD_AXIS_VERTICAL,
                 MotionEvent.AXIS_HAT_Y,
                 NativeLibrary.ButtonType.DPAD,
                 1,
@@ -468,22 +466,22 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
         // Nintendo table (no swap).
         private val joyconFaceButtonMappings = listOf(
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_A,
+                CitraSettings.KEY_BUTTON_A,
                 KeyEvent.KEYCODE_BUTTON_B,
                 NativeLibrary.ButtonType.BUTTON_A
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_B,
+                CitraSettings.KEY_BUTTON_B,
                 KeyEvent.KEYCODE_BUTTON_A,
                 NativeLibrary.ButtonType.BUTTON_B
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_X,
+                CitraSettings.KEY_BUTTON_X,
                 KeyEvent.KEYCODE_BUTTON_X,
                 NativeLibrary.ButtonType.BUTTON_X
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_Y,
+                CitraSettings.KEY_BUTTON_Y,
                 KeyEvent.KEYCODE_BUTTON_Y,
                 NativeLibrary.ButtonType.BUTTON_Y
             )
@@ -492,22 +490,22 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
         // Joy-Con D-pad: uses Linux scan codes because Android reports BTN_DPAD_* as KEYCODE_UNKNOWN
         private val joyconDpadButtonMappings = listOf(
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_UP,
+                CitraSettings.KEY_BUTTON_UP,
                 LINUX_BTN_DPAD_UP,
                 NativeLibrary.ButtonType.DPAD_UP
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_DOWN,
+                CitraSettings.KEY_BUTTON_DOWN,
                 LINUX_BTN_DPAD_DOWN,
                 NativeLibrary.ButtonType.DPAD_DOWN
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_LEFT,
+                CitraSettings.KEY_BUTTON_LEFT,
                 LINUX_BTN_DPAD_LEFT,
                 NativeLibrary.ButtonType.DPAD_LEFT
             ),
             DefaultButtonMapping(
-                Settings.KEY_BUTTON_RIGHT,
+                CitraSettings.KEY_BUTTON_RIGHT,
                 LINUX_BTN_DPAD_RIGHT,
                 NativeLibrary.ButtonType.DPAD_RIGHT
             )
@@ -518,28 +516,28 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
         // the standard orientation - verified empirically on paired Joy-Cons via Bluetooth.
         private val joyconStickAxisMappings = listOf(
             DefaultAxisMapping(
-                Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
+                CitraSettings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
                 MotionEvent.AXIS_X,
                 NativeLibrary.ButtonType.STICK_LEFT,
                 0,
                 false
             ),
             DefaultAxisMapping(
-                Settings.KEY_CIRCLEPAD_AXIS_VERTICAL,
+                CitraSettings.KEY_CIRCLEPAD_AXIS_VERTICAL,
                 MotionEvent.AXIS_Y,
                 NativeLibrary.ButtonType.STICK_LEFT,
                 1,
                 false
             ),
             DefaultAxisMapping(
-                Settings.KEY_CSTICK_AXIS_HORIZONTAL,
+                CitraSettings.KEY_CSTICK_AXIS_HORIZONTAL,
                 MotionEvent.AXIS_RX,
                 NativeLibrary.ButtonType.STICK_C,
                 0,
                 true
             ),
             DefaultAxisMapping(
-                Settings.KEY_CSTICK_AXIS_VERTICAL,
+                CitraSettings.KEY_CSTICK_AXIS_VERTICAL,
                 MotionEvent.AXIS_RY,
                 NativeLibrary.ButtonType.STICK_C,
                 1,
@@ -572,9 +570,10 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
 
         private val allBindingKeys: Set<String> by lazy {
             (
-                Settings.buttonKeys + Settings.triggerKeys +
-                    Settings.circlePadKeys + Settings.cStickKeys + Settings.dPadAxisKeys +
-                    Settings.dPadButtonKeys
+                CitraSettings.buttonKeys + CitraSettings.triggerKeys +
+                    CitraSettings.circlePadKeys + CitraSettings.cStickKeys +
+                    CitraSettings.dPadAxisKeys +
+                    CitraSettings.dPadButtonKeys
                 ).toSet()
         }
 
@@ -672,21 +671,21 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
          * Returns the settings key for the specified Citra button code.
          */
         private fun getButtonKey(buttonCode: Int): String = when (buttonCode) {
-            NativeLibrary.ButtonType.BUTTON_A -> Settings.KEY_BUTTON_A
-            NativeLibrary.ButtonType.BUTTON_B -> Settings.KEY_BUTTON_B
-            NativeLibrary.ButtonType.BUTTON_X -> Settings.KEY_BUTTON_X
-            NativeLibrary.ButtonType.BUTTON_Y -> Settings.KEY_BUTTON_Y
-            NativeLibrary.ButtonType.TRIGGER_L -> Settings.KEY_BUTTON_L
-            NativeLibrary.ButtonType.TRIGGER_R -> Settings.KEY_BUTTON_R
-            NativeLibrary.ButtonType.BUTTON_ZL -> Settings.KEY_BUTTON_ZL
-            NativeLibrary.ButtonType.BUTTON_ZR -> Settings.KEY_BUTTON_ZR
-            NativeLibrary.ButtonType.BUTTON_SELECT -> Settings.KEY_BUTTON_SELECT
-            NativeLibrary.ButtonType.BUTTON_START -> Settings.KEY_BUTTON_START
-            NativeLibrary.ButtonType.BUTTON_HOME -> Settings.KEY_BUTTON_HOME
-            NativeLibrary.ButtonType.DPAD_UP -> Settings.KEY_BUTTON_UP
-            NativeLibrary.ButtonType.DPAD_DOWN -> Settings.KEY_BUTTON_DOWN
-            NativeLibrary.ButtonType.DPAD_LEFT -> Settings.KEY_BUTTON_LEFT
-            NativeLibrary.ButtonType.DPAD_RIGHT -> Settings.KEY_BUTTON_RIGHT
+            NativeLibrary.ButtonType.BUTTON_A -> CitraSettings.KEY_BUTTON_A
+            NativeLibrary.ButtonType.BUTTON_B -> CitraSettings.KEY_BUTTON_B
+            NativeLibrary.ButtonType.BUTTON_X -> CitraSettings.KEY_BUTTON_X
+            NativeLibrary.ButtonType.BUTTON_Y -> CitraSettings.KEY_BUTTON_Y
+            NativeLibrary.ButtonType.TRIGGER_L -> CitraSettings.KEY_BUTTON_L
+            NativeLibrary.ButtonType.TRIGGER_R -> CitraSettings.KEY_BUTTON_R
+            NativeLibrary.ButtonType.BUTTON_ZL -> CitraSettings.KEY_BUTTON_ZL
+            NativeLibrary.ButtonType.BUTTON_ZR -> CitraSettings.KEY_BUTTON_ZR
+            NativeLibrary.ButtonType.BUTTON_SELECT -> CitraSettings.KEY_BUTTON_SELECT
+            NativeLibrary.ButtonType.BUTTON_START -> CitraSettings.KEY_BUTTON_START
+            NativeLibrary.ButtonType.BUTTON_HOME -> CitraSettings.KEY_BUTTON_HOME
+            NativeLibrary.ButtonType.DPAD_UP -> CitraSettings.KEY_BUTTON_UP
+            NativeLibrary.ButtonType.DPAD_DOWN -> CitraSettings.KEY_BUTTON_DOWN
+            NativeLibrary.ButtonType.DPAD_LEFT -> CitraSettings.KEY_BUTTON_LEFT
+            NativeLibrary.ButtonType.DPAD_RIGHT -> CitraSettings.KEY_BUTTON_RIGHT
             else -> ""
         }
 

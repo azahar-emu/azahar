@@ -33,7 +33,7 @@ import org.citra.citra_emu.adapters.HomeSettingAdapter
 import org.citra.citra_emu.databinding.DialogSoftwareKeyboardBinding
 import org.citra.citra_emu.databinding.FragmentHomeSettingsBinding
 import org.citra.citra_emu.features.settings.SettingKeys
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.model.Game
@@ -186,7 +186,7 @@ class HomeSettingsFragment : Fragment() {
                 R.string.preferences_theme,
                 R.string.theme_and_color_description,
                 R.drawable.ic_palette,
-                { SettingsActivity.launch(requireContext(), Settings.SECTION_THEME, "") }
+                { SettingsActivity.launch(requireContext(), CitraSettings.SECTION_THEME, "") }
             ),
             HomeSetting(
                 R.string.about,

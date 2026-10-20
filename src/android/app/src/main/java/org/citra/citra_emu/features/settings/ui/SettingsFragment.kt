@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui
 
@@ -13,9 +13,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlin.getValue
 import org.citra.citra_emu.databinding.FragmentSettingsBinding
-import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
 class SettingsFragment :
@@ -23,7 +25,11 @@ class SettingsFragment :
     SettingsFragmentView {
     override var activityView: SettingsActivityView? = null
 
-    private val fragmentPresenter = SettingsFragmentPresenter(this)
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
+
+    private val fragmentPresenter by lazy {
+        SettingsFragmentPresenter(this, settingsViewModel.editingSettings)
+    }
     private var settingsAdapter: SettingsAdapter? = null
 
     private var _binding: FragmentSettingsBinding? = null
@@ -87,10 +93,6 @@ class SettingsFragment :
 
     override fun showToastMessage(message: String?, is_long: Boolean) {
         activityView!!.showToastMessage(message!!, is_long)
-    }
-
-    override fun putSetting(setting: AbstractSetting) {
-        fragmentPresenter.putSetting(setting)
     }
 
     override fun onSettingChanged() {

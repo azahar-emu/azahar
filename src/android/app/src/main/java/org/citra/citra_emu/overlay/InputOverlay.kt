@@ -30,6 +30,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
@@ -51,7 +52,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     private var buttonBeingConfigured: InputOverlayDrawableButton? = null
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
-    private val settingsViewModel = NativeLibrary.sEmulationActivity.get()!!.settingsViewModel
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
     private var touchscreenPointerId = -1
@@ -132,7 +132,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             var xPosition = event.getX(pointerIndex).toInt()
             var yPosition = event.getY(pointerIndex).toInt()
 
-            if (BooleanSetting.EXPAND_TO_CUTOUT_AREA.boolean) {
+            if (CitraSettings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
                 val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
                 val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
                 val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0

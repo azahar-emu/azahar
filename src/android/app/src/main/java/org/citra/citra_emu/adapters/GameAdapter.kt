@@ -54,9 +54,9 @@ import org.citra.citra_emu.adapters.GameAdapter.GameViewHolder
 import org.citra.citra_emu.databinding.CardGameBinding
 import org.citra.citra_emu.databinding.DialogShortcutBinding
 import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.GraphicsAPI
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.TextureFilter
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.IndeterminateProgressDialogFragment
@@ -70,7 +70,6 @@ import org.citra.citra_emu.viewmodel.GamesViewModel
 class GameAdapter(
     private val activity: AppCompatActivity,
     private val inflater: LayoutInflater,
-    private val settings: Settings,
     private val openImageLauncher: ActivityResultLauncher<String>?,
     private val onRequestCompressOrDecompress: (
         (inputPath: String, suggestedName: String, shouldCompress: Boolean) -> Unit
@@ -123,18 +122,23 @@ class GameAdapter(
         lastClickTime = SystemClock.elapsedRealtime()
 
         // NOTE: We could make this check not hardcoded, but it's a temp thing anyway so probs not worth. -OS
+        // TODO: I think this will cause an issue if Graphics API is a per-game setting, since this hard checks
+        // before those settings are loaded.
         if (
-            IntSetting.GRAPHICS_API.int == GraphicsAPI.VULKAN.int &&
-            IntSetting.TEXTURE_FILTER.int == TextureFilter.ANIME4K.int
+            CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
+            CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
         ) {
             MaterialAlertDialogBuilder(view.context)
                 .setTitle(R.string.incompatible_texture_filter)
                 .setMessage(R.string.incompatible_texture_filter_description)
                 .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                    IntSetting.TEXTURE_FILTER.int = TextureFilter.NOFILTER.int
-                    settings.saveSetting(
+                    CitraSettings.activeSettings.setBySettingsContext(
                         IntSetting.TEXTURE_FILTER,
-                        SettingsFile.FILE_NAME_CONFIG
+                        TextureFilter.NOFILTER.int
+                    )
+                    SettingsFile.saveSetting(
+                        IntSetting.TEXTURE_FILTER,
+                        CitraSettings.activeSettings
                     )
                     this.onClick(view)
                 }
