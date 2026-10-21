@@ -253,6 +253,7 @@ if (ENABLE_QT)
         "screenshotPath"
         "calloutFlags"
         "showConsole"
+        "bypass_audio_effects"
     )
         set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
         set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")

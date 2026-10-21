@@ -140,6 +140,9 @@ void LogSettings() {
     log_setting("Audio_Emulation", GetAudioEmulationName(values.audio_emulation.GetValue()));
     log_setting("Audio_OutputType", values.output_type.GetValue());
     log_setting("Audio_OutputDevice", values.output_device.GetValue());
+#ifdef ENABLE_QT
+    log_setting("Audio_BypassAudioEffects", values.bypass_audio_effects.GetValue());
+#endif
     log_setting("Audio_InputType", values.input_type.GetValue());
     log_setting("Audio_InputDevice", values.input_device.GetValue());
     log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching.GetValue());
