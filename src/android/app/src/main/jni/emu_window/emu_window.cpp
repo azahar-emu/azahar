@@ -1,6 +1,6 @@
 // Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <array>
@@ -23,12 +23,12 @@ bool EmuWindow_Android::OnSurfaceChanged(ANativeWindow* surface) {
     if (render_window == surface && temp_width == window_width && temp_height == window_height) {
         return false;
     }
+    StopPresenting();
     window_width = temp_width;
     window_height = temp_height;
     render_window = surface;
     window_info.type = Frontend::WindowSystemType::Android;
     window_info.render_surface = surface;
-    StopPresenting();
     OnFramebufferSizeChanged();
     return true;
 }

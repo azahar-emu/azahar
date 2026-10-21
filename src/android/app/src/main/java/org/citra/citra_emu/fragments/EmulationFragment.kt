@@ -22,7 +22,6 @@ import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.Choreographer
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -88,8 +87,7 @@ import org.citra.citra_emu.viewmodel.EmulationViewModel
 
 class EmulationFragment :
     Fragment(),
-    SurfaceHolder.Callback,
-    Choreographer.FrameCallback {
+    SurfaceHolder.Callback {
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
@@ -530,7 +528,6 @@ class EmulationFragment :
 
     override fun onResume() {
         super.onResume()
-        Choreographer.getInstance().postFrameCallback(this)
         if (NativeLibrary.isRunning()) {
             emulationState.unpause()
 
@@ -560,7 +557,6 @@ class EmulationFragment :
         if (NativeLibrary.isRunning()) {
             emulationState.pause()
         }
-        Choreographer.getInstance().removeFrameCallback(this)
         super.onPause()
     }
 
@@ -1648,11 +1644,6 @@ class EmulationFragment :
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         emulationState.clearSurface()
-    }
-
-    override fun doFrame(frameTimeNanos: Long) {
-        Choreographer.getInstance().postFrameCallback(this)
-        NativeLibrary.doFrame()
     }
 
     private val applyCutoutInsets: (View, WindowInsetsCompat) -> WindowInsetsCompat = {
