@@ -10,6 +10,8 @@
 #include "common/android_utils.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
+#include "core/core.h"
+#include "core/core_timing.h"
 #include "input_common/main.h"
 #include "jni/emu_window/emu_window.h"
 #include "jni/id_cache.h"
@@ -44,6 +46,35 @@ bool EmuWindow_Android::OnTouchEvent(int x, int y, bool pressed) {
 
 void EmuWindow_Android::OnTouchMoved(int x, int y) {
     TouchMoved((unsigned)std::max(x, 0), (unsigned)std::max(y, 0));
+}
+
+void EmuWindow_Android::ReportFrameWork() {
+    if (is_secondary) {
+        return;
+    }
+    auto& system = Core::System::GetInstance();
+    if (!system.perf_stats) {
+        return;
+    }
+
+    // The way the emulator works causes Android to see the thread do a big
+    // CPU burst followed by a sleep (due to the frame limiter). This makes
+    // the OS see the thread sleeping for a long time, and puts it on slow
+    // cores with reduced frequency, then when the next burst happens it
+    // may do so in the slow core.
+    // To prevent this we hint the OS that we are targetting half of what
+    // the current frame time took so that it puts us in the beefy cores.
+    constexpr double TARGET_RATIO = 0.5;
+
+    const double frame_limit = Settings::GetFrameLimit();
+    const double speed = frame_limit > 0 ? frame_limit / 100.0 : 1.0;
+    const std::chrono::duration<double> frame_time{1.0 / (SCREEN_REFRESH_RATE * speed)};
+    const auto target =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(frame_time * TARGET_RATIO);
+    if (!performance_hint) {
+        performance_hint = std::make_unique<PerformanceHintSession>(target);
+    }
+    performance_hint->ReportWork(system.perf_stats->GetLastSystemFrameTime(), target);
 }
 
 void EmuWindow_Android::OnFramebufferSizeChanged() {

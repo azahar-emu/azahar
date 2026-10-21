@@ -187,6 +187,8 @@ std::unique_ptr<Frontend::GraphicsContext> EmuWindow_Android_OpenGL::CreateShare
 }
 
 void EmuWindow_Android_OpenGL::PollEvents() {
+    ReportFrameWork();
+
     if (render_window) {
         host_window = render_window;
         render_window = nullptr;

@@ -5,9 +5,11 @@
 #pragma once
 
 #include <chrono>
+#include <memory>
 #include <vector>
 #include <EGL/egl.h>
 #include "core/frontend/emu_window.h"
+#include "jni/performance_hint.h"
 
 namespace Core {
 class System;
@@ -47,6 +49,8 @@ public:
 protected:
     void OnFramebufferSizeChanged();
 
+    void ReportFrameWork();
+
     /// Creates the API specific window surface
     virtual bool CreateWindowSurface() {
         return false;
@@ -66,4 +70,7 @@ protected:
     int window_height{};
 
     std::unique_ptr<Frontend::GraphicsContext> core_context;
+
+private:
+    std::unique_ptr<PerformanceHintSession> performance_hint;
 };
