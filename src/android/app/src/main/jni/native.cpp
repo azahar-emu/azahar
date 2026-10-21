@@ -285,7 +285,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         }
     });
 
-    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
 
 
@@ -308,9 +307,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     system.ApplySettings();
     Settings::LogSettings();
 
-
     bool opengl_windows = false;
-    switch (graphics_api) {
+    switch (Settings::GetWorkingGraphicsAPI()) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
@@ -330,7 +328,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     default:
         LOG_CRITICAL(Frontend,
                      "Unknown or unsupported graphics API {}, falling back to available default",
-                     graphics_api);
+                     Settings::GetWorkingGraphicsAPI());
 #ifdef ENABLE_OPENGL
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
         opengl_windows = true;
