@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <cmath>
@@ -318,6 +318,17 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
 
     // Reschedule recurrent event
     system.CoreTiming().ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
+}
+
+void Module::RestartPadUpdates() {
+    // Do not change the timings when movies are involved.
+    const auto play_mode = system.Movie().GetPlayMode();
+    if (play_mode == Core::Movie::PlayMode::Recording ||
+        play_mode == Core::Movie::PlayMode::Playing) {
+        return;
+    }
+    system.CoreTiming().UnscheduleEvent(pad_update_event, 0);
+    UpdatePadCallback(0, 0);
 }
 
 void Module::UpdateAccelerometerCallback(std::uintptr_t user_data, s64 cycles_late) {

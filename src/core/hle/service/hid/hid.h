@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -335,6 +335,9 @@ public:
     void UseArticClient(const std::shared_ptr<Network::ArticBase::Client>& client);
 
     void ReloadInputDevices();
+
+    /// Runs the pad update now and restarts its period from now.
+    void RestartPadUpdates();
 
     const PadState& GetState() const;
 
