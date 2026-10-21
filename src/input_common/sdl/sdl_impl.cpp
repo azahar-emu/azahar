@@ -818,7 +818,8 @@ SDLState::SDLState() {
             using namespace std::chrono_literals;
             while (initialized) {
                 SDL_PumpEvents();
-                std::this_thread::sleep_for(10ms);
+                // Pump faster if there are controllers connected to reduce missed inputs per frame.
+                std::this_thread::sleep_for(SDL_NumJoysticks() > 0 ? 1ms : 10ms);
             }
         });
     }
