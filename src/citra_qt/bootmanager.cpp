@@ -1,7 +1,9 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
+#include <chrono>
+#include <thread>
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
@@ -15,6 +17,7 @@
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
 #include "common/settings.h"
+#include "common/thread.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/frontend/framebuffer_layout.h"
@@ -34,6 +37,7 @@
 // clang-format on
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
+#include <QThread>
 #endif
 
 #if defined(__APPLE__)
@@ -284,25 +288,65 @@ public:
         windowHandle()->setSurfaceType(QWindow::OpenGLSurface);
     }
 
+    ~OpenGLRenderWidget() override {
+        StopPresenting();
+    }
+
     void SetContext(std::unique_ptr<Frontend::GraphicsContext>&& context_) {
         context = std::move(context_);
     }
 
-    void Present() {
-        if (!isVisible()) {
+    void StartPresenting() {
+        if (present_thread || !QOpenGLContext::supportsThreadedOpenGL()) {
             return;
         }
-        if (!system.IsPoweredOn()) {
+        QOpenGLContext* gl_context =
+            static_cast<OpenGLSharedContext*>(context.get())->GetShareContext();
+        QThread* gui_thread = QThread::currentThread();
+        stop_presenting = false;
+        present_thread.reset(QThread::create([this, gl_context, gui_thread] {
+            Common::SetCurrentThreadName(is_secondary ? "SecondaryPresent" : "Present");
+            while (!stop_presenting) {
+                if (!Present()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+            }
+            context->DoneCurrent();
+            gl_context->moveToThread(gui_thread);
+        }));
+        gl_context->moveToThread(present_thread.get());
+        present_thread->start();
+    }
+
+    void StopPresenting() {
+        if (!present_thread) {
             return;
+        }
+        stop_presenting = true;
+        present_thread->wait();
+        present_thread.reset();
+        update();
+    }
+
+    bool Present() {
+        if (!isVisible()) {
+            return false;
+        }
+        if (!system.IsPoweredOn()) {
+            return false;
         }
         context->MakeCurrent();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         system.GPU().Renderer().TryPresent(100, is_secondary);
         context->SwapBuffers();
         glFinish();
+        return true;
     }
 
     void paintEvent(QPaintEvent* event) override {
+        if (present_thread) {
+            return;
+        }
         Present();
         update();
     }
@@ -313,6 +357,8 @@ public:
 
 private:
     std::unique_ptr<Frontend::GraphicsContext> context{};
+    std::unique_ptr<QThread> present_thread;
+    std::atomic<bool> stop_presenting{false};
     Core::System& system;
     bool is_secondary;
 };
@@ -825,9 +871,20 @@ void GRenderWindow::InitializeSoftware() {
 
 void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
+#ifdef ENABLE_OPENGL
+    if (auto* gl_widget = dynamic_cast<OpenGLRenderWidget*>(child_widget)) {
+        gl_widget->StartPresenting();
+    }
+#endif
 }
 
 void GRenderWindow::OnEmulationStopping() {
+#ifdef ENABLE_OPENGL
+    // The renderer is destroyed when the emulation thread ends, so presenting must stop first
+    if (auto* gl_widget = dynamic_cast<OpenGLRenderWidget*>(child_widget)) {
+        gl_widget->StopPresenting();
+    }
+#endif
     emu_thread = nullptr;
 }
 

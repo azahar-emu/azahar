@@ -1,6 +1,6 @@
 // Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cstdarg>
 #include <cstring>
@@ -10,6 +10,7 @@
 #include "audio_core/audio_types.h"
 #include "audio_core/cubeb_sink.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 
 namespace AudioCore {
 
@@ -42,6 +43,12 @@ CubebSink::CubebSink(std::string_view target_device_name) : impl(std::make_uniqu
         .channels = 2,
         .layout = CUBEB_LAYOUT_STEREO,
     };
+#ifdef ENABLE_QT
+    // The device's audio effects can add tens of ms of latency. Only WASAPI uses this.
+    if (Settings::values.bypass_audio_effects.GetValue()) {
+        params.prefs = CUBEB_STREAM_PREF_RAW;
+    }
+#endif
 
     u32 minimum_latency = 100 * native_sample_rate / 1000; // Firefox default
     if (cubeb_get_min_latency(impl->ctx, &params, &minimum_latency) != CUBEB_OK) {
