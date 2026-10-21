@@ -1,4 +1,4 @@
-// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
@@ -35,7 +35,9 @@ enum class StringSetting(
         "_back"
     ),
     WEB_API_URL(SettingKeys.web_api_url(), CitraSettings.SECTION_NETWORK, ""),
-    NETWORK_TOKEN(SettingKeys.network_token(), CitraSettings.SECTION_NETWORK, "");
+    NETWORK_TOKEN(SettingKeys.network_token(), CitraSettings.SECTION_NETWORK, ""),
+    LOG_FILTER(SettingKeys.log_filter(), CitraSettings.SECTION_DEBUG, "*:Info"),
+    LOG_REGEX_FILTER(SettingKeys.log_regex_filter(), CitraSettings.SECTION_DEBUG, "");
 
     override fun valueFromString(string: String) = string
 

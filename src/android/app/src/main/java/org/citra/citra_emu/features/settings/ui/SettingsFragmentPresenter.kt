@@ -1,4 +1,4 @@
-// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
@@ -1970,26 +1970,6 @@ class SettingsFragmentPresenter(
             add(
                 SwitchSetting(
                     editingSettings,
-                    BooleanSetting.DEBUG_RENDERER,
-                    R.string.renderer_debug,
-                    R.string.renderer_debug_description,
-                    BooleanSetting.DEBUG_RENDERER.key,
-                    BooleanSetting.DEBUG_RENDERER.defaultValue
-                )
-            )
-            add(
-                SwitchSetting(
-                    editingSettings,
-                    BooleanSetting.INSTANT_DEBUG_LOG,
-                    R.string.instant_debug_log,
-                    R.string.instant_debug_log_description,
-                    BooleanSetting.INSTANT_DEBUG_LOG.key,
-                    BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
-                )
-            )
-            add(
-                SwitchSetting(
-                    editingSettings,
                     BooleanSetting.ENABLE_RPC_SERVER,
                     R.string.enable_rpc_server,
                     R.string.enable_rpc_server_desc,
@@ -2025,6 +2005,56 @@ class SettingsFragmentPresenter(
                     R.string.deterministic_async_operations_description,
                     BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.key,
                     BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.defaultValue
+                )
+            )
+
+            add(HeaderSetting(R.string.logging))
+
+            val logFilterModes =
+                settingsActivity.resources.getStringArray(R.array.logFilterNameModes)
+            val logFilterValues =
+                settingsActivity.resources.getStringArray(R.array.logFilterNameValues)
+            add(
+                StringSingleChoiceSetting(
+                    editingSettings,
+                    StringSetting.LOG_FILTER,
+                    R.string.log_filter_name,
+                    R.string.log_filter_description,
+                    logFilterModes,
+                    logFilterValues,
+                    StringSetting.LOG_FILTER.key,
+                    StringSetting.LOG_FILTER.defaultValue
+                )
+            )
+            add(
+                StringInputSetting(
+                    editingSettings,
+                    StringSetting.LOG_REGEX_FILTER,
+                    R.string.log_regex_filter_name,
+                    R.string.log_regex_filter_description,
+                    StringSetting.LOG_REGEX_FILTER.key,
+                    StringSetting.LOG_REGEX_FILTER.defaultValue,
+                    255
+                )
+            )
+            add(
+                SwitchSetting(
+                    editingSettings,
+                    BooleanSetting.DEBUG_RENDERER,
+                    R.string.renderer_debug,
+                    R.string.renderer_debug_description,
+                    BooleanSetting.DEBUG_RENDERER.key,
+                    BooleanSetting.DEBUG_RENDERER.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    editingSettings,
+                    BooleanSetting.INSTANT_DEBUG_LOG,
+                    R.string.instant_debug_log,
+                    R.string.instant_debug_log_description,
+                    BooleanSetting.INSTANT_DEBUG_LOG.key,
+                    BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
                 )
             )
         }
