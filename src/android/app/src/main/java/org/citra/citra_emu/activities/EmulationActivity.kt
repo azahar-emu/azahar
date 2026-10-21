@@ -6,7 +6,6 @@ package org.citra.citra_emu.activities
 
 import android.Manifest.permission
 import android.annotation.SuppressLint
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
@@ -142,22 +141,8 @@ class EmulationActivity : AppCompatActivity() {
         isRotationBlocked = true
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
 
-        // load global settings if for some reason they aren't (should be loaded in MainActivity)
-        if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
-            SettingsFile.loadSettings(CitraSettings.activeSettings)
-        }
         // load per-game settings
-        SettingsFile.loadSettings(
-            CitraSettings.activeSettings,
-            String.format("%016X", game.titleId)
-        )
-
-        if (
-            CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
-            CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
-        ) {
-            showAnime4kDialog()
-        }
+        loadGameSettings(game)
 
         super.onCreate(savedInstanceState)
 
@@ -223,8 +208,10 @@ class EmulationActivity : AppCompatActivity() {
             BundleCompat.getParcelable(extras, "game", Game::class.java)
         }
         if (game != null) {
+            loadGameSettings(game)
             NativeLibrary.playTimeManagerStart(game.titleId)
         }
+        enableFullscreenImmersive()
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
@@ -233,6 +220,27 @@ class EmulationActivity : AppCompatActivity() {
             intent.extras,
             NavOptions.Builder().setPopUpTo(R.id.emulationFragment, true).build()
         )
+    }
+    private fun loadGameSettings(game: Game) {
+        CitraSettings.activeSettings.changeToGlobalContext() // don't let the previous game's overrides leak in
+        if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
+            SettingsFile.loadSettings(CitraSettings.activeSettings)
+        }
+        SettingsFile.loadSettings(
+            CitraSettings.activeSettings,
+            String.format("%016X", game.titleId)
+        )
+
+        if (CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
+            CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
+        ) {
+            CitraSettings.activeSettings.setByCurrentState(
+                IntSetting.TEXTURE_FILTER,
+                TextureFilter.NOFILTER.int
+            )
+            SettingsFile.saveSetting(IntSetting.TEXTURE_FILTER, CitraSettings.activeSettings)
+            showAnime4kDialog()
+        }
     }
 
     private fun getLaunchUri(intent: Intent): Uri? = try {
@@ -668,16 +676,8 @@ class EmulationActivity : AppCompatActivity() {
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.incompatible_texture_filter)
             .setMessage(R.string.incompatible_texture_filter_description)
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                CitraSettings.activeSettings.setByCurrentState(
-                    IntSetting.TEXTURE_FILTER,
-                    TextureFilter.NOFILTER.int
-                )
-                SettingsFile.saveSetting(
-                    IntSetting.TEXTURE_FILTER,
-                    CitraSettings.activeSettings
-                )
-            }
+            .setPositiveButton(android.R.string.ok, null)
+            .setCancelable(false)
             .show()
     }
 
