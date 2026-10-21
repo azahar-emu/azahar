@@ -1177,10 +1177,18 @@ void RendererVulkan::SwapBuffers() {
     if (!screenRendered) {
         scheduler.Finish();
     }
+    LimitFramesAheadOfGpu();
 
     system.perf_stats->EndSwap();
     rasterizer.TickFrame();
     EndFrame();
+}
+
+void RendererVulkan::LimitFramesAheadOfGpu() {
+    if (previous_frame_tick != 0) {
+        scheduler.Wait(previous_frame_tick);
+    }
+    previous_frame_tick = scheduler.CurrentTick() - 1;
 }
 
 void RendererVulkan::RenderScreenshot() {
