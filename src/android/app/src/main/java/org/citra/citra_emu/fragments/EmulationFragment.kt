@@ -266,6 +266,7 @@ class EmulationFragment :
                 binding.surfaceInputOverlay.isClickable = true
                 binding.surfaceInputOverlay.isFocusable = true
                 binding.surfaceInputOverlay.isFocusableInTouchMode = true
+                binding.surfaceInputOverlay.requestFocus()
             }
 
             override fun onDrawerStateChanged(newState: Int) {
