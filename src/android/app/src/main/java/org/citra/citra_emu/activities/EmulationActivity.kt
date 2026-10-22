@@ -59,6 +59,7 @@ import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.FileBrowserHelper
+import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.NetPlayManager
 import org.citra.citra_emu.utils.PermissionsHandler
@@ -105,22 +106,23 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.info("[EmulationActivity] intent=$intent")
+        Log.info(
+            "[EmulationActivity] extras=${try {
+                intent.extras?.keySet()?.joinToString()
+            } catch (
+                e: Exception
+            ) {
+                "unreadable: ${e.message}"
+            }}"
+        )
+
         requestWindowFeature(Window.FEATURE_NO_TITLE)
 
         RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
 
         ThemeUtil.setTheme(this)
-        val game = try {
-            intent.extras?.let { extras ->
-                BundleCompat.getParcelable(extras, "game", Game::class.java)
-            } ?: run {
-                Log.error("[EmulationActivity] Missing game data in intent extras")
-                return
-            }
-        } catch (e: Exception) {
-            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
-            return
-        }
+        val game = getGameFromIntent(intent)
 
         if (!ensureUserDirectoryReady()) {
             super.onCreate(null) // null: don't restore fragments into an activity we're killing
@@ -141,8 +143,9 @@ class EmulationActivity : AppCompatActivity() {
         isRotationBlocked = true
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
 
-        // load per-game settings
-        loadGameSettings(game)
+        // load per-game settings.
+        // TODO: come up with a system for homebrew which all have titleId = 0
+        if (game != null && game.titleId != 0L) loadGameSettings(game)
 
         super.onCreate(savedInstanceState)
 
@@ -184,7 +187,8 @@ class EmulationActivity : AppCompatActivity() {
 
         applyOrientationSettings() // Check for orientation settings at startup
 
-        NativeLibrary.playTimeManagerStart(game.titleId)
+        // TODO: all 3dsx homebrew will have titleId = 0, so make this use something different
+        if (game != null && game.titleId != 0L) NativeLibrary.playTimeManagerStart(game.titleId)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -204,13 +208,13 @@ class EmulationActivity : AppCompatActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         emulationViewModel.setEmulationStarted(false)
 
-        val game = intent.extras?.let { extras ->
-            BundleCompat.getParcelable(extras, "game", Game::class.java)
-        }
-        if (game != null) {
-            loadGameSettings(game)
+        val game = getGameFromIntent(intent)
+        loadGameSettings(game)
+
+        if (game != null && game.titleId != 0L) {
             NativeLibrary.playTimeManagerStart(game.titleId)
         }
+
         enableFullscreenImmersive()
 
         val navHostFragment =
@@ -221,15 +225,18 @@ class EmulationActivity : AppCompatActivity() {
             NavOptions.Builder().setPopUpTo(R.id.emulationFragment, true).build()
         )
     }
-    private fun loadGameSettings(game: Game) {
+
+    private fun loadGameSettings(game: Game?) {
         CitraSettings.activeSettings.changeToGlobalContext() // don't let the previous game's overrides leak in
         if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
             SettingsFile.loadSettings(CitraSettings.activeSettings)
         }
-        SettingsFile.loadSettings(
-            CitraSettings.activeSettings,
-            String.format("%016X", game.titleId)
-        )
+        if (game != null && game.titleId != 0L) {
+            SettingsFile.loadSettings(
+                CitraSettings.activeSettings,
+                String.format("%016X", game.titleId)
+            )
+        }
 
         if (CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
             CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
@@ -253,7 +260,50 @@ class EmulationActivity : AppCompatActivity() {
             intent.data ?: intent.getStringExtra("SelectedGame")?.toUri()
         }
     } catch (e: Exception) {
+        Log.error("[EmulationActivity] Failed to parse URI from intent: ${e.message}")
         null
+    }
+
+    /** creates or loads a Game object from an intent */
+    private fun getGameFromIntent(intent: Intent): Game? {
+        val parcelable = try {
+            intent.extras?.let { BundleCompat.getParcelable(it, "game", Game::class.java) }
+        } catch (e: Exception) {
+            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
+            null
+        }
+
+        if (parcelable != null) return parcelable
+
+        val uri: Uri = intent.data
+            ?: intent.getStringExtra("SelectedGame")?.toUri()
+            ?: return null
+
+        try {
+            if (BuildUtil.isGooglePlayBuild || uri.toString().startsWith("!")) {
+                return GameHelper.getGame(
+                    uri,
+                    isInstalled = false,
+                    addedToLibrary = false,
+                    mediaType = Game.MediaType.GAME_CARD
+                )
+            } else {
+                val fd = contentResolver.openFileDescriptor(uri, "r")
+                if (fd != null) {
+                    return GameHelper.getGame(
+                        "fd://${fd.fd}".toUri(),
+                        isInstalled = false,
+                        addedToLibrary = false,
+                        mediaType = Game.MediaType.GAME_CARD
+                    )
+                } else {
+                    return null
+                }
+            }
+        } catch (e: Exception) {
+            Log.error("[EmulationActivity] Failed to resolve game from intent: ${e.message}")
+            return null
+        }
     }
 
     // On some devices, the system bars will not disappear on first boot or after some

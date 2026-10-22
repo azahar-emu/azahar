@@ -404,14 +404,10 @@ class EmulationFragment :
                     SettingsActivity.launch(
                         requireContext(),
                         SettingsFile.FILE_NAME_CONFIG,
+                        null,
                         null
                     )
 
-                    true
-                }
-
-                R.id.menu_multiplayer -> {
-                    emulationActivity.displayMultiplayerDialog()
                     true
                 }
 
@@ -434,6 +430,11 @@ class EmulationFragment :
                         )
                     }
 
+                    true
+                }
+
+                R.id.menu_multiplayer -> {
+                    emulationActivity.displayMultiplayerDialog()
                     true
                 }
 
@@ -570,7 +571,7 @@ class EmulationFragment :
         }
 
         if (DirectoryInitialization.areCitraDirectoriesReady()) {
-            emulationState.run(emulationActivity!!.isActivityRecreated)
+            emulationState.run(emulationActivity.isActivityRecreated)
         } else {
             setupCitraDirectoriesThenStartEmulation()
         }
@@ -614,7 +615,7 @@ class EmulationFragment :
         if (directoryInitializationState ===
             DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
         ) {
-            emulationState.run(emulationActivity!!.isActivityRecreated)
+            emulationState.run(emulationActivity.isActivityRecreated)
         } else if (directoryInitializationState ===
             DirectoryInitializationState.EXTERNAL_STORAGE_PERMISSION_NEEDED
         ) {
@@ -948,7 +949,7 @@ class EmulationFragment :
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_emulation_amiibo_load -> {
-                    emulationActivity!!.openAmiiboFileLauncher.launch(false)
+                    emulationActivity.openAmiiboFileLauncher.launch(false)
                     true
                 }
 
