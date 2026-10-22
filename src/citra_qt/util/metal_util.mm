@@ -4,7 +4,7 @@
 
 #import <AppKit/AppKit.h>
 #import <QuartzCore/CAMetalLayer.h>
-#import <qwindowdefs.h>
+#include <QWindow>//#import <qwindowdefs.h>
 
 namespace MetalUtil {
 
