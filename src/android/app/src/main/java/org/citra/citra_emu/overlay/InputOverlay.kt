@@ -16,6 +16,7 @@ import android.graphics.drawable.VectorDrawable
 import android.os.Build
 import android.util.AttributeSet
 import android.util.DisplayMetrics
+import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.SurfaceView
 import android.view.View
@@ -75,6 +76,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
         // Request focus for the overlay so it has priority on presses.
         requestFocus()
+
+        // Deliver controller axis events as they arrive instead of batching them to the next
+        // frame.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            requestUnbufferedDispatch(InputDevice.SOURCE_CLASS_JOYSTICK)
+        }
     }
 
     override fun draw(canvas: Canvas) {
@@ -108,6 +115,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         if (isInEditMode) {
             return onTouchWhileEditing(event)
+        }
+
+        // Deliver the touch events as they arrive instead of batching them to the next
+        // frame.
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            requestUnbufferedDispatch(event)
         }
 
         val motionEvent = event.action and MotionEvent.ACTION_MASK

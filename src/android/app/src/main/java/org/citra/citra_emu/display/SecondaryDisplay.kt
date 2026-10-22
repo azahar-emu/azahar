@@ -196,7 +196,12 @@ class SecondaryDisplayPresentation(
             }
         })
 
-        this.surfaceView.setOnTouchListener { _, event ->
+        this.surfaceView.setOnTouchListener { view, event ->
+            // Deliver the touch events as they arrive instead of batching them to the next
+            // frame.
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                view.requestUnbufferedDispatch(event)
+            }
 
             val pointerIndex = event.actionIndex
             val pointerId = event.getPointerId(pointerIndex)

@@ -36,6 +36,7 @@
 #include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/string_util.h"
+#include "common/thread.h"
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
@@ -122,6 +123,9 @@ std::condition_variable_any surface_cv;
 
 std::string inserted_cartridge;
 
+// OpenGL only: presents each frame as soon as the emulation thread has drawn it.
+std::jthread present_thread;
+
 // Android Multiplayer which can be initialized with parameters
 std::unique_ptr<AndroidMultiplayer> multiplayer{nullptr};
 std::shared_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
@@ -166,7 +170,33 @@ static void LoadDiskCacheProgress(VideoCore::LoadCallbackStage stage, int progre
 
 static Camera::NDK::Factory* g_ndk_factory{};
 
+static void PresentLoop(std::stop_token stop_token) {
+    Common::SetCurrentThreadName("GLPresent");
+    while (!stop_token.stop_requested()) {
+        if (!window->WaitForFrame(std::chrono::milliseconds(100))) {
+            continue;
+        }
+        std::scoped_lock lock(surface_mutex);
+        if (stop_run || pause_emulation) {
+            continue;
+        }
+        window->TryPresenting();
+        if (secondary_window) {
+            secondary_window->TryPresenting();
+        }
+    }
+    window->DonePresenting();
+    if (secondary_window) {
+        secondary_window->DonePresenting();
+    }
+}
+
 static void TryShutdown() {
+    if (present_thread.joinable()) {
+        present_thread.request_stop();
+        present_thread.join();
+    }
+
     std::scoped_lock surface_lock(surface_mutex);
 
     if (!window) {
@@ -257,10 +287,12 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
+    bool opengl_windows = false;
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
+        opengl_windows = true;
         shared_context = window->GetEGLContext();
         secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface,
                                                                       true, shared_context);
@@ -279,6 +311,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                      graphics_api);
 #ifdef ENABLE_OPENGL
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
+        opengl_windows = true;
         shared_context = window->GetEGLContext();
         secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface,
                                                                       true, shared_context);
@@ -356,6 +389,10 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
 
     SCOPE_EXIT({ TryShutdown(); });
+
+    if (opengl_windows) {
+        present_thread = std::jthread(PresentLoop);
+    }
 
     system.RegisterCoreLoopThreadId();
 
@@ -521,19 +558,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] J
         if (window) {
             window->OnSurfaceChanged(s_surface);
         }
-    }
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_doFrame([[maybe_unused]] JNIEnv* env,
-                                                     [[maybe_unused]] jobject obj) {
-    if (stop_run || pause_emulation) {
-        return;
-    }
-    if (window) {
-        window->TryPresenting();
-    }
-    if (secondary_window) {
-        secondary_window->TryPresenting();
     }
 }
 
