@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <climits>
@@ -607,9 +607,14 @@ void CpuLimiterMulti::UpdateAppCpuLimit() {
         return;
     }
 
-    app_cpu_time = static_cast<u32>(kernel.ResourceLimit()
-                                        .GetForCategory(Kernel::ResourceLimitCategory::Application)
-                                        ->GetCurrentValue(Kernel::ResourceLimitType::CpuTime));
+    const s32 new_cpu_time = kernel.ResourceLimit()
+                                 .GetForCategory(Kernel::ResourceLimitCategory::Application)
+                                 ->GetCurrentValue(Kernel::ResourceLimitType::CpuTime);
+    if (new_cpu_time >= 90) {
+        return;
+    }
+
+    app_cpu_time = new_cpu_time;
     if (app_cpu_time == Core1CpuTime::PREEMPTION_DISABLED) {
         // No preemption, disable event
         active = false;
