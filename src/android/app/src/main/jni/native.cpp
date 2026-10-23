@@ -288,7 +288,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     EGLContext* shared_context;
 
-
     // Load game-specific settings overlay if available
     u64 program_id{};
     FileUtil::SetCurrentRomPath(filepath);
@@ -303,7 +302,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     // Use filename as fallback if title id is zero (e.g., homebrew)
     const std::string fallback_name =
-            program_id == 0 ? std::string(FileUtil::GetFilename(filepath)) : std::string{};
+        program_id == 0 ? std::string(FileUtil::GetFilename(filepath)) : std::string{};
     global_config.LoadPerGameConfig(program_id, fallback_name);
     system.ApplySettings();
     Settings::LogSettings();
@@ -347,8 +346,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 #endif
         break;
     }
-
-
 
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImage::Factory>());
 

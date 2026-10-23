@@ -227,7 +227,8 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun loadGameSettings(game: Game?) {
-        CitraSettings.activeSettings.changeToGlobalContext() // don't let the previous game's overrides leak in
+        // don't let the previous game's overrides leak in
+        CitraSettings.activeSettings.changeToGlobalContext()
         if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
             SettingsFile.loadSettings(CitraSettings.activeSettings)
         }

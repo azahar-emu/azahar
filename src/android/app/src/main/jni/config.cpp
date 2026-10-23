@@ -112,7 +112,7 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& sett
     setting = GetSetting(group, setting);
 }
 
-//TODO: figure out why ranged isn't being used
+// TODO: figure out why ranged isn't being used
 template <typename Type, bool ranged>
 Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
     if constexpr (std::is_floating_point_v<Type>) {
@@ -176,8 +176,8 @@ void Config::ReadValues() {
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
     // Renderer
-    ReadSetting("Renderer",Settings::values.use_gles);
-    ReadSetting("Renderer",Settings::values.shaders_accurate_mul);
+    ReadSetting("Renderer", Settings::values.use_gles);
+    ReadSetting("Renderer", Settings::values.shaders_accurate_mul);
     ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
@@ -229,8 +229,8 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.render_3d_which_display);
     // Layout
 
-    ReadSetting("Layout",Settings::values.layout_option);
-    ReadSetting("Layout",Settings::values.screen_gap);
+    ReadSetting("Layout", Settings::values.layout_option);
+    ReadSetting("Layout", Settings::values.screen_gap);
     ReadSetting("Layout", Settings::values.small_screen_position);
     ReadSetting("Layout", Settings::values.screen_gap);
     ReadSetting("Layout", Settings::values.custom_top_x);

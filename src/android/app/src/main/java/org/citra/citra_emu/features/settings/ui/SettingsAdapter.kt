@@ -555,7 +555,11 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
 
         MaterialAlertDialogBuilder(context)
             .setMessage(
-                if (settings.isPerGame()) R.string.reset_setting_global_confirmation else R.string.reset_setting_confirmation
+                if (settings.isPerGame()) {
+                    R.string.reset_setting_global_confirmation
+                } else {
+                    R.string.reset_setting_confirmation
+                }
             )
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 if (settings.isPerGame()) {

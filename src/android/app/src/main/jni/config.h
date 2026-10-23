@@ -39,13 +39,12 @@ private:
     void ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting);
 
     /**
-    * Reads a value honoring per_game config, and returns it.
-    * Does not modify the setting.
-    *
-    * @param group The name of the INI group
-    * @param setting The setting to modify
-    */
+     * Reads a value honoring per_game config, and returns it.
+     * Does not modify the setting.
+     *
+     * @param group The name of the INI group
+     * @param setting The setting to modify
+     */
     template <typename Type, bool ranged>
     Type GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting);
-
 };
