@@ -248,6 +248,8 @@
     <string name="async_fs_operations">Asynchronous filesystem operations</string>
     <string name="async_fs_operations_description">Makes emulated filesystem accesses asynchronous. Greatly reduces filesystem related stutter, but may slightly increase load times.</string>
 
+    <string name="per_app_settings_unsupported">Per-Application Settings unsupported</string>
+    <string name="per_app_settings_unsupported_description">This application does not support per-application settings, perhaps because it is a homebrew app.</string>
     <!-- Camera settings strings -->
     <string name="inner_camera">Inner Camera</string>
     <string name="outer_left_camera">Outer Left Camera</string>

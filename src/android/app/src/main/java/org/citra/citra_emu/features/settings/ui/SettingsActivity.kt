@@ -20,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.preference.PreferenceManager
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
@@ -58,6 +59,19 @@ class SettingsActivity :
         val gameId = launcher.getStringExtra(ARG_GAME_ID) ?: ""
         val gameTitle = launcher.getStringExtra(ARG_GAME_TITLE) ?: ""
         val menuTag = launcher.getStringExtra(ARG_MENU_TAG) ?: ""
+
+        val parsedId = gameId.toLongOrNull(16)
+        if (parsedId == 0L) {
+            // gameId of 0 means this is homebrew or another unsupported situation.
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.per_app_settings_unsupported)
+                .setMessage(R.string.per_app_settings_unsupported_description)
+                .setPositiveButton(android.R.string.ok, null)
+                .setCancelable(false)
+                .setOnDismissListener { finish() }
+                .show()
+        }
+
         presenter.onCreate(savedInstanceState, menuTag, gameId, gameTitle)
 
         // Show "Back" button in the action bar for navigation

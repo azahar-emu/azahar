@@ -413,22 +413,14 @@ class EmulationFragment :
 
                 R.id.menu_application_settings -> {
                     val titleId = NativeLibrary.getRunningTitleId()
-                    if (titleId != 0L) {
-                        val gameId = java.lang.String.format("%016X", titleId)
-                        SettingsActivity.launch(
-                            requireContext(),
-                            SettingsFile.FILE_NAME_CONFIG,
-                            gameId,
-                            game.title
-                        )
-                    } else {
-                        // Fallback: open global settings if title id unknown
-                        SettingsActivity.launch(
-                            requireContext(),
-                            SettingsFile.FILE_NAME_CONFIG,
-                            null
-                        )
-                    }
+
+                    val gameId = java.lang.String.format("%016X", titleId)
+                    SettingsActivity.launch(
+                        requireContext(),
+                        SettingsFile.FILE_NAME_CONFIG,
+                        gameId,
+                        game.title
+                    )
 
                     true
                 }
