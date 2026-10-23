@@ -1988,7 +1988,7 @@ bool GMainWindow::CreateShortcutLink(const std::filesystem::path& shortcut_path,
                                      const std::string& categories, const std::string& keywords,
                                      const std::string& name, const bool& skip_tryexec) try {
 #if defined(__linux__) || defined(__FreeBSD__) // Linux and FreeBSD
-    std::filesystem::path shortcut_path_full = shortcut_path / (name + ".desktop");
+    std::filesystem::path shortcut_path_full = shortcut_path / PathFromUTF8(name + ".desktop");
     std::ofstream shortcut_stream(shortcut_path_full, std::ios::binary | std::ios::trunc);
     if (!shortcut_stream.is_open()) {
         LOG_ERROR(Frontend, "Failed to create shortcut");
@@ -2003,7 +2003,7 @@ bool GMainWindow::CreateShortcutLink(const std::filesystem::path& shortcut_path,
         fmt::print(shortcut_stream, "Comment={}\n", comment);
     }
     if (std::filesystem::is_regular_file(icon_path)) {
-        fmt::print(shortcut_stream, "Icon={}\n", icon_path.string());
+        fmt::print(shortcut_stream, "Icon={}\n", PathToUTF8(icon_path));
     }
     if (!skip_tryexec) {
         fmt::print(shortcut_stream, "TryExec={}\n", command);
@@ -2123,25 +2123,27 @@ bool GMainWindow::MakeShortcutIcoPath(const u64 program_id, const std::string_vi
     // Get path to Citra icons directory & icon extension
     std::string ico_extension = "png";
 #if defined(_WIN32)
-    out_icon_path = FileUtil::GetUserPath(FileUtil::UserPath::IconsDir);
+    out_icon_path = PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::IconsDir));
     ico_extension = "ico";
 #elif defined(__linux__) || defined(__FreeBSD__)
-    out_icon_path = FileUtil::GetUserDirectory("XDG_DATA_HOME") + "/icons/hicolor/256x256/";
+    out_icon_path =
+        PathFromUTF8(FileUtil::GetUserDirectory("XDG_DATA_HOME") + "/icons/hicolor/256x256/");
 #endif
     // Create icons directory if it doesn't exist
-    if (!FileUtil::CreateFullPath(out_icon_path.string())) {
+    if (!FileUtil::CreateFullPath(PathToUTF8(out_icon_path))) {
         QMessageBox::critical(
             this, tr("Create Icon"),
             tr("Cannot create icon file. Path \"%1\" does not exist and cannot be created.")
-                .arg(QString::fromStdString(out_icon_path.string())),
+                .arg(QString::fromStdString(PathToUTF8(out_icon_path))),
             QMessageBox::StandardButton::Ok);
         out_icon_path.clear();
         return false;
     }
 
     // Create icon file path
-    out_icon_path /= (program_id == 0 ? fmt::format("citra-{}.{}", game_file_name, ico_extension)
-                                      : fmt::format("citra-{:016X}.{}", program_id, ico_extension));
+    out_icon_path /=
+        PathFromUTF8(program_id == 0 ? fmt::format("citra-{}.{}", game_file_name, ico_extension)
+                                     : fmt::format("citra-{:016X}.{}", program_id, ico_extension));
     return true;
 }
 
@@ -2166,10 +2168,10 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
     // Shortcut path
     std::filesystem::path shortcut_path{};
     if (target == GameListShortcutTarget::Desktop) {
-        shortcut_path =
-            QStandardPaths::writableLocation(QStandardPaths::DesktopLocation).toStdString();
+        shortcut_path = PathFromUTF8(
+            QStandardPaths::writableLocation(QStandardPaths::DesktopLocation).toStdString());
     } else if (target == GameListShortcutTarget::Applications) {
-        shortcut_path = GetApplicationsDirectory();
+        shortcut_path = PathFromUTF8(GetApplicationsDirectory());
     }
 
     // Icon path and title
