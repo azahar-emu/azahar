@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #pragma once
 
@@ -1008,6 +1008,8 @@ public:
          *     1 : Result of function, 0 on success, otherwise error code
          */
         void Reboot(Kernel::HLERequestContext& ctx);
+
+        void GetAppletProgramInfo(Kernel::HLERequestContext& ctx);
 
         /**
          * APT::HardwareResetAsync service function.

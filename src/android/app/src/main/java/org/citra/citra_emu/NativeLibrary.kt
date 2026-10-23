@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu
 
@@ -13,6 +13,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.OpenableColumns
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Surface
@@ -33,6 +34,7 @@ import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.NetPlayManager
 import org.citra.citra_emu.utils.RemovableStorageHelper
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
 
@@ -137,6 +139,7 @@ object NativeLibrary {
     external fun setUserDirectory(directory: String)
 
     data class InstalledGame(val path: String, val mediaType: Game.MediaType)
+
     fun getInstalledGamePaths(): Array<InstalledGame> {
         val games = getInstalledGamePathsImpl()
 
@@ -152,6 +155,7 @@ object NativeLibrary {
             }
         }.toTypedArray()
     }
+
     private external fun getInstalledGamePathsImpl(): Array<String?>
 
     // Create the config.ini file.
@@ -173,7 +177,6 @@ object NativeLibrary {
     // Surface Handling
     external fun surfaceChanged(surf: Surface)
     external fun surfaceDestroyed()
-    external fun doFrame()
 
     // Second window
     external fun secondarySurfaceChanged(secondary_surface: Surface)
@@ -321,6 +324,19 @@ object NativeLibrary {
                 canContinue = false
             }
 
+            CoreError.ErrorSavestateBuildMismatch -> {
+                title = emulationActivity.getString(R.string.core_error_savestate_build_mismatch)
+                message =
+                    emulationActivity.getString(R.string.savestate_build_mismatch_message, details)
+                canContinue = true
+            }
+
+            CoreError.ErrorShaderCacheCrash -> {
+                title = emulationActivity.getString(R.string.shader_cache_crash)
+                message = emulationActivity.getString(R.string.shader_cache_crash_message)
+                canContinue = true
+            }
+
             CoreError.ErrorUnknown -> {
                 title = emulationActivity.getString(R.string.fatal_error)
                 message = emulationActivity.getString(R.string.fatal_error_message)
@@ -399,11 +415,11 @@ object NativeLibrary {
             } else {
                 alertResult = false
                 builder
-                    .setPositiveButton(android.R.string.yes) { _: DialogInterface, _: Int ->
+                    .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                         alertResult = true
                         synchronized(alertLock) { alertLock.notify() }
                     }
-                    .setNegativeButton(android.R.string.no) { _: DialogInterface, _: Int ->
+                    .setNegativeButton(android.R.string.cancel) { _: DialogInterface, _: Int ->
                         alertResult = false
                         synchronized(alertLock) { alertLock.notify() }
                     }
@@ -699,6 +715,25 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
+    fun addNetPlayMessage(type: Int, message: String) {
+        val emulationActivity = sEmulationActivity.get()
+        if (emulationActivity != null) {
+            emulationActivity.addNetPlayMessages(type, message)
+        } else {
+            NetPlayManager.addNetPlayMessage(type, message)
+        }
+    }
+
+    @Keep
+    @JvmStatic
+    fun clearChat() {
+        NetPlayManager.clearChat()
+    }
+
+    external fun initMultiplayer()
+
+    @Keep
+    @JvmStatic
     fun onCompressProgress(total: Long, current: Long) {
         CompressProgressDialogViewModel.update(total, current)
     }
@@ -746,6 +781,7 @@ object NativeLibrary {
     fun getNativePath(uri: Uri): String {
         BuildUtil.assertNotGooglePlay()
 
+        val context = CitraApplication.appContext
         val dirSep = "/"
 
         val uriString = uri.toString()
@@ -760,10 +796,44 @@ object NativeLibrary {
         val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
 
-        if (pathSegment.startsWith("primary:")) { // User directory is located in primary storage
+        if (pathSegment.startsWith("primary:")) { // Path is located in primary storage
             val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type PRIMARY: $uri)"
+            )
             return primaryStoragePath + dirSep + virtualPath
-        } else { // User directory probably located on a removable storage device
+        } else if (uriString // Path is likely located in the /Download folder
+                .startsWith("content://com.android.providers.downloads.documents/document/msf")
+        ) {
+            var fileName: String? = null
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    fileName = cursor.getString(0)
+                }
+            }
+            if (fileName == null) {
+                android.util.Log.e(
+                    "NativeLibrary",
+                    "Unable to resolve URI to real file (URI: $uri)"
+                )
+                return ""
+            }
+            val downloadsPath = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            ).absolutePath
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type DOWNLOAD with fileName '$fileName': $uri)"
+            )
+            return downloadsPath + dirSep + fileName
+        } else { // Path is probably located on a removable storage device
             val storageIdString = pathSegment.substringBefore(":")
             val removablePath = RemovableStorageHelper.getRemovableStoragePath(
                 CitraApplication.appContext,
@@ -777,6 +847,10 @@ object NativeLibrary {
                 )
                 return ""
             }
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type EXTERNAL: $uri)"
+            )
             return removablePath + dirSep + virtualPath
         }
     }
@@ -896,9 +970,10 @@ object NativeLibrary {
         ErrorArticDisconnected(12, R.string.core_error_artic_disconnected),
         ErrorN3DSApplication(13, R.string.core_error_n3ds_application),
         ErrorCoreExceptionRaised(14, R.string.core_error_core_exception_raised),
-        ErrorMemoryExceptionRaised(15, R.string.core_error_memory_exception_raised),
+        ErrorSavestateBuildMismatch(15, R.string.core_error_savestate_build_mismatch),
         ShutdownRequested(16, R.string.core_error_shutdown_requested),
-        ErrorUnknown(17, R.string.core_error_unknown);
+        ErrorUnknown(17, R.string.core_error_unknown),
+        ErrorShaderCacheCrash(18, R.string.core_error_shader_cache_crash);
 
         companion object {
             fun fromInt(value: Int): CoreError = entries.find { it.value == value } ?: ErrorUnknown
@@ -923,7 +998,12 @@ object NativeLibrary {
             val canContinue = requireArguments().getBoolean(CAN_CONTINUE)
             val dialog = MaterialAlertDialogBuilder(requireContext())
                 .setTitle(title)
-                .setMessage(message)
+                .setMessage(
+                    Html.fromHtml(
+                        message,
+                        Html.FROM_HTML_MODE_LEGACY
+                    )
+                )
             if (canContinue) {
                 dialog.setPositiveButton(R.string.continue_button) { _: DialogInterface?, _: Int ->
                     coreErrorAlertResult = true
@@ -934,7 +1014,11 @@ object NativeLibrary {
                 coreErrorAlertResult = false
                 userChosen = true
             }
-            return dialog.show()
+            val alert = dialog.create()
+            alert.show()
+            val alertMessage = alert.findViewById<View>(android.R.id.message) as TextView
+            alertMessage.movementMethod = LinkMovementMethod.getInstance()
+            return alert
         }
 
         override fun onDismiss(dialog: DialogInterface) {

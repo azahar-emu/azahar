@@ -1,6 +1,10 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
+
+// Copyright 2014 PPSSPP Project
+// Licensed under GPLv2 or any later version
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #pragma once
 

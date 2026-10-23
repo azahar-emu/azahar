@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <QDesktopServices>
 #include <QMessageBox>
@@ -82,8 +82,15 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     });
 #endif
 
+    connect(ui->toggle_pica_debugging, &QCheckBox::clicked, this, [this](bool checked) {
+        QMessageBox::information(this, tr("Relaunch Required"),
+                                 tr("Please relaunch Azahar for this setting to take effect."));
+    });
+
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
+    ui->toggle_fastinterp->setEnabled(!is_powered_on);
     ui->toggle_renderer_debug->setEnabled(!is_powered_on);
+    ui->toggle_pica_debugging->setEnabled(!is_powered_on);
     ui->toggle_dump_command_buffers->setEnabled(!is_powered_on);
     ui->enable_rpc_server->setEnabled(!is_powered_on);
     ui->toggle_unique_data_console_type->setEnabled(!is_powered_on);
@@ -121,6 +128,7 @@ void ConfigureDebug::SetConfiguration() {
     ui->log_regex_filter_edit->setText(
         QString::fromStdString(Settings::values.log_regex_filter.GetValue()));
     ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());
+    ui->toggle_fastinterp->setChecked(Settings::values.use_fastinterp.GetValue());
     ui->delay_start_for_lle_modules->setChecked(
         Settings::values.delay_start_for_lle_modules.GetValue());
     ui->deterministic_async_operations->setChecked(
@@ -131,10 +139,10 @@ void ConfigureDebug::SetConfiguration() {
 #endif // !ENABLE_SCRIPTING
     ui->toggle_unique_data_console_type->setChecked(
         Settings::values.toggle_unique_data_console_type.GetValue());
-    ui->break_on_unmapped_memory_access->setChecked(
-        Settings::values.break_on_unmapped_memory_access.GetValue());
+    ui->enable_exception_handler->setChecked(Settings::values.enable_exception_handler.GetValue());
 
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
+    ui->toggle_pica_debugging->setChecked(Settings::values.pica_debugging.GetValue());
     ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
 
     if (!Settings::IsConfiguringGlobal()) {
@@ -172,15 +180,16 @@ void ConfigureDebug::ApplyConfiguration() {
     Common::Log::SetGlobalFilter(filter);
     Common::Log::SetRegexFilter(Settings::values.log_regex_filter.GetValue());
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
+    Settings::values.use_fastinterp = ui->toggle_fastinterp->isChecked();
     Settings::values.delay_start_for_lle_modules = ui->delay_start_for_lle_modules->isChecked();
     Settings::values.deterministic_async_operations =
         ui->deterministic_async_operations->isChecked();
     Settings::values.enable_rpc_server = ui->enable_rpc_server->isChecked();
     Settings::values.toggle_unique_data_console_type =
         ui->toggle_unique_data_console_type->isChecked();
-    Settings::values.break_on_unmapped_memory_access =
-        ui->break_on_unmapped_memory_access->isChecked();
+    Settings::values.enable_exception_handler = ui->enable_exception_handler->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
+    Settings::values.pica_debugging = ui->toggle_pica_debugging->isChecked();
     Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
     Settings::values.instant_debug_log = ui->instant_debug_log->isChecked();
 
@@ -205,8 +214,8 @@ void ConfigureDebug::SetupPerGameUI() {
     ui->groupBox_2->setVisible(false);
     ui->enable_rpc_server->setVisible(false);
     ui->toggle_unique_data_console_type->setVisible(false);
-    ui->break_on_unmapped_memory_access->setVisible(false);
     ui->toggle_cpu_jit->setVisible(false);
+    ui->toggle_fastinterp->setVisible(false);
 }
 
 void ConfigureDebug::RetranslateUI() {

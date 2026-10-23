@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.hotkeys
 
@@ -12,8 +12,9 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
+import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.TurboHelper
 
@@ -32,7 +33,7 @@ class HotkeyUtility(
         val buttonSet = InputBindingSetting.getButtonSet(keyEvent)
         val enableButton =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-                .getString(Settings.HOTKEY_ENABLE, "")
+                .getString(CitraSettings.HOTKEY_ENABLE, "")
         val thisKeyIsEnableButton = buttonSet.contains(Hotkey.ENABLE.button)
         val thisKeyIsHotkey =
             !thisKeyIsEnableButton && Hotkey.entries.any { buttonSet.contains(it.button) }
@@ -71,11 +72,16 @@ class HotkeyUtility(
         var handled = false
         val buttonSet = InputBindingSetting.getButtonSet(keyEvent)
         val thisKeyIsEnableButton = buttonSet.contains(Hotkey.ENABLE.button)
+        val thisKeyIsComboButton = buttonSet.contains(Hotkey.COMBO_BUTTON.button)
         val thisKeyIsHotkey =
             !thisKeyIsEnableButton && Hotkey.entries.any { buttonSet.contains(it.button) }
         if (thisKeyIsEnableButton) {
             handled = true
             hotkeyIsEnabled = false
+        }
+        if (thisKeyIsComboButton) {
+            ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
+            handled = true
         }
 
         for (button in buttonSet) {
@@ -140,6 +146,10 @@ class HotkeyUtility(
                     context.getString(stringRes),
                     Toast.LENGTH_SHORT
                 ).show()
+            }
+
+            Hotkey.COMBO_BUTTON.button -> {
+                ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
             }
 
             else -> {}

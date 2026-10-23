@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <array>
@@ -12,6 +12,7 @@
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "core/arm/arm_interface.h"
+#include "core/arm/exception_handler.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #ifdef ENABLE_GDBSTUB
@@ -35,6 +36,7 @@
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/svc.h"
 #include "core/hle/kernel/svc_wrapper.h"
 #include "core/hle/kernel/thread.h"
@@ -1144,7 +1146,6 @@ Result SVC::ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value, s6
 }
 
 void SVC::Break(u8 break_reason) {
-    LOG_CRITICAL(Debug_Emulated, "Emulated program broke execution!");
     std::string reason_str;
     switch (break_reason) {
     case 0:
@@ -1160,8 +1161,8 @@ void SVC::Break(u8 break_reason) {
         reason_str = "UNKNOWN";
         break;
     }
-    LOG_CRITICAL(Debug_Emulated, "Break reason: {}", reason_str);
-    system.SetStatus(Core::System::ResultStatus::ErrorUnknown);
+    LOG_CRITICAL(Debug_Emulated, "Emulated program broke execution! Reason: {}", reason_str);
+    Core::LogException(system, Core::ExceptionType::Break);
 }
 
 /// Used to output a message on a debug hardware unit, or for the GDB file I/O
@@ -2109,7 +2110,7 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
 
     // TODO(PabloMK7) Fix-up this svc.
 
-    // Only linear memory supported
+    // Only FCRAM and kernel shared pages supported
     auto vma = src_process->vm_manager.FindVMA(src_address);
     R_UNLESS(vma != src_process->vm_manager.vma_map.end() &&
                  vma->second.type == VMAType::BackingMemory,
@@ -2118,11 +2119,20 @@ Result SVC::MapProcessMemoryEx(Handle dst_process_handle, u32 dst_address,
     const u32 offset = src_address - vma->second.base;
     R_UNLESS(offset + size <= vma->second.size, ResultInvalidAddress);
 
-    auto vma_res = dst_process->vm_manager.MapBackingMemory(
-        dst_address,
-        memory.GetFCRAMRef(vma->second.backing_memory.GetPtr() + offset -
-                           kernel.memory.GetFCRAMPointer(0)),
-        size, map_as_private ? MemoryState::Private : MemoryState::Shared);
+    MemoryRef src_memory_ref;
+    // TODO(PabloMK7): This is hacky, make a proper fix
+    if (vma->second.backing_memory.GetPtr() == kernel.GetSharedPageHandler().GetPtr()) {
+        src_memory_ref = kernel.GetSharedPageMemoryRef(offset);
+    } else if (vma->second.backing_memory.GetPtr() == kernel.GetConfigMemHandler().GetPtr()) {
+        src_memory_ref = kernel.GetConfigMemMemoryRef(offset);
+    } else {
+        src_memory_ref = memory.GetFCRAMRef(vma->second.backing_memory.GetPtr() + offset -
+                                            kernel.memory.GetFCRAMPointer(0));
+    }
+
+    auto vma_res = dst_process->vm_manager.MapBackingMemory(dst_address, src_memory_ref, size,
+                                                            map_as_private ? MemoryState::Private
+                                                                           : MemoryState::Shared);
 
     if (!vma_res.Succeeded()) {
         return ResultInvalidAddressState;
@@ -2141,7 +2151,6 @@ Result SVC::UnmapProcessMemoryEx(Handle process, u32 dst_address, u32 size) {
         size = (size & ~0xFFF) + Memory::CITRA_PAGE_SIZE;
     }
 
-    // Only linear memory supported
     auto vma = dst_process->vm_manager.FindVMA(dst_address);
     R_UNLESS(vma != dst_process->vm_manager.vma_map.end() &&
                  vma->second.type == VMAType::BackingMemory,

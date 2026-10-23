@@ -1,8 +1,9 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2024-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <clocale>
+#include <format>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -66,7 +67,9 @@
 #ifdef ENABLE_DISCORD_RPC
 #include "citra_qt/discord.h"
 #endif
+#ifdef ENABLE_FFMPEG
 #include "citra_qt/dumping/dumping_dialog.h"
+#endif
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/loading_screen.h"
@@ -85,7 +88,7 @@
 #include "citra_qt/util/util.h"
 #include "common/arch.h"
 #include "common/common_paths.h"
-#include "common/dynamic_library/dynamic_library.h"
+#include "common/dynamic_library.h"
 #include "common/file_util.h"
 #include "common/literals.h"
 #include "common/logging/backend.h"
@@ -99,6 +102,7 @@
 #include "common/settings.h"
 #include "common/string_util.h"
 #include "common/zstd_compression.h"
+#include "core/arm/exception_handler.h"
 #include "core/core.h"
 #include "core/dumping/backend.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -112,7 +116,6 @@
 #include "core/savestate.h"
 #include "core/system_titles.h"
 #include "input_common/main.h"
-#include "network/network_settings.h"
 #include "ui_main.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -235,7 +238,8 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 bool IsPrereleaseBuild() {
     return ((strstr(Common::g_build_fullname, "alpha") != NULL) ||
             (strstr(Common::g_build_fullname, "beta") != NULL) ||
-            (strstr(Common::g_build_fullname, "rc") != NULL));
+            (strstr(Common::g_build_fullname, "rc") != NULL) ||
+            (strstr(Common::g_build_fullname, "test") != NULL));
 }
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
@@ -279,10 +283,6 @@ GMainWindow::GMainWindow(Core::System& system_)
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
-            if (!DynamicLibrary::FFmpeg::LoadFFmpeg()) {
-                ShowFFmpegErrorMessage();
-                continue;
-            }
             video_dumping_path = args[++i];
             video_dumping_on_start = true;
             continue;
@@ -299,8 +299,7 @@ GMainWindow::GMainWindow(Core::System& system_)
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
-            Settings::values.use_gdbstub = true;
-            Settings::values.gdbstub_port = strtoul(args[++i].toLatin1(), NULL, 0);
+            gdbport_from_arg = strtoul(args[++i].toLatin1(), NULL, 0);
             continue;
         }
 
@@ -414,7 +413,11 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     LoadTranslation();
 
-    Pica::g_debug_context = Pica::DebugContext::Construct();
+    if (Settings::values.pica_debugging) {
+        Pica::g_debug_context = Pica::DebugContext::Construct();
+    } else {
+        Pica::g_debug_context.reset();
+    }
     setAcceptDrops(true);
     ui->setupUi(this);
     statusBar()->hide();
@@ -456,6 +459,11 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     LOG_INFO(Frontend, "Azahar Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
+    std::string build_variant = Common::g_build_variant;
+    if (build_variant == "") {
+        build_variant = "N/A";
+    }
+    LOG_INFO(Frontend, "Build Variant: {}", build_variant);
 #if CITRA_ARCH(x86_64)
     const auto& caps = Common::GetCPUCaps();
     std::string cpu_string = caps.cpu_string;
@@ -484,6 +492,11 @@ GMainWindow::GMainWindow(Core::System& system_)
     secondary_window->setWindowIcon(azahar_icon);
 
     show();
+
+    // If the theme is updated before show() it doesn't apply properly, so do it again here.
+    // We still need the earlier call to make sure that the icons are set up correctly in the
+    // game list.
+    UpdateUITheme();
 
 #ifdef __APPLE__
     if (AppleUtils::IsRunningFromTerminal()) {
@@ -553,11 +566,9 @@ void GMainWindow::InitializeWidgets() {
     secondary_window->hide();
     secondary_window->setParent(nullptr);
 
-    action_secondary_fullscreen = new QAction(secondary_window);
-    action_secondary_toggle_screen = new QAction(secondary_window);
-    action_secondary_swap_screen = new QAction(secondary_window);
-    action_secondary_rotate_screen = new QAction(secondary_window);
-
+#ifndef ENABLE_FFMPEG
+    ui->action_Dump_Video->setVisible(false);
+#endif
     game_list = new GameList(*play_time_manager, this);
     ui->horizontalLayout->addWidget(game_list);
 
@@ -706,8 +717,12 @@ void GMainWindow::InitializeWidgets() {
 }
 
 void GMainWindow::InitializeDebugWidgets() {
-    connect(ui->action_Create_Pica_Surface_Viewer, &QAction::triggered, this,
-            &GMainWindow::OnCreateGraphicsSurfaceViewer);
+    if (Pica::g_debug_context) {
+        connect(ui->action_Create_Pica_Surface_Viewer, &QAction::triggered, this,
+                &GMainWindow::OnCreateGraphicsSurfaceViewer);
+    } else {
+        ui->action_Create_Pica_Surface_Viewer->setEnabled(false);
+    }
 
     QMenu* debug_menu = ui->menu_View_Debugging;
 
@@ -726,35 +741,37 @@ void GMainWindow::InitializeDebugWidgets() {
     connect(this, &GMainWindow::EmulationStopping, registersWidget,
             &RegistersWidget::OnEmulationStopping);
 
-    graphicsWidget = new GPUCommandStreamWidget(system, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
-    graphicsWidget->hide();
-    debug_menu->addAction(graphicsWidget->toggleViewAction());
+    if (Pica::g_debug_context) {
+        graphicsWidget = new GPUCommandStreamWidget(system, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
+        graphicsWidget->hide();
+        debug_menu->addAction(graphicsWidget->toggleViewAction());
 
-    graphicsCommandsWidget = new GPUCommandListWidget(system, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
-    graphicsCommandsWidget->hide();
-    debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
+        graphicsCommandsWidget = new GPUCommandListWidget(system, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
+        graphicsCommandsWidget->hide();
+        debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
 
-    graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
-    graphicsBreakpointsWidget->hide();
-    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
+        graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
+        graphicsBreakpointsWidget->hide();
+        debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
 
-    graphicsVertexShaderWidget =
-        new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
-    graphicsVertexShaderWidget->hide();
-    debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
+        graphicsVertexShaderWidget =
+            new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
+        graphicsVertexShaderWidget->hide();
+        debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
 
-    graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
-    graphicsTracingWidget->hide();
-    debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
-    connect(this, &GMainWindow::EmulationStarting, graphicsTracingWidget,
-            &GraphicsTracingWidget::OnEmulationStarting);
-    connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
-            &GraphicsTracingWidget::OnEmulationStopping);
+        graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
+        graphicsTracingWidget->hide();
+        debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
+        connect(this, &GMainWindow::EmulationStarting, graphicsTracingWidget,
+                &GraphicsTracingWidget::OnEmulationStarting);
+        connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
+                &GraphicsTracingWidget::OnEmulationStopping);
+    }
 
     waitTreeWidget = new WaitTreeWidget(system, this);
     addDockWidget(Qt::LeftDockWidgetArea, waitTreeWidget);
@@ -847,7 +864,8 @@ void GMainWindow::InitializeSaveStateMenuActions() {
 
 void GMainWindow::InitializeHotkeys() {
     hotkey_registry.LoadHotkeys();
-
+    hotkey_registry.buttonMonitor.start(16);
+    LOG_DEBUG(Frontend, "Initializing hotkeys");
     const QString main_window = QStringLiteral("Main Window");
     const QString fullscreen = QStringLiteral("Fullscreen");
 
@@ -856,11 +874,20 @@ void GMainWindow::InitializeHotkeys() {
                                           const bool primary_only = false,
                                           const bool auto_repeat = false) {
         static const QString main_window = QStringLiteral("Main Window");
-        action->setShortcut(hotkey_registry.GetKeySequence(main_window, action_name));
+        auto context = hotkey_registry.GetShortcutContext(main_window, action_name);
+        auto shortcut = hotkey_registry.GetKeySequence(main_window, action_name);
+        action->setShortcut(shortcut);
+        action->setShortcutContext(context);
         action->setAutoRepeat(auto_repeat);
         this->addAction(action);
-        if (!primary_only)
-            secondary_window->addAction(action);
+        // handle the shortcuts that are different per-screen
+        if (context == Qt::WidgetShortcut) {
+            render_window->addAction(action);
+            if (!primary_only) {
+                secondary_window->addAction(action);
+            }
+        }
+        hotkey_registry.SetAction(main_window, action_name, action);
     };
 
     link_action_shortcut(ui->action_Load_File, QStringLiteral("Load File"));
@@ -870,9 +897,12 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Restart, QStringLiteral("Restart Emulation"));
     link_action_shortcut(ui->action_Pause, QStringLiteral("Continue/Pause Emulation"));
     link_action_shortcut(ui->action_Stop, QStringLiteral("Stop Emulation"));
+    link_action_shortcut(ui->action_Configure, QStringLiteral("Configure"));
+    link_action_shortcut(ui->action_Configure_Current_Game,
+                         QStringLiteral("Configure Current Application"));
     link_action_shortcut(ui->action_Show_Filter_Bar, QStringLiteral("Toggle Filter Bar"));
     link_action_shortcut(ui->action_Show_Status_Bar, QStringLiteral("Toggle Status Bar"));
-    link_action_shortcut(ui->action_Fullscreen, fullscreen, true);
+    link_action_shortcut(ui->action_Fullscreen, fullscreen);
     link_action_shortcut(ui->action_Capture_Screenshot, QStringLiteral("Capture Screenshot"));
     link_action_shortcut(ui->action_Debug_Pause, QStringLiteral("Debug Pause"));
     link_action_shortcut(ui->action_Debug_Resume, QStringLiteral("Debug Resume"));
@@ -899,19 +929,21 @@ void GMainWindow::InitializeHotkeys() {
     // QShortcut Hotkeys
     const auto connect_shortcut = [&](const QString& action_name, const auto& function) {
         const auto* hotkey = hotkey_registry.GetHotkey(main_window, action_name, this);
-        const auto* secondary_hotkey =
-            hotkey_registry.GetHotkey(main_window, action_name, secondary_window);
         connect(hotkey, &QShortcut::activated, this, function);
-        connect(secondary_hotkey, &QShortcut::activated, this, function);
     };
 
     connect_shortcut(QStringLiteral("Toggle Screen Layout"), &GMainWindow::ToggleScreenLayout);
     connect_shortcut(QStringLiteral("Exit Fullscreen"), [&] {
         if (emulation_running) {
-            ui->action_Fullscreen->setChecked(false);
-            ToggleFullscreen();
+            if (secondary_window->isActiveWindow()) {
+                secondary_window->showNormal();
+            } else {
+                ui->action_Fullscreen->setChecked(false);
+                ToggleFullscreen();
+            }
         }
     });
+
     connect_shortcut(QStringLiteral("Toggle Per-Application Speed"), [&] {
         if (!hotkey_registry
                  .GetKeySequence(QStringLiteral("Main Window"), QStringLiteral("Toggle Turbo Mode"))
@@ -962,21 +994,6 @@ void GMainWindow::InitializeHotkeys() {
             UpdateStatusBar();
         }
     });
-
-    // Secondary Window QAction Hotkeys
-    const auto add_secondary_window_hotkey = [this](QAction* action, QKeySequence hotkey,
-                                                    const char* slot) {
-        // This action will fire specifically when secondary_window is in focus
-        action->setShortcut(hotkey);
-        disconnect(action, SIGNAL(triggered()), this, slot);
-        connect(action, SIGNAL(triggered()), this, slot);
-        secondary_window->addAction(action);
-    };
-
-    // Use the same fullscreen hotkey as the main window
-    const auto fullscreen_hotkey = hotkey_registry.GetKeySequence(main_window, fullscreen);
-    add_secondary_window_hotkey(action_secondary_fullscreen, fullscreen_hotkey,
-                                SLOT(ToggleSecondaryFullscreen()));
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -995,6 +1012,7 @@ void GMainWindow::RestoreUIState() {
     restoreGeometry(UISettings::values.geometry);
     restoreState(UISettings::values.state);
     render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
+    secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
 #if MICROPROFILE_ENABLED
     microProfileDialog->restoreGeometry(UISettings::values.microprofile_geometry);
     microProfileDialog->setVisible(UISettings::values.microprofile_visible.GetValue());
@@ -1102,6 +1120,7 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
     connect(this, &GMainWindow::CompressFinished, this, &GMainWindow::OnCompressFinished);
+    connect(this, &GMainWindow::BundleFinished, this, &GMainWindow::OnBundleFinished);
     connect(this, &GMainWindow::UpdateThemedIcons, multiplayer_state,
             &MultiplayerState::UpdateThemedIcons);
 }
@@ -1129,6 +1148,9 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Exit, &QMainWindow::close, QAction::QuitRole);
     connect_menu(ui->action_Load_Amiibo, &GMainWindow::OnLoadAmiibo);
     connect_menu(ui->action_Remove_Amiibo, &GMainWindow::OnRemoveAmiibo);
+    connect_menu(ui->action_Open_Citra_Folder, &GMainWindow::OnOpenCitraFolder);
+    connect_menu(ui->action_Open_NAND_Folder, &GMainWindow::OnOpenNANDFolder);
+    connect_menu(ui->action_Open_SDMC_Folder, &GMainWindow::OnOpenSDMCFolder);
 
     // Emulation
     connect_menu(ui->action_Pause, &GMainWindow::OnPauseContinueGame);
@@ -1191,7 +1213,9 @@ void GMainWindow::ConnectMenuEvents() {
         }
     });
     connect_menu(ui->action_Capture_Screenshot, &GMainWindow::OnCaptureScreenshot);
+#ifdef ENABLE_FFMPEG
     connect_menu(ui->action_Dump_Video, &GMainWindow::OnDumpVideo);
+#endif
 
     // Tools debug
     connect_menu(ui->action_Debug_Pause, [this] {
@@ -1217,9 +1241,10 @@ void GMainWindow::ConnectMenuEvents() {
     // Tools
     connect_menu(ui->action_Compress_ROM_File, &GMainWindow::OnCompressFile);
     connect_menu(ui->action_Decompress_ROM_File, &GMainWindow::OnDecompressFile);
+    connect_menu(ui->action_Create_ROM_Bundle, &GMainWindow::OnCreateBundle);
+    connect_menu(ui->action_Extract_ROM_Bundle, &GMainWindow::OnExtractBundle);
 
     // Help
-    connect_menu(ui->action_Open_Citra_Folder, &GMainWindow::OnOpenCitraFolder);
     connect_menu(ui->action_Open_Log_Folder, []() {
         QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
@@ -1253,9 +1278,9 @@ void GMainWindow::UpdateMenuState() {
     ui->action_Advance_Frame->setEnabled(emulation_running && is_paused);
 
     if (emulation_running && is_paused) {
-        ui->action_Pause->setText(tr("&Continue"));
+        ui->action_Pause->setText(tr("Continue"));
     } else {
-        ui->action_Pause->setText(tr("&Pause"));
+        ui->action_Pause->setText(tr("Pause"));
     }
 }
 
@@ -1374,9 +1399,10 @@ bool GMainWindow::LoadROM(const QString& filename) {
         QString invalid_format_description =
             tr("The application file format not supported.<br>Please make sure you are using one "
                "of the compatible file formats:<ul><li>Cartridge images: "
-               "<b>.cci/.zcci/.3ds</b></li><li>Installable archives: "
-               "<b>.cia/.zcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH "
-               "containers: <b>.cxi/.zcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>");
+               "<b>.cci/.zcci/.bcci/.3ds</b></li><li>Installable archives: "
+               "<b>.cia/.zcia/.bcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH "
+               "containers: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>ELF files: "
+               "<b>.elf/.axf</b></li></ul>");
 
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
@@ -1421,7 +1447,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
         case Core::System::ResultStatus::ErrorLoader:
             QMessageBox::critical(this, tr("Generic load error"),
-                                  tr("An generic load error occurred while loading the "
+                                  tr("A generic load error occurred while loading the "
                                      "application.<br/>Please check the log for more details."));
             break;
         case Core::System::ResultStatus::ErrorLoader_ErrorPatches:
@@ -1446,7 +1472,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
     }
 
     std::string title;
-    system.GetAppLoader().ReadTitle(title);
+    system.GetAppLoader().ReadTitle(title, true);
     game_title = QString::fromStdString(title);
     UpdateWindowTitle();
 
@@ -1462,6 +1488,23 @@ bool GMainWindow::LoadROM(const QString& filename) {
 void GMainWindow::BootGame(const QString& filename) {
     if (emu_thread) {
         ShutdownGame();
+    }
+
+    // NOTE: We could make this not hardcoded, but it's a temp thing anyway so probs not worth. -OS
+    if (Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Vulkan &&
+        Settings::values.texture_filter.GetValue() == Settings::TextureFilter::Anime4K) {
+        const auto answer = QMessageBox::warning(
+            this, tr("Incompatible texture filter"),
+            tr("The selected texture filter (Anime4K) is not compatible with the Vulkan "
+               "renderer.\nThe texture filter will be set to None.\nProceed?"),
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (answer == QMessageBox::No) {
+            return;
+        }
+        if (answer == QMessageBox::Yes) {
+            Settings::values.texture_filter = Settings::TextureFilter::NoFilter;
+        }
     }
 
     const bool is_artic = filename.startsWith(QString::fromStdString("articbase:/")) ||
@@ -1516,6 +1559,13 @@ void GMainWindow::BootGame(const QString& filename) {
         system.RegisterAppLoaderEarly(loader);
     }
 
+    // Override GDB settings if emulator was launched with
+    // GDB port option.
+    if (gdbport_from_arg != -1) {
+        system.SetGDBPortOverride(gdbport_from_arg);
+        system.SetDebugNextProcessFlag();
+    }
+
     system.ApplySettings();
 
     Settings::LogSettings();
@@ -1546,14 +1596,16 @@ void GMainWindow::BootGame(const QString& filename) {
 
     ui->action_Advance_Frame->setEnabled(false);
 
+#ifdef ENABLE_FFMPEG
     if (video_dumping_on_start) {
         StartVideoDumping(video_dumping_path);
         video_dumping_on_start = false;
         video_dumping_path.clear();
     }
+#endif()
 
     // Register debug widgets
-    if (graphicsWidget->isVisible()) {
+    if (graphicsWidget && graphicsWidget->isVisible()) {
         graphicsWidget->Register();
     }
 
@@ -1618,12 +1670,14 @@ void GMainWindow::ShutdownGame() {
         HideFullscreen();
     }
 
+#ifdef ENABLE_FFMPEG
     auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {
         game_shutdown_delayed = true;
         OnStopVideoDumping();
         return;
     }
+#endif
 
     AllowOSSleep();
 
@@ -1638,10 +1692,12 @@ void GMainWindow::ShutdownGame() {
     // breakpoint after (or before) RequestStop() is called, the emulation would never be able
     // to continue out to the main loop and terminate. Thus wait() would hang forever.
     // TODO(bunnei): This function is not thread safe, but it's being used as if it were
-    Pica::g_debug_context->ClearBreakpoints();
+    if (Pica::g_debug_context) {
+        Pica::g_debug_context->ClearBreakpoints();
+    }
 
     // Unregister debug widgets
-    if (graphicsWidget->isVisible()) {
+    if (graphicsWidget && graphicsWidget->isVisible()) {
         graphicsWidget->Unregister();
     }
 
@@ -1789,28 +1845,21 @@ void GMainWindow::UpdateSaveStates() {
         if (savestate.slot >= Core::SaveStateSlotCount) {
             continue;
         }
-        const bool display_name =
-            savestate.status == Core::SaveStateInfo::ValidationStatus::RevisionDismatch &&
-            !savestate.build_name.empty();
         actions_load_state[savestate.slot]->setEnabled(true);
         if (savestate.slot == 0) {
-            const auto text = tr("%2 %3")
+            const auto text = QStringLiteral("%2")
                                   .arg(QDateTime::fromSecsSinceEpoch(savestate.time)
                                            .toString(QStringLiteral("yyyy-MM-dd hh:mm:ss")))
-                                  .arg(display_name ? QString::fromStdString(savestate.build_name)
-                                                    : QLatin1String())
                                   .trimmed();
             ui->action_Quick_Save->setText(tr("Quick Save - %1").arg(text).trimmed());
             ui->action_Quick_Load->setText(tr("Quick Load - %1").arg(text).trimmed());
             continue;
         }
-        const auto text =
-            tr("Slot %1 - %2 %3")
-                .arg(savestate.slot)
-                .arg(QDateTime::fromSecsSinceEpoch(savestate.time)
-                         .toString(QStringLiteral("yyyy-MM-dd hh:mm:ss")))
-                .arg(display_name ? QString::fromStdString(savestate.build_name) : QLatin1String())
-                .trimmed();
+        const auto text = tr("Slot %1 - %2")
+                              .arg(savestate.slot)
+                              .arg(QDateTime::fromSecsSinceEpoch(savestate.time)
+                                       .toString(QStringLiteral("yyyy-MM-dd hh:mm:ss")))
+                              .trimmed();
 
         actions_load_state[savestate.slot]->setText(text);
         actions_save_state[savestate.slot]->setText(text);
@@ -2133,7 +2182,7 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
     // Get title from game file
     const auto loader = Loader::GetLoader(game_path);
     std::string game_title = fmt::format("{:016X}", program_id);
-    if (loader->ReadTitle(game_title) != Loader::ResultStatus::Success) {
+    if (loader->ReadTitle(game_title, false) != Loader::ResultStatus::Success) {
         game_title = fmt::format("{:016x}", program_id);
     }
 
@@ -2147,7 +2196,7 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
 
     // Get icon from game file
     std::vector<u8> icon_image_file;
-    if (loader->ReadIcon(icon_image_file) != Loader::ResultStatus::Success) {
+    if (loader->ReadIcon(icon_image_file, false) != Loader::ResultStatus::Success) {
         LOG_WARNING(Frontend, "Could not read icon from {:s}", game_path);
     }
 
@@ -2213,7 +2262,7 @@ void GMainWindow::OnGameListDumpRomFS(QString game_path, u64 program_id) {
                 const auto& [base, update] = future_watcher->result();
                 if (base != Loader::ResultStatus::Success) {
                     QMessageBox::critical(
-                        this, tr("Azahar"),
+                        this, QStringLiteral("Azahar"),
                         tr("Could not dump base RomFS.\nRefer to the log for details."));
                     return;
                 }
@@ -2287,9 +2336,8 @@ void GMainWindow::OnGameListOpenPerGameProperties(const QString& file) {
 void GMainWindow::OnMenuLoadFile() {
     const QString extensions = QStringLiteral("*.").append(
         GameList::supported_file_extensions.join(QStringLiteral(" *.")));
-    const QString file_filter = tr("3DS Executable (%1);;All Files (*.*)",
-                                   "%1 is an identifier for the 3DS executable file extensions.")
-                                    .arg(extensions);
+    const QString file_filter = tr("3DS Executable") + QStringLiteral(" (%1)").arg(extensions) +
+                                QStringLiteral(";;") + tr("All Files") + QStringLiteral(" (*.*)");
     const QString filename = QFileDialog::getOpenFileName(
         this, tr("Load File"), UISettings::values.roms_path, file_filter);
 
@@ -2334,35 +2382,40 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
     QLineEdit textInput(UISettings::values.last_artic_base_addr, &dialog);
     layout_h.addWidget(&textInput);
 
-    QLabel label_select(tr("<br>Choose setup mode:"), &dialog);
+    QLabel label_select(QStringLiteral("<br>") + tr("Choose setup mode:"), &dialog);
     layout.addWidget(&label_select);
 
     std::pair<bool, bool> install_state = Core::AreSystemTitlesInstalled();
 
     QRadioButton radio1(&dialog);
     QRadioButton radio2(&dialog);
+    QString new3dsSetupString = tr("New 3DS setup");
+    QString old3dsSetupString = tr("Old 3DS setup");
+    QString availableIcon = QStringLiteral("(\u2139\uFE0F) ");
+    QString unavailableIcon = QStringLiteral("(\u26A0) ");
+    QString installedIcon = QStringLiteral("(\u2705) ");
     if (!install_state.first) {
         radio1.setChecked(true);
 
-        radio1.setText(tr("(\u2139\uFE0F) Old 3DS setup"));
+        radio1.setText(availableIcon + old3dsSetupString);
         radio1.setToolTip(tr("Setup is possible."));
 
-        radio2.setText(tr("(\u26A0) New 3DS setup"));
+        radio2.setText(unavailableIcon + new3dsSetupString);
         radio2.setToolTip(tr("Old 3DS setup is required first."));
         radio2.setEnabled(false);
     } else {
-        radio1.setText(tr("(\u2705) Old 3DS setup"));
+        radio1.setText(installedIcon + old3dsSetupString);
         radio1.setToolTip(tr("Setup completed."));
 
         if (!install_state.second) {
             radio2.setChecked(true);
 
-            radio2.setText(tr("(\u2139\uFE0F) New 3DS setup"));
+            radio2.setText(availableIcon + new3dsSetupString);
             radio2.setToolTip(tr("Setup is possible."));
         } else {
             radio1.setChecked(true);
 
-            radio2.setText(tr("(\u2705) New 3DS setup"));
+            radio2.setText(installedIcon + new3dsSetupString);
             radio2.setToolTip(tr("Setup completed."));
         }
     }
@@ -2398,7 +2451,8 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
 void GMainWindow::OnMenuInstallCIA() {
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load Files"), UISettings::values.roms_path,
-        tr("3DS Installation File (*.cia *.zcia)") + QStringLiteral(";;") + tr("All Files (*.*)"));
+        tr("3DS Installation File") + QStringLiteral(" (*.cia *.zcia *.bcia);;") + tr("All Files") +
+            QStringLiteral(" (*.*)"));
 
     if (filepaths.isEmpty()) {
         return;
@@ -2429,7 +2483,7 @@ void GMainWindow::InstallCIA(QStringList filepaths) {
 
     emit UpdateProgress(0, 0);
 
-    (void)QtConcurrent::run([&, filepaths] {
+    (void)QtConcurrent::run([this, filepaths] {
         Service::AM::InstallStatus status;
         const auto cia_progress = [&](std::size_t written, std::size_t total) {
             emit UpdateProgress(written, total);
@@ -2482,6 +2536,8 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString 
         QMessageBox::critical(this, tr("Unable to find File"),
                               tr("Could not find %1").arg(filename));
         break;
+    case Service::AM::InstallStatus::ErrorCannotCheckBundle:
+        break;
     }
 }
 
@@ -2504,6 +2560,29 @@ void GMainWindow::OnCompressFinished(bool is_compress, bool success) {
         } else {
             QMessageBox::information(this, tr("Z3DS Compression"),
                                      tr("All files have been decompressed successfully."));
+        }
+    }
+}
+
+void GMainWindow::OnBundleFinished(bool is_bundle, bool success) {
+    progress_bar->hide();
+    progress_bar->setValue(0);
+
+    if (!success) {
+        if (is_bundle) {
+            QMessageBox::critical(this, tr("Bundle File"),
+                                  tr("Failed to create the bundle, check log for details."));
+        } else {
+            QMessageBox::critical(this, tr("Bundle File"),
+                                  tr("Failed to extract the bundle, check log for details."));
+        }
+    } else {
+        if (is_bundle) {
+            QMessageBox::information(this, tr("Bundle File"),
+                                     tr("Bundle has been created successfully."));
+        } else {
+            QMessageBox::information(this, tr("Bundle File"),
+                                     tr("Bundle has been extracted successfully."));
         }
     }
 }
@@ -2560,10 +2639,12 @@ void GMainWindow::UninstallTitles(
     future_watcher.waitForFinished();
 
     if (failed) {
-        QMessageBox::critical(this, tr("Azahar"), tr("Failed to uninstall '%1'.").arg(failed_name));
+        QMessageBox::critical(this, QStringLiteral("Azahar"),
+                              tr("Failed to uninstall '%1'.").arg(failed_name));
     } else if (!future_watcher.isCanceled()) {
-        QMessageBox::information(this, tr("Azahar"),
+        QMessageBox::information(this, QStringLiteral("Azahar"),
                                  tr("Successfully uninstalled '%1'.").arg(first_name));
+        emit InstalledTitlesChanged();
     }
 }
 
@@ -2669,10 +2750,16 @@ void GMainWindow::ToggleFullscreen() {
     if (!emulation_running) {
         return;
     }
-    if (ui->action_Fullscreen->isChecked()) {
-        ShowFullscreen();
+    if (secondary_window->isVisible() && secondary_window->isActiveWindow()) {
+        // undo the action and fullscreen secondary manually
+        ui->action_Fullscreen->toggle();
+        ToggleSecondaryFullscreen();
     } else {
-        HideFullscreen();
+        if (ui->action_Fullscreen->isChecked()) {
+            ShowFullscreen();
+        } else {
+            HideFullscreen();
+        }
     }
 }
 
@@ -2684,11 +2771,14 @@ void GMainWindow::ToggleSecondaryFullscreen() {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(secondary_window, false);
 #endif
+        secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
         secondary_window->showNormal();
     } else {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(secondary_window, true);
 #endif
+        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
+        LOG_INFO(Frontend, "Attempting to fullscreen secondary window");
         secondary_window->showFullScreen();
     }
 }
@@ -2732,7 +2822,7 @@ void GMainWindow::HideFullscreen() {
 void GMainWindow::ToggleWindowMode() {
     if (ui->action_Single_Window_Mode->isChecked()) {
         // Render in the main window...
-        render_window->BackupGeometry();
+        UISettings::values.renderwindow_geometry = render_window->saveGeometry();
         ui->horizontalLayout->addWidget(render_window);
         render_window->setFocusPolicy(Qt::StrongFocus);
         if (emulation_running) {
@@ -2745,10 +2835,9 @@ void GMainWindow::ToggleWindowMode() {
         // Render in a separate window...
         ui->horizontalLayout->removeWidget(render_window);
         render_window->setParent(nullptr);
-        render_window->setFocusPolicy(Qt::NoFocus);
         if (emulation_running) {
             render_window->setVisible(true);
-            render_window->RestoreGeometry();
+            render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
             game_list->show();
         }
     }
@@ -2759,11 +2848,17 @@ void GMainWindow::UpdateSecondaryWindowVisibility() {
         return;
     }
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
-        secondary_window->RestoreGeometry();
+        secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
         secondary_window->show();
     } else {
-        secondary_window->BackupGeometry();
+        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
         secondary_window->hide();
+    }
+    // make sure focus is on primary window whenever this changes
+    if (UISettings::values.single_window_mode.GetValue()) {
+        QApplication::setActiveWindow(this);
+    } else {
+        QApplication::setActiveWindow(render_window);
     }
 }
 
@@ -2909,6 +3004,10 @@ void GMainWindow::TriggerRotateScreens() {
 }
 
 void GMainWindow::OnSaveState() {
+    if (!system.IsPoweredOn()) {
+        return;
+    }
+
     QAction* action = qobject_cast<QAction*>(sender());
     ASSERT(action);
 
@@ -2918,6 +3017,10 @@ void GMainWindow::OnSaveState() {
 }
 
 void GMainWindow::OnLoadState() {
+    if (!system.IsPoweredOn()) {
+        return;
+    }
+
     QAction* action = qobject_cast<QAction*>(sender());
     ASSERT(action);
 
@@ -3018,7 +3121,8 @@ void GMainWindow::OnLoadAmiibo() {
     }
 
     const QString extensions{QStringLiteral("*.bin")};
-    const QString file_filter = tr("Amiibo File (%1);; All Files (*.*)").arg(extensions);
+    const QString file_filter = tr("Amiibo File") + QStringLiteral(" (%1);;").arg(extensions) +
+                                tr("All Files") + QStringLiteral(" (*.*)");
     const QString filename = QFileDialog::getOpenFileName(this, tr("Load Amiibo"), {}, file_filter);
 
     if (filename.isEmpty()) {
@@ -3060,6 +3164,16 @@ void GMainWindow::OnRemoveAmiibo() {
 void GMainWindow::OnOpenCitraFolder() {
     QDesktopServices::openUrl(QUrl::fromLocalFile(
         QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))));
+}
+
+void GMainWindow::OnOpenNANDFolder() {
+    QDesktopServices::openUrl(QUrl::fromLocalFile(
+        QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir))));
+}
+
+void GMainWindow::OnOpenSDMCFolder() {
+    QDesktopServices::openUrl(QUrl::fromLocalFile(
+        QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir))));
 }
 
 void GMainWindow::OnToggleFilterBar() {
@@ -3190,7 +3304,6 @@ void GMainWindow::OnCaptureScreenshot() {
                                           .toString(QStringLiteral("dd.MM.yy_hh.mm.ss.z"))
                                           .toStdString();
         path.append(fmt::format("/{}_{}.png", filename, timestamp));
-
         auto* const screenshot_window =
             secondary_window->HasFocus() ? secondary_window : render_window;
         screenshot_window->CaptureScreenshot(
@@ -3200,44 +3313,15 @@ void GMainWindow::OnCaptureScreenshot() {
     }
 }
 
-void GMainWindow::ShowFFmpegErrorMessage() {
-    QMessageBox message_box;
-    message_box.setWindowTitle(tr("Could not load video dumper"));
-    message_box.setText(
-        tr("FFmpeg could not be loaded. Make sure you have a compatible version installed."
-#ifdef _WIN32
-           "\n\nTo install FFmpeg to Azahar, press Open and select your FFmpeg directory."
-#endif
-           "\n\nTo view a guide on how to install FFmpeg, press Help."));
-    message_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Help
-#ifdef _WIN32
-                                   | QMessageBox::Open
-#endif
-    );
-    auto result = message_box.exec();
-    if (result == QMessageBox::Help) {
-        QDesktopServices::openUrl(
-            QUrl(QStringLiteral("https://web.archive.org/web/20240301121456/https://"
-                                "citra-emu.org/wiki/installing-ffmpeg-for-the-video-dumper/")));
-#ifdef _WIN32
-    } else if (result == QMessageBox::Open) {
-        OnOpenFFmpeg();
-#endif
-    }
-}
-
+#ifdef ENABLE_FFMPEG
 void GMainWindow::OnDumpVideo() {
-    if (DynamicLibrary::FFmpeg::LoadFFmpeg()) {
-        if (ui->action_Dump_Video->isChecked()) {
-            OnStartVideoDumping();
-        } else {
-            OnStopVideoDumping();
-        }
+    if (ui->action_Dump_Video->isChecked()) {
+        OnStartVideoDumping();
     } else {
-        ui->action_Dump_Video->setChecked(false);
-        ShowFFmpegErrorMessage();
+        OnStopVideoDumping();
     }
 }
+#endif
 
 void GMainWindow::OnCompressFile() {
     // NOTE: Encrypted files SHOULD NEVER be compressed, otherwise the resulting
@@ -3247,10 +3331,10 @@ void GMainWindow::OnCompressFile() {
     //
     // This is enforced using the loaders as they already return an error on encryption.
 
-    QStringList filepaths =
-        QFileDialog::getOpenFileNames(this, tr("Load 3DS ROM Files"), UISettings::values.roms_path,
-                                      tr("3DS ROM Files (*.cia *.cci *.3dsx *.cxi *.3ds)") +
-                                          QStringLiteral(";;") + tr("All Files (*.*)"));
+    QStringList filepaths = QFileDialog::getOpenFileNames(
+        this, tr("Load 3DS ROM Files"), UISettings::values.roms_path,
+        tr("3DS ROM Files") + QStringLiteral(" (*.cia *.cci *.3dsx *.cxi *.3ds);;") +
+            tr("All Files") + QStringLiteral(" (*.*)"));
 
     QString out_path;
 
@@ -3261,21 +3345,31 @@ void GMainWindow::OnCompressFile() {
     bool single_file = filepaths.size() == 1;
     if (single_file) {
         // If it's a single file, ask the user for the output file.
-        auto compress_info = Loader::GetCompressFileInfo(filepaths[0].toStdString(), true);
-        if (!compress_info.has_value()) {
+        auto compress_info = Loader::GetLoaderFileInfo(filepaths[0].toStdString());
+        if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+            LOG_ERROR(Frontend,
+                      "Error compressing file {}, the selected file is not a compatible 3DS ROM "
+                      "format or is encrypted or bundled.",
+                      filepaths[0].toStdString());
+            emit CompressFinished(true, false);
+            return;
+        }
+        if (compress_info.is_compressed) {
+            LOG_ERROR(Frontend,
+                      "Error compressing file {}, the selected file is already compressed.",
+                      filepaths[0].toStdString());
             emit CompressFinished(true, false);
             return;
         }
 
         QFileInfo fileinfo(filepaths[0]);
-        QString final_path =
-            fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
-            QStringLiteral(".") +
-            QString::fromStdString(compress_info.value().first.recommended_compressed_extension);
+        QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) +
+                             fileinfo.completeBaseName() + QStringLiteral(".") +
+                             QString::fromStdString(compress_info.recommended_compressed_extension);
 
-        QString out_filter = tr("3DS Compressed ROM File (*.%1)")
-                                 .arg(QString::fromStdString(
-                                     compress_info.value().first.recommended_compressed_extension));
+        QString out_filter =
+            tr("3DS Compressed ROM File") + QStringLiteral(" (*.%1)").arg(QString::fromStdString(
+                                                compress_info.recommended_compressed_extension));
         out_path = QFileDialog::getSaveFileName(this, tr("Save 3DS Compressed ROM File"),
                                                 final_path, out_filter);
         if (out_path.isEmpty()) {
@@ -3291,7 +3385,7 @@ void GMainWindow::OnCompressFile() {
         }
     }
 
-    (void)QtConcurrent::run([&, filepaths, out_path] {
+    (void)QtConcurrent::run([this, filepaths, out_path] {
         bool single_file = filepaths.size() == 1;
         QString out_filepath;
         bool total_success = true;
@@ -3301,8 +3395,20 @@ void GMainWindow::OnCompressFile() {
             std::string in_path = filepath.toStdString();
 
             // Identify file type
-            auto compress_info = Loader::GetCompressFileInfo(filepath.toStdString(), true);
-            if (!compress_info.has_value()) {
+            auto compress_info = Loader::GetLoaderFileInfo(filepath.toStdString());
+            if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+                LOG_ERROR(
+                    Frontend,
+                    "Error decompressing file {}, the selected file is not a compatible 3DS ROM "
+                    "format or is encrypted or bundled.",
+                    in_path);
+                total_success = false;
+                continue;
+            }
+            if (compress_info.is_compressed) {
+                LOG_ERROR(Frontend,
+                          "Error compressing file {}, the selected file is already compressed.",
+                          in_path);
                 total_success = false;
                 continue;
             }
@@ -3311,10 +3417,10 @@ void GMainWindow::OnCompressFile() {
                 out_filepath = out_path;
             } else {
                 QFileInfo fileinfo(filepath);
-                out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
-                               QStringLiteral(".") +
-                               QString::fromStdString(
-                                   compress_info.value().first.recommended_compressed_extension);
+                out_filepath =
+                    out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                    QStringLiteral(".") +
+                    QString::fromStdString(compress_info.recommended_compressed_extension);
             }
 
             std::string out_path = out_filepath.toStdString();
@@ -3324,10 +3430,10 @@ void GMainWindow::OnCompressFile() {
             const auto progress = [&](std::size_t written, std::size_t total) {
                 emit UpdateProgress(written, total);
             };
-            bool success = FileUtil::CompressZ3DSFile(in_path, out_path,
-                                                      compress_info.value().first.underlying_magic,
-                                                      compress_info.value().second, progress,
-                                                      compress_info.value().first.default_metadata);
+            bool success =
+                FileUtil::CompressZ3DSFile(in_path, out_path, compress_info.underlying_magic,
+                                           compress_info.default_compress_frame_size, progress,
+                                           compress_info.default_metadata);
             if (!success) {
                 total_success = false;
                 FileUtil::Delete(out_path);
@@ -3342,8 +3448,8 @@ void GMainWindow::OnDecompressFile() {
 
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load 3DS Compressed ROM Files"), UISettings::values.roms_path,
-        tr("3DS Compressed ROM Files (*.zcia *zcci *z3dsx *zcxi)") + QStringLiteral(";;") +
-            tr("All Files (*.*)"));
+        tr("3DS Compressed ROM Files") + QStringLiteral(" (*.zcia *zcci *z3dsx *zcxi)") +
+            QStringLiteral(";;") + tr("All Files") + QStringLiteral(" (*.*)"));
 
     QString out_path;
 
@@ -3354,22 +3460,31 @@ void GMainWindow::OnDecompressFile() {
     bool single_file = filepaths.size() == 1;
     if (single_file) {
         // If it's a single file, ask the user for the output file.
-        auto compress_info = Loader::GetCompressFileInfo(filepaths[0].toStdString(), false);
-        if (!compress_info.has_value()) {
+        auto compress_info = Loader::GetLoaderFileInfo(filepaths[0].toStdString());
+        if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+            LOG_ERROR(Frontend,
+                      "Error decompressing file {}, the selected file is not a compatible 3DS ROM "
+                      "format.",
+                      filepaths[0].toStdString());
+            emit CompressFinished(false, false);
+            return;
+        }
+        if (!compress_info.is_compressed) {
+            LOG_ERROR(Frontend,
+                      "Error decompressing file {}, the selected file is already decompressed",
+                      filepaths[0].toStdString());
             emit CompressFinished(false, false);
             return;
         }
 
         QFileInfo fileinfo(filepaths[0]);
-        QString final_path =
-            fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
-            QStringLiteral(".") +
-            QString::fromStdString(compress_info.value().first.recommended_uncompressed_extension);
+        QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) +
+                             fileinfo.completeBaseName() + QStringLiteral(".") +
+                             QString::fromStdString(compress_info.recommended_plain_extension);
 
-        QString out_filter =
-            tr("3DS ROM File (*.%1)")
-                .arg(QString::fromStdString(
-                    compress_info.value().first.recommended_uncompressed_extension));
+        QString out_filter = tr("3DS ROM File") +
+                             QStringLiteral(" (*.%1)").arg(
+                                 QString::fromStdString(compress_info.recommended_plain_extension));
         out_path =
             QFileDialog::getSaveFileName(this, tr("Save 3DS ROM File"), final_path, out_filter);
         if (out_path.isEmpty()) {
@@ -3385,7 +3500,7 @@ void GMainWindow::OnDecompressFile() {
         }
     }
 
-    (void)QtConcurrent::run([&, filepaths, out_path] {
+    (void)QtConcurrent::run([this, filepaths, out_path] {
         bool single_file = filepaths.size() == 1;
         QString out_filepath;
         bool total_success = true;
@@ -3395,8 +3510,20 @@ void GMainWindow::OnDecompressFile() {
             std::string in_path = filepath.toStdString();
 
             // Identify file type
-            auto compress_info = Loader::GetCompressFileInfo(filepath.toStdString(), false);
-            if (!compress_info.has_value()) {
+            auto compress_info = Loader::GetLoaderFileInfo(filepath.toStdString());
+            if (!compress_info.is_valid || !compress_info.is_compress_supported) {
+                LOG_ERROR(
+                    Frontend,
+                    "Error decompressing file {}, the selected file is not a compatible 3DS ROM "
+                    "format.",
+                    in_path);
+                total_success = false;
+                continue;
+            }
+            if (!compress_info.is_compressed) {
+                LOG_ERROR(Frontend,
+                          "Error decompressing file {}, the selected file is already decompressed.",
+                          in_path);
                 total_success = false;
                 continue;
             }
@@ -3407,8 +3534,7 @@ void GMainWindow::OnDecompressFile() {
                 QFileInfo fileinfo(filepath);
                 out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
                                QStringLiteral(".") +
-                               QString::fromStdString(
-                                   compress_info.value().first.recommended_uncompressed_extension);
+                               QString::fromStdString(compress_info.recommended_plain_extension);
             }
 
             std::string out_path = out_filepath.toStdString();
@@ -3431,62 +3557,101 @@ void GMainWindow::OnDecompressFile() {
     });
 }
 
-#ifdef _WIN32
-void GMainWindow::OnOpenFFmpeg() {
-    auto filename =
-        QFileDialog::getExistingDirectory(this, tr("Select FFmpeg Directory")).toStdString();
-    if (filename.empty()) {
+void GMainWindow::OnCreateBundle() {
+    QString filepath = QFileDialog::getOpenFileName(
+        this, tr("Load Main 3DS ROM File"), UISettings::values.roms_path,
+        tr("3DS ROM Files") + QStringLiteral(" (*.cci *.zcci *.cia *.zcia *.cxi *.3ds);;") +
+            tr("All Files") + QStringLiteral(" (*.*)"));
+
+    if (filepath.isEmpty()) {
         return;
     }
-    // Check for a bin directory if they chose the FFmpeg root directory.
-    auto bin_dir = filename + DIR_SEP + "bin";
-    if (!FileUtil::Exists(bin_dir)) {
-        // Otherwise, assume the user directly selected the directory containing the DLLs.
-        bin_dir = filename;
+
+    std::string in_path = filepath.toStdString();
+
+    auto file_info = Loader::GetLoaderFileInfo(filepath.toStdString());
+    if (!file_info.is_valid || !file_info.is_bundle_supported) {
+        LOG_ERROR(Frontend,
+                  "Error bundling file {}, the selected file is not a compatible 3DS ROM "
+                  "format.",
+                  in_path);
+        emit BundleFinished(true, false);
+        return;
+    }
+    if (file_info.is_bundled) {
+        LOG_ERROR(Frontend, "Error bundling file {}, the selected file is already bundled.",
+                  in_path);
+        emit BundleFinished(true, false);
+        return;
     }
 
-    static const std::array library_names = {
-        Common::DynamicLibrary::GetLibraryName("avcodec", LIBAVCODEC_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("avfilter", LIBAVFILTER_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("avformat", LIBAVFORMAT_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("avutil", LIBAVUTIL_VERSION_MAJOR),
-        Common::DynamicLibrary::GetLibraryName("swresample", LIBSWRESAMPLE_VERSION_MAJOR),
-    };
+    QFileInfo fileinfo(filepath);
+    QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                         QStringLiteral(".") +
+                         QString::fromStdString(file_info.recommended_bundle_extension);
 
-    for (auto& library_name : library_names) {
-        if (!FileUtil::Exists(bin_dir + DIR_SEP + library_name)) {
-            QMessageBox::critical(this, tr("Azahar"),
-                                  tr("The provided FFmpeg directory is missing %1. Please make "
-                                     "sure the correct directory was selected.")
-                                      .arg(QString::fromStdString(library_name)));
+    QString out_filter = tr("3DS Bundle ROM File") +
+                         QStringLiteral(" (*.%1)").arg(
+                             QString::fromStdString(file_info.recommended_bundle_extension));
+
+    QString out_path = QFileDialog::getSaveFileName(this, tr("Select Output 3DS Bundled ROM File"),
+                                                    final_path, out_filter);
+    if (out_path.isEmpty()) {
+        return;
+    }
+
+    QStringList depends = QFileDialog::getOpenFileNames(
+        this, tr("Load CIA File Dependencies"), UISettings::values.roms_path,
+        tr("3DS ROM Files") + QStringLiteral(" (*.cia *.zcia);;") + tr("All Files") +
+            QStringLiteral(" (*.*)"));
+
+    if (depends.isEmpty()) {
+        return;
+    }
+
+    std::vector<std::string> depends_vector;
+
+    for (const QString& dep : depends) {
+
+        std::string dep_path = dep.toStdString();
+
+        // Identify file type
+        auto dep_file_info = Loader::GetLoaderFileInfo(dep_path);
+        if (!dep_file_info.is_valid || !dep_file_info.is_bundle_supported ||
+            dep_file_info.is_bundled ||
+            dep_file_info.underlying_magic != std::array<u8, 4>({'C', 'I', 'A', '\0'})) {
+            LOG_ERROR(Frontend,
+                      "Error processing dependency file {}, the selected file is not a compatible "
+                      "CIA file.",
+                      dep_path);
+            emit BundleFinished(true, false);
             return;
         }
+
+        depends_vector.push_back(dep_path);
     }
 
-    std::atomic<bool> success(true);
-    auto process_file = [&success](u64* num_entries_out, const std::string& directory,
-                                   const std::string& virtual_name) -> bool {
-        auto file_path = directory + DIR_SEP + virtual_name;
-        if (file_path.ends_with(".dll")) {
-            auto destination_path = FileUtil::GetExeDirectory() + DIR_SEP + virtual_name;
-            if (!FileUtil::Copy(file_path, destination_path)) {
-                success.store(false);
-                return false;
-            }
-        }
-        return true;
-    };
-    FileUtil::ForeachDirectoryEntry(nullptr, bin_dir, process_file);
+    emit UpdateProgress(0, 0);
 
-    if (success.load()) {
-        QMessageBox::information(this, tr("Azahar"), tr("FFmpeg has been sucessfully installed."));
-    } else {
-        QMessageBox::critical(this, tr("Azahar"),
-                              tr("Installation of FFmpeg failed. Check the log file for details."));
-    }
+    (void)QtConcurrent::run([this, out_path, in_path, depends_vector] {
+        const auto progress = [&](std::size_t written, std::size_t total) {
+            emit UpdateProgress(written, total);
+        };
+
+        [[maybe_unused]] auto result =
+            Loader::CreateBundleFile(out_path.toStdString(), in_path, depends_vector, progress);
+        emit BundleFinished(true, result == Loader::ResultStatus::Success);
+    });
 }
-#endif
 
+void GMainWindow::OnExtractBundle() {
+    // TODO(PabloMK7): Implement before 2127 release, do not translate temporary strings.
+    QMessageBox::warning(
+        this, tr("Bundle File"),
+        QStringLiteral("Bundle extraction is not implemented yet, please use a TAR file browser."));
+}
+
+#ifdef ENABLE_FFMPEG
 void GMainWindow::OnStartVideoDumping() {
     DumpingDialog dialog(this, system);
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
@@ -3511,7 +3676,7 @@ void GMainWindow::StartVideoDumping(const QString& path) {
         system.RegisterVideoDumper(dumper);
     } else {
         QMessageBox::critical(
-            this, tr("Azahar"),
+            this, QStringLiteral("Azahar"),
             tr("Could not start video dumping.<br>Please ensure that the video encoder is "
                "configured correctly.<br>Refer to the log for details."));
         ui->action_Dump_Video->setChecked(false);
@@ -3547,6 +3712,7 @@ void GMainWindow::OnStopVideoDumping() {
         future_watcher->setFuture(future);
     }
 }
+#endif
 
 void GMainWindow::UpdateStatusBar() {
     if (!emu_thread) [[unlikely]] {
@@ -3596,7 +3762,7 @@ void GMainWindow::UpdateStatusBar() {
                                tr("(Accessing SaveData)")),
             };
 
-        const QString unit = do_mb ? tr("MB/s") : tr("KB/s");
+        const QString unit = do_mb ? QStringLiteral("MB/s") : QStringLiteral("KB/s");
         QString event{};
         for (auto p : perf_events) {
             if (results.artic_events.Get(p.first)) {
@@ -3810,8 +3976,76 @@ void GMainWindow::showEvent([[maybe_unused]] QShowEvent* event) {
     game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
+bool GMainWindow::ShowExceptionDialog(Core::System::ResultStatus result,
+                                      const std::string& details) {
+    QDialog dialog(this);
+    dialog.setWindowTitle(result == Core::System::ResultStatus::ErrorCoreExceptionRaised
+                              ? tr("An exception occurred")
+                              : tr("An invalid memory access occurred"));
+
+    dialog.setMinimumSize(600, 500);
+
+    auto* layout = new QVBoxLayout(&dialog);
+
+    auto* label = new QLabel(
+        result == Core::System::ResultStatus::ErrorCoreExceptionRaised
+            ? tr("An exception occurred while executing the emulated application.")
+            : tr("An invalid memory access occurred while executing the emulated application."));
+
+    layout->addWidget(label);
+
+    auto* textEdit = new QPlainTextEdit();
+    textEdit->setPlainText(QString::fromStdString(details));
+    textEdit->setReadOnly(true);
+    QFont monoFont(QStringLiteral("Monospace"));
+    monoFont.setStyleHint(QFont::TypeWriter);
+    monoFont.setPointSize(10);
+    textEdit->setFont(monoFont);
+    textEdit->setLineWrapMode(QPlainTextEdit::NoWrap);
+    layout->addWidget(textEdit);
+
+    auto* buttonLayout = new QHBoxLayout();
+
+    auto* ignoreButton = new QPushButton(tr("Ignore for this Session"));
+
+    QObject::connect(ignoreButton, &QPushButton::clicked,
+                     []() { Core::SetIgnoreExceptionsForSession(true); });
+
+    buttonLayout->addWidget(ignoreButton);
+    buttonLayout->addStretch();
+
+    auto* continueButton = new QPushButton(tr("Continue"));
+    QObject::connect(continueButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+    buttonLayout->addWidget(continueButton);
+
+    auto* stopButton = new QPushButton(tr("Stop Emulation"));
+    QObject::connect(stopButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+    buttonLayout->addWidget(stopButton);
+
+    layout->addLayout(buttonLayout);
+
+    return dialog.exec() == QDialog::Accepted;
+}
+
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
     QString status_message;
+
+    // Handle exception dialogs separately
+    if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised) {
+        if (ShowExceptionDialog(result, details)) {
+            if (emu_thread) {
+                ShutdownGame();
+                return;
+            }
+        }
+
+        if (emu_thread) {
+            emu_thread->SetRunning(true);
+            message_label->setText(status_message);
+            message_label_used_for_movie = false;
+        }
+        return;
+    }
 
     QString title, message;
     QMessageBox::Icon error_severity_icon;
@@ -3819,8 +4053,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     if (result == Core::System::ResultStatus::ErrorSystemFiles) {
         const QString common_message =
             tr("%1 is missing. Please <a "
-               "href='https://web.archive.org/web/20240304201103/https://citra-emu.org/wiki/"
-               "dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/'>dump your "
+               "href='https://github.com/azahar-emu/azahar/wiki/Dumping-System-Files'>dump your "
                "system archives</a>.<br/>Continuing emulation may result in crashes and bugs.");
 
         if (!details.empty()) {
@@ -3843,24 +4076,31 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
                    .c_str());
         error_severity_icon = QMessageBox::Icon::Critical;
         can_continue = false;
-    } else if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised) {
-        title = tr("An exception occurred");
-        message = tr("An exception occurred while executing the emulated application.\n\n");
-        message += QString::fromStdString(details);
-        error_severity_icon = QMessageBox::Icon::Critical;
-        can_continue = false;
-    } else if (result == Core::System::ResultStatus::ErrorMemoryExceptionRaised) {
-        title = tr("An invalid memory access occurred");
+    } else if (result == Core::System::ResultStatus::ErrorShaderCacheCrash) {
+        title = tr("Shader Cache Crash");
         message =
-            tr("An invalid memory access occurred while executing the emulated application.\n\n");
-        message += QString::fromStdString(details);
+            tr("Azahar closed unexpectedly the last time it built the Vulkan shader cache of the "
+               "current title. The graphics driver may have crashed on one of the cached shaders, "
+               "and continuing may crash it again.<br/><br/>To reset the shader cache, "
+               "right-click the application in the game list and select "
+               "<b>Disk Shader Cache &gt; Delete Vulkan Shader Cache</b>.");
+        status_message = tr("Shader cache crash");
+        error_severity_icon = QMessageBox::Icon::Critical;
+    } else if (result == Core::System::ResultStatus::ErrorSavestateBuildMismatch) {
+        title = tr("Savestate version mismatch");
+        message = tr("Could not load savestate because it was created on a different Azahar "
+                     "version:<br/>"
+                     "<b>Azahar %1</b>.<br/><br/>Please read our blog entry <a "
+                     "href='https://azahar-emu.org/blog/understanding-save-states/'>understanding "
+                     "savestates</a> for more information.<br/><br/>To recover your progress, "
+                     "downgrade to <b>Azahar %1</b>, load this savestate and use the application's "
+                     "built-in save functionality.")
+                      .arg(QString::fromStdString(details));
         error_severity_icon = QMessageBox::Icon::Critical;
     } else {
         title = tr("Fatal Error");
         message = tr("A fatal error occurred. "
-                     "<a href='https://web.archive.org/web/20240228001712/https://"
-                     "community.citra-emu.org/t/how-to-upload-the-log-file/296'>Check "
-                     "the log</a> for details."
+                     "Check the log for details."
                      "<br/>Continuing emulation may result in crashes and bugs.");
         status_message = tr("Fatal Error encountered");
         error_severity_icon = QMessageBox::Icon::Critical;
@@ -3912,7 +4152,7 @@ bool GMainWindow::ConfirmClose() {
     }
 
     QMessageBox::StandardButton answer =
-        QMessageBox::question(this, tr("Azahar"), tr("Would you like to exit now?"),
+        QMessageBox::question(this, QStringLiteral("Azahar"), tr("Would you like to exit now?"),
                               QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
 }
@@ -3946,8 +4186,9 @@ static bool IsSingleFileDropEvent(const QMimeData* mime) {
     return mime->hasUrls() && mime->urls().length() == 1;
 }
 
-static const std::array<std::string, 11> AcceptedExtensions = {
-    "cci", "cxi", "bin", "3dsx", "app", "elf", "axf", "zcci", "zcxi", "z3dsx", "3ds"};
+static const std::array<std::string, 13> AcceptedExtensions = {
+    "cci",  "cxi",  "bin",   "3dsx", "app",  "elf", "axf",
+    "zcci", "zcxi", "z3dsx", "3ds",  "bcci", "bcxi"};
 
 static bool IsCorrectFileExtension(const QMimeData* mime) {
     const QString& filename = mime->urls().at(0).toLocalFile();
@@ -4008,7 +4249,7 @@ bool GMainWindow::ConfirmChangeGame() {
     }
 
     auto answer = QMessageBox::question(
-        this, tr("Azahar"),
+        this, QStringLiteral("Azahar"),
         tr("The application is still running. Would you like to stop emulation?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
@@ -4033,17 +4274,21 @@ inline bool isDarkMode() {
 
 void GMainWindow::UpdateUITheme() {
     const QString icons_base_path = QStringLiteral(":/icons/");
+    const QString default_system_theme = QStringLiteral("default");
+    const QString light_icon_system_theme = QStringLiteral("default_with_light_icons");
+    const QString colorful_icon_system_theme = QStringLiteral("colorful");
+
     QString default_theme;
     if (!isDarkMode()) {
-        default_theme = QStringLiteral("default");
+        default_theme = default_system_theme;
     } else {
-        default_theme = QStringLiteral("default_with_light_icons");
+        default_theme = light_icon_system_theme;
     }
 
     const QString default_theme_path = icons_base_path + default_theme;
 
     const QString& current_theme = UISettings::values.theme;
-    const bool is_default_theme = current_theme == QString::fromUtf8(UISettings::themes[0].second);
+    const bool is_default_theme = (current_theme == default_system_theme);
     QStringList theme_paths(default_theme_paths);
 
     if (is_default_theme || current_theme.isEmpty()) {
@@ -4076,6 +4321,13 @@ void GMainWindow::UpdateUITheme() {
         theme_paths.append({default_theme_path, current_theme_path});
         QIcon::setThemeName(current_theme);
     }
+
+#ifdef _WIN32
+    if (current_theme == default_system_theme || current_theme == light_icon_system_theme ||
+        current_theme == colorful_icon_system_theme) {
+        SetCustomWindowsScrollbar();
+    }
+#endif
 
     QIcon::setThemeSearchPaths(theme_paths);
 }
@@ -4244,6 +4496,9 @@ void GMainWindow::UpdateUISettings() {
         UISettings::values.geometry = saveGeometry();
         UISettings::values.renderwindow_geometry = render_window->saveGeometry();
     }
+    if (!secondary_window->isFullScreen()) {
+        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
+    }
     UISettings::values.state = saveState();
 #if MICROPROFILE_ENABLED
     UISettings::values.microprofile_geometry = microProfileDialog->saveGeometry();
@@ -4382,6 +4637,48 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 #endif
 }
 
+#ifdef _WIN32
+void GMainWindow::SetCustomWindowsScrollbar() {
+    constexpr auto customScrollbarStyleTemplate = (R"(
+        QScrollBar:vertical {{
+            background: palette(window);
+            width: 16px;
+            margin: 0px;
+            border-left: 1px solid palette({0});
+        }}
+        QScrollBar::handle:vertical {{
+            background: palette({1});
+            border: none;
+            border-radius: 4px;
+            margin: 3px;
+        }}
+        QScrollBar::handle:vertical:hover {{
+            background: palette({0});
+        }}
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+            border: none;
+            height: 0px;
+        }}
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+            background: none;
+        }}
+    )");
+
+    const auto darkCustomScrollbarStyle =
+        QString::fromUtf8(std::format(customScrollbarStyleTemplate, "midlight", "light"));
+    const auto lightCustomScrollbarStyle =
+        QString::fromUtf8(std::format(customScrollbarStyleTemplate, "dark", "mid"));
+
+    const bool isDarkMode = (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark);
+
+    if (isDarkMode) {
+        setStyleSheet(darkCustomScrollbarStyle);
+    } else {
+        setStyleSheet(lightCustomScrollbarStyle);
+    }
+}
+#endif
+
 int LaunchQtFrontend(int argc, char* argv[]) {
 #ifdef __APPLE__
     // Ensure that the linker doesn't optimize qt_swizzle.mm out of existence.
@@ -4455,6 +4752,9 @@ int LaunchQtFrontend(int argc, char* argv[]) {
 
     QObject::connect(&app, &QGuiApplication::applicationStateChanged, &main_window,
                      &GMainWindow::OnAppFocusStateChanged);
+
+    // Process any pending events before executing the app (prevents freeze-on–boot on macOS)
+    app.processEvents();
 
     int result = app.exec();
     return result;

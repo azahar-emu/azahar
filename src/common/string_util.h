@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #pragma once
 
@@ -107,5 +107,7 @@ inline void TruncateString(std::string& str) {
                                                               std::size_t max_len);
 
 #define HANA_TO_STD_STRING(hana_string) std::string(hana_string.c_str())
+
+std::string BytesToHex(std::span<const u8> data, u32 group_each = 0);
 
 } // namespace Common

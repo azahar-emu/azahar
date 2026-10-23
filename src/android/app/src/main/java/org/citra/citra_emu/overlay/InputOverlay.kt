@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.overlay
 
@@ -13,19 +13,26 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.drawable.VectorDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.util.DisplayMetrics
+import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.SurfaceView
 import android.view.View
 import android.view.View.OnTouchListener
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.preference.PreferenceManager
 import java.lang.NullPointerException
 import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.features.hotkeys.Hotkey
+import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
 
@@ -46,7 +53,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     private var buttonBeingConfigured: InputOverlayDrawableButton? = null
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
-    private val settingsViewModel = NativeLibrary.sEmulationActivity.get()!!.settingsViewModel
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
     private var touchscreenPointerId = -1
@@ -70,6 +76,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
         // Request focus for the overlay so it has priority on presses.
         requestFocus()
+
+        // Deliver controller axis events as they arrive instead of batching them to the next
+        // frame.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            requestUnbufferedDispatch(InputDevice.SOURCE_CLASS_JOYSTICK)
+        }
     }
 
     override fun draw(canvas: Canvas) {
@@ -82,9 +94,15 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     private fun swapScreen() {
         val isEnabled = !EmulationMenuSettings.swapScreens
         EmulationMenuSettings.swapScreens = isEnabled
+        val displayRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display.rotation
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay.rotation
+        }
         NativeLibrary.swapScreens(
             isEnabled,
-            (context as Activity).windowManager.defaultDisplay.rotation
+            displayRotation
         )
     }
 
@@ -97,6 +115,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         if (isInEditMode) {
             return onTouchWhileEditing(event)
+        }
+
+        // Deliver the touch events as they arrive instead of batching them to the next
+        // frame.
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            requestUnbufferedDispatch(event)
         }
 
         val motionEvent = event.action and MotionEvent.ACTION_MASK
@@ -118,8 +142,16 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
         for (pointerIndex in pointerList) {
             val pointerId = event.getPointerId(pointerIndex)
 
-            val xPosition = event.getX(pointerIndex).toInt()
-            val yPosition = event.getY(pointerIndex).toInt()
+            var xPosition = event.getX(pointerIndex).toInt()
+            var yPosition = event.getY(pointerIndex).toInt()
+
+            if (CitraSettings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
+                val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+                val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
+                val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
+                xPosition += marginsX
+                yPosition += marginsY
+            }
 
             var hasActiveButtons = false
             for (button in overlayButtons) {
@@ -184,6 +216,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                         button.status == NativeLibrary.ButtonState.PRESSED
                     ) {
                         TurboHelper.toggleTurbo(true)
+                    } else if (button.id == Hotkey.COMBO_BUTTON.button) {
+                        ComboHelper.comboActivate(button.status)
                     }
 
                     NativeLibrary.onGamePadEvent(
@@ -593,6 +627,18 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                 )
             )
         }
+
+        if (preferences.getBoolean("buttonToggle16", false)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.button_combo,
+                    R.drawable.button_combo_pressed,
+                    Hotkey.COMBO_BUTTON.button,
+                    orientation
+                )
+            )
+        }
     }
 
     fun refreshControls() {
@@ -663,11 +709,30 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
     private fun defaultOverlayLandscape() {
         // Get screen size
-        val display = (context as Activity).windowManager.defaultDisplay
-        val outMetrics = DisplayMetrics()
-        display.getMetrics(outMetrics)
-        var maxX = outMetrics.heightPixels.toFloat()
-        var maxY = outMetrics.widthPixels.toFloat()
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay
+        }
+        var displayWidth: Float
+        var displayHeight: Float
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val displayMetrics = (context as Activity).windowManager.maximumWindowMetrics.bounds
+            displayWidth = displayMetrics.width().toFloat()
+            displayHeight = displayMetrics.height().toFloat()
+        } else {
+            val displayMetrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            display.getMetrics(displayMetrics)
+            displayWidth = displayMetrics.widthPixels.toFloat()
+            displayHeight = displayMetrics.heightPixels.toFloat()
+        }
+        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
+        val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
+        var maxX = displayWidth - marginsX
+        var maxY = displayHeight - marginsY
         // Height and width changes depending on orientation. Use the larger value for height.
         if (maxY > maxX) {
             val tmp = maxX
@@ -806,16 +871,43 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_Y).toFloat() / 1000 * maxY
             )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_Y).toFloat() / 1000 * maxY
+            )
             .apply()
     }
 
     private fun defaultOverlayPortrait() {
         // Get screen size
-        val display = (context as Activity).windowManager.defaultDisplay
-        val outMetrics = DisplayMetrics()
-        display.getMetrics(outMetrics)
-        var maxX = outMetrics.heightPixels.toFloat()
-        var maxY = outMetrics.widthPixels.toFloat()
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay
+        }
+        var displayWidth: Float
+        var displayHeight: Float
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val displayMetrics = (context as Activity).windowManager.maximumWindowMetrics.bounds
+            displayWidth = displayMetrics.width().toFloat()
+            displayHeight = displayMetrics.height().toFloat()
+        } else {
+            val displayMetrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            display.getMetrics(displayMetrics)
+            displayWidth = displayMetrics.widthPixels.toFloat()
+            displayHeight = displayMetrics.heightPixels.toFloat()
+        }
+        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
+        val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
+        var maxX = displayWidth - marginsX
+        var maxY = displayHeight - marginsY
         // Height and width changes depending on orientation. Use the larger value for height.
         if (maxY < maxX) {
             val tmp = maxX
@@ -956,6 +1048,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             .putFloat(
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + portrait + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_PORTRAIT_Y).toFloat() / 1000 * maxY
+            )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + portrait + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + portrait + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_Y).toFloat() / 1000 * maxY
             )
             .apply()
     }

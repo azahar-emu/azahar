@@ -15,15 +15,29 @@ macro(generate_build_info)
         string(STRIP "${GIT_REV_RAW}" GIT_REV)
         string(SUBSTRING "${GIT_REV_RAW}" 0 9 GIT_DESC)
         set(GIT_BRANCH "HEAD")
-    elseif (EXISTS "${CMAKE_SOURCE_DIR}/.git/objects")
+    # A linked worktree has a .git file pointing at the real gitdir, not a .git directory, so
+    # testing for objects/ inside it silently downgrades every worktree build to "UNKNOWN".
+    elseif (EXISTS "${CMAKE_SOURCE_DIR}/.git")
         # Find the package here with the known path so that the GetGit commands can find it as well
         find_package(Git QUIET PATHS "${GIT_EXECUTABLE}")
 
         # only use Git to check revision info when source is obtained via Git
         include(GetGitRevisionDescription)
         get_git_head_revision(GIT_REF_SPEC GIT_REV)
+        # In a linked worktree HEAD lives in the worktree's own gitdir, but the ref it names does
+        # not, so the lookup above finds no hash. Ask git, which knows where to look.
+        if (NOT GIT_REV MATCHES "^[0-9a-f]+$")
+            execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
+                            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                            OUTPUT_VARIABLE GIT_REV
+                            OUTPUT_STRIP_TRAILING_WHITESPACE
+                            ERROR_QUIET)
+        endif()
         git_describe(GIT_DESC --always --long --dirty)
         git_branch_name(GIT_BRANCH)
+        if (DEFINED ENV{CITRA_USE_TAG_AS_VERSION})
+            git_describe(GIT_TAG --tags --dirty)
+        endif()
     else()
         # self-packed archive?
         set(GIT_REV "UNKNOWN")
@@ -36,17 +50,33 @@ macro(generate_build_info)
     set(REPO_NAME "")
     set(BUILD_VERSION "0")
     set(BUILD_FULLNAME "${GIT_SHORT_REV}")
-    if (DEFINED ENV{CI} AND DEFINED ENV{GITHUB_ACTIONS})
-        if ($ENV{GITHUB_REF_TYPE} STREQUAL "tag")
-            set(GIT_TAG $ENV{GITHUB_REF_NAME})
+    if (NOT DEFINED GIT_TAG)
+        if ((DEFINED ENV{CI} AND DEFINED ENV{GITHUB_ACTIONS}))
+            if ($ENV{GITHUB_REF_TYPE} STREQUAL "tag")
+                set(GIT_TAG $ENV{GITHUB_REF_NAME})
+            endif()
+        elseif (EXISTS "${CMAKE_SOURCE_DIR}/GIT-COMMIT" AND EXISTS "${CMAKE_SOURCE_DIR}/GIT-TAG")
+            file(READ "${CMAKE_SOURCE_DIR}/GIT-TAG" GIT_TAG)
+            string(STRIP ${GIT_TAG} GIT_TAG)
         endif()
-    elseif (EXISTS "${CMAKE_SOURCE_DIR}/GIT-COMMIT" AND EXISTS "${CMAKE_SOURCE_DIR}/GIT-TAG")
-        file(READ "${CMAKE_SOURCE_DIR}/GIT-TAG" GIT_TAG)
-        string(STRIP ${GIT_TAG} GIT_TAG)
     endif()
 
     if (DEFINED GIT_TAG AND NOT "${GIT_TAG}" STREQUAL "unknown")
         set(BUILD_VERSION "${GIT_TAG}")
         set(BUILD_FULLNAME "${BUILD_VERSION}")
+    endif()
+
+    # Set build variant
+    set(BUILD_VARIANT "") # Empty string on non-Windows platforms
+    if (WIN32)
+        if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
+            set(BUILD_VARIANT "MXE")
+        elseif(MINGW)
+            set(BUILD_VARIANT "MSYS2")
+        elseif(MSVC)
+            set(BUILD_VARIANT "MSVC")
+        else()
+            set(BUILD_VARIANT "Unknown")
+        endif()
     endif()
 endmacro()

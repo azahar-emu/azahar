@@ -2,6 +2,8 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     audio_types.h
     codec.cpp
     codec.h
+    csnd.cpp
+    csnd.h
     dsp_interface.cpp
     dsp_interface.h
     hle/aac_decoder.cpp
@@ -9,6 +11,8 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     hle/common.h
     hle/decoder.cpp
     hle/decoder.h
+    hle/effects.cpp
+    hle/effects.h
     hle/filter.cpp
     hle/filter.h
     hle/hle.cpp
@@ -45,7 +49,12 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
 create_target_directory_groups(audio_core)
 
 target_link_libraries(audio_core PUBLIC citra_common citra_core)
-target_link_libraries(audio_core PRIVATE faad2 SoundTouch teakra)
+target_link_libraries(audio_core PRIVATE SoundTouch teakra)
+if(USE_SYSTEM_FAAD)
+    target_link_libraries(audio_core PRIVATE faad)
+else()
+    target_link_libraries(audio_core PRIVATE faad2)
+endif()
 
 if(ENABLE_SDL2)
     target_link_libraries(audio_core PRIVATE SDL2::SDL2)

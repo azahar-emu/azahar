@@ -1,10 +1,10 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Copyright Dolphin Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <array>
 #include <fstream>
@@ -864,12 +864,16 @@ const std::string& GetExeDirectory() {
 }
 
 std::string AppDataRoamingDirectory() {
-    PWSTR pw_local_path = nullptr;
-    // Only supported by Windows Vista or later
-    SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &pw_local_path);
-    std::string local_path = Common::UTF16ToUTF8(pw_local_path);
-    CoTaskMemFree(pw_local_path);
-    return local_path;
+    PWSTR path = nullptr;
+
+    const HRESULT hr =
+        SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_DEFAULT, nullptr, &path);
+
+    ASSERT_MSG(SUCCEEDED(hr) && path != nullptr, "Failed to get AppData directory: {:X}", hr);
+
+    std::string result = Common::UTF16ToUTF8(path);
+    CoTaskMemFree(path);
+    return result;
 }
 #else
 /**
@@ -1055,6 +1059,8 @@ std::string SerializePath(const std::string& input, bool is_saving) {
     auto result = input;
     StringReplace(result, "%CITRA_ROM_FILE%", g_currentRomPath, is_saving);
     StringReplace(result, "%CITRA_USER_DIR%", GetUserPath(UserPath::UserDir), is_saving);
+    StringReplace(result, "%CITRA_USER_SDMC%", GetUserPath(UserPath::SDMCDir), is_saving);
+    StringReplace(result, "%CITRA_USER_NAND%", GetUserPath(UserPath::NANDDir), is_saving);
     return result;
 }
 
@@ -1391,6 +1397,14 @@ bool IOFile::Open() {
     m_good = m_file != nullptr;
 #endif
 
+    // The initial read position of a stream opened with "a+" depends on the C library. glibc starts
+    // at the beginning of the file, bionic (Android) and the BSD libc (macOS) at its end. Start at
+    // the beginning on every OS.
+    if (m_good && openmode.find('a') != std::string::npos &&
+        openmode.find('+') != std::string::npos) {
+        Seek(0, SEEK_SET);
+    }
+
     return m_good;
 }
 
@@ -1409,14 +1423,14 @@ u64 IOFile::GetSize() const {
     return 0;
 }
 
-bool IOFile::SeekImpl(s64 off, int origin) {
+bool IOFile::Seek(s64 off, int origin) {
     if (!IsOpen() || 0 != FSEEK(m_file, off, origin))
         m_good = false;
 
     return m_good;
 }
 
-u64 IOFile::TellImpl() const {
+u64 IOFile::Tell() const {
     if (IsOpen())
         return FTELL(m_file);
 
@@ -1430,7 +1444,7 @@ bool IOFile::Flush() {
     return m_good;
 }
 
-std::size_t IOFile::ReadImpl(void* data, std::size_t length, std::size_t data_size) {
+std::size_t IOFile::ReadImpl(void* data, std::size_t length, std::size_t elem_size) {
     if (!IsOpen()) {
         m_good = false;
         return std::numeric_limits<std::size_t>::max();
@@ -1442,7 +1456,11 @@ std::size_t IOFile::ReadImpl(void* data, std::size_t length, std::size_t data_si
 
     DEBUG_ASSERT(data != nullptr);
 
-    return FREAD(data, data_size, length, m_file);
+    std::size_t read = FREAD(data, elem_size, length, m_file);
+    if (read != length) {
+        m_good = FERROR(m_file) != 0;
+    }
+    return read;
 }
 
 #ifdef _WIN32
@@ -1485,19 +1503,25 @@ std::size_t IOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t o
 
     DEBUG_ASSERT(data != nullptr);
 
+    std::size_t read;
 #ifdef HAVE_LIBRETRO_VFS
     std::scoped_lock lock(m_file_pos_mutex);
     int64_t pos = filestream_tell(m_file);
     FSEEK(m_file, offset, RETRO_VFS_SEEK_POSITION_START);
     int64_t rv = FREAD(data, 1, byte_count, m_file);
     FSEEK(m_file, pos, RETRO_VFS_SEEK_POSITION_START);
-    return rv;
+    read = static_cast<std::size_t>(rv);
 #else
-    return pread(fileno(m_file), data, byte_count, offset);
+    read = pread(fileno(m_file), data, byte_count, offset);
 #endif
+    if (read != byte_count) {
+        m_good = FERROR(m_file) != 0;
+    }
+
+    return read;
 }
 
-std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {
+std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t elem_size) {
     if (!IsOpen()) {
         m_good = false;
         return std::numeric_limits<std::size_t>::max();
@@ -1509,11 +1533,105 @@ std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t 
 
     DEBUG_ASSERT(data != nullptr);
 
+    std::size_t written;
 #if defined(HAVE_LIBRETRO_VFS)
-    return rfwrite(data, data_size, length, m_file) / data_size;
+    written = rfwrite(data, elem_size, length, m_file) / elem_size;
 #else
-    return std::fwrite(data, data_size, length, m_file);
+    written = std::fwrite(data, elem_size, length, m_file);
 #endif
+    if (written != length) {
+        m_good = FERROR(m_file) != 0;
+    }
+    return written;
+}
+
+bool IOFileBase::ReadLine(std::string& line) {
+    line.clear();
+
+    char ch;
+    bool read_anything = false;
+
+    while (true) {
+        const std::size_t read = ReadImpl(&ch, sizeof(ch), 1);
+
+        if (read != sizeof(ch)) {
+            return read_anything;
+        }
+        read_anything = true;
+
+        if (ch == '\n') {
+            return true;
+        }
+
+        // Always convert to UNIX style
+        if (ch != '\r') {
+            line.push_back(ch);
+        }
+    }
+}
+
+size_t IOFileBase::WriteLine(const std::string_view line) {
+    const size_t written_line = WriteImpl(line.data(), line.size(), 1);
+    if (written_line != line.size()) {
+        return written_line;
+    }
+
+    char nl = '\n';
+    const size_t written_nl = WriteImpl(&nl, sizeof(nl), 1);
+    if (written_nl != sizeof(nl)) {
+        return written_nl;
+    }
+
+    return written_line + written_nl;
+}
+
+inline bool IOFile::IsOpen() const {
+    return nullptr != m_file;
+}
+
+inline bool IOFile::IsGood() const {
+    return m_good;
+}
+
+inline void IOFile::Clear() {
+    m_good = true;
+
+#ifdef HAVE_LIBRETRO_VFS
+    filestream_rewind(m_file);
+#else
+    std::clearerr(m_file);
+#endif
+}
+
+inline const std::string& IOFile::Filename() const {
+    return filename;
+}
+
+std::unique_ptr<IOFileBase> IOFile::OpenCopy() const {
+    std::unique_ptr<IOFile> ret = std::make_unique<IOFile>();
+    ret->filename = filename;
+    ret->openmode = openmode;
+    ret->flags = flags;
+    ret->Open();
+
+    return ret;
+}
+
+int IOFile::GetFd() const {
+#ifdef HAVE_LIBRETRO_VFS
+    if (m_file == nullptr)
+        return -1;
+    return fileno(filestream_get_vfs_handle(m_file)->fp);
+#else
+#ifdef ANDROID
+    if (!AndroidUtils::CanUseRawFS()) {
+        return m_fd;
+    }
+#endif // ANDROID
+    if (m_file == nullptr)
+        return -1;
+    return fileno(m_file);
+#endif // HAVE_LIBRETRO_VFS
 }
 
 bool IOFile::Resize(u64 size) {
@@ -1532,106 +1650,6 @@ bool IOFile::Resize(u64 size) {
         m_good = false;
 
     return m_good;
-}
-
-struct CryptoIOFileImpl {
-
-    std::vector<u8> key;
-    std::vector<u8> iv;
-
-    CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d;
-    CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption e;
-
-    std::vector<u8> write_buffer;
-
-    std::size_t ReadImpl(CryptoIOFile& f, void* data, std::size_t length, std::size_t data_size) {
-        std::size_t res = f.IOFile::ReadImpl(data, length, data_size);
-        if (res != std::numeric_limits<std::size_t>::max() && res != 0) {
-            d.ProcessData(reinterpret_cast<CryptoPP::byte*>(data),
-                          reinterpret_cast<CryptoPP::byte*>(data), res * data_size);
-            e.Seek(f.IOFile::Tell());
-        }
-        return res;
-    }
-
-    std::size_t ReadAtImpl(CryptoIOFile& f, void* data, std::size_t byte_count,
-                           std::size_t offset) {
-        std::size_t res = f.IOFile::ReadAtImpl(data, byte_count, offset);
-        if (res != std::numeric_limits<std::size_t>::max() && res != 0) {
-            d.Seek(offset);
-            d.ProcessData(reinterpret_cast<CryptoPP::byte*>(data),
-                          reinterpret_cast<CryptoPP::byte*>(data), res);
-            e.Seek(f.IOFile::Tell());
-        }
-        return res;
-    }
-
-    std::size_t WriteImpl(CryptoIOFile& f, const void* data, std::size_t length,
-                          std::size_t data_size) {
-        if (write_buffer.size() < length * data_size) {
-            write_buffer.resize(length * data_size);
-        }
-        e.ProcessData(write_buffer.data(), reinterpret_cast<const CryptoPP::byte*>(data),
-                      length * data_size);
-        std::size_t res = f.IOFile::WriteImpl(write_buffer.data(), length, data_size);
-        if (res != std::numeric_limits<std::size_t>::max() && res != 0) {
-            d.Seek(f.IOFile::Tell());
-        }
-        return res;
-    }
-
-    bool SeekImpl(CryptoIOFile& f, s64 off, int origin) {
-        bool res = f.IOFile::SeekImpl(off, origin);
-        if (res) {
-            u64 pos = f.IOFile::Tell();
-            d.Seek(pos);
-            e.Seek(pos);
-        }
-        return res;
-    }
-};
-
-CryptoIOFile::CryptoIOFile() : IOFile() {
-    impl = std::make_unique<CryptoIOFileImpl>();
-}
-
-CryptoIOFile::CryptoIOFile(const std::string& filename, const char openmode[],
-                           const std::vector<u8>& aes_key, const std::vector<u8>& aes_iv, int flags)
-    : IOFile(filename, openmode, flags) {
-    impl = std::make_unique<CryptoIOFileImpl>();
-    impl->key = aes_key;
-    impl->iv = aes_iv;
-    impl->d.SetKeyWithIV(aes_key.data(), aes_key.size(), aes_iv.data());
-    impl->e.SetKeyWithIV(aes_key.data(), aes_key.size(), aes_iv.data());
-}
-
-CryptoIOFile::~CryptoIOFile() {}
-
-std::size_t CryptoIOFile::ReadImpl(void* data, std::size_t length, std::size_t data_size) {
-    return impl->ReadImpl(*this, data, length, data_size);
-}
-
-std::size_t CryptoIOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
-    return impl->ReadAtImpl(*this, data, byte_count, offset);
-}
-
-std::size_t CryptoIOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {
-    return impl->WriteImpl(*this, data, length, data_size);
-}
-
-bool CryptoIOFile::SeekImpl(s64 off, int origin) {
-    return impl->SeekImpl(*this, off, origin);
-}
-
-template <class Archive>
-void CryptoIOFile::serialize(Archive& ar, const unsigned int) {
-    ar & impl->key;
-    ar & impl->iv;
-    if (Archive::is_loading::value) {
-        impl->e.SetKeyWithIV(impl->key.data(), impl->key.size(), impl->iv.data());
-        impl->d.SetKeyWithIV(impl->key.data(), impl->key.size(), impl->iv.data());
-    }
-    ar& boost::serialization::base_object<IOFile>(*this);
 }
 
 template <typename T>
@@ -1667,4 +1685,3 @@ void OpenFStream<std::ios_base::out>(
 } // namespace FileUtil
 
 SERIALIZE_EXPORT_IMPL(FileUtil::IOFile)
-SERIALIZE_EXPORT_IMPL(FileUtil::CryptoIOFile)

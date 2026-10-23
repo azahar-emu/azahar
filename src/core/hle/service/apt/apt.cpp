@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
@@ -1123,7 +1123,7 @@ void Module::APTInterface::GetCaptureInfo(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_APT, "called");
 
-    auto screen_capture_buffer = apt->applet_manager->GetCaptureInfo();
+    auto screen_capture_buffer = apt->applet_manager->GetCaptureInfoSuspendedApp();
     auto real_size = std::min(static_cast<u32>(screen_capture_buffer.size()), size);
     screen_capture_buffer.resize(size);
 
@@ -1430,6 +1430,58 @@ void Module::APTInterface::Reboot(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
+}
+
+void Module::APTInterface::GetAppletProgramInfo(Kernel::HLERequestContext& ctx) {
+    union {
+        u32 raw;
+        BitField<0, 1, u32> mediatype_nand;
+        BitField<1, 1, u32> mediatype_sdmc;
+        BitField<2, 1, u32> mediatype_gamecard;
+        BitField<4, 1, u32> is_appid;
+        BitField<5, 1, u32> not_appid_must_set;
+        BitField<8, 1, u32> is_system_app;
+    } flags;
+
+    IPC::RequestParser rp(ctx);
+    u32 program_id = rp.Pop<u32>();
+    flags.raw = rp.Pop<u32>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+
+    u64 title_id;
+    if (flags.is_appid) {
+        auto cfg = Service::CFG::GetModule(apt->system);
+        title_id =
+            GetTitleIdForApplet(static_cast<AppletId>(program_id), cfg->GetRegionValue(true));
+    } else {
+        if (!flags.not_appid_must_set) {
+            rb.Push(ResultUnknown); // TODO: Find proper error code
+            rb.Push(0);
+            return;
+        } else {
+            u32 tid_high = flags.is_system_app ? 0x00040010 : 0x00040000;
+            title_id = static_cast<u64>(tid_high) << 32 | program_id;
+        }
+    }
+
+    std::vector<Service::AM::TitleInfo> info;
+    Result res = ResultUnknown; // TODO: Find proper error code
+    if (res.IsError() && flags.mediatype_nand) {
+        res = Service::AM::GetTitleInfoFromList(apt->system, std::span<u64>(&title_id, 1),
+                                                FS::MediaType::NAND, info);
+    }
+    if (res.IsError() && flags.mediatype_sdmc) {
+        res = Service::AM::GetTitleInfoFromList(apt->system, std::span<u64>(&title_id, 1),
+                                                FS::MediaType::SDMC, info);
+    }
+    if (res.IsError() && flags.mediatype_gamecard) {
+        res = Service::AM::GetTitleInfoFromList(apt->system, std::span<u64>(&title_id, 1),
+                                                FS::MediaType::GameCard, info);
+    }
+
+    rb.Push(res);
+    rb.Push(res.IsSuccess() ? info[0].version : 0);
 }
 
 void Module::APTInterface::HardwareResetAsync(Kernel::HLERequestContext& ctx) {

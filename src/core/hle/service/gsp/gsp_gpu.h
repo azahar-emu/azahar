@@ -1,11 +1,12 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <array>
 #include <cstddef>
+#include <deque>
 #include <memory>
 #include <optional>
 #include <string>
@@ -18,6 +19,7 @@
 #include "core/hle/service/gsp/gsp_command.h"
 #include "core/hle/service/gsp/gsp_interrupt.h"
 #include "core/hle/service/service.h"
+#include "core/memory.h"
 
 namespace Core {
 class System;
@@ -45,12 +47,23 @@ struct FrameBufferInfo {
     u32 GetPixelFormat() {
         return format & PIXEL_FORMAT_MASK;
     }
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & active_fb;
+        ar & address_left;
+        ar & address_right;
+        ar & stride;
+        ar & format;
+        ar & shown_fb;
+        ar & unknown;
+    }
 };
 static_assert(sizeof(FrameBufferInfo) == 0x1c, "Struct has incorrect size");
 
 struct FrameBufferUpdate {
-    BitField<0, 1, u8> index;    // Index used for GSP::SetBufferSwap
-    BitField<0, 1, u8> is_dirty; // true if GSP should update GPU framebuffer registers
+    u8 index;    // Index of the framebuffer info to use
+    u8 is_dirty; // Non-zero if GSP should update GPU framebuffer registers
     u16 pad1;
 
     FrameBufferInfo framebuffer_info[2];
@@ -60,6 +73,20 @@ struct FrameBufferUpdate {
 static_assert(sizeof(FrameBufferUpdate) == 0x40, "Struct has incorrect size");
 static_assert(offsetof(FrameBufferUpdate, framebuffer_info[1]) == 0x20,
               "FrameBufferInfo element has incorrect alignment");
+
+enum RelayEventQueueFlags : u32 {
+    AllowSaveVramSysArea = (1 << 0),
+};
+DECLARE_ENUM_FLAG_OPERATORS(RelayEventQueueFlags)
+
+// TODO(PabloMK7): Fill this in when the purpose of
+// each bit is determined.
+enum class VRAMBankBackupMask : u8 {
+    MASK_0 = (1 << 0),
+    MASK_1 = (1 << 1),
+    MASK_2 = (1 << 2),
+};
+DECLARE_ENUM_FLAG_OPERATORS(VRAMBankBackupMask)
 
 constexpr u32 FRAMEBUFFER_WIDTH = 240;
 constexpr u32 FRAMEBUFFER_WIDTH_POW2 = 256;
@@ -71,6 +98,8 @@ constexpr u32 FRAMEBUFFER_HEIGHT_POW2 = 512;
 constexpr VAddr FRAMEBUFFER_SAVE_AREA_TOP_LEFT = Memory::VRAM_VADDR + 0x273000;
 constexpr VAddr FRAMEBUFFER_SAVE_AREA_TOP_RIGHT = Memory::VRAM_VADDR + 0x2B9800;
 constexpr VAddr FRAMEBUFFER_SAVE_AREA_BOTTOM = Memory::VRAM_VADDR + 0x4C7800;
+
+constexpr size_t VRAM_BACKUP_BANK_SIZE = 0x80000;
 
 class GSP_GPU;
 
@@ -88,10 +117,76 @@ public:
     u32 thread_id;
     /// Whether RegisterInterruptRelayQueue was called for this session
     bool registered = false;
+    /// Current relay queue flags
+    RelayEventQueueFlags relay_queue_flags{};
+    /// Event to be signaled on VBlank
+    std::shared_ptr<Kernel::Event> on_vblank_event{};
 
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
+};
+
+class VramBackupHandler {
+public:
+    VramBackupHandler() : system(Core::Global<Core::System>()) {
+        for (auto& v : vram_backup) {
+            v.resize(VRAM_BACKUP_BANK_SIZE);
+        }
+    }
+
+    // TODO(PabloMK7): Figure out what each state means
+    enum class State : u32 { STATE_0, STATE_1, STATE_2 };
+
+    void SaveVRAMWithState(State state);
+
+    void RestoreVRAMWithState(State state);
+
+    void ResetState() {
+        curr_state = State::STATE_0;
+    }
+
+private:
+    Core::System& system;
+
+    void SaveVRAMBank(size_t bank_id);
+
+    void RestoreVRAMBank(size_t bank_id);
+
+    static constexpr u32 BANK_COUNT = Memory::VRAM_SIZE / VRAM_BACKUP_BANK_SIZE;
+
+    // A vector is needed because otherwise a stack overflow happens
+    // in the boost serialization code.
+    std::array<std::vector<u8>, BANK_COUNT> vram_backup{};
+
+    // TODO(PabloMK7): Figure out what this means, it's taken from
+    // GSP decompilation.
+    static constexpr std::array<VRAMBankBackupMask, BANK_COUNT> mask_per_bank = {
+        VRAMBankBackupMask::MASK_0,                              // 0x1F000000 - 0x1F07FFFF
+        VRAMBankBackupMask::MASK_0,                              // 0x1F080000 - 0x1F0FFFFF
+        VRAMBankBackupMask::MASK_0,                              // 0x1F100000 - 0x1F17FFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_1, // 0x1F180000 - 0x1F1FFFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_1, // 0x1F200000 - 0x1F27FFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_1, // 0x1F280000 - 0x1F2FFFFF
+        VRAMBankBackupMask::MASK_0,                              // 0x1F300000 - 0x1F37FFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_2, // 0x1F380000 - 0x1F3FFFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_2, // 0x1F400000 - 0x1F47FFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_1, // 0x1F480000 - 0x1F4FFFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_1, // 0x1F500000 - 0x1F57FFFF
+        VRAMBankBackupMask::MASK_0 | VRAMBankBackupMask::MASK_1, // 0x1F580000 - 0x1F5FFFFF
+    };
+
+    State curr_state = State::STATE_0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        for (size_t i = 0; i < BANK_COUNT; i++) {
+            ar& vram_backup[i];
+        }
+
+        ar & curr_state;
+    }
     friend class boost::serialization::access;
 };
 
@@ -110,16 +205,20 @@ public:
 
     /**
      * Retrieves the framebuffer info stored in the GSP shared memory for the
-     * specified screen index and thread id.
+     * specified screen index and thread id, and clears its update flag.
      * @param thread_id GSP thread id of the process that accesses the structure that we are
      * requesting.
      * @param screen_index Index of the screen we are requesting (Top = 0, Bottom = 1).
-     * @returns FramebufferUpdate Information about the specified framebuffer.
+     * @returns A pair containing whether the FB info is new and the framebuffer info itself.
      */
-    FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
+    std::pair<bool, FrameBufferInfo*> GetFrameBufferInfo(u32 thread_id, u32 screen_index,
+                                                         bool force_update = false);
 
     /// Gets a pointer to a thread command buffer in GSP shared memory
     CommandBuffer* GetCommandBuffer(u32 thread_id);
+
+    /// Gets the pointer to the thread's framebuffer update slot for a screen in GSP shared memory
+    FrameBufferUpdate* GetFrameBufferUpdate(u32 thread_id, u32 screen_index);
 
     /// Gets a pointer to the interrupt relay queue for a given thread index
     InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id);
@@ -128,7 +227,7 @@ public:
      * Retreives the ID of the thread with GPU rights.
      */
     u32 GetActiveThreadId() {
-        return active_thread_id;
+        return thread_id_with_rights;
     }
 
     /**
@@ -137,6 +236,8 @@ public:
     u32 GetActiveClientThreadId() {
         return active_client_thread_id;
     }
+
+    class ThreadCallback;
 
 private:
     /**
@@ -148,6 +249,8 @@ private:
     void SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id, u64 wait_delay_ns);
 
     void ProcessPendingInterrupt(size_t pending_interrupt_id);
+
+    bool HasGpuRight(Kernel::HLERequestContext& ctx);
 
     void ProcessPendingInterruptImpl(InterruptId interrupt_id, u32 thread_id);
 
@@ -176,8 +279,18 @@ private:
      */
     void WriteHWRegsWithMask(Kernel::HLERequestContext& ctx);
 
+    /// Write the data to the same register repeatedly.
+    void WriteHWRegRepeat(Kernel::HLERequestContext& ctx);
+
     /// Read a GSP GPU hardware register
     void ReadHWRegs(Kernel::HLERequestContext& ctx);
+
+    /// Helper for stubbed commands.
+    void Unsupported(Kernel::HLERequestContext& ctx);
+
+    void DoCacheOperation(Kernel::HLERequestContext& ctx, bool allow_vram);
+
+    void DoResetGpuCore();
 
     /**
      * GSP_GPU::SetBufferSwap service function
@@ -191,6 +304,10 @@ private:
      *      1: Result code
      */
     void SetBufferSwap(Kernel::HLERequestContext& ctx);
+
+    void SetCommandList(Kernel::HLERequestContext& ctx);
+
+    void RequestDma(Kernel::HLERequestContext& ctx);
 
     /**
      * GSP_GPU::FlushDataCache service function
@@ -222,6 +339,8 @@ private:
      */
     void InvalidateDataCache(Kernel::HLERequestContext& ctx);
 
+    void RegisterInterruptEvents(Kernel::HLERequestContext& ctx);
+
     /**
      * GSP_GPU::SetLcdForceBlack service function
      *
@@ -236,6 +355,12 @@ private:
 
     /// This triggers handling of the GX command written to the command buffer in shared memory.
     void TriggerCmdReqQueue(Kernel::HLERequestContext& ctx);
+
+    void SetDisplayTransfer(Kernel::HLERequestContext& ctx);
+
+    void SetTextureCopy(Kernel::HLERequestContext& ctx);
+
+    void SetMemoryFill(Kernel::HLERequestContext& ctx);
 
     /**
      * GSP_GPU::SetAxiConfigQoSMode service function
@@ -371,6 +496,8 @@ private:
     /// Force the 3D LED State (0 = On, Non-Zero = Off)
     void SetLedForceOff(Kernel::HLERequestContext& ctx);
 
+    void SetTestCommand(Kernel::HLERequestContext& ctx);
+
     /**
      * GSP_GPU::SetInternalPriorities service function
      *  Inputs:
@@ -382,6 +509,8 @@ private:
      */
     void SetInternalPriorities(Kernel::HLERequestContext& ctx);
 
+    void ResetGpuCore(Kernel::HLERequestContext& ctx);
+
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
 
@@ -390,8 +519,58 @@ private:
     std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> MakeSessionData() override;
 
     Result AcquireGpuRight(const Kernel::HLERequestContext& ctx,
-                           const std::shared_ptr<Kernel::Process>& process, u32 flag,
-                           bool blocking);
+                           const std::shared_ptr<Kernel::Process>& process, bool force,
+                           bool try_only, bool& switch_deferred);
+
+    void DeferDiskResourcesSwitch(u64 program_id, std::shared_ptr<Kernel::Event> event);
+
+    void ProcessDeferredSwitch();
+
+    /// Set by forced AcquireRight, from then onwards AcquireRight without the force flag does
+    /// not give the right (until the system restarts).
+    bool force_mode = false;
+    bool gpu_core_reset_by_force = false;
+
+    void ApplyPerProgramSettings(const Kernel::Process& process);
+
+    /// Gives the GPU right to a GSP thread. Returns false when the disk resources of the process
+    /// were not switched because loading them crashed the emulator last time.
+    bool GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::Process& process);
+
+    struct RightWaitContext {
+        u32 thread_id;
+        u32 client_thread_id;
+        bool force;
+        std::shared_ptr<Kernel::Process> process;
+        std::shared_ptr<Kernel::Event> event;
+        std::shared_ptr<ThreadCallback> callback;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & thread_id;
+            ar & client_thread_id;
+            ar & force;
+            ar & process;
+            ar & event;
+            ar & callback;
+        }
+    };
+
+    /// Threads waiting for the GPU right in request order.
+    std::deque<RightWaitContext> right_waiters;
+
+    struct DeferredSwitch {
+        u64 program_id;
+        std::shared_ptr<Kernel::Event> event;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & program_id;
+            ar & event;
+        }
+    };
+
+    std::deque<DeferredSwitch> deferred_switches;
 
     Core::System& system;
 
@@ -399,15 +578,12 @@ private:
     std::shared_ptr<Kernel::SharedMemory> shared_memory;
 
     /// Thread id that currently has GPU rights or std::numeric_limits<u32>::max() if none.
-    u32 active_thread_id = std::numeric_limits<u32>::max();
+    u32 thread_id_with_rights = std::numeric_limits<u32>::max();
 
     /// Thread id of the client thread that has GPU rights
     u32 active_client_thread_id = std::numeric_limits<u32>::max();
 
     bool first_initialization = true;
-
-    /// VRAM copy saved using SaveVramSysArea.
-    boost::optional<std::vector<u8>> saved_vram;
 
     /// Maximum number of threads that can be registered at the same time in the GSP module.
     static constexpr u32 MaxGSPThreads = 4;
@@ -526,6 +702,12 @@ private:
     PerformanceRecorder perf_recorder;
 
     Core::TimingEventType* SignalInterruptEventType = nullptr;
+    Core::TimingEventType* DeferredSwitchEventType = nullptr;
+
+    std::array<FrameBufferInfo, 2> cached_framebuffer_infos;
+    std::array<bool, 2> force_buffer_swap{};
+
+    VramBackupHandler vram_backup_handler;
 
     friend class SessionData;
 
@@ -539,3 +721,4 @@ private:
 BOOST_CLASS_EXPORT_KEY(Service::GSP::SessionData)
 BOOST_CLASS_EXPORT_KEY(Service::GSP::GSP_GPU)
 SERVICE_CONSTRUCT(Service::GSP::GSP_GPU)
+BOOST_CLASS_EXPORT_KEY(Service::GSP::GSP_GPU::ThreadCallback)

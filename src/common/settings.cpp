@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <string_view>
 #include <utility>
@@ -87,6 +87,7 @@ void LogSettings() {
 
     LOG_INFO(Config, "Azahar Configuration:");
     log_setting("Core_UseCpuJit", values.use_cpu_jit.GetValue());
+    log_setting("Core_UseFastInterp", values.use_fastinterp.GetValue());
     log_setting("Core_CPUClockPercentage", values.cpu_clock_percentage.GetValue());
     log_setting("Controller_UseArticController", values.use_artic_base_controller.GetValue());
     log_setting("Renderer_UseGLES", values.use_gles.GetValue());
@@ -96,6 +97,7 @@ void LogSettings() {
     log_setting("Renderer_SpirvShaderGen", values.spirv_shader_gen.GetValue());
     log_setting("Renderer_DisableSpirvOptimizer", values.disable_spirv_optimizer.GetValue());
     log_setting("Renderer_Debug", values.renderer_debug.GetValue());
+    log_setting("Renderer_PicaDebugging", values.pica_debugging.GetValue());
     log_setting("Renderer_UseHwShader", values.use_hw_shader.GetValue());
     log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
@@ -103,6 +105,7 @@ void LogSettings() {
     log_setting("Renderer_UseIntegerScaling", values.use_integer_scaling.GetValue());
     log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
     log_setting("Renderer_VSyncNew", values.use_vsync.GetValue());
+    log_setting("Renderer_SkipDuplicateFrames", values.use_skip_duplicate_frames.GetValue());
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
@@ -137,6 +140,9 @@ void LogSettings() {
     log_setting("Audio_Emulation", GetAudioEmulationName(values.audio_emulation.GetValue()));
     log_setting("Audio_OutputType", values.output_type.GetValue());
     log_setting("Audio_OutputDevice", values.output_device.GetValue());
+#ifdef ENABLE_QT
+    log_setting("Audio_BypassAudioEffects", values.bypass_audio_effects.GetValue());
+#endif
     log_setting("Audio_InputType", values.input_type.GetValue());
     log_setting("Audio_InputDevice", values.input_device.GetValue());
     log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching.GetValue());
@@ -169,8 +175,7 @@ void LogSettings() {
     log_setting("Debugging_InstantDebugLog", values.instant_debug_log.GetValue());
     log_setting("Debugging_ToggleUniqueDataConsoleType",
                 values.toggle_unique_data_console_type.GetValue());
-    log_setting("Debugging_BreakOnUnmappedMemoryAccess",
-                values.break_on_unmapped_memory_access.GetValue());
+    log_setting("Debugging_EnableExceptionHandler", values.enable_exception_handler.GetValue());
 }
 
 bool IsConfiguringGlobal() {
@@ -215,6 +220,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.use_disk_shader_cache.SetGlobal(true);
     values.shaders_accurate_mul.SetGlobal(true);
     values.use_vsync.SetGlobal(true);
+    values.use_skip_duplicate_frames.SetGlobal(true);
     values.resolution_factor.SetGlobal(true);
     values.use_integer_scaling.SetGlobal(true);
     values.frame_limit.SetGlobal(true);

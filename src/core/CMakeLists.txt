@@ -1,6 +1,8 @@
 add_library(citra_core STATIC EXCLUDE_FROM_ALL
     3ds.h
     arm/arm_interface.h
+    arm/exception_handler.cpp
+    arm/exception_handler.h
     arm/dyncom/arm_dyncom.cpp
     arm/dyncom/arm_dyncom.h
     arm/dyncom/arm_dyncom_dec.cpp
@@ -36,10 +38,6 @@ add_library(citra_core STATIC EXCLUDE_FROM_ALL
     core.h
     core_timing.cpp
     core_timing.h
-    dumping/backend.cpp
-    dumping/backend.h
-    dumping/ffmpeg_backend.cpp
-    dumping/ffmpeg_backend.h
     file_sys/archive_artic.cpp
     file_sys/archive_artic.h
     file_sys/archive_backend.cpp
@@ -489,7 +487,6 @@ add_library(citra_core STATIC EXCLUDE_FROM_ALL
     precompiled_headers.h
     savestate.cpp
     savestate.h
-    savestate_data.h
     system_titles.cpp
     system_titles.h
     tracer/citrace.h
@@ -499,6 +496,15 @@ add_library(citra_core STATIC EXCLUDE_FROM_ALL
 
 if (ENABLE_BUILTIN_KEYBLOB)
     target_sources(citra_core PRIVATE hw/default_keys.h)
+endif()
+
+if(ENABLE_FFMPEG)
+    target_sources(citra_core PRIVATE
+        dumping/backend.cpp
+        dumping/backend.h
+        dumping/ffmpeg_backend.cpp
+        dumping/ffmpeg_backend.h
+    )
 endif()
 
 create_target_directory_groups(citra_core)
@@ -513,6 +519,9 @@ endif()
 
 if (ENABLE_SCRIPTING)
     target_compile_definitions(citra_core PUBLIC -DENABLE_SCRIPTING)
+    if (ENABLE_SCRIPTING_SYNC)
+        target_compile_definitions(citra_core PUBLIC -DENABLE_SCRIPTING_SYNC)
+    endif()
     target_sources(citra_core PRIVATE
         rpc/packet.cpp
         rpc/packet.h
@@ -535,6 +544,11 @@ if (ENABLE_GDBSTUB)
     )
 endif()
 
+if (ENABLE_FFMPEG)
+    target_link_libraries(citra_core PRIVATE ${FFMPEG_LIBRARIES})
+    target_include_directories(citra_core PRIVATE ${FFMPEG_INCLUDE_DIRS})
+endif()
+
 if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
     target_sources(citra_core PRIVATE
         arm/dynarmic/arm_dynarmic.cpp
@@ -547,6 +561,20 @@ if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
         arm/dynarmic/arm_tick_counts.h
     )
     target_link_libraries(citra_core PRIVATE dynarmic)
+endif()
+
+# FastInterp's dispatch loop requires GCC/Clang computed goto; MSVC builds
+# fall back to DynCom when the JIT is off.
+if (NOT MSVC)
+    target_compile_definitions(citra_core PUBLIC HAVE_FASTINTERP)
+    target_sources(citra_core PRIVATE
+        arm/fastinterp/fastinterp.cpp
+        arm/fastinterp/fastinterp.h
+        arm/fastinterp/fastinterp_cache.h
+        arm/fastinterp/fastinterp_decode.cpp
+        arm/fastinterp/fastinterp_flags.h
+        arm/fastinterp/fastinterp_types.h
+    )
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
