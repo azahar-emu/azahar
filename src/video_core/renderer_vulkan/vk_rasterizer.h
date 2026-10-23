@@ -1,6 +1,6 @@
-// Copyright 2022-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -63,6 +63,8 @@ public:
 
     /// Switches the disk resources to the specified title
     void SwitchDiskResources(u64 title_id) override;
+
+    bool DiskResourcesLoadCrashed(u64 title_id) override;
 
 private:
     /// Syncs pipeline state from PICA registers

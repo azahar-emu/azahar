@@ -109,6 +109,8 @@ public:
         ErrorCoreExceptionRaised,    ///< The CPU emulation raised an exception
         ErrorSavestateBuildMismatch, ///< Tried to load savestate from a different Azahar version
         ShutdownRequested,           ///< Emulated program requested a system shutdown
+        ErrorShaderCacheCrash,       ///< The emulator crashed the last time it built the disk
+                                     ///< shader cache
         ErrorUnknown                 ///< Any other error
     };
 

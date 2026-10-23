@@ -331,6 +331,12 @@ object NativeLibrary {
                 canContinue = true
             }
 
+            CoreError.ErrorShaderCacheCrash -> {
+                title = emulationActivity.getString(R.string.shader_cache_crash)
+                message = emulationActivity.getString(R.string.shader_cache_crash_message)
+                canContinue = true
+            }
+
             CoreError.ErrorUnknown -> {
                 title = emulationActivity.getString(R.string.fatal_error)
                 message = emulationActivity.getString(R.string.fatal_error_message)
@@ -966,7 +972,8 @@ object NativeLibrary {
         ErrorCoreExceptionRaised(14, R.string.core_error_core_exception_raised),
         ErrorSavestateBuildMismatch(15, R.string.core_error_savestate_build_mismatch),
         ShutdownRequested(16, R.string.core_error_shutdown_requested),
-        ErrorUnknown(17, R.string.core_error_unknown);
+        ErrorUnknown(17, R.string.core_error_unknown),
+        ErrorShaderCacheCrash(18, R.string.core_error_shader_cache_crash);
 
         companion object {
             fun fromInt(value: Int): CoreError = entries.find { it.value == value } ?: ErrorUnknown

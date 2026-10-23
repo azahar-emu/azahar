@@ -4076,6 +4076,16 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
                    .c_str());
         error_severity_icon = QMessageBox::Icon::Critical;
         can_continue = false;
+    } else if (result == Core::System::ResultStatus::ErrorShaderCacheCrash) {
+        title = tr("Shader Cache Crash");
+        message =
+            tr("Azahar closed unexpectedly the last time it built the Vulkan shader cache of the "
+               "current title. The graphics driver may have crashed on one of the cached shaders, "
+               "and continuing may crash it again.<br/><br/>To reset the shader cache, "
+               "right-click the application in the game list and select "
+               "<b>Disk Shader Cache &gt; Delete Vulkan Shader Cache</b>.");
+        status_message = tr("Shader cache crash");
+        error_severity_icon = QMessageBox::Icon::Critical;
     } else if (result == Core::System::ResultStatus::ErrorSavestateBuildMismatch) {
         title = tr("Savestate version mismatch");
         message = tr("Could not load savestate because it was created on a different Azahar "

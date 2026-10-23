@@ -497,6 +497,7 @@
     <string name="core_error_savestate_build_mismatch">Savestate version mismatch</string>
     <string name="core_error_shutdown_requested">Shutdown requested</string>
     <string name="core_error_unknown">Unknown error</string>
+    <string name="core_error_shader_cache_crash">Shader cache crash</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Press Back to access the menu.</string>
@@ -645,6 +646,8 @@
     <string name="unsupported_encrypted">Unsupported encrypted application</string>
     <string name="invalid_system_mode">Invalid system mode</string>
     <string name="invalid_system_mode_message">New 3DS exclusive applications cannot be loaded without enabling the New 3DS mode.</string>
+    <string name="shader_cache_crash">Shader Cache Crash</string>
+    <string name="shader_cache_crash_message"><![CDATA[Azahar closed unexpectedly the last time it built the shader cache of the current title. The graphics driver may have crashed on one of the cached shaders, and continuing may crash again.<br/><br/>To reset the shader cache, long press the application in the application list, tap <b>Delete Shader Cache</b> and select <b>Vulkan</b>.]]></string>
     <string name="savestate_build_mismatch_message"><![CDATA[Could not load savestate because it was created on a different Azahar version:<br/><b>Azahar %1$s</b>.<br/><br/>Please read our blog entry <a href="https://azahar-emu.org/blog/understanding-save-states/">understanding savestates</a> for more information.<br/><br/>To recover your progress, downgrade to <b>Azahar %1$s</b>, load this savestate and use the application\'s built-in save functionality.]]></string>
 
     <!-- Disk Shader Cache -->
