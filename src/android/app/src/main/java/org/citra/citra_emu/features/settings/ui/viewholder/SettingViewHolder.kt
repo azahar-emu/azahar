@@ -48,8 +48,12 @@ abstract class SettingViewHolder<out T : SettingsItem>(
     abstract override fun onLongClick(clicked: View): Boolean
 
     fun showGlobalMessageIfNeeded(globalMessage: MaterialTextView, position: Int) {
+        globalMessage.visibility = View.GONE
+
         setting ?: return
         // Show "Revert to global" button in Custom Settings if applicable.
+        globalMessage.visibility = View.GONE
+
         val settings = adapter.fragmentView.activityView?.editingSettings
         val showGlobal = settings?.isPerGame() == true &&
             setting?.setting != null &&
