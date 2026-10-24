@@ -15,24 +15,41 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#44000000" />
+        android:background="#66000000" />
 
-    <!-- L and R -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="24dp">
 
-        <View
+        <!-- L Button -->
+        <TextView
             android:id="@+id/touch_zone_l"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:layout_marginEnd="12dp"
+            android:background="#33FFFFFF"
+            android:gravity="center"
+            android:text="L"
+            android:textColor="@android:color/white"
+            android:textSize="56sp"
+            android:textStyle="bold" />
 
-        <View
+        <!-- R Button -->
+        <TextView
             android:id="@+id/touch_zone_r"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:background="#33FFFFFF"
+            android:gravity="center"
+            android:text="R"
+            android:textColor="@android:color/white"
+            android:textSize="56sp"
+            android:textStyle="bold" />
+
     </LinearLayout>
 </FrameLayout>
