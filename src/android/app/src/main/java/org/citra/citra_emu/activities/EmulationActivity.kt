@@ -27,6 +27,7 @@ import androidx.core.os.BundleCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.preference.PreferenceManager
@@ -39,6 +40,7 @@ import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
+import org.citra.citra_emu.features.fold.FoldDualScreenController
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
@@ -72,6 +74,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
     lateinit var secondaryDisplayManager: SecondaryDisplay
+    private lateinit var foldDualScreenController : FoldDualScreenController
 
     private val onShutdown = Runnable {
         if (intent.getBooleanExtra("launchedFromShortcut", false)) {
@@ -144,6 +147,11 @@ class EmulationActivity : AppCompatActivity() {
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
         setContentView(binding.root)
 
+        foldDualScreenController = FoldDualScreenController(this, lifecycleScope) { buttonType, state ->
+            NativeLibrary.onGamePadEvent(NativeLibrary.TOUCHSCREEN_DEVICE, buttonType, state)
+        }
+        foldDualScreenController.init()
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
         val navController = navHostFragment.navController
@@ -182,6 +190,9 @@ class EmulationActivity : AppCompatActivity() {
             Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
             return
         }
+
+        // pass game icon or artwork to controller
+        // foldDualScreenController.setCoverArtwork(game.icon)
 
         NativeLibrary.playTimeManagerStart(game.titleId)
     }
@@ -248,9 +259,13 @@ class EmulationActivity : AppCompatActivity() {
             }
         }
         super.onResume()
+
+        foldDualScreenController.startCoverControls()
     }
 
     override fun onStop() {
+        foldDualScreenController.stopCoverControls()
+
         secondaryDisplayManager.releasePresentation()
         super.onStop()
     }
