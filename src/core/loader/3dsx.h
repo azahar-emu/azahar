@@ -1,10 +1,10 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Copyright 2014 Dolphin Emulator Project / Citra Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #pragma once
 
@@ -34,11 +34,13 @@ public:
 
     ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
 
-    ResultStatus ReadIcon(std::vector<u8>& buffer) override;
+    ResultStatus ReadIcon(std::vector<u8>& buffer, bool prefer_update_icon) override;
 
     ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
 
-    CompressFileInfo GetCompressFileInfo() override;
+    ResultStatus ReadTitle(std::string& title, bool prefer_update_title) override;
+
+    LoaderFileInfo GetLoaderFileInfo() override;
 
     bool IsFileCompressed() override;
 

@@ -1,11 +1,12 @@
-// Copyright 2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2025-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <QMessageBox>
 #include <QPushButton>
 #include <QString>
 #include <QTranslator>
+#include "citra_qt/util/util.h"
 #include "common/file_util.h"
 #include "user_data_migration.h"
 
@@ -18,7 +19,7 @@ UserDataMigrator::UserDataMigrator(QMainWindow* main_window) {
     // NOTE: Logging is not initialized yet, do not produce logs here.
 
     // Check migration if user directory does not exist
-    if (!fs::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))) {
+    if (!fs::is_directory(PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::UserDir)))) {
         ShowMigrationPrompt(main_window);
     }
 }
@@ -29,10 +30,10 @@ void UserDataMigrator::ShowMigrationPrompt(QMainWindow* main_window) {
     const QString migration_prompt_message =
         main_window->tr("Would you like to migrate your data for use in Azahar?\n"
                         "(This may take a while; The old data will not be deleted)");
-    const bool citra_dir_found =
-        fs::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::LegacyCitraUserDir));
-    const bool lime3ds_dir_found =
-        fs::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::LegacyLime3DSUserDir));
+    const bool citra_dir_found = fs::is_directory(
+        PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::LegacyCitraUserDir)));
+    const bool lime3ds_dir_found = fs::is_directory(
+        PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::LegacyLime3DSUserDir)));
 
     if (citra_dir_found && lime3ds_dir_found) {
         QMessageBox migration_prompt;
@@ -119,15 +120,16 @@ void UserDataMigrator::MigrateUserData(QMainWindow* main_window,
         legacy_cache_dir = FileUtil::GetUserPath(FileUtil::UserPath::LegacyLime3DSCacheDir);
     }
 
-    fs::copy(legacy_user_dir, FileUtil::GetUserPath(FileUtil::UserPath::UserDir), copy_options);
+    fs::copy(PathFromUTF8(legacy_user_dir),
+             PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::UserDir)), copy_options);
 
-    if (fs::is_directory(legacy_config_dir)) {
-        fs::copy(legacy_config_dir, FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir),
-                 copy_options);
+    if (fs::is_directory(PathFromUTF8(legacy_config_dir))) {
+        fs::copy(PathFromUTF8(legacy_config_dir),
+                 PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir)), copy_options);
     }
-    if (fs::is_directory(legacy_cache_dir)) {
-        fs::copy(legacy_cache_dir, FileUtil::GetUserPath(FileUtil::UserPath::CacheDir),
-                 copy_options);
+    if (fs::is_directory(PathFromUTF8(legacy_cache_dir))) {
+        fs::copy(PathFromUTF8(legacy_cache_dir),
+                 PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::CacheDir)), copy_options);
     }
 
     QMessageBox::information(

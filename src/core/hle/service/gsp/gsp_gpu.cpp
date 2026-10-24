@@ -1,10 +1,11 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <span>
 #include <vector>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/deque.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include "common/archives.h"
@@ -39,13 +40,29 @@ namespace ErrCodes {
 enum {
     // TODO(purpasmart): Check if this name fits its actual usage
     OutofRangeOrMisalignedAddress = 513,
-    NoSaveVRAMSysAreaPerm = 518,
+    NoPermission = 518,
     FirstInitialization = 519,
+    ForceModeCanceled = 520,
 };
 }
 
-constexpr Result ResultNoSaveVRAMSysAreaPerm(ErrCodes::NoSaveVRAMSysAreaPerm, ErrorModule::GX,
+constexpr Result ResultNoSaveVRAMSysAreaPerm(ErrCodes::NoPermission, ErrorModule::GX,
                                              ErrorSummary::NothingHappened, ErrorLevel::Permanent);
+constexpr Result ResultNoGpuRight(ErrCodes::NoPermission, ErrorModule::GX,
+                                  ErrorSummary::NothingHappened,
+                                  ErrorLevel::Permanent); // 0xD8202A06
+constexpr Result ResultInvalidBuffer(ErrorDescription::InvalidAddress, ErrorModule::GX,
+                                     ErrorSummary::InvalidArgument,
+                                     ErrorLevel::Usage); // 0xE0E02BF5
+constexpr Result ResultInvalidPriority(ErrorDescription::InvalidSection, ErrorModule::GX,
+                                       ErrorSummary::InvalidArgument,
+                                       ErrorLevel::Usage); // 0xE0E02BE8
+constexpr Result ResultNotSupported(ErrorDescription::NotImplemented, ErrorModule::GX,
+                                    ErrorSummary::NotSupported, ErrorLevel::Usage); // 0xE0C02BF4
+constexpr Result ResultForceModeCanceled(ErrCodes::ForceModeCanceled, ErrorModule::GX,
+                                         ErrorSummary::Canceled, ErrorLevel::Success); // 0x01202A08
+constexpr Result ResultGpuRightBusy(ErrorDescription::Busy, ErrorModule::GX,
+                                    ErrorSummary::WouldBlock, ErrorLevel::Status); // 0xC8402BF0
 constexpr Result ResultFirstInitialization(ErrCodes::FirstInitialization, ErrorModule::GX,
                                            ErrorSummary::Success, ErrorLevel::Success);
 constexpr Result ResultRegsOutOfRangeOrMisaligned(ErrCodes::OutofRangeOrMisalignedAddress,
@@ -88,15 +105,11 @@ std::pair<bool, FrameBufferInfo*> GSP_GPU::GetFrameBufferInfo(u32 thread_id, u32
     // If the thread ID is invalid, the last cached
     // data is used.
     if (thread_id != std::numeric_limits<u32>::max()) {
-
-        // For each thread there are two FrameBufferUpdate fields
-        const u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
-        FrameBufferUpdate* screen =
-            reinterpret_cast<FrameBufferUpdate*>(shared_memory->GetPointer(offset));
+        FrameBufferUpdate* screen = GetFrameBufferUpdate(thread_id, screen_index);
 
         if (screen->is_dirty || force_update) {
-            cached_framebuffer_infos[screen_index] = screen->framebuffer_info[screen->index];
-            screen->is_dirty.Assign(false);
+            cached_framebuffer_infos[screen_index] = screen->framebuffer_info[screen->index & 1];
+            screen->is_dirty = 0;
             is_dirty = true;
         }
     }
@@ -104,17 +117,38 @@ std::pair<bool, FrameBufferInfo*> GSP_GPU::GetFrameBufferInfo(u32 thread_id, u32
     return {is_dirty, &cached_framebuffer_infos[screen_index]};
 }
 
+FrameBufferUpdate* GSP_GPU::GetFrameBufferUpdate(u32 thread_id, u32 screen_index) {
+    const u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
+    return reinterpret_cast<FrameBufferUpdate*>(shared_memory->GetPointer(offset));
+}
+
 InterruptRelayQueue* GSP_GPU::GetInterruptRelayQueue(u32 thread_id) {
     u8* ptr = shared_memory->GetPointer(sizeof(InterruptRelayQueue) * thread_id);
     return reinterpret_cast<InterruptRelayQueue*>(ptr);
+}
+
+bool GSP_GPU::HasGpuRight(Kernel::HLERequestContext& ctx) {
+    return GetSessionData(ctx.Session())->thread_id == thread_id_with_rights;
 }
 
 void GSP_GPU::ClientDisconnected(std::shared_ptr<Kernel::ServerSession> server_session) {
     SessionData* session_data = GetSessionData(server_session);
     session_data->interrupt_event = nullptr;
     session_data->registered = false;
+    std::erase_if(right_waiters, [session_data](const RightWaitContext& waiter) {
+        return waiter.thread_id == session_data->thread_id;
+    });
     if (thread_id_with_rights == session_data->thread_id) {
         ReleaseRight(session_data);
+    }
+    // Clear the framebuffer update slots of the thread.
+    for (u32 screen_id = 0; screen_id < 2; ++screen_id) {
+        auto* update = GetFrameBufferUpdate(session_data->thread_id, screen_id);
+        update->index = 0;
+        update->is_dirty = 0;
+        update->pad1 = 0;
+        update->framebuffer_info[0].address_left = 0;
+        update->framebuffer_info[1].address_left = 0;
     }
     if (True(session_data->relay_queue_flags & RelayEventQueueFlags::AllowSaveVramSysArea)) {
         vram_backup_handler.ResetState();
@@ -225,6 +259,7 @@ public:
     enum class Type : u32 {
         SaveVRAMSysArea,
         RestoreVRAMSysArea,
+        AcquireRight,
     };
 
     explicit ThreadCallback(Core::System& system_, std::string name_, Type type_)
@@ -232,16 +267,19 @@ public:
 
     void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
                 Kernel::ThreadWakeupReason reason) {
-        if (type == Type::SaveVRAMSysArea || type == Type::RestoreVRAMSysArea) {
-            IPC::RequestBuilder rb = IPC::RequestBuilder(ctx, 1, 0);
-            rb.Push(ResultSuccess);
-        }
+        IPC::RequestBuilder rb = IPC::RequestBuilder(ctx, 1, 0);
+        rb.Push(result);
+    }
+
+    void SetResult(Result result_) {
+        result = result_;
     }
 
 private:
     Core::System& system;
     std::string name;
     Type type;
+    Result result = ResultSuccess;
 
     ThreadCallback() : system(Core::Global<Core::System>()) {}
 
@@ -250,6 +288,7 @@ private:
         ar& boost::serialization::base_object<Kernel::HLERequestContext::WakeupCallback>(*this);
         ar & name;
         ar & type;
+        ar & result.raw;
     }
     friend class boost::serialization::access;
 };
@@ -257,22 +296,82 @@ private:
 void GSP_GPU::WriteHWRegs(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 reg_addr = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    // Real HW ignores this.
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto src_data = rp.PopStaticBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(GSP::WriteHWRegs(reg_addr, size, src_data, system.GPU()));
+    if (!HasGpuRight(ctx)) {
+        rb.Push(ResultNoGpuRight);
+        return;
+    }
+
+    rb.Push(GSP::WriteHWRegs(reg_addr, static_cast<u32>(src_data.size()), src_data, system.GPU()));
 }
 
 void GSP_GPU::WriteHWRegsWithMask(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 reg_addr = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    // Real HW ignores this.
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
     const auto src_data = rp.PopStaticBuffer();
-    const auto mask_data = rp.PopStaticBuffer();
+    auto mask_data = rp.PopStaticBuffer();
+
+    // If the mask data is smaller, it is treated as zeroes.
+    if (mask_data.size() < src_data.size()) {
+        mask_data.resize(src_data.size(), 0);
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(GSP::WriteHWRegsWithMask(reg_addr, size, src_data, mask_data, system.GPU()));
+    if (!HasGpuRight(ctx)) {
+        rb.Push(ResultNoGpuRight);
+        return;
+    }
+
+    // Real hardware explicitly checks this combination to reset the LCD mode state, and writes are
+    // skipped.
+    // TODO(PabloMK7): Handle LCD state here properly.
+    if (reg_addr == 0x400424 && src_data.size() == 0x50) {
+        rb.Push(ResultSuccess);
+        return;
+    }
+
+    rb.Push(GSP::WriteHWRegsWithMask(reg_addr, static_cast<u32>(src_data.size()), src_data,
+                                     mask_data, system.GPU()));
+}
+
+void GSP_GPU::WriteHWRegRepeat(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 reg_addr = rp.Pop<u32>();
+    // Real HW ignores this.
+    [[maybe_unused]] const u32 size = rp.Pop<u32>();
+    const auto src_data = rp.PopStaticBuffer();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (!HasGpuRight(ctx)) {
+        rb.Push(ResultNoGpuRight);
+        return;
+    }
+
+    const u32 size_bytes = static_cast<u32>(src_data.size());
+    if (reg_addr & 3 || reg_addr >= 0x420000) {
+        rb.Push(ResultRegsOutOfRangeOrMisaligned);
+        return;
+    }
+    if (size_bytes > 0x80) {
+        rb.Push(ResultRegsInvalidSize);
+        return;
+    }
+    if (size_bytes & 3) {
+        rb.Push(ResultRegsMisaligned);
+        return;
+    }
+    for (u32 offset = 0; offset < size_bytes; offset += sizeof(u32)) {
+        u32 value;
+        std::memcpy(&value, &src_data[offset], sizeof(u32));
+        system.GPU().WriteReg(REGS_BEGIN + reg_addr, value);
+    }
+    rb.Push(ResultSuccess);
 }
 
 void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
@@ -282,6 +381,12 @@ void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
 
     static constexpr u32 MaxReadSize = 0x80;
     u32 size = std::min(input_size, MaxReadSize);
+
+    if (!HasGpuRight(ctx)) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultNoGpuRight);
+        return;
+    }
 
     if ((reg_addr % 4) != 0 || reg_addr >= 0x420000) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -314,40 +419,101 @@ void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
     u32 screen_id = rp.Pop<u32>();
     auto fb_info = rp.PopRaw<FrameBufferInfo>();
 
-    system.GPU().SetBufferSwap(screen_id, fb_info);
+    if (!HasGpuRight(ctx)) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultNoGpuRight);
+        return;
+    }
+
+    // Real hardware ignores invalid screens and still returns success.
+    if (screen_id < 2) {
+        system.GPU().SetBufferSwap(screen_id, fb_info);
+    } else {
+        LOG_ERROR(Service_GSP, "Invalid screen id {}", screen_id);
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void GSP_GPU::SetCommandList(Kernel::HLERequestContext& ctx) {
+    // Stubbed command, which was once implemented in older GSP versions.
+    // Only returns success.
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void GSP_GPU::RequestDma(Kernel::HLERequestContext& ctx) {
+    // Stubbed command, which was once implemented in older GSP versions.
+    // Only returns success.
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+/// Checks if the given address is valid for cache operations.
+static bool IsValidCacheRange(VAddr address, u32 size, bool allow_vram) {
+    const VAddr end = address + size;
+    const auto contains = [address, end](VAddr range_start, VAddr range_end) {
+        return address >= range_start && address <= range_end && end >= range_start &&
+               end <= range_end;
+    };
+    return contains(Memory::LINEAR_HEAP_VADDR, Memory::LINEAR_HEAP_VADDR_END) ||
+           contains(Memory::NEW_LINEAR_HEAP_VADDR, Memory::NEW_LINEAR_HEAP_VADDR_END) ||
+           contains(Memory::N3DS_EXTRA_RAM_VADDR, Memory::N3DS_EXTRA_RAM_VADDR_END) ||
+           (allow_vram && address >= Memory::VRAM_VADDR && address <= Memory::VRAM_VADDR_END);
+}
+
+void GSP_GPU::DoCacheOperation(Kernel::HLERequestContext& ctx, bool allow_vram) {
+    IPC::RequestParser rp(ctx);
+    const u32 address = rp.Pop<u32>();
+    const u32 size = rp.Pop<u32>();
+    [[maybe_unused]] auto process = rp.PopObject<Kernel::Process>();
+
+    // The CPU cache is not emulated, only the address check.
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (!IsValidCacheRange(address, size, allow_vram)) {
+        LOG_ERROR(Service_GSP, "Invalid cache operation range address=0x{:08X}, size=0x{:08X}",
+                  address, size);
+        rb.Push(ResultInvalidBuffer);
+        return;
+    }
     rb.Push(ResultSuccess);
 }
 
 void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    [[maybe_unused]] u32 address = rp.Pop<u32>();
-    [[maybe_unused]] u32 size = rp.Pop<u32>();
-    [[maybe_unused]] auto process = rp.PopObject<Kernel::Process>();
-
-    // TODO(purpasmart96): Verify return header on HW
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
-
-    LOG_TRACE(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
+    DoCacheOperation(ctx, false);
 }
 
 void GSP_GPU::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
+    DoCacheOperation(ctx, true);
+}
+
+void GSP_GPU::RegisterInterruptEvents(Kernel::HLERequestContext& ctx) {
+    Unsupported(ctx);
+}
+
+void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
+    DoCacheOperation(ctx, false);
+}
+
+void GSP_GPU::ResetGpuCore(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    [[maybe_unused]] u32 address = rp.Pop<u32>();
-    [[maybe_unused]] u32 size = rp.Pop<u32>();
-    [[maybe_unused]] auto process = rp.PopObject<Kernel::Process>();
-
-    // TODO(purpasmart96): Verify return header on HW
-
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (!HasGpuRight(ctx)) {
+        rb.Push(ResultNoGpuRight);
+        return;
+    }
+    DoResetGpuCore();
     rb.Push(ResultSuccess);
+}
 
-    LOG_TRACE(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
+void GSP_GPU::Unsupported(Kernel::HLERequestContext& ctx) {
+    // Stubbed commands, which were once implemented in older GSP versions.
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultNotSupported);
 }
 
 void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
@@ -357,6 +523,8 @@ void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 
+    // TODO(PabloMK7): Implement the AXI registers even if they do not
+    // do anything. For now this function remains stubbed.
     LOG_DEBUG(Service_GSP, "(STUBBED) called mode=0x{:08X}", mode);
 }
 
@@ -383,14 +551,27 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     auto relay_queue_flags = static_cast<RelayEventQueueFlags>(rp.Pop<u32>());
 
     auto interrupt_event = rp.PopObject<Kernel::Event>();
-    ASSERT_MSG(interrupt_event, "handle is not valid!");
 
-    interrupt_event->SetName("GSP_GPU::interrupt_event");
+    // Real hardware stores the handle without checking it.
+    if (interrupt_event) {
+        interrupt_event->SetName("GSP_GPU::interrupt_event");
+    } else {
+        LOG_ERROR(Service_GSP, "Invalid interrupt event handle");
+    }
 
     SessionData* session_data = GetSessionData(ctx.Session());
     session_data->interrupt_event = std::move(interrupt_event);
     session_data->registered = true;
     session_data->relay_queue_flags = relay_queue_flags;
+
+    // Clear the relevant queue information, as real hardware does.
+    auto* interrupt_relay_queue = GetInterruptRelayQueue(session_data->thread_id);
+    interrupt_relay_queue->index = 0;
+    interrupt_relay_queue->number_interrupts = 0;
+    interrupt_relay_queue->error_code = 0;
+    interrupt_relay_queue->config = 0;
+    interrupt_relay_queue->missed_PDC0 = 0;
+    interrupt_relay_queue->missed_PDC1 = 0;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
@@ -584,15 +765,6 @@ void Service::GSP::GSP_GPU::ProcessPendingInterruptImpl(InterruptId interrupt_id
             }
         }
 
-        // Update framebuffer information if requested
-        const s32 screen_id = (interrupt_id == InterruptId::PDC0) ? 0 : 1;
-
-        auto info = GetFrameBufferInfo(thread_id, screen_id);
-        if (info.first || force_buffer_swap[screen_id]) {
-            force_buffer_swap[screen_id] = false;
-            system.GPU().SetBufferSwap(screen_id, *info.second);
-        }
-
         // If it's the bottom screen interrupt and a HLE event is pending,
         // signal it and reset.
         if (interrupt_id == InterruptId::PDC1 && session_data->on_vblank_event) {
@@ -615,6 +787,15 @@ void GSP_GPU::SignalInterrupt(InterruptId interrupt_id, u64 wait_delay_ns) {
     // Normal interrupts are only signaled for the active thread (ie, the thread that has the GPU
     // right), but the PDC0/1 interrupts are signaled for every registered thread.
     if (interrupt_id == InterruptId::PDC0 || interrupt_id == InterruptId::PDC1) {
+        // Update the framebuffer if requested. Only the framebuffer info of the thread with the
+        // GPU right is used.
+        const u32 screen_id = (interrupt_id == InterruptId::PDC0) ? 0 : 1;
+        auto info = GetFrameBufferInfo(thread_id_with_rights, screen_id);
+        if (info.first || force_buffer_swap[screen_id]) {
+            force_buffer_swap[screen_id] = false;
+            system.GPU().SetBufferSwap(screen_id, *info.second);
+        }
+
         for (u32 thread_id = 0; thread_id < MaxGSPThreads; ++thread_id) {
             SignalInterruptForThread(interrupt_id, thread_id, wait_delay_ns);
         }
@@ -633,6 +814,14 @@ void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const bool enable_black = rp.Pop<bool>();
 
+    // After the GPU core reset of a forced AcquireRight, only the right holder can turn the
+    // screens back on.
+    if (gpu_core_reset_by_force && !enable_black && !HasGpuRight(ctx)) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultNoGpuRight);
+        return;
+    }
+
     Pica::ColorFill data{};
     data.is_enabled.Assign(enable_black);
     system.GPU().SetColorFill(data);
@@ -649,6 +838,7 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
         // the function always succeeds.
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultSuccess);
+        return;
     }
 
     auto* command_buffer = GetCommandBuffer(thread_id_with_rights);
@@ -679,8 +869,14 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
 
         // Decode and execute command
         system.perf_stats->BeginGPUProcessing();
-        gpu.Execute(command);
+        const Result result = gpu.Execute(command);
         system.perf_stats->EndGPUProcessing();
+
+        // The GSP module stores the error of a failed command and keeps going.
+        if (result.IsError()) {
+            command_buffer->unk[0] = result.raw;
+            command_buffer->status.Assign(CommandBuffer::STATUS_CMD_FAILED);
+        }
 
         if (command.stop) {
             command_buffer->status.Assign(CommandBuffer::STATUS_STOPPED);
@@ -701,6 +897,18 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultSuccess);
     }
+}
+
+void GSP_GPU::SetDisplayTransfer(Kernel::HLERequestContext& ctx) {
+    Unsupported(ctx);
+}
+
+void GSP_GPU::SetTextureCopy(Kernel::HLERequestContext& ctx) {
+    Unsupported(ctx);
+}
+
+void GSP_GPU::SetMemoryFill(Kernel::HLERequestContext& ctx) {
+    Unsupported(ctx);
 }
 
 void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
@@ -908,61 +1116,130 @@ void GSP_GPU::RestoreVramSysArea(Kernel::HLERequestContext& ctx) {
         "GSP_GPU::RestoreVramSysArea", std::chrono::nanoseconds(-1), vblank_callback);
 }
 
-Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
-                                const std::shared_ptr<Kernel::Process>& process, u32 flag,
-                                bool blocking) {
-    const auto session_data = GetSessionData(ctx.Session());
-
-    LOG_DEBUG(Service_GSP, "called flag={:08X} process={} thread_id={}", flag, process->process_id,
-              session_data->thread_id);
-
+void GSP_GPU::ApplyPerProgramSettings(const Kernel::Process& process) {
     bool right_eye_disable_allow =
         Common::Hacks::hack_manager.GetHackAllowMode(Common::Hacks::HackType::RIGHT_EYE_DISABLE,
-                                                     process->codeset->program_id) !=
+                                                     process.codeset->program_id) !=
         Common::Hacks::HackAllowMode::DISALLOW;
 
     bool requires_shader_fixup =
         Common::Hacks::hack_manager.GetHackAllowMode(
-            Common::Hacks::HackType::REQUIRES_SHADER_FIXUP, process->codeset->program_id,
+            Common::Hacks::HackType::REQUIRES_SHADER_FIXUP, process.codeset->program_id,
             Common::Hacks::HackAllowMode::DISALLOW) != Common::Hacks::HackAllowMode::DISALLOW;
 
     delay_texture_copy_completion =
         Common::Hacks::hack_manager.GetHackAllowMode(
-            Common::Hacks::HackType::DELAY_TEXTURE_COPY_COMPLETION, process->codeset->program_id,
+            Common::Hacks::HackType::DELAY_TEXTURE_COPY_COMPLETION, process.codeset->program_id,
             Common::Hacks::HackAllowMode::DISALLOW) != Common::Hacks::HackAllowMode::DISALLOW;
 
     auto& gpu = system.GPU();
-    gpu.ApplyPerProgramSettings(process->codeset->program_id);
+    gpu.ApplyPerProgramSettings(process.codeset->program_id);
     gpu.GetRightEyeDisabler().SetEnabled(right_eye_disable_allow);
     gpu.PicaCore().vs_setup.SetRequiresShaderFixup(requires_shader_fixup);
     gpu.PicaCore().gs_setup.SetRequiresShaderFixup(requires_shader_fixup);
+}
+
+bool GSP_GPU::GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::Process& process) {
+    ApplyPerProgramSettings(process);
+
+    const u64 program_id = process.codeset->program_id;
+    auto* const rasterizer = system.GPU().Renderer().Rasterizer();
+    const bool load_crashed = rasterizer->DiskResourcesLoadCrashed(program_id);
+    if (load_crashed) {
+        system.SetStatus(Core::System::ResultStatus::ErrorShaderCacheCrash,
+                         fmt::format("{:016X}", program_id).c_str());
+    } else {
+        rasterizer->SwitchDiskResources(program_id);
+    }
+
+    thread_id_with_rights = thread_id;
+    active_client_thread_id = client_thread_id;
+
+    for (u32 screen_id = 0; screen_id < 2; ++screen_id) {
+        GetFrameBufferUpdate(thread_id_with_rights, screen_id)->is_dirty = 0;
+    }
+    return !load_crashed;
+}
+
+void GSP_GPU::DeferDiskResourcesSwitch(u64 program_id, std::shared_ptr<Kernel::Event> event) {
+    deferred_switches.push_back({program_id, std::move(event)});
+    system.Kernel().timing.ScheduleEvent(0, DeferredSwitchEventType);
+}
+
+void GSP_GPU::ProcessDeferredSwitch() {
+    const auto deferred = std::move(deferred_switches.front());
+    deferred_switches.pop_front();
+    system.GPU().Renderer().Rasterizer()->SwitchDiskResources(deferred.program_id);
+    deferred.event->Signal();
+}
+
+Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
+                                const std::shared_ptr<Kernel::Process>& process, bool force,
+                                bool try_only, bool& switch_deferred) {
+    const auto session_data = GetSessionData(ctx.Session());
+
+    LOG_DEBUG(Service_GSP, "called force={} try={} process={} thread_id={}", force, try_only,
+              process->process_id, session_data->thread_id);
 
     if (thread_id_with_rights == session_data->thread_id) {
         return {ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
                 ErrorLevel::Success};
     }
 
-    gpu.Renderer().Rasterizer()->SwitchDiskResources(process->codeset->program_id);
-
-    if (blocking) {
-        // TODO: The thread should be put to sleep until acquired.
-        ASSERT_MSG(thread_id_with_rights == std::numeric_limits<u32>::max(),
-                   "Sleeping for GPU right is not yet supported.");
-    } else if (thread_id_with_rights != std::numeric_limits<u32>::max()) {
-        return {ErrorDescription::Busy, ErrorModule::GX, ErrorSummary::WouldBlock,
-                ErrorLevel::Status};
+    if (force && !force_mode) {
+        // The first forced AcquireRight steals the right and switches the GSP
+        // module to force mode until the system restarts.
+        if (thread_id_with_rights != std::numeric_limits<u32>::max()) {
+            LOG_WARNING(Service_GSP, "GPU right taken from thread {} by force",
+                        thread_id_with_rights);
+        }
+        force_mode = true;
+        switch_deferred =
+            !GrantGpuRight(session_data->thread_id, ctx.ClientThread()->thread_id, *process);
+        return ResultSuccess;
     }
 
-    thread_id_with_rights = session_data->thread_id;
-    active_client_thread_id = ctx.ClientThread()->thread_id;
+    if (thread_id_with_rights != std::numeric_limits<u32>::max()) {
+        return ResultGpuRightBusy;
+    }
+
+    // In force mode, if AcquireRight is used without force, then it returns a
+    // special success error code.
+    if (force_mode && !force && !try_only) {
+        return ResultForceModeCanceled;
+    }
+
+    switch_deferred =
+        !GrantGpuRight(session_data->thread_id, ctx.ClientThread()->thread_id, *process);
     return ResultSuccess;
+}
+
+void GSP_GPU::DoResetGpuCore() {
+    // The GSP module turns on the LCD force black of both screens, resets and reinitialises the
+    // GPU and applies the framebuffers again. The screens stay black until SetLcdForceBlack(0)
+    // is called. TODO(PabloMK7): Emulate the low level details of a GPU reset.
+    Pica::ColorFill data{};
+    data.is_enabled.Assign(1);
+    system.GPU().SetColorFill(data);
+    force_buffer_swap[0] = true;
+    force_buffer_swap[1] = true;
 }
 
 void GSP_GPU::TryAcquireRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto process = rp.PopObject<Kernel::Process>();
 
-    const auto result = AcquireGpuRight(ctx, process, 0, false);
+    bool switch_deferred = false;
+    const auto result = AcquireGpuRight(ctx, process, false, true, switch_deferred);
+    if (switch_deferred) {
+        auto callback = std::make_shared<ThreadCallback>(system, "GSP_GPU::TryAcquireRight",
+                                                         ThreadCallback::Type::AcquireRight);
+        callback->SetResult(result);
+        DeferDiskResourcesSwitch(process->codeset->program_id,
+                                 ctx.SleepClientThread("GSP_GPU::TryAcquireRight",
+                                                       std::chrono::nanoseconds(-1), callback));
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(result);
@@ -970,19 +1247,71 @@ void GSP_GPU::TryAcquireRight(Kernel::HLERequestContext& ctx) {
 
 void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const auto flag = rp.Pop<u32>();
+    const bool force = rp.Pop<u8>() != 0;
     const auto process = rp.PopObject<Kernel::Process>();
 
-    const auto result = AcquireGpuRight(ctx, process, flag, true);
+    bool switch_deferred = false;
+    const auto result = AcquireGpuRight(ctx, process, force, false, switch_deferred);
+    if (result == ResultGpuRightBusy) {
+        // The GSP module waits until the holder releases the right, then gives it to the thread.
+        // Sleep the caller thread until the right is available.
+        const auto session_data = GetSessionData(ctx.Session());
+        auto callback = std::make_shared<ThreadCallback>(system, "GSP_GPU::AcquireRight",
+                                                         ThreadCallback::Type::AcquireRight);
+        auto event =
+            ctx.SleepClientThread("GSP_GPU::AcquireRight", std::chrono::nanoseconds(-1), callback);
+        right_waiters.push_back({session_data->thread_id, ctx.ClientThread()->thread_id, force,
+                                 process, std::move(event), std::move(callback)});
+        return;
+    }
+
+    // The first forced AcquireRight resets the GPU core and
+    // makes SetLcdForceBlack(0) require the right.
+    if (force && !gpu_core_reset_by_force) {
+        gpu_core_reset_by_force = true;
+        DoResetGpuCore();
+    }
+
+    if (switch_deferred) {
+        auto callback = std::make_shared<ThreadCallback>(system, "GSP_GPU::AcquireRight",
+                                                         ThreadCallback::Type::AcquireRight);
+        callback->SetResult(result);
+        DeferDiskResourcesSwitch(
+            process->codeset->program_id,
+            ctx.SleepClientThread("GSP_GPU::AcquireRight", std::chrono::nanoseconds(-1), callback));
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(result);
 }
 
 void GSP_GPU::ReleaseRight(const SessionData* session_data) {
-    if (thread_id_with_rights == session_data->thread_id) {
-        thread_id_with_rights = std::numeric_limits<u32>::max();
-        active_client_thread_id = std::numeric_limits<u32>::max();
+    if (thread_id_with_rights != session_data->thread_id) {
+        return;
+    }
+
+    thread_id_with_rights = std::numeric_limits<u32>::max();
+    active_client_thread_id = std::numeric_limits<u32>::max();
+
+    // Wake up the first thread waiting in AcquireRight. In force mode, threads waiting without
+    // the flag are woken with ResultForceModeCanceled and do not get the right.
+    while (!right_waiters.empty()) {
+        auto wait_context = std::move(right_waiters.front());
+        right_waiters.pop_front();
+        if (force_mode && !wait_context.force) {
+            wait_context.callback->SetResult(ResultForceModeCanceled);
+            wait_context.event->Signal();
+            continue;
+        }
+        if (GrantGpuRight(wait_context.thread_id, wait_context.client_thread_id,
+                          *wait_context.process)) {
+            wait_context.event->Signal();
+        } else {
+            DeferDiskResourcesSwitch(wait_context.process->codeset->program_id,
+                                     std::move(wait_context.event));
+        }
+        break;
     }
 }
 
@@ -999,20 +1328,6 @@ void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_GSP, "called");
 }
 
-void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-
-    [[maybe_unused]] u32 address = rp.Pop<u32>();
-    [[maybe_unused]] u32 size = rp.Pop<u32>();
-    auto process = rp.PopObject<Kernel::Process>();
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
-
-    LOG_TRACE(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
-              size, process->process_id);
-}
-
 void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -1025,12 +1340,21 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_GSP, "(STUBBED) called");
 }
 
+void GSP_GPU::SetTestCommand(Kernel::HLERequestContext& ctx) {
+    Unsupported(ctx);
+}
+
 void GSP_GPU::SetInternalPriorities(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto priority = rp.Pop<u32>();
     const auto priority_with_rights = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (priority < 0x10 || priority > 0x3F || priority_with_rights < 0x11 ||
+        priority_with_rights > 0x3F) {
+        rb.Push(ResultInvalidPriority);
+        return;
+    }
     rb.Push(ResultSuccess);
 
     LOG_DEBUG(Service_GSP, "(STUBBED) called priority={:#02X}, priority_with_rights={:#02X}",
@@ -1063,6 +1387,10 @@ void GSP_GPU::serialize(Archive& ar, const unsigned int) {
     ar & cached_framebuffer_infos;
     ar & force_buffer_swap;
     ar & vram_backup_handler;
+    ar & right_waiters;
+    ar & deferred_switches;
+    ar & force_mode;
+    ar & gpu_core_reset_by_force;
 }
 SERIALIZE_IMPL(GSP_GPU)
 
@@ -1071,19 +1399,19 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
         // clang-format off
         {0x0001, &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
         {0x0002, &GSP_GPU::WriteHWRegsWithMask, "WriteHWRegsWithMask"},
-        {0x0003, nullptr, "WriteHWRegRepeat"},
+        {0x0003, &GSP_GPU::WriteHWRegRepeat, "WriteHWRegRepeat"},
         {0x0004, &GSP_GPU::ReadHWRegs, "ReadHWRegs"},
         {0x0005, &GSP_GPU::SetBufferSwap, "SetBufferSwap"},
-        {0x0006, nullptr, "SetCommandList"},
-        {0x0007, nullptr, "RequestDma"},
+        {0x0006, &GSP_GPU::SetCommandList, "SetCommandList"},
+        {0x0007, &GSP_GPU::RequestDma, "RequestDma"},
         {0x0008, &GSP_GPU::FlushDataCache, "FlushDataCache"},
         {0x0009, &GSP_GPU::InvalidateDataCache, "InvalidateDataCache"},
-        {0x000A, nullptr, "RegisterInterruptEvents"},
+        {0x000A, &GSP_GPU::RegisterInterruptEvents, "RegisterInterruptEvents"},
         {0x000B, &GSP_GPU::SetLcdForceBlack, "SetLcdForceBlack"},
         {0x000C, &GSP_GPU::TriggerCmdReqQueue, "TriggerCmdReqQueue"},
-        {0x000D, nullptr, "SetDisplayTransfer"},
-        {0x000E, nullptr, "SetTextureCopy"},
-        {0x000F, nullptr, "SetMemoryFill"},
+        {0x000D, &GSP_GPU::SetDisplayTransfer, "SetDisplayTransfer"},
+        {0x000E, &GSP_GPU::SetTextureCopy, "SetTextureCopy"},
+        {0x000F, &GSP_GPU::SetMemoryFill, "SetMemoryFill"},
         {0x0010, &GSP_GPU::SetAxiConfigQoSMode, "SetAxiConfigQoSMode"},
         {0x0011, &GSP_GPU::SetPerfLogMode, "SetPerfLogMode"},
         {0x0012, &GSP_GPU::GetPerfLog, "GetPerfLog"},
@@ -1095,9 +1423,9 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
         {0x0018, &GSP_GPU::ImportDisplayCaptureInfo, "ImportDisplayCaptureInfo"},
         {0x0019, &GSP_GPU::SaveVramSysArea, "SaveVramSysArea"},
         {0x001A, &GSP_GPU::RestoreVramSysArea, "RestoreVramSysArea"},
-        {0x001B, nullptr, "ResetGpuCore"},
+        {0x001B, &GSP_GPU::ResetGpuCore, "ResetGpuCore"},
         {0x001C, &GSP_GPU::SetLedForceOff, "SetLedForceOff"},
-        {0x001D, nullptr, "SetTestCommand"},
+        {0x001D, &GSP_GPU::SetTestCommand, "SetTestCommand"},
         {0x001E, &GSP_GPU::SetInternalPriorities, "SetInternalPriorities"},
         {0x001F, &GSP_GPU::StoreDataCache, "StoreDataCache"},
         // clang-format on
@@ -1115,6 +1443,8 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
         "GSPPendingInterrupt", [this](uintptr_t arg, s64 cycle_late) {
             ProcessPendingInterrupt(static_cast<size_t>(arg));
         });
+    DeferredSwitchEventType = system.Kernel().timing.RegisterEvent(
+        "GSPDeferredDiskResourcesSwitch", [this](uintptr_t, s64) { ProcessDeferredSwitch(); });
 
     first_initialization = true;
 };

@@ -1,37 +1,45 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model.view
 
 import androidx.annotation.StringRes
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.AbstractStringSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 
 class DateTimeSetting(
-    setting: AbstractSetting?,
+    private val settings: CitraSettings,
+    setting: AbstractSetting<String>?,
     titleId: Int,
     descriptionId: Int,
     val key: String? = null,
     private val defaultValue: String? = null,
     override var isEnabled: Boolean = true,
+    private val getValue: (() -> String)? = null,
+    private val setValue: ((String) -> Unit)? = null,
     @StringRes override var disabledMessage: Int =
         R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_DATETIME_SETTING
 
     val value: String
-        get() = if (setting != null) {
-            val setting = setting as AbstractStringSetting
-            setting.string
-        } else {
-            defaultValue!!
-        }
+        get() = getValue?.invoke()
+            ?: if (setting != null) {
+                @Suppress("UNCHECKED_CAST")
+                settings.get(setting as AbstractSetting<String>)
+            } else {
+                defaultValue!!
+            }
 
-    fun setSelectedValue(datetime: String): AbstractStringSetting {
-        val stringSetting = setting as AbstractStringSetting
-        stringSetting.string = datetime
-        return stringSetting
+    fun setSelectedValue(datetime: String) {
+        if (setValue != null) {
+            setValue(datetime)
+        } else {
+            @Suppress("UNCHECKED_CAST")
+            val stringSetting = setting as AbstractSetting<String>
+            settings.setBySettingsContext(stringSetting, datetime)
+        }
     }
 }

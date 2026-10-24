@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <boost/container/static_vector.hpp>
 
@@ -67,11 +67,13 @@ constexpr std::array<vk::DescriptorSetLayoutBinding, 6> BUFFER_BINDINGS = {{
 }};
 
 template <u32 NumTex0>
-constexpr std::array<vk::DescriptorSetLayoutBinding, 3> TEXTURE_BINDINGS = {{
+constexpr std::array<vk::DescriptorSetLayoutBinding, 4> TEXTURE_BINDINGS = {{
     {0, vk::DescriptorType::eCombinedImageSampler, NumTex0,
      vk::ShaderStageFlagBits::eFragment},                                                  // tex0
     {1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment}, // tex1
     {2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment}, // tex2
+    {3, vk::DescriptorType::eCombinedImageSampler, 1,
+     vk::ShaderStageFlagBits::eFragment}, // tex_color
 }};
 
 constexpr std::array<vk::DescriptorSetLayoutBinding, 2> UTILITY_BINDINGS = {{
@@ -152,13 +154,17 @@ PipelineCache::~PipelineCache() {
 
 void PipelineCache::LoadCache(const std::atomic_bool& stop_loading,
                               const VideoCore::DiskResourceLoadCallback& callback) {
+    const bool flag_set = SetCacheLoadFlag(GetProgramID());
     LoadDriverPipelineDiskCache(stop_loading, callback);
     LoadDiskCache(stop_loading, callback);
+    if (flag_set) {
+        QueueClearCacheLoadFlag(GetProgramID());
+    }
 }
 
 void PipelineCache::SwitchCache(u64 title_id, const std::atomic_bool& stop_loading,
                                 const VideoCore::DiskResourceLoadCallback& callback) {
-    if (GetProgramID() == title_id) {
+    if (curr_disk_cache && GetProgramID() == title_id) {
         LOG_DEBUG(Render_Vulkan,
                   "Skipping pipeline cache switch - already using cache for title_id={:016X}",
                   title_id);
@@ -178,13 +184,50 @@ void PipelineCache::SwitchCache(u64 title_id, const std::atomic_bool& stop_loadi
 
     LOG_INFO(Render_Vulkan, "Switching pipeline cache to title_id={:016X}", title_id);
 
-    // Save current driver cache, update program ID and load the new driver cache
-    SaveDriverPipelineDiskCache();
+    const bool flag_set = SetCacheLoadFlag(title_id);
+
+    // Save current driver cache, if one was loaded, update program ID and load the new driver cache
+    if (curr_disk_cache) {
+        SaveDriverPipelineDiskCache();
+    }
     SetProgramID(title_id);
     LoadDriverPipelineDiskCache(stop_loading, nullptr);
 
     // Switch the disk shader cache after driver cache is switched
     SwitchDiskCache(title_id, stop_loading, callback);
+    if (flag_set) {
+        QueueClearCacheLoadFlag(title_id);
+    }
+}
+
+bool PipelineCache::LoadCacheCrashed(u64 title_id) const {
+    return Settings::values.use_disk_shader_cache && !load_flag_titles.contains(title_id) &&
+           FileUtil::Exists(GetLoadFlagPath(title_id));
+}
+
+bool PipelineCache::SetCacheLoadFlag(u64 title_id) {
+    // Buggy drivers can crash while building the cached pipelines, and the crash would then repeat
+    // on every load. The flag lets the next load detect it and warn the user.
+    if (!Settings::values.use_disk_shader_cache || !EnsureDirectories()) {
+        return false;
+    }
+    load_flag_titles.insert(title_id);
+    if (!FileUtil::CreateEmptyFile(GetLoadFlagPath(title_id))) {
+        LOG_ERROR(Render_Vulkan, "Failed to create the load flag of title_id={:016X}", title_id);
+        return false;
+    }
+    return true;
+}
+
+void PipelineCache::QueueClearCacheLoadFlag(u64 title_id) {
+    pipeline_workers.QueueWork([path = GetLoadFlagPath(title_id), disk_cache = curr_disk_cache] {
+        disk_cache->WaitLoadCachedPipelines();
+        FileUtil::Delete(path);
+    });
+}
+
+std::string PipelineCache::GetLoadFlagPath(u64 title_id) const {
+    return fmt::format("{}{:016X}-loading.flag", GetPipelineCacheDir(), title_id);
 }
 
 void PipelineCache::LoadDriverPipelineDiskCache(
@@ -578,6 +621,14 @@ void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
         current_shaders[ProgramType::FS] = (*res).second;
         shader_hashes[ProgramType::FS] = (*res).first;
     }
+}
+
+void PipelineCache::QueryBlendEmulation(const Pica::RegsInternal& regs, bool& rgb_emulation,
+                                        bool& alpha_emulation) const {
+    Pica::Shader::FramebufferConfig framebuffer_config{regs};
+    framebuffer_config.ApplyProfile(profile);
+    rgb_emulation = framebuffer_config.requested_rgb_blend.RequiresMinMaxEmulation();
+    alpha_emulation = framebuffer_config.requested_alpha_blend.RequiresMinMaxEmulation();
 }
 
 bool PipelineCache::IsCacheValid(std::span<const u8> data) const {

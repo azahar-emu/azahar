@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <climits>
@@ -148,6 +148,14 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
     std::shared_ptr<Process> previous_process = nullptr;
 
     Core::Timing& timing = kernel.timing;
+
+    // On real ARM11 a thread context switch (exception entry/return) clears the CPU's local
+    // exclusive monitor, so a LDREX reservation never survives a reschedule. The HLE switch
+    // replaces that exception path, so we must clear the reservation explicitly. Without this,
+    // a thread preempted between LDREX and STREX can have its STREX spuriously succeed (or a
+    // stale reservation corrupt another thread's atomic), breaking guest LightLocks/mutexes and
+    // desyncing multi-threaded scheduling.
+    cpu->ClearExclusiveState();
 
     // Save context for previous thread
     if (previous_thread) {
@@ -599,9 +607,14 @@ void CpuLimiterMulti::UpdateAppCpuLimit() {
         return;
     }
 
-    app_cpu_time = static_cast<u32>(kernel.ResourceLimit()
-                                        .GetForCategory(Kernel::ResourceLimitCategory::Application)
-                                        ->GetCurrentValue(Kernel::ResourceLimitType::CpuTime));
+    const s32 new_cpu_time = kernel.ResourceLimit()
+                                 .GetForCategory(Kernel::ResourceLimitCategory::Application)
+                                 ->GetCurrentValue(Kernel::ResourceLimitType::CpuTime);
+    if (new_cpu_time >= 90) {
+        return;
+    }
+
+    app_cpu_time = new_cpu_time;
     if (app_cpu_time == Core1CpuTime::PREEMPTION_DISABLED) {
         // No preemption, disable event
         active = false;

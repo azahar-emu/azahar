@@ -25,7 +25,6 @@
     <string name="select_games_folder">Wybierz folder aplikacji</string>
     <string name="select_games_folder_description">Pozwala Azahar rozszerzyć listę aplikacji.</string>
     <string name="about">O</string>
-    <string name="citra_description">Emulator 3DS na licencji open source</string>
     <string name="about_description">Wersja kompilacji, kredyty i nie tylko</string>
     <string name="games_dir_selected">Wybrano katalog z aplikacjami</string>
     <string name="select_citra_user_folder_home_description">Zmienia pliki, których Azahar używa do ładowania aplikacji</string>
@@ -412,7 +411,6 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Wystąpił błąd podczas ładowania aplikacji</string>
     <string name="loader_error_invalid_format">Nieprawidłowy format aplikacji</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[Format pliku aplikacji nie jest obsługiwany.<br>Upewnij się, że używasz jednego z obsługiwanych formatów plików:<ul><li>Obrazy kartridża: <b>.cci/.zcci/.3ds</b></li><li>Archiwa instalacyjne: <b>.cia/.zcia</b></li><li>Tytuły homebrew: <b>.3dsx/.z3dsx</b></li><li>Pliki NCCH: <b>.cxi/.zcxi/.app</li><li>Pliki ELF: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Nieprawidłowy moduł systemu</string>
     <string name="loader_error_invalid_system_mode_description">Aplikacje dostępne wyłącznie na konsoli New 3DS nie mogą być uruchamiane bez włączenia trybu New 3DS.</string>
     <string name="loader_error_applying_patches">Błąd podczas instalowania łatki</string>

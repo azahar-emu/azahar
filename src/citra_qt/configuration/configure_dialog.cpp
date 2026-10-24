@@ -1,6 +1,6 @@
 // Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <map>
 #include <QListWidgetItem>
@@ -78,7 +78,10 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Cor
             &ConfigureHotkeys::OnInputKeysChanged);
     connect(hotkeys_tab.get(), &ConfigureHotkeys::HotkeysChanged, input_tab.get(),
             &ConfigureInput::OnHotkeysChanged);
-
+    connect(input_tab.get(), &ConfigureInput::ClearHotkey, hotkeys_tab.get(),
+            &ConfigureHotkeys::OnClearBinding);
+    connect(hotkeys_tab.get(), &ConfigureHotkeys::ClearInputBinding, input_tab.get(),
+            &ConfigureInput::OnClearBinding);
     // Synchronise lists upon initialisation
     input_tab->EmitInputKeysChanged();
     hotkeys_tab->EmitHotkeysChanged();

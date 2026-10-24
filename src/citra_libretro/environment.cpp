@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cstring>
 
@@ -269,7 +269,7 @@ void retro_get_system_info(struct retro_system_info* info) {
     info->library_name = "Azahar";
     info->library_version = Common::g_build_fullname;
     info->need_fullpath = true;
-    info->valid_extensions = "3ds|3dsx|z3dsx|elf|axf|cci|zcci|cxi|zcxi|app";
+    info->valid_extensions = "3ds|3dsx|z3dsx|elf|axf|cci|zcci|cxi|zcxi|app|bcci|bcxi";
 }
 
 void LibRetro::SubmitAudio(const int16_t* data, size_t frames) {

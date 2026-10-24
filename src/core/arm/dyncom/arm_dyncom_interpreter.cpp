@@ -1,10 +1,10 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Copyright 2012 Michael Kang, 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #define CITRA_IGNORE_EXIT(x)
 
@@ -1706,7 +1706,8 @@ ADD_INST: {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         add_inst* const inst_cream = (add_inst*)inst_base->component;
 
-        u32 rn_val = CHECK_READ_REG15_WA(cpu, inst_cream->Rn);
+        u32 rn_val = inst_cream->I ? CHECK_READ_REG15_WA(cpu, inst_cream->Rn)
+                                   : CHECK_READ_REG15(cpu, inst_cream->Rn);
 
         bool carry;
         bool overflow;

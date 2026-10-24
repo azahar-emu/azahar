@@ -1,6 +1,6 @@
-// Copyright 2015-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <array>
 #include <cmath>
@@ -74,6 +74,15 @@ QPixmap GetQPixmapFromSMDH(const std::vector<u8>& smdh_data) {
     return QPixmap::fromImage(icon);
 }
 
+std::filesystem::path PathFromUTF8(std::string_view utf8_path) {
+    return std::filesystem::path(std::u8string(utf8_path.begin(), utf8_path.end()));
+}
+
+std::string PathToUTF8(const std::filesystem::path& path) {
+    const std::u8string utf8_path = path.u8string();
+    return std::string(utf8_path.begin(), utf8_path.end());
+}
+
 bool SaveIconToFile(const std::filesystem::path& icon_path, const QImage& image) {
 #if defined(WIN32)
 #pragma pack(push, 2)
@@ -105,7 +114,7 @@ bool SaveIconToFile(const std::filesystem::path& icon_path, const QImage& image)
         .id_count = static_cast<WORD>(scale_sizes.size()),
     };
 
-    FileUtil::IOFile icon_file(icon_path.string(), "wb");
+    FileUtil::IOFile icon_file(PathToUTF8(icon_path), "wb");
     if (!icon_file.IsOpen()) {
         return false;
     }
@@ -168,10 +177,10 @@ bool SaveIconToFile(const std::filesystem::path& icon_path, const QImage& image)
     return true;
 #elif defined(__linux__) || defined(__FreeBSD__)
     // Convert and write the icon as a PNG
-    if (!image.save(QString::fromStdString(icon_path.string()))) {
+    if (!image.save(QString::fromStdString(PathToUTF8(icon_path)))) {
         LOG_ERROR(Frontend, "Could not write icon as PNG to file");
     } else {
-        LOG_INFO(Frontend, "Wrote an icon to {}", icon_path.string());
+        LOG_INFO(Frontend, "Wrote an icon to {}", PathToUTF8(icon_path));
     }
     return true;
 #else

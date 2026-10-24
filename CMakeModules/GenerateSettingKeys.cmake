@@ -9,6 +9,7 @@ foreach(KEY IN ITEMS
     "use_artic_base_controller"
     "enable_gamemode"
     "use_cpu_jit"
+    "use_fastinterp"
     "cpu_clock_percentage"
     "is_new_3ds"
     "lle_applets"
@@ -24,6 +25,9 @@ foreach(KEY IN ITEMS
     "init_time_offset"
     "init_ticks_type"
     "init_ticks_override"
+    "battery_state_source"
+    "battery_charging"
+    "battery_level"
     "plugin_loader"
     "allow_plugin_loader"
     "steps_per_hour"
@@ -252,6 +256,7 @@ if (ENABLE_QT)
         "screenshotPath"
         "calloutFlags"
         "showConsole"
+        "bypass_audio_effects"
     )
         set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
         set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")

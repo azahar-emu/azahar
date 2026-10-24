@@ -26,7 +26,7 @@
     <string name="select_games_folder">Välj applikationsmapp</string>
     <string name="select_games_folder_description">Låter Azahar fylla i programlistan</string>
     <string name="about">Om</string>
-    <string name="citra_description">En 3DS-emulator med öppen källkod</string>
+    <string name="citra_description">En 3DS-emulator med öppen källkod\nLicensierad under GPLv3 eller senare</string>
     <string name="about_description">Byggversion, krediter och mer</string>
     <string name="games_dir_selected">Applikationskatalog vald</string>
     <string name="select_citra_user_folder_home_description">Ändrar de filer som Azahar använder för att ladda applikationer</string>
@@ -349,6 +349,8 @@
     <!-- Debug settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Använder JIT-kompilatorn (Just-in-Time) för CPU-emulering. När den är aktiverad kommer spelprestanda att förbättras avsevärt.</string>
+    <string name="use_fastinterp">Använd snabb tolk</string>
+    <string name="use_fastinterp_description">När CPU:ns JIT är inaktiverad används den snabba tolken i stället för den äldre tolken. Omstart krävs.</string>
     <string name="hw_shaders">Aktivera hårdvaru-shader</string>
     <string name="hw_shaders_description">Använder hårdvara för att emulera 3DS-shaders. När detta är aktiverat kommer spelprestanda att förbättras avsevärt.</string>
     <string name="cpu_clock_speed">CPU-klockhastighet</string>
@@ -444,7 +446,6 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Fel vid inläsning av program</string>
     <string name="loader_error_invalid_format">Ogiltigt programformat</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[Programfilformatet stöds inte.<br>Kontrollera att du använder ett kompatibelt filformat:<ul><li>Kassettavbildningar: <b>.cci/.zcci/.3ds</b></li><li>Installerbara arkiv: <b>.cia/.zcia</b></li><li>Homebrew-program: <b>.3dsx/.z3dsx</b></li><li>NCCH-behållare: <b>.cxi/.zcxi/.app</b></li><li>ELF-filer: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Ogiltigt systemläge</string>
     <string name="loader_error_invalid_system_mode_description">Program som är exklusiva för New 3DS kan inte läsas in utan att New 3DS-läget aktiveras.</string>
     <string name="loader_error_applying_patches">Fel vid tillämpning av patchar</string>
@@ -782,6 +783,11 @@
     <string name="anaglyph">Anaglyf</string>
     <string name="interlaced">Interlaced</string>
     <string name="reverse_interlaced">Omvänd interlaced</string>
+
+    <!-- Texture filters -->
+    <string name="anime4k">Anime4K (endast OpenGL)</string>
+    <string name="incompatible_texture_filter">Inkompatibelt texturfilter</string>
+    <string name="incompatible_texture_filter_description">Det valda texturfiltret (Anime4K) är inte kompatibelt med Vulkan-renderaren.\nTexturfiltret kommer att ställas in på Inget.\nFortsätt?</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Spelkontrollerat</string>

@@ -1,6 +1,6 @@
 // Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <memory>
 #include <QtGlobal>
@@ -40,6 +40,9 @@ ConfigureAudio::ConfigureAudio(bool is_powered_on, QWidget* parent)
     }
 
     ui->volume_label->setVisible(Settings::IsConfiguringGlobal());
+#ifndef _WIN32
+    ui->bypass_audio_effects->setVisible(false);
+#endif
     ui->volume_combo_box->setVisible(!Settings::IsConfiguringGlobal());
 
     SetupPerGameUI();
@@ -65,6 +68,7 @@ void ConfigureAudio::SetConfiguration() {
     SetOutputDeviceFromDeviceID();
     SetInputDeviceFromDeviceID();
 
+    ui->bypass_audio_effects->setChecked(Settings::values.bypass_audio_effects.GetValue());
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching.GetValue());
     ui->toggle_realtime_audio->setChecked(Settings::values.enable_realtime_audio.GetValue());
     ui->simulate_headphones_plugged->setChecked(
@@ -185,6 +189,7 @@ void ConfigureAudio::ApplyConfiguration() {
         Settings::values.output_type =
             static_cast<AudioCore::SinkType>(ui->output_type_combo_box->currentData().toUInt());
         Settings::values.output_device = ui->output_device_combo_box->currentText().toStdString();
+        Settings::values.bypass_audio_effects = ui->bypass_audio_effects->isChecked();
         Settings::values.input_type =
             static_cast<AudioCore::InputType>(ui->input_type_combo_box->currentData().toUInt());
         Settings::values.input_device = ui->input_device_combo_box->currentText().toStdString();
@@ -198,6 +203,9 @@ void ConfigureAudio::UpdateAudioOutputDevices(int sink_index) {
 
     ui->output_device_combo_box->clear();
     ui->output_device_combo_box->addItem(QString::fromUtf8(AudioCore::auto_device_name));
+
+    // Only cubeb WASAPI backend can bypass the effects. Auto resolves to the first output type.
+    ui->bypass_audio_effects->setEnabled(sink_details.type == AudioCore::SinkType::Cubeb);
 
     for (const auto& device : sink_details.list_devices()) {
         ui->output_device_combo_box->addItem(QString::fromStdString(device));
@@ -237,6 +245,7 @@ void ConfigureAudio::SetupPerGameUI() {
     ui->output_type_label->setVisible(false);
     ui->output_device_combo_box->setVisible(false);
     ui->output_device_label->setVisible(false);
+    ui->bypass_audio_effects->setVisible(false);
     ui->input_type_label->setVisible(false);
     ui->input_type_combo_box->setVisible(false);
     ui->input_device_label->setVisible(false);

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui
 
@@ -26,13 +26,8 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ActivitySettingsBinding
-import org.citra.citra_emu.features.settings.model.BooleanSetting
-import org.citra.citra_emu.features.settings.model.FloatSetting
-import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
-import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.InsetsHelper
@@ -43,13 +38,12 @@ import org.citra.citra_emu.utils.ThemeUtil
 class SettingsActivity :
     AppCompatActivity(),
     SettingsActivityView {
-    private val presenter = SettingsActivityPresenter(this)
-
     private lateinit var binding: ActivitySettingsBinding
+    val settingsViewModel: SettingsViewModel by viewModels()
+    private val presenter by lazy { SettingsActivityPresenter(this, settingsViewModel) }
 
-    private val settingsViewModel: SettingsViewModel by viewModels()
-
-    override val settings: Settings get() = settingsViewModel.settings
+    // the activity will work with the fresh Settings() object created and stored in the viewmodel
+    override val editingSettings: CitraSettings get() = settingsViewModel.editingSettings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         RefreshRateUtil.enforceRefreshRate(this)
@@ -64,9 +58,9 @@ class SettingsActivity :
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val launcher = intent
-        val gameID = launcher.getStringExtra(ARG_GAME_ID)
-        val menuTag = launcher.getStringExtra(ARG_MENU_TAG)
-        presenter.onCreate(savedInstanceState, menuTag!!, gameID!!)
+        val gameID = launcher.getStringExtra(ARG_GAME_ID) ?: ""
+        val menuTag = launcher.getStringExtra(ARG_MENU_TAG) ?: ""
+        presenter.onCreate(savedInstanceState, menuTag, gameID)
 
         // Show "Back" button in the action bar for navigation
         setSupportActionBar(binding.toolbarSettings)
@@ -202,24 +196,24 @@ class SettingsActivity :
     }
 
     fun onSettingsReset() {
+        // This function deletes the main config file AND any other config files
+        // that will store per-game settings and reloads from the default.
+
+        // TODO: if in a per-game settings context, replace this with a ResetToGlobal option
         // Prevents saving to a non-existent settings file
         presenter.onSettingsReset()
 
-        val controllerKeys = Settings.buttonKeys + Settings.circlePadKeys + Settings.cStickKeys +
-            Settings.dPadAxisKeys + Settings.dPadButtonKeys + Settings.triggerKeys
+        val controllerKeys =
+            CitraSettings.buttonKeys + CitraSettings.circlePadKeys + CitraSettings.cStickKeys +
+                CitraSettings.dPadAxisKeys + CitraSettings.dPadButtonKeys +
+                CitraSettings.triggerKeys
         val editor =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
         controllerKeys.forEach { editor.remove(it) }
         editor.apply()
 
-        // Reset the static memory representation of each setting
-        BooleanSetting.clear()
-        FloatSetting.clear()
-        ScaledFloatSetting.clear()
-        IntSetting.clear()
-        StringSetting.clear()
-
         // Delete settings file because the user may have changed values that do not exist in the UI
+        // TODO: once per-game settings are added, delete the per-game config folder as well
         val settingsFile = SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)
         if (!settingsFile.delete()) {
             throw IOException("Failed to delete $settingsFile")
@@ -234,6 +228,14 @@ class SettingsActivity :
             throw IllegalStateException("Azahar directory unavailable when accessing config file!")
         }
 
+        // clear the active setttings and reload them from the default, then merge them into the
+        // currently edited settings. This mostly doesn't matter since the activity ends after this
+        // function, but if we
+        CitraSettings.activeSettings.clearAll()
+        editingSettings.clearAll()
+        SettingsFile.loadSettings(CitraSettings.activeSettings)
+        NativeLibrary.reloadSettings()
+
         // Set default values for system config file
         SystemSaveGame.apply {
             setUsername("AZAHAR")
@@ -245,6 +247,7 @@ class SettingsActivity :
         }
 
         showToastMessage(getString(R.string.settings_reset), true)
+        presenter.applyChangedSettings()
         finish()
     }
 

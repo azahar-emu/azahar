@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <boost/hana/string.hpp>
 
@@ -39,6 +39,7 @@ static constexpr const char* input = "input";
 
 namespace cpu {
 static constexpr const char* use_cpu_jit = citra_setting(BaseKeys::use_cpu_jit);
+static constexpr const char* use_fastinterp = citra_setting(BaseKeys::use_fastinterp);
 static constexpr const char* cpu_clock_percentage = citra_setting(BaseKeys::cpu_clock_percentage);
 } // namespace cpu
 
@@ -161,6 +162,21 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::enabled
     },
 #endif
+    {
+        config::cpu::use_fastinterp,
+        "Use Fast Interpreter",
+        "Fast Interpreter",
+        "When the CPU JIT is disabled or unavailable, use the fast interpreter "
+        "instead of the legacy interpreter. Restart required.",
+        nullptr,
+        config::category::cpu,
+        {
+            { config::enabled, "Enabled" },
+            { config::disabled, "Disabled" },
+            { nullptr, nullptr }
+        },
+        config::enabled
+    },
     {
         config::cpu::cpu_clock_percentage,
         "CPU Clock Speed",
@@ -401,7 +417,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::category::graphics,
         {
             { "none", "None" },
-            { "Anime4K Ultrafast", "Anime4K Ultrafast" },
+            { "Anime4K", "Anime4K (OpenGL only)" },
             { "Bicubic", "Bicubic" },
             { "ScaleForce", "ScaleForce" },
             { "xBRZ", "xBRZ" },
@@ -834,6 +850,9 @@ static void ParseCpuOptions(void) {
         LibRetro::FetchVariable(config::cpu::use_cpu_jit, config::enabled) == config::enabled;
 #endif
 
+    Settings::values.use_fastinterp =
+        LibRetro::FetchVariable(config::cpu::use_fastinterp, config::enabled) == config::enabled;
+
     auto cpu_clock = LibRetro::FetchVariable(config::cpu::cpu_clock_percentage, "100");
     Settings::values.cpu_clock_percentage = std::stoi(cpu_clock);
 }
@@ -918,8 +937,14 @@ static void ParseAudioOptions(void) {
 }
 
 static Settings::TextureFilter GetTextureFilter(const std::string& name) {
-    if (name == "Anime4K Ultrafast")
-        return Settings::TextureFilter::Anime4K;
+    if (name == "Anime4K") {
+        const auto graphics_api = LibRetro::FetchVariable(config::graphics::graphics_api, "auto");
+        if (graphics_api == "Vulkan") {
+            return Settings::TextureFilter::NoFilter;
+        } else {
+            return Settings::TextureFilter::Anime4K;
+        }
+    }
     if (name == "Bicubic")
         return Settings::TextureFilter::Bicubic;
     if (name == "ScaleForce")

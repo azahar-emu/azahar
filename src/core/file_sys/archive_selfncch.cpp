@@ -1,6 +1,6 @@
-// Copyright 2017-2024 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <array>
 #include "common/archives.h"
@@ -280,7 +280,7 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
 
     std::vector<u8> buffer;
 
-    if (Loader::ResultStatus::Success == app_loader.ReadIcon(buffer))
+    if (Loader::ResultStatus::Success == app_loader.ReadIcon(buffer, false))
         data.icon = std::make_shared<std::vector<u8>>(std::move(buffer));
 
     buffer.clear();

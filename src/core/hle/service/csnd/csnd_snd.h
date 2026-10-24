@@ -1,12 +1,17 @@
-// Copyright 2014-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
+#include <array>
+#include <bitset>
 #include <memory>
 #include <boost/serialization/array.hpp>
+#include <boost/serialization/bitset.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include "audio_core/audio_types.h"
+#include "audio_core/csnd.h"
 #include "common/archives.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -14,83 +19,36 @@
 
 namespace Core {
 class System;
-}
+struct TimingEventType;
+} // namespace Core
 
 namespace Service::CSND {
 
-enum class Encoding : u8 {
-    Pcm8 = 0,
-    Pcm16 = 1,
-    Adpcm = 2,
-    Psg = 3,
-};
+struct Type0Command;
 
-enum class LoopMode : u8 {
-    Manual = 0,  // Play block 1 endlessly ignoring the size
-    Normal = 1,  // Play block 1 once, then repeat with block 2. Block size is reloaded every time a
-                 // new block is started
-    OneShot = 2, // Play block 1 once and stop
-    ConstantSize = 3, // Similar to Normal, but only load block size once at the beginning
-};
-
-struct AdpcmState {
-    s16 predictor = 0;
-    u8 step_index = 0;
+/// State the CSND module keeps for each client session.
+struct ClientData : public Kernel::SessionRequestHandler::SessionDataBase {
+    std::shared_ptr<Kernel::Mutex> mutex;
+    std::shared_ptr<Kernel::SharedMemory> shared_memory;
+    u32 master_state_offset = 0;
+    u32 channel_state_offset = 0;
+    u32 capture_state_offset = 0;
+    u32 direct_sound_offset = 0;
+    u32 channel_mask = 0;
+    u8 capture_mask = 0;
 
 private:
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar & predictor;
-        ar & step_index;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
-struct Channel {
-    PAddr block1_address = 0;
-    PAddr block2_address = 0;
-    u32 block1_size = 0;
-    u32 block2_size = 0;
-    AdpcmState block1_adpcm_state;
-    AdpcmState block2_adpcm_state;
-    bool block2_adpcm_reload = false;
-    u16 left_channel_volume = 0;
-    u16 right_channel_volume = 0;
-    u16 left_capture_volume = 0;
-    u16 right_capture_volume = 0;
-    u32 sample_rate = 0;
-    bool linear_interpolation = false;
-    LoopMode loop_mode = LoopMode::Manual;
-    Encoding encoding = Encoding::Pcm8;
-    u8 psg_duty = 0;
-
-private:
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar & block1_address;
-        ar & block2_address;
-        ar & block1_size;
-        ar & block2_size;
-        ar & block1_adpcm_state;
-        ar & block2_adpcm_state;
-        ar & block2_adpcm_reload;
-        ar & left_channel_volume;
-        ar & right_channel_volume;
-        ar & left_capture_volume;
-        ar & right_capture_volume;
-        ar & sample_rate;
-        ar & linear_interpolation;
-        ar & loop_mode;
-        ar & encoding;
-        ar & psg_duty;
-    }
-    friend class boost::serialization::access;
-};
-
-class CSND_SND final : public ServiceFramework<CSND_SND> {
+class CSND_SND final : public ServiceFramework<CSND_SND, ClientData> {
 public:
     explicit CSND_SND(Core::System& system);
-    ~CSND_SND() = default;
+    ~CSND_SND();
+
+    void ClientDisconnected(std::shared_ptr<Kernel::ServerSession> server_session) override;
 
 private:
     /**
@@ -101,7 +59,7 @@ private:
      *      2 : offset to master state located in the shared-memory, region size=8
      *      3 : offset to channel state located in the shared-memory, region size=12*num_channels
      *      4 : offset to capture state located in the shared-memory, region size=8*num_captures
-     *      5 : offset to type 1 commands (?) located in the shared-memory.
+     *      5 : offset to the direct sound structure located in the shared-memory.
      *  Outputs:
      *      1 : Result of function, 0 on success, otherwise error code
      *      2 : Handle-list header
@@ -128,17 +86,6 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void ExecuteCommands(Kernel::HLERequestContext& ctx);
-
-    /**
-     * CSND_SND::ExecuteType1Commands service function
-     *  Inputs:
-     *      0 : Header Code[0x00040080]
-     *      1 : unknown
-     *      2 : unknown
-     *  Outputs:
-     *      1 : Result of function, 0 on success, otherwise error code
-     */
-    void ExecuteType1Commands(Kernel::HLERequestContext& ctx);
 
     /**
      * CSND_SND::AcquireSoundChannels service function
@@ -238,38 +185,69 @@ private:
      */
     void Reset(Kernel::HLERequestContext& ctx);
 
+    void CacheOperation(Kernel::HLERequestContext& ctx);
+
+    void ExecuteCommand(ClientData& client, const Type0Command& command);
+    void UpdateState(ClientData& client);
+
+    /// Renders the pending samples up to the current emulated time, so that the registers read and
+    /// written respresent the proper values at that time.
+    void UpdateHardware();
+
+    bool IsRunning(u32 channel);
+    void SetPlayStateRaw(u32 channel, bool play);
+    void SetPlayState(u32 channel, bool play);
+    void StopChannel(u32 channel);
+    void SetRequestedVolume(u32 channel, u16 left, u16 right, bool start_fade);
+    void SetTargetVolume(u32 channel, u16 left, u16 right, bool start_fade);
+    void WriteCurrentVolume(u32 channel);
+    void StartFade();
+    void FadeCallback(std::uintptr_t step, s64 cycles_late);
+    void StartTicking();
+    void AudioTickCallback(s64 cycles_late);
+
     Core::System& system;
 
-    std::shared_ptr<Kernel::Mutex> mutex = nullptr;
-    std::shared_ptr<Kernel::SharedMemory> shared_memory = nullptr;
+    AudioCore::Csnd csnd_hw;
 
-    static constexpr u32 MaxCaptureUnits = 2;
-    std::array<bool, MaxCaptureUnits> capture_units = {false, false};
+    struct ChannelVolume {
+        std::array<u16, 2> requested{};
+        std::array<u16, 2> target{};
+        std::array<s32, 2> current{};
+        std::array<s32, 2> step{};
 
-    static constexpr u32 ChannelCount = 32;
-    std::array<Channel, ChannelCount> channels;
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & requested;
+            ar & target;
+            ar & current;
+            ar & step;
+        }
+        friend class boost::serialization::access;
+    };
+    std::array<ChannelVolume, AudioCore::Csnd::NumChannels> volumes{};
+    using ChannelSet = std::bitset<AudioCore::Csnd::NumChannels>;
+    ChannelSet started;       ///< Channels started through command 1
+    ChannelSet fading;        ///< Channels fading towards their target
+    ChannelSet stop_pending;  ///< Channels to stop once faded out
+    ChannelSet pause_pending; ///< Channels to pause once faded out
+    bool fade_scheduled = false;
 
-    u32 master_state_offset = 0;
-    u32 channel_state_offset = 0;
-    u32 capture_state_offset = 0;
-    u32 type1_command_offset = 0;
+    std::array<bool, AudioCore::Csnd::NumCaptureUnits> capture_units_in_use{};
 
-    u32 acquired_channel_mask = 0;
+    bool is_ticking = false;
+    u32 initialized_clients = 0;
+    AudioCore::StereoFrame16 frame{};
+    u32 frame_samples = 0;
+    s64 frame_start_ticks = 0;
+    s64 frame_length_ticks = 0;
+
+    Core::TimingEventType* audio_tick_event = nullptr;
+    Core::TimingEventType* fade_event = nullptr;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        DEBUG_SERIALIZATION_POINT;
-        ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
-        ar & mutex;
-        ar & shared_memory;
-        ar & capture_units;
-        ar & channels;
-        ar & master_state_offset;
-        ar & channel_state_offset;
-        ar & capture_state_offset;
-        ar & type1_command_offset;
-        ar & acquired_channel_mask;
-    }
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
@@ -279,4 +257,5 @@ void InstallInterfaces(Core::System& system);
 } // namespace Service::CSND
 
 BOOST_CLASS_EXPORT_KEY(Service::CSND::CSND_SND)
+BOOST_CLASS_EXPORT_KEY(Service::CSND::ClientData)
 SERVICE_CONSTRUCT(Service::CSND::CSND_SND)

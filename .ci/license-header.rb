@@ -1,12 +1,16 @@
 #!/usr/bin/ruby
 # frozen_string_literal: true
 
+# Copyright 2024-2026 Citra Emulator Project / Azahar Emulator Project
+# Licensed under GPLv3 or any later version
+# Refer to the LICENSE.txt file included.
+
 YEARS_PLACEHOLDER = 'YEARS_PLACEHOLDER'
 
 license_header_template = <<~EOF
       // Copyright #{YEARS_PLACEHOLDER} Citra Emulator Project / Azahar Emulator Project
-      // Licensed under GPLv2 or any later version
-      // Refer to the license.txt file included.
+      // Licensed under GPLv3 or any later version
+      // Refer to the LICENSE.txt file included.
       EOF
 
 def build_license_regex(template, placeholder)
@@ -34,7 +38,7 @@ print 'Checking files...'
 missing_header_files = []
 stale_year_files = []
 branch_changed_files.each do |file_name|
-   next unless file_name.end_with?('.cpp', '.cpp.in', '.h', '.h.in', '.kt', '.kts', '.m', '.mm')
+   next unless file_name.end_with?('.cpp', '.cpp.in', '.frag', '.h', '.h.in', '.inc', '.kt', '.kts', '.m', '.mm', '.vert')
    next unless File.file?(file_name)
 
    file_content = File.read(file_name, mode: 'r:bom|utf-8')

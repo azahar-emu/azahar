@@ -1,17 +1,28 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
+#include <algorithm>
 #include <cstddef>
+#include <vector>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "common/assert.h"
+#include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/dumping/backend.h"
 
 namespace AudioCore {
+
+namespace {
+/// Amount of CSND frames to wait until they are outputted on their own
+/// because DSP is not producing any output.
+constexpr u32 CsndFramesBeforeDspIdle = 2;
+/// Max amount of CSND pending samples.
+constexpr std::size_t MaxCsndPendingSamples = samples_per_frame * 4;
+} // namespace
 
 DspInterface::DspInterface(Core::System& system_) : system(system_) {}
 
@@ -37,37 +48,97 @@ void DspInterface::EnableStretching(bool enable) {
 }
 
 void DspInterface::OutputFrame(StereoFrame16 frame) {
-    if (!sink) {
-        return;
-    }
-
-    if (sink->ImmediateSubmission()) {
-        sink->PushSamples(frame.data(), frame.size());
-    } else {
-        fifo.Push(frame.data(), frame.size());
-    }
-
-    auto video_dumper = system.GetVideoDumper();
-    if (video_dumper && video_dumper->IsDumping()) {
-        video_dumper->AddAudioFrame(std::move(frame));
-    }
+    std::scoped_lock lock{csnd_mutex};
+    MixCsnd(frame);
+    PushSamples(frame);
 }
 
 void DspInterface::OutputSample(std::array<s16, 2> sample) {
+    std::scoped_lock lock{csnd_mutex};
+    MixCsnd({&sample, 1});
+    PushSamples({&sample, 1});
+}
+
+void DspInterface::OutputCsndFrame(const StereoFrame16& frame) {
+    std::scoped_lock lock{csnd_mutex};
+
+    if (dsp_samples_since_csnd_frame == 0) {
+        csnd_frames_without_dsp++;
+    } else {
+        csnd_frames_without_dsp = 0;
+    }
+    dsp_samples_since_csnd_frame = 0;
+
+    csnd_pending.insert(csnd_pending.end(), frame.begin(), frame.end());
+
+    if (csnd_frames_without_dsp >= CsndFramesBeforeDspIdle) {
+        // The DSP is not running, CSND is the only output.
+        const std::vector<std::array<s16, 2>> samples(csnd_pending.begin(), csnd_pending.end());
+        csnd_pending.clear();
+        PushSamples(samples);
+        return;
+    }
+
+    // The two clocks may drift a little, don't let CSND fall too far behind the DSP output.
+    while (csnd_pending.size() > MaxCsndPendingSamples) {
+        csnd_pending.pop_front();
+    }
+}
+
+void DspInterface::MixCsnd(std::span<std::array<s16, 2>> samples) {
+    // TODO(PabloMK7): Implement SIMD mixing here if possible.
+    dsp_samples_since_csnd_frame += samples.size();
+    for (auto& sample : samples) {
+        if (csnd_pending.empty()) {
+            break;
+        }
+        const auto& csnd = csnd_pending.front();
+        for (std::size_t i = 0; i < 2; i++) {
+            sample[i] = static_cast<s16>(std::clamp(sample[i] + csnd[i], -0x8000, 0x7FFF));
+        }
+        csnd_pending.pop_front();
+    }
+}
+
+void DspInterface::PushSamples(std::span<const std::array<s16, 2>> samples) {
     if (!sink) {
         return;
     }
 
     if (sink->ImmediateSubmission()) {
-        sink->PushSamples(&sample, 1);
+        sink->PushSamples(samples.data(), samples.size());
     } else {
-        fifo.Push(&sample, 1);
+        fifo.Push(samples.data(), samples.size());
     }
 
     auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {
-        video_dumper->AddAudioSample(std::move(sample));
+        for (const auto& sample : samples) {
+            video_dumper->AddAudioSample(sample);
+        }
     }
+}
+
+void DspInterface::DrainFifoBacklog(std::size_t num_frames) {
+    // The emulation thread produces a video frame of audio at a time, so the FIFO only needs enough
+    // headroom to smooth those bursts. Audio that stays in the FIFO for a whole window without
+    // being needed remains queued during a stall or at stream start. That extra data delays all
+    // later audio by its length, for the entire session.
+    constexpr std::size_t window_frames = native_sample_rate;
+    constexpr std::size_t kept_frames = native_sample_rate / 100;
+
+    fifo_low_fill = std::min(fifo_low_fill, fifo.Size());
+    backlog_window_frames += num_frames;
+    if (backlog_window_frames < window_frames) {
+        return;
+    }
+    if (fifo_low_fill > 2 * kept_frames) {
+        const std::size_t excess = fifo_low_fill - kept_frames;
+        fifo.Pop(excess);
+        LOG_DEBUG(Audio, "Dropped {} frames of audio backlog", excess);
+    }
+    fifo_low_fill = std::numeric_limits<std::size_t>::max();
+    backlog_window_frames = 0;
 }
 
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
@@ -96,6 +167,7 @@ void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
             time_stretcher.Clear();
         }
         frames_written += fifo.Pop(buffer, num_frames - frames_written);
+        DrainFifoBacklog(num_frames);
     }
 
     if (frames_written > 0) {

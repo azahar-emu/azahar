@@ -25,7 +25,6 @@
     <string name="select_games_folder">Vælg applikationsmappe</string>
     <string name="select_games_folder_description">Tillad at Azahar udfylder applikationslisten</string>
     <string name="about">Om</string>
-    <string name="citra_description">En open source 3DS-emulator</string>
     <string name="about_description">Version, krediteringer og mere</string>
     <string name="games_dir_selected">Applikationsmappen er valgt</string>
     <string name="select_citra_user_folder_home_description">Ændrer de filer, som Azahar bruger til at indlæse applikationer</string>
@@ -414,7 +413,6 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Fejl ved indlæsning af applikation</string>
     <string name="loader_error_invalid_format">Ugyldigt ansøgningsformat</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[Programmets filformat understøttes ikke.<br>Sørg for, at du bruger et af de kompatible filformater:<ul><li>Cartridge afbildninger: <b>.cci/.zcci/.3ds</b></li><li>Installerbare arkiver: <b>.cia/.zcia</b></li><li>Hjemmelavede titler: <b>.3dsx/.z3dsx</b></li><li>NCCH containere: <b>.cxi/.zcxi/.app</b></li><li>ELF filer: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Ugyldig systemtilstand</string>
     <string name="loader_error_invalid_system_mode_description">Nye 3DS-eksklusive applikationer kan ikke indlæses uden at aktivere Ny 3DS-tilstanden.</string>
     <string name="loader_error_applying_patches">Fejl ved anvendelse af programrettelser</string>

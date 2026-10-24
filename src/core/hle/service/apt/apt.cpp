@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
@@ -343,13 +343,17 @@ void Module::APTInterface::GetSharedFont(Kernel::HLERequestContext& ctx) {
 
 void Module::APTInterface::GetWirelessRebootInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const auto size = rp.Pop<u32>();
+    const auto size = std::min(rp.Pop<u32>(), max_wireless_reboot_info_size);
 
     LOG_WARNING(Service_APT, "called size={:08X}", size);
 
+    std::vector<u8> buffer(size, 0);
+    std::memcpy(buffer.data(), apt->wireless_reboot_info.data(),
+                std::min<std::size_t>(size, apt->wireless_reboot_info.size()));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(ResultSuccess);
-    rb.PushStaticBuffer(apt->wireless_reboot_info, 0);
+    rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
 void Module::APTInterface::NotifyToWait(Kernel::HLERequestContext& ctx) {

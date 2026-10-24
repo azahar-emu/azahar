@@ -25,7 +25,6 @@
     <string name="select_games_folder">Uygulamalar Dosyasını Seç</string>
     <string name="select_games_folder_description">Azahar\'ın uygulama listesini doldurmasına izin verir</string>
     <string name="about">Hakkında</string>
-    <string name="citra_description">Açık kaynaklı bir 3DS emülatörü</string>
     <string name="about_description">Yapı sürümü, katkıda bulunanlar ve daha fazlası</string>
     <string name="games_dir_selected">Uygulama dizini seçildi</string>
     <string name="select_citra_user_folder_home_description">Azahar\'ın uygulama yüklemek için kullandığı dosyaları değiştirir</string>

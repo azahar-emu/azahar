@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -39,7 +39,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.DialogSoftwareKeyboardBinding
 import org.citra.citra_emu.databinding.FragmentSystemFilesBinding
 import org.citra.citra_emu.features.settings.SettingKeys
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -142,11 +142,11 @@ class SystemFilesFragment : Fragment() {
             SystemSaveGame.setSystemSetupNeeded(isChecked)
         }
 
-        val showHomeApps = preferences.getBoolean(Settings.PREF_SHOW_HOME_APPS, false)
+        val showHomeApps = preferences.getBoolean(CitraSettings.PREF_SHOW_HOME_APPS, false)
         binding.switchShowApps.isChecked = showHomeApps
         binding.switchShowApps.setOnCheckedChangeListener { _, isChecked ->
             preferences.edit()
-                .putBoolean(Settings.PREF_SHOW_HOME_APPS, isChecked)
+                .putBoolean(CitraSettings.PREF_SHOW_HOME_APPS, isChecked)
                 .apply()
             gamesViewModel.setShouldSwapData(true)
         }

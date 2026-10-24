@@ -9,7 +9,6 @@
     <string name="home_games">Εφαρμογές</string>
     <string name="install_game_content">Εγκατάσταση αρχείου CIA</string>
     <string name="about">Πληροφορίες</string>
-    <string name="citra_description">Ένας εξομοιωτής 3DS ανοικτού κώδικα</string>
     <string name="install_cia_title">Εγκατάσταση CIA</string>
 
     <string name="select_gpu_driver_install">Εγκατάσταση</string>

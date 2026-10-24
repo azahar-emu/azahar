@@ -1,10 +1,12 @@
-// Copyright 2017-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
+#include <limits>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <boost/serialization/access.hpp>
 #include "audio_core/audio_types.h"
@@ -103,6 +105,13 @@ public:
     /// Enable/Disable audio stretching.
     void EnableStretching(bool enable);
 
+    /**
+     * Adds one frame of CSND output. On hardware CSND and the DSP reach the codec chip on separate
+     * I2S lines and the codec mixes them, here the frame is mixed to the DSP output.
+     * Must be called once per audio frame period.
+     */
+    void OutputCsndFrame(const StereoFrame16& frame);
+
 protected:
     void OutputFrame(StereoFrame16 frame);
     void OutputSample(std::array<s16, 2> sample);
@@ -110,6 +119,9 @@ protected:
 private:
     void FlushResidualStretcherAudio();
     void OutputCallback(s16* buffer, std::size_t num_frames);
+    void DrainFifoBacklog(std::size_t num_frames);
+    void MixCsnd(std::span<std::array<s16, 2>> samples);
+    void PushSamples(std::span<const std::array<s16, 2>> samples);
 
     Core::System& system;
 
@@ -118,8 +130,15 @@ private:
     std::atomic<bool> flushing_time_stretcher = false;
     Common::RingBuffer<s16, 0x2000, 2> fifo;
     std::array<s16, 2> last_frame{};
+    std::size_t fifo_low_fill = std::numeric_limits<std::size_t>::max();
+    std::size_t backlog_window_frames = 0;
     TimeStretcher time_stretcher;
     std::unique_ptr<Sink> sink;
+
+    std::mutex csnd_mutex;
+    StereoBuffer16 csnd_pending;
+    std::size_t dsp_samples_since_csnd_frame = 0;
+    u32 csnd_frames_without_dsp = 0;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {}

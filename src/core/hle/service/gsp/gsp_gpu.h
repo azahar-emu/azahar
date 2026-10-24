@@ -1,11 +1,12 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <array>
 #include <cstddef>
+#include <deque>
 #include <memory>
 #include <optional>
 #include <string>
@@ -61,8 +62,8 @@ struct FrameBufferInfo {
 static_assert(sizeof(FrameBufferInfo) == 0x1c, "Struct has incorrect size");
 
 struct FrameBufferUpdate {
-    BitField<0, 1, u8> index;    // Index used for GSP::SetBufferSwap
-    BitField<0, 1, u8> is_dirty; // true if GSP should update GPU framebuffer registers
+    u8 index;    // Index of the framebuffer info to use
+    u8 is_dirty; // Non-zero if GSP should update GPU framebuffer registers
     u16 pad1;
 
     FrameBufferInfo framebuffer_info[2];
@@ -204,7 +205,7 @@ public:
 
     /**
      * Retrieves the framebuffer info stored in the GSP shared memory for the
-     * specified screen index and thread id.
+     * specified screen index and thread id, and clears its update flag.
      * @param thread_id GSP thread id of the process that accesses the structure that we are
      * requesting.
      * @param screen_index Index of the screen we are requesting (Top = 0, Bottom = 1).
@@ -215,6 +216,9 @@ public:
 
     /// Gets a pointer to a thread command buffer in GSP shared memory
     CommandBuffer* GetCommandBuffer(u32 thread_id);
+
+    /// Gets the pointer to the thread's framebuffer update slot for a screen in GSP shared memory
+    FrameBufferUpdate* GetFrameBufferUpdate(u32 thread_id, u32 screen_index);
 
     /// Gets a pointer to the interrupt relay queue for a given thread index
     InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id);
@@ -246,6 +250,8 @@ private:
 
     void ProcessPendingInterrupt(size_t pending_interrupt_id);
 
+    bool HasGpuRight(Kernel::HLERequestContext& ctx);
+
     void ProcessPendingInterruptImpl(InterruptId interrupt_id, u32 thread_id);
 
     /**
@@ -273,8 +279,18 @@ private:
      */
     void WriteHWRegsWithMask(Kernel::HLERequestContext& ctx);
 
+    /// Write the data to the same register repeatedly.
+    void WriteHWRegRepeat(Kernel::HLERequestContext& ctx);
+
     /// Read a GSP GPU hardware register
     void ReadHWRegs(Kernel::HLERequestContext& ctx);
+
+    /// Helper for stubbed commands.
+    void Unsupported(Kernel::HLERequestContext& ctx);
+
+    void DoCacheOperation(Kernel::HLERequestContext& ctx, bool allow_vram);
+
+    void DoResetGpuCore();
 
     /**
      * GSP_GPU::SetBufferSwap service function
@@ -288,6 +304,10 @@ private:
      *      1: Result code
      */
     void SetBufferSwap(Kernel::HLERequestContext& ctx);
+
+    void SetCommandList(Kernel::HLERequestContext& ctx);
+
+    void RequestDma(Kernel::HLERequestContext& ctx);
 
     /**
      * GSP_GPU::FlushDataCache service function
@@ -319,6 +339,8 @@ private:
      */
     void InvalidateDataCache(Kernel::HLERequestContext& ctx);
 
+    void RegisterInterruptEvents(Kernel::HLERequestContext& ctx);
+
     /**
      * GSP_GPU::SetLcdForceBlack service function
      *
@@ -333,6 +355,12 @@ private:
 
     /// This triggers handling of the GX command written to the command buffer in shared memory.
     void TriggerCmdReqQueue(Kernel::HLERequestContext& ctx);
+
+    void SetDisplayTransfer(Kernel::HLERequestContext& ctx);
+
+    void SetTextureCopy(Kernel::HLERequestContext& ctx);
+
+    void SetMemoryFill(Kernel::HLERequestContext& ctx);
 
     /**
      * GSP_GPU::SetAxiConfigQoSMode service function
@@ -468,6 +496,8 @@ private:
     /// Force the 3D LED State (0 = On, Non-Zero = Off)
     void SetLedForceOff(Kernel::HLERequestContext& ctx);
 
+    void SetTestCommand(Kernel::HLERequestContext& ctx);
+
     /**
      * GSP_GPU::SetInternalPriorities service function
      *  Inputs:
@@ -479,6 +509,8 @@ private:
      */
     void SetInternalPriorities(Kernel::HLERequestContext& ctx);
 
+    void ResetGpuCore(Kernel::HLERequestContext& ctx);
+
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
 
@@ -487,8 +519,58 @@ private:
     std::unique_ptr<Kernel::SessionRequestHandler::SessionDataBase> MakeSessionData() override;
 
     Result AcquireGpuRight(const Kernel::HLERequestContext& ctx,
-                           const std::shared_ptr<Kernel::Process>& process, u32 flag,
-                           bool blocking);
+                           const std::shared_ptr<Kernel::Process>& process, bool force,
+                           bool try_only, bool& switch_deferred);
+
+    void DeferDiskResourcesSwitch(u64 program_id, std::shared_ptr<Kernel::Event> event);
+
+    void ProcessDeferredSwitch();
+
+    /// Set by forced AcquireRight, from then onwards AcquireRight without the force flag does
+    /// not give the right (until the system restarts).
+    bool force_mode = false;
+    bool gpu_core_reset_by_force = false;
+
+    void ApplyPerProgramSettings(const Kernel::Process& process);
+
+    /// Gives the GPU right to a GSP thread. Returns false when the disk resources of the process
+    /// were not switched because loading them crashed the emulator last time.
+    bool GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::Process& process);
+
+    struct RightWaitContext {
+        u32 thread_id;
+        u32 client_thread_id;
+        bool force;
+        std::shared_ptr<Kernel::Process> process;
+        std::shared_ptr<Kernel::Event> event;
+        std::shared_ptr<ThreadCallback> callback;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & thread_id;
+            ar & client_thread_id;
+            ar & force;
+            ar & process;
+            ar & event;
+            ar & callback;
+        }
+    };
+
+    /// Threads waiting for the GPU right in request order.
+    std::deque<RightWaitContext> right_waiters;
+
+    struct DeferredSwitch {
+        u64 program_id;
+        std::shared_ptr<Kernel::Event> event;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & program_id;
+            ar & event;
+        }
+    };
+
+    std::deque<DeferredSwitch> deferred_switches;
 
     Core::System& system;
 
@@ -620,6 +702,7 @@ private:
     PerformanceRecorder perf_recorder;
 
     Core::TimingEventType* SignalInterruptEventType = nullptr;
+    Core::TimingEventType* DeferredSwitchEventType = nullptr;
 
     std::array<FrameBufferInfo, 2> cached_framebuffer_infos;
     std::array<bool, 2> force_buffer_swap{};

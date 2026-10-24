@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -85,6 +85,11 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 )") DECLARE_KEY(use_cpu_jit) BOOST_HANA_STRING(R"(
+
+[Core]
+# Whether to use the fast interpreter or the legacy interpreter when JIT is disabled
+# 0: Legacy, 1 (default): Fast
+)") DECLARE_KEY(use_fastinterp) BOOST_HANA_STRING(R"(
 
 # Change the Clock Frequency of the emulated 3DS CPU.
 # Underclocking can increase the performance of the game at the risk of freezing.
@@ -417,7 +422,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Whether or not to enable the audio-stretching post-processing effect
 # This effect adjusts audio speed to match emulation speed and helps prevent audio stutter,
 # at the cost of increasing audio latency.
-# 0: No, 1 (default): Yes
+# 0 (default): No, 1: Yes
 )") DECLARE_KEY(enable_audio_stretching) BOOST_HANA_STRING(R"(
 
 # Scales audio playback speed to account for drops in emulation framerate

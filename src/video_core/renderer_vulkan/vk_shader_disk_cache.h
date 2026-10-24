@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -39,6 +39,9 @@ public:
         const Pica::RegsInternal& regs);
 
     GraphicsPipeline* GetPipeline(const PipelineInfo& info);
+
+    /// Waits until the pipelines queued while loading the cache are built
+    void WaitLoadCachedPipelines();
 
     u64 GetProgramID() const {
         return title_id;
@@ -357,6 +360,7 @@ private:
     tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
         graphics_pipelines;
     std::unordered_set<u64> known_graphic_pipelines;
+    std::vector<GraphicsPipeline*> loaded_cached_pipelines;
 };
 
 } // namespace Vulkan

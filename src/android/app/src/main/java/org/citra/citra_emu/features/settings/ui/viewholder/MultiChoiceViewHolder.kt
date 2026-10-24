@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui.viewholder
 
@@ -11,9 +11,8 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var setting: SettingsItem
-
+    SettingViewHolder<SettingsItem>(binding.root, adapter) {
+    override lateinit var setting: SettingsItem
     override fun bind(item: SettingsItem) {
         setting = item
         binding.textSettingName.setText(item.nameId)

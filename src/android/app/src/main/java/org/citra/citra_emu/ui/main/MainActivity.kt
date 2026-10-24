@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.ui.main
 
@@ -48,8 +48,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
-import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.features.settings.model.SettingsViewModel
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
@@ -75,7 +74,6 @@ class MainActivity :
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val gamesViewModel: GamesViewModel by viewModels()
-    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override var themeId: Int = 0
 
@@ -98,7 +96,8 @@ class MainActivity :
             DirectoryInitialization.areCitraDirectoriesReady() &&
             !CitraDirectoryUtils.needToUpdateManually()
         ) {
-            settingsViewModel.settings.loadSettings()
+            // load the global settings from the config file at program launch
+            SettingsFile.loadSettings(CitraSettings.activeSettings)
         }
 
         ThemeUtil.themeChangeListener(this)
@@ -112,10 +111,14 @@ class MainActivity :
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 
-        window.statusBarColor =
-            ContextCompat.getColor(applicationContext, android.R.color.transparent)
-        window.navigationBarColor =
-            ContextCompat.getColor(applicationContext, android.R.color.transparent)
+        @Suppress("DEPRECATION")
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // ^- These are set to transparent automatically on Vanilla Ice Cream and up.
+            window.statusBarColor =
+                ContextCompat.getColor(applicationContext, android.R.color.transparent)
+            window.navigationBarColor =
+                ContextCompat.getColor(applicationContext, android.R.color.transparent)
+        }
 
         binding.statusBarShade.setBackgroundColor(
             ThemeUtil.getColorWithOpacity(
@@ -229,7 +232,7 @@ class MainActivity :
 
     private fun checkUserPermissions() {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
+            .getBoolean(CitraSettings.PREF_FIRST_APP_LAUNCH, true)
 
         if (firstTimeSetup) {
             return
@@ -294,7 +297,7 @@ class MainActivity :
 
     private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-            .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
+            .getBoolean(CitraSettings.PREF_FIRST_APP_LAUNCH, true)
 
         if (firstTimeSetup && !homeViewModel.navigatedToSetup) {
             homeViewModel.setupCurrentPage = savedInstanceState?.getInt(KEY_SETUP_CURRENT_PAGE) ?: 0
@@ -327,8 +330,8 @@ class MainActivity :
                         binding.navigationView.height.toFloat() * 2
                     translationY(0f)
                 } else {
-                    if (ViewCompat.getLayoutDirection(binding.navigationView) ==
-                        ViewCompat.LAYOUT_DIRECTION_LTR
+                    if (binding.navigationView.layoutDirection ==
+                        View.LAYOUT_DIRECTION_LTR
                     ) {
                         binding.navigationView.translationX =
                             binding.navigationView.width.toFloat() * -2
@@ -346,8 +349,8 @@ class MainActivity :
                 if (smallLayout) {
                     translationY(binding.navigationView.height.toFloat() * 2)
                 } else {
-                    if (ViewCompat.getLayoutDirection(binding.navigationView) ==
-                        ViewCompat.LAYOUT_DIRECTION_LTR
+                    if (binding.navigationView.layoutDirection ==
+                        View.LAYOUT_DIRECTION_LTR
                     ) {
                         translationX(binding.navigationView.width.toFloat() * -2)
                     } else {

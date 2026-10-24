@@ -11,7 +11,6 @@
     <string name="share_log">Dalintis žurnalu</string>
     <string name="share_log_not_found">Žurnalas nerastas</string>
     <string name="about">Apie</string>
-    <string name="citra_description">Atviro kodo 3DS emulatorius</string>
     <string name="select_gpu_driver_install">Instaliuoti</string>
     <string name="licenses">Licencijos</string>
     <!-- Setup strings -->

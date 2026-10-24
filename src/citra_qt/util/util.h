@@ -1,10 +1,12 @@
-// Copyright 2015-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <filesystem>
+#include <string>
+#include <string_view>
 #include <QFont>
 #include <QString>
 #include "common/common_types.h"
@@ -31,6 +33,12 @@ QPixmap CreateCirclePixmapFromColor(const QColor& color);
  * @return QPixmap game icon
  */
 QPixmap GetQPixmapFromSMDH(const std::vector<u8>& smdh_data);
+
+/// Builds a path from a UTF-8 string.
+std::filesystem::path PathFromUTF8(std::string_view utf8_path);
+
+/// Returns a path as a UTF-8 string.
+std::string PathToUTF8(const std::filesystem::path& path);
 
 /**
  * Saves a windows icon to a file

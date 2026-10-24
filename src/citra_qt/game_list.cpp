@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <QActionGroup>
 #include <QApplication>
@@ -1119,9 +1119,9 @@ void GameList::LoadInterfaceLayout() {
 }
 
 const QStringList GameList::supported_file_extensions = {
-    QStringLiteral("3dsx"), QStringLiteral("elf"), QStringLiteral("axf"),   QStringLiteral("cci"),
-    QStringLiteral("cxi"),  QStringLiteral("app"), QStringLiteral("z3dsx"), QStringLiteral("zcci"),
-    QStringLiteral("zcxi"), QStringLiteral("3ds"),
+    QStringLiteral("3dsx"), QStringLiteral("elf"),  QStringLiteral("axf"),   QStringLiteral("cci"),
+    QStringLiteral("cxi"),  QStringLiteral("app"),  QStringLiteral("z3dsx"), QStringLiteral("zcci"),
+    QStringLiteral("zcxi"), QStringLiteral("bcci"), QStringLiteral("3ds"),
 };
 
 void GameList::RefreshGameDirectory() {

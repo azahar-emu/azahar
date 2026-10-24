@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <string_view>
 #include <utility>
@@ -87,6 +87,7 @@ void LogSettings() {
 
     LOG_INFO(Config, "Azahar Configuration:");
     log_setting("Core_UseCpuJit", values.use_cpu_jit.GetValue());
+    log_setting("Core_UseFastInterp", values.use_fastinterp.GetValue());
     log_setting("Core_CPUClockPercentage", values.cpu_clock_percentage.GetValue());
     log_setting("Controller_UseArticController", values.use_artic_base_controller.GetValue());
     log_setting("Renderer_UseGLES", values.use_gles.GetValue());
@@ -139,6 +140,9 @@ void LogSettings() {
     log_setting("Audio_Emulation", GetAudioEmulationName(values.audio_emulation.GetValue()));
     log_setting("Audio_OutputType", values.output_type.GetValue());
     log_setting("Audio_OutputDevice", values.output_device.GetValue());
+#ifdef ENABLE_QT
+    log_setting("Audio_BypassAudioEffects", values.bypass_audio_effects.GetValue());
+#endif
     log_setting("Audio_InputType", values.input_type.GetValue());
     log_setting("Audio_InputDevice", values.input_device.GetValue());
     log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching.GetValue());

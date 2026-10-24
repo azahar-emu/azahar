@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include <boost/serialization/version.hpp>
 #include "common/common_types.h"
+#include "common/thread.h"
 #include "common/vector_math.h"
 #include "core/arm/arm_interface.h"
 #include "core/cheats/cheats.h"
@@ -108,6 +109,8 @@ public:
         ErrorCoreExceptionRaised,    ///< The CPU emulation raised an exception
         ErrorSavestateBuildMismatch, ///< Tried to load savestate from a different Azahar version
         ShutdownRequested,           ///< Emulated program requested a system shutdown
+        ErrorShaderCacheCrash,       ///< The emulator crashed the last time it built the disk
+                                     ///< shader cache
         ErrorUnknown                 ///< Any other error
     };
 
@@ -125,6 +128,26 @@ public:
      * @return Result status, indicating whethor or not the operation succeeded.
      */
     [[nodiscard]] ResultStatus RunLoop(bool tight_loop = true);
+
+    /**
+     * Runs one pass of all the work that must happen on the emulation thread outside of guest
+     * execution (such as GDB or scripting requests). Called by RunLoop between slices and from
+     * the frame limiter.
+     */
+    void ProcessPendingWork();
+
+    /**
+     * Runs ProcessPendingWork until the deadline, sleeping in between until either the deadline
+     * passes or NotifyPendingWork is called. The frame limiter calls this instead of sleeping.
+     * Must be called from the emulation thread.
+     */
+    void ProcessPendingWorkUntil(std::chrono::steady_clock::time_point deadline);
+
+    /**
+     * Wakes up the emulation thread if it is waiting in ProcessPendingWorkUntil, so that newly
+     * queued work is processed right away. This function is thread safe.
+     */
+    void NotifyPendingWork();
 
     /**
      * Step the CPU one instruction
@@ -511,6 +534,8 @@ private:
 
 private:
     static System s_instance;
+
+    Common::Event pending_work_event;
 
     std::atomic_bool is_powered_on{};
 

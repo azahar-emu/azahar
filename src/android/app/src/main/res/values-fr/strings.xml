@@ -26,7 +26,7 @@
     <string name="select_games_folder">Sélectionner le dossier Applications</string>
     <string name="select_games_folder_description">Permet à Azahar d\'alimenter la liste des applications</string>
     <string name="about">À propos</string>
-    <string name="citra_description">Un émulateur 3DS open source</string>
+    <string name="citra_description">Un émulateur open source\nSous licence GPLv3 ou ultérieure</string>
     <string name="about_description">Numéro de build, crédits et plus encore</string>
     <string name="games_dir_selected">Répertoire d\'application sélectionné</string>
     <string name="select_citra_user_folder_home_description">Modifie les fichiers utilisés par Azahar pour charger les applications</string>
@@ -349,6 +349,8 @@
     <!-- Debug settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Utilise le compilateur Just-in-Time (JIT) pour l\'émulation CPU. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
+    <string name="use_fastinterp">Utiliser l\'interpréteur rapide</string>
+    <string name="use_fastinterp_description">Quand le CPU JIT est désactivé, utiliser l\'interpréteur rapide au lieu de l\'ancien interpréteur. Redémarrage requis.</string>
     <string name="hw_shaders">Activer le shader hardware</string>
     <string name="hw_shaders_description">Utilise le hardware pour émuler les shaders de la 3DS. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
     <string name="cpu_clock_speed">Fréquence d\'horloge du CPU</string>
@@ -444,7 +446,7 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Erreur lors du chargement de l\'application</string>
     <string name="loader_error_invalid_format">Format d\'application invalide</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[Le format de fichier d\'application n\'est pas supporté.<br>Assurez vous d\'utiliser un des formats compatibles : <ul><li>Images de cartouche : <b>.cci/.zcci/.3ds</b></li><li>Archives installables : <b>.cia/.zcia</b></li><li>Applications Homebrew : <b>.3dsx/.z3dsx</b></li><li>Conteneurs NCCH : <b>.cxi/.zcxi/.app</b></li><li>Fichiers ELF : <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_format_description"><![CDATA[Le format de fichier d\'application n\'est pas supporté.<br>Assurez vous d\'utiliser un des formats compatibles : <ul><li>Images de cartouche : <b>.cci/.zcci/.bcci/.3ds</b></li><li>Archives installables : <b>.cia/.zcia/.bcia</b></li><li>Applications Homebrew : <b>.3dsx/.z3dsx</b></li><li>Conteneurs NCCH : <b>.cxi/.zcxi/.bcxi/.app</b></li><li>Fichiers ELF : <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Mode système invalide</string>
     <string name="loader_error_invalid_system_mode_description">Les applications exclusives à la New 3DS ne peuvent pas être chargées sans activer le mode New 3DS.</string>
     <string name="loader_error_applying_patches">Erreur lors de l\'application de patchs</string>
@@ -783,6 +785,11 @@
     <string name="anaglyph">Anaglyphe</string>
     <string name="interlaced">Entrelacé</string>
     <string name="reverse_interlaced">Entrelacement inversé</string>
+
+    <!-- Texture filters -->
+    <string name="anime4k">Anime4K (OpenGL uniquement)</string>
+    <string name="incompatible_texture_filter">Filtre de texture incompatible</string>
+    <string name="incompatible_texture_filter_description">Le filtre de texture sélectionné (Anime4K) n\'est pas compatible avec le moteur de rendu Vulkan.\nLe filtre de texture va être réglé sur Aucun.\nContinuer ?</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Contrôlé par le jeu</string>

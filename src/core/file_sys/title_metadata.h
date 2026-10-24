@@ -1,10 +1,11 @@
-// Copyright 2017-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <array>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -111,12 +112,15 @@ public:
     void AddContentChunk(const ContentChunk& chunk);
 
     void Print() const;
+    /// Result of the last Load, Error if nothing was loaded.
+    Loader::ResultStatus LoadResult() const;
 
 private:
     Body tmd_body;
     u32_be signature_type;
     std::vector<u8> tmd_signature;
     std::vector<ContentChunk> tmd_chunks;
+    std::optional<Loader::ResultStatus> load_result;
 };
 
 } // namespace FileSys

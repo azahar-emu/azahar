@@ -1,6 +1,6 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cstring>
 #include <memory>
@@ -11,6 +11,7 @@
 #include "common/common_types.h"
 #include "common/file_derived.h"
 #include "common/logging/log.h"
+#include "common/tar_file.h"
 #include "core/core.h"
 #include "core/file_sys/layered_fs.h"
 #include "core/file_sys/ncch_container.h"
@@ -40,6 +41,9 @@ u64 GetModId(u64 program_id) {
  * @return Size of decompressed buffer
  */
 static std::size_t LZSS_GetDecompressedSize(std::span<const u8> buffer) {
+    if (buffer.size() < sizeof(u32)) {
+        return buffer.size();
+    }
     u32 offset_size;
     std::memcpy(&offset_size, buffer.data() + buffer.size() - sizeof(u32), sizeof(u32));
     return offset_size + buffer.size();
@@ -54,14 +58,24 @@ static std::size_t LZSS_GetDecompressedSize(std::span<const u8> buffer) {
  * @return True on success, otherwise false
  */
 static bool LZSS_Decompress(std::span<const u8> compressed, std::span<u8> decompressed) {
+    if (compressed.size() < 8 || decompressed.size() < compressed.size()) {
+        return false;
+    }
+
     const u8* footer = compressed.data() + compressed.size() - 8;
 
     u32 buffer_top_and_bottom;
     std::memcpy(&buffer_top_and_bottom, footer, sizeof(u32));
 
+    const std::size_t top = (buffer_top_and_bottom >> 24) & 0xFF;
+    const std::size_t bottom = buffer_top_and_bottom & 0xFFFFFF;
+    if (top > compressed.size() || bottom > compressed.size()) {
+        return false;
+    }
+
     std::size_t out = decompressed.size();
-    std::size_t index = compressed.size() - ((buffer_top_and_bottom >> 24) & 0xFF);
-    std::size_t stop_index = compressed.size() - (buffer_top_and_bottom & 0xFFFFFF);
+    std::size_t index = compressed.size() - top;
+    std::size_t stop_index = compressed.size() - bottom;
 
     std::memset(decompressed.data(), 0, decompressed.size());
     std::memcpy(decompressed.data(), compressed.data(), compressed.size());
@@ -135,6 +149,22 @@ std::unique_ptr<FileUtil::IOFileBase> NCCHContainer::AutoOpenNCCHNCSD(
 
     std::unique_ptr<FileUtil::IOFileBase> file = in_file->OpenCopy();
 
+    // Check if it is a bundle
+    if (auto tar = FileUtil::TarArchive::OpenTarArchive(file->OpenCopy())) {
+        auto files = tar->GetFileList();
+        for (const auto& f : files) {
+            if (f.name.ends_with(".cci") || f.name.ends_with(".zcci") || f.name.ends_with(".3ds") ||
+                f.name.ends_with(".cxi") || f.name.ends_with(".zcxi") || f.name.ends_with(".app")) {
+                file = tar->OpenSubFile(f.name);
+                if (has_ncch_magic(file.get())) {
+                    return std::move(file);
+                }
+                break;
+            }
+        }
+        tar.reset();
+    }
+
     // Check in loop for special files, including nested files.
     while (true) {
         // 1st: Crypto file
@@ -164,9 +194,14 @@ std::unique_ptr<FileUtil::IOFileBase> NCCHContainer::AutoOpenNCCHNCSD(
     }
 }
 
-NCCHContainer::NCCHContainer(const std::string& filepath, u32 ncch_offset, u32 partition)
+NCCHContainer::NCCHContainer(const std::string& filepath, u32 partition)
     : partition(partition), filepath(filepath) {
     file = AutoOpenNCCHNCSD(filepath);
+}
+
+NCCHContainer::NCCHContainer(FileUtil::IOFileBase* _file, u32 partition)
+    : partition(partition), filepath(_file->Filename()) {
+    file = AutoOpenNCCHNCSD(_file);
 }
 
 Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath_, u32 ncch_offset_,

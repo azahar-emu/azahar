@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Copyright 2013 Dolphin Emulator Project
 // Licensed under GPLv2+
@@ -91,8 +91,19 @@ void OnProcessExit(u32 process_id);
  */
 void OnThreadExit(u32 thread_id);
 
-/// Read and handle packet from gdb client.
-void HandlePacket(Core::System& system);
+/**
+ * Signal to the GDB stub that a thread flagged for single stepping
+ * (Kernel::Thread::gdb_single_step) has executed one instruction.
+ */
+void OnSingleStepComplete(Kernel::Thread* thread);
+
+/**
+ * Handles all packets received from the gdb client since the last call. Must be called from the
+ * emulation thread. Packets are read by a separate thread, which calls
+ * Core::System::NotifyPendingWork when one arrives so that this runs without waiting for the
+ * frame limiter.
+ */
+void HandlePackets(Core::System& system);
 
 /**
  * Get the nearest breakpoint of the specified type at the given address.

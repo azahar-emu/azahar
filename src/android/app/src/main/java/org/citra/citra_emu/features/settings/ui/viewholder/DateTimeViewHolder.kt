@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui.viewholder
 
@@ -18,12 +18,12 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var setting: DateTimeSetting
+    SettingViewHolder<DateTimeSetting>(binding.root, adapter) {
+    override lateinit var setting: DateTimeSetting
 
     @SuppressLint("SimpleDateFormat")
     override fun bind(item: SettingsItem) {
-        setting = item as DateTimeSetting
+        setting = item as? DateTimeSetting ?: return
         binding.textSettingName.setText(item.nameId)
         if (item.descriptionId != 0) {
             binding.textSettingDescription.visibility = View.VISIBLE

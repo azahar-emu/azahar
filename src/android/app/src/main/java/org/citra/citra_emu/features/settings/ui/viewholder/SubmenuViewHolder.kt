@@ -1,6 +1,6 @@
-// Copyright 2023-2024 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui.viewholder
 
@@ -12,11 +12,11 @@ import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class SubmenuViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var item: SubmenuSetting
+    SettingViewHolder<SubmenuSetting>(binding.root, adapter) {
+    override lateinit var setting: SubmenuSetting
 
     override fun bind(item: SettingsItem) {
-        this.item = item as SubmenuSetting
+        setting = item as SubmenuSetting
         if (item.iconId == 0) {
             binding.icon.visibility = View.GONE
         } else {
@@ -40,7 +40,7 @@ class SubmenuViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAd
     }
 
     override fun onClick(clicked: View) {
-        adapter.onSubmenuClick(item)
+        adapter.onSubmenuClick(setting)
     }
 
     override fun onLongClick(clicked: View): Boolean {

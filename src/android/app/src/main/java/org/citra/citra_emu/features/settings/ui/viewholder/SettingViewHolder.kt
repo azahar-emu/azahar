@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui.viewholder
 
@@ -9,8 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
-abstract class SettingViewHolder(itemView: View, protected val adapter: SettingsAdapter) :
-    RecyclerView.ViewHolder(itemView),
+abstract class SettingViewHolder<out T : SettingsItem>(
+    itemView: View,
+    protected val adapter: SettingsAdapter
+) : RecyclerView.ViewHolder(itemView),
     View.OnClickListener,
     View.OnLongClickListener {
 
@@ -18,6 +20,11 @@ abstract class SettingViewHolder(itemView: View, protected val adapter: Settings
         itemView.setOnClickListener(this)
         itemView.setOnLongClickListener(this)
     }
+
+    /**
+     * The SettingsItem we are holding
+     */
+    abstract val setting: T?
 
     /**
      * Called by the adapter to set this ViewHolder's child views to display the list item

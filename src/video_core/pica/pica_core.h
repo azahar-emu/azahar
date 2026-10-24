@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -266,8 +266,8 @@ public:
             BitField<0, 1, u8> noise_lut_dirty;
             BitField<2, 1, u8> color_map_dirty;
             BitField<3, 1, u8> alpha_map_dirty;
-            BitField<4, 1, u8> lut_dirty;
-            BitField<5, 1, u8> diff_lut_dirty;
+            BitField<4, 1, u8> color_lut_dirty;
+            BitField<5, 1, u8> color_diff_lut_dirty;
         };
 
     private:
@@ -398,6 +398,8 @@ public:
         PAddr paddr;
         bool vp_heigh_found = false;
         bool paddr_found = false;
+        // Whether the scanned list issues any geometry.
+        bool has_draw = false;
     };
 
     RenderPropertiesGuess GuessCmdRenderProperties(PAddr list, u32 size);

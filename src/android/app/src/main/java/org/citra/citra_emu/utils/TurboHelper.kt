@@ -1,6 +1,6 @@
 // Copyright 2025-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.utils
 
@@ -8,6 +8,7 @@ import android.widget.Toast
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.IntSetting
 
 object TurboHelper {
@@ -20,7 +21,9 @@ object TurboHelper {
         val toastMessage: String
 
         if (turboSpeedEnabled) {
-            NativeLibrary.setTemporaryFrameLimit(IntSetting.TURBO_LIMIT.int.toDouble())
+            NativeLibrary.setTemporaryFrameLimit(
+                CitraSettings.activeSettings.get(IntSetting.TURBO_LIMIT).toDouble()
+            )
             toastMessage = context.getString(R.string.turbo_enabled_toast)
         } else {
             NativeLibrary.disableTemporaryFrameLimit()

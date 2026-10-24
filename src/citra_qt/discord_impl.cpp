@@ -1,6 +1,6 @@
 // Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <chrono>
 #include <string>
@@ -43,7 +43,7 @@ void DiscordImpl::Update(bool is_powered_on) {
 
     std::string title;
     if (is_powered_on) {
-        system.GetAppLoader().ReadTitle(title);
+        system.GetAppLoader().ReadTitle(title, true);
         title = truncate("Playing: " + title);
     }
 

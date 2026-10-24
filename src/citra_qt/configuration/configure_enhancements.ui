@@ -223,7 +223,7 @@
            </item>
            <item>
             <property name="text">
-             <string notr="true">Anime4K</string>
+             <string>Anime4K (OpenGL only)</string>
             </property>
            </item>
            <item>

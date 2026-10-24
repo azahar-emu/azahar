@@ -1,6 +1,6 @@
 // Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <unordered_map>
 #include <QGraphicsOpacityEffect>
@@ -115,14 +115,14 @@ void LoadingScreen::Prepare(Loader::AppLoader& loader) {
     std::vector<u8> buffer;
     // TODO when banner becomes supported, decode it and add it as a movie
 
-    if (loader.ReadIcon(buffer) == Loader::ResultStatus::Success) {
+    if (loader.ReadIcon(buffer, true) == Loader::ResultStatus::Success) {
         QPixmap icon = GetQPixmapFromSMDH(buffer);
         ui->icon->setPixmap(icon);
     } else {
         ui->icon->clear();
     }
     std::string title;
-    if (loader.ReadTitle(title) != Loader::ResultStatus::Success) {
+    if (loader.ReadTitle(title, true) != Loader::ResultStatus::Success) {
         u64 program_id;
         if (loader.ReadProgramId(program_id) == Loader::ResultStatus::Success) {
             title = fmt::format("{:016x}", program_id);

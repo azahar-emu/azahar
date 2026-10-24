@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -87,7 +87,7 @@ private:
 // File that exposes a fragment [sub_file_offset, sub_file_offset + sub_file_size) of
 // the underlying file. The file can only be opened in replace or read modes, without
 // create, truncate or append. Resizing is only possible if new size is smaller.
-class SubIOFile final : public IOFileBase {
+class SubIOFile : public IOFileBase {
 public:
     SubIOFile();
 

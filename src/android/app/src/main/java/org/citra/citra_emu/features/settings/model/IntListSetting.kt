@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.model
 
@@ -11,11 +11,11 @@ enum class IntListSetting(
     override val section: String,
     override val defaultValue: List<Int>,
     val canBeEmpty: Boolean = true
-) : AbstractListSetting<Int> {
+) : AbstractSetting<List<Int>> {
 
     LAYOUTS_TO_CYCLE(
         SettingKeys.layouts_to_cycle(),
-        Settings.SECTION_LAYOUT,
+        CitraSettings.SECTION_LAYOUT,
         listOf(0, 1, 2, 3, 4, 5),
         canBeEmpty = false
     ),
@@ -25,28 +25,16 @@ enum class IntListSetting(
      */
     COMBO_BUTTON_BUTTONS(
         SettingKeys.combo_button_buttons(),
-        Settings.SECTION_CONTROLS,
+        CitraSettings.SECTION_CONTROLS,
         listOf(),
         canBeEmpty = true
     );
 
-    private var backingList: List<Int> = defaultValue
-    private var lastValidList: List<Int> = defaultValue
+    override fun valueToString(value: List<Int>): String = value.joinToString()
 
-    override var list: List<Int>
-        get() = backingList
-        set(value) {
-            if (!canBeEmpty && value.isEmpty()) {
-                backingList = lastValidList
-            } else {
-                backingList = value
-                lastValidList = value
-            }
-        }
-
-    override val valueAsString: String
-        get() = list.joinToString()
-
+    override fun valueFromString(string: String): List<Int>? = string.split(",")
+        .mapNotNull { it.trim().toIntOrNull() }
+        .takeIf { canBeEmpty || it.isNotEmpty() }
     override val isRuntimeEditable: Boolean
         get() {
             for (setting in NOT_RUNTIME_EDITABLE) {
@@ -61,7 +49,5 @@ enum class IntListSetting(
         private val NOT_RUNTIME_EDITABLE: List<IntListSetting> = emptyList()
 
         fun from(key: String): IntListSetting? = values().firstOrNull { it.key == key }
-
-        fun clear() = values().forEach { it.list = it.defaultValue }
     }
 }

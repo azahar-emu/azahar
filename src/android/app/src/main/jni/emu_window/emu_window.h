@@ -1,12 +1,15 @@
-// Copyright 2019-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
+#include <chrono>
+#include <memory>
 #include <vector>
 #include <EGL/egl.h>
 #include "core/frontend/emu_window.h"
+#include "jni/performance_hint.h"
 
 namespace Core {
 class System;
@@ -31,6 +34,10 @@ public:
     void DoneCurrent() override;
 
     virtual void TryPresenting() {}
+    virtual bool WaitForFrame(std::chrono::milliseconds timeout) {
+        return false;
+    }
+    virtual void DonePresenting() {}
     // EGL Context must be shared
     // could probably use the existing
     // SharedContext for this instead, this is maybe temporary
@@ -41,6 +48,8 @@ public:
 
 protected:
     void OnFramebufferSizeChanged();
+
+    void ReportFrameWork();
 
     /// Creates the API specific window surface
     virtual bool CreateWindowSurface() {
@@ -61,4 +70,7 @@ protected:
     int window_height{};
 
     std::unique_ptr<Frontend::GraphicsContext> core_context;
+
+private:
+    std::unique_ptr<PerformanceHintSession> performance_hint;
 };

@@ -1,9 +1,12 @@
-// Copyright 2019-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <vector>
 
 #include <EGL/egl.h>
@@ -24,6 +27,8 @@ public:
     ~EmuWindow_Android_OpenGL() override = default;
 
     void TryPresenting() override;
+    bool WaitForFrame(std::chrono::milliseconds timeout) override;
+    void DonePresenting() override;
     void StopPresenting() override;
     void PollEvents() override;
     EGLContext* GetEGLContext() override;
@@ -46,5 +51,11 @@ private:
         Running,
         Stopped,
     };
-    PresentingState presenting_state{};
+    std::atomic<PresentingState> presenting_state{};
+
+    bool surface_current{};
+
+    std::mutex frame_mutex;
+    std::condition_variable frame_cv;
+    bool frame_ready{};
 };

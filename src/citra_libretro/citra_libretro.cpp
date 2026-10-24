@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <list>
 #include <numeric>
@@ -37,6 +37,7 @@
 #if CITRA_ARCH(x86_64)
 #include "common/x64/cpu_detect.h"
 #endif
+#include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/settings.h"
@@ -294,6 +295,15 @@ void retro_run() {
             switch (result) {
             case Core::System::ResultStatus::ErrorSystemFiles:
                 msg = "Azahar was unable to locate a 3DS system archive: " + errorContent;
+                break;
+            case Core::System::ResultStatus::ErrorShaderCacheCrash:
+                // There is no way to ask the user, so the emulation continues.
+                msg = "Azahar closed unexpectedly the last time it built the Vulkan shader cache "
+                      "of the current title. "
+                      "If it crashes again, reset the shader cache by deleting the files "
+                      "starting with " +
+                      errorContent + " in the transferable and pipeline folders in " +
+                      FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + "vulkan";
                 break;
             default:
                 msg = "Fatal Error encountered (" + std::to_string(static_cast<int>(result)) +

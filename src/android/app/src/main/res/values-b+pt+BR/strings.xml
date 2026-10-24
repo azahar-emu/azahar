@@ -26,7 +26,6 @@
     <string name="select_games_folder">Selecionar Pasta de Aplicativos</string>
     <string name="select_games_folder_description">Permite que o Azahar preencha a lista de aplicativos</string>
     <string name="about">Sobre</string>
-    <string name="citra_description">Um emulador de 3DS de código aberto</string>
     <string name="about_description">Versão da compilação, créditos e mais</string>
     <string name="games_dir_selected">Diretório do aplicativo selecionado</string>
     <string name="select_citra_user_folder_home_description">Altera os arquivos que o Azahar usa para carregar aplicativos</string>
@@ -444,7 +443,6 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Erro ao carregar o aplicativo</string>
     <string name="loader_error_invalid_format">Formato de aplicativo inválido</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[Formato de arquivo do aplicativo não suportado.<br>Certifique-se de estar usando um dos formatos de arquivo compatíveis: <ul><li>Imagens de cartucho: <b>.cci/.zcci/.3ds</b></li><li>Arquivos instaláveis: <b>.cia/.zcia</b></li><li> Títulos homebrew: <b>.3dsx/.z3dsx</b></li><li>Contêineres NCCH: <b>.cxi/.zcxi/.app</b></li><li>Arquivos ELF: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Modo de sistema inválido</string>
     <string name="loader_error_invalid_system_mode_description">Aplicativos exclusivos do New 3DS não podem ser carregados sem ativar o modo New 3DS.</string>
     <string name="loader_error_applying_patches">Erro ao aplicar patches</string>

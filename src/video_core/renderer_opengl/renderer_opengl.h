@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -58,6 +58,7 @@ private:
     void InitOpenGLObjects();
     void ReloadShader(Settings::StereoRenderOption render_3d);
     void PrepareRendertarget();
+    void LimitFramesAheadOfGpu();
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
                          std::unique_ptr<Frontend::TextureMailbox>& mailbox, bool flipped);
@@ -114,6 +115,7 @@ private:
     FrameDumperOpenGL frame_dumper;
     bool isSecondaryWindow;
     bool secondaryWindowEnabled;
+    GLsync previous_frame_fence{};
 };
 
 } // namespace OpenGL

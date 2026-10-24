@@ -1,6 +1,6 @@
-// Copyright 2017-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cryptopp/sha.h>
 #include "common/alignment.h"
@@ -15,13 +15,17 @@ namespace FileSys {
 
 Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     FileUtil::IOFile file(file_path, "rb");
-    if (!file.IsOpen())
-        return Loader::ResultStatus::Error;
+    if (!file.IsOpen()) {
+        load_result = Loader::ResultStatus::Error;
+        return *load_result;
+    }
 
     std::vector<u8> file_data(file.GetSize());
 
-    if (!file.ReadBytes(file_data.data(), file.GetSize()))
-        return Loader::ResultStatus::Error;
+    if (!file.ReadBytes(file_data.data(), file.GetSize())) {
+        load_result = Loader::ResultStatus::Error;
+        return *load_result;
+    }
 
     Loader::ResultStatus result = Load(file_data);
     if (result != Loader::ResultStatus::Success)
@@ -30,10 +34,19 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     return result;
 }
 
+Loader::ResultStatus TitleMetadata::LoadResult() const {
+    return load_result.value_or(Loader::ResultStatus::Error);
+}
+
 Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::size_t offset) {
+    if (offset > file_data.size()) {
+        load_result = Loader::ResultStatus::Error;
+        return *load_result;
+    }
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     if (total_size < sizeof(u32_be)) {
-        return Loader::ResultStatus::Error;
+        load_result = Loader::ResultStatus::Error;
+        return *load_result;
     }
 
     std::memcpy(&signature_type, &file_data[offset], sizeof(u32_be));
@@ -41,7 +54,8 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
     // Signature lengths are variable, and the body follows the signature
     u32 signature_size = GetSignatureSize(signature_type);
     if (signature_size == 0) {
-        return Loader::ResultStatus::Error;
+        load_result = Loader::ResultStatus::Error;
+        return *load_result;
     }
 
     // The TMD body start position is rounded to the nearest 0x40 after the signature
@@ -49,7 +63,8 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
     std::size_t body_end = body_start + sizeof(Body);
 
     if (total_size < body_end) {
-        return Loader::ResultStatus::Error;
+        load_result = Loader::ResultStatus::Error;
+        return *load_result;
     }
 
     // Read signature + TMD body, then load the amount of ContentChunks specified
@@ -62,9 +77,11 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
     if (total_size < expected_size) {
         LOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
                   total_size);
-        return Loader::ResultStatus::ErrorInvalidFormat;
+        load_result = Loader::ResultStatus::ErrorInvalidFormat;
+        return *load_result;
     }
 
+    tmd_chunks.clear();
     for (u16 i = 0; i < tmd_body.content_count; i++) {
         ContentChunk chunk;
 
@@ -73,7 +90,8 @@ Loader::ResultStatus TitleMetadata::Load(std::span<const u8> file_data, std::siz
         tmd_chunks.push_back(chunk);
     }
 
-    return Loader::ResultStatus::Success;
+    load_result = Loader::ResultStatus::Success;
+    return *load_result;
 }
 
 Loader::ResultStatus TitleMetadata::Save(const std::string& file_path) {
@@ -253,7 +271,7 @@ void TitleMetadata::Print() const {
         LOG_DEBUG(Service_FS, "Content chunks for content info index {}:", i);
         for (u16 j = index; j < index + count; j++) {
             // Don't attempt to print content we don't have
-            if (j > tmd_body.content_count)
+            if (j >= tmd_chunks.size())
                 break;
 
             const ContentChunk& chunk = tmd_chunks[j];

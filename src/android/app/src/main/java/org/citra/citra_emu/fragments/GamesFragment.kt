@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -36,8 +36,8 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
@@ -256,12 +256,13 @@ class GamesFragment : Fragment() {
         @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
         if (!BuildConfig.DEBUG &&
             !BuildUtil.isGooglePlayBuild &&
-            BooleanSetting.CHECK_FOR_UPDATES.boolean &&
+            CitraSettings.activeSettings.get(BooleanSetting.CHECK_FOR_UPDATES) &&
             !homeViewModel.updatePromptShown
         ) {
             Thread({
                 val checkForPrereleaseUpdates =
-                    isPrereleaseBuild() || (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
+                    isPrereleaseBuild() ||
+                        (CitraSettings.activeSettings.get(IntSetting.UPDATE_CHECK_CHANNEL) == 1)
                 val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
 
                 if (!latestReleaseTag.isNullOrEmpty() &&
@@ -295,7 +296,7 @@ class GamesFragment : Fragment() {
 
     private fun setAdapter(games: List<Game>) {
         val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        if (preferences.getBoolean(Settings.PREF_SHOW_HOME_APPS, false)) {
+        if (preferences.getBoolean(CitraSettings.PREF_SHOW_HOME_APPS, false)) {
             (binding.gridGames.adapter as GameAdapter).submitList(games)
         } else {
             val filteredList = games.filter { !it.isSystemTitle }
@@ -332,7 +333,7 @@ class GamesFragment : Fragment() {
         val leftInsets = barInsets.left + cutoutInsets.left
         val rightInsets = barInsets.right + cutoutInsets.right
         val mlpSwipe = binding.swipeRefresh.layoutParams as MarginLayoutParams
-        if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
+        if (view.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
             mlpSwipe.leftMargin = leftInsets + spacingNavigationRail
             mlpSwipe.rightMargin = rightInsets
         } else {

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -36,7 +36,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.SetupAdapter
 import org.citra.citra_emu.databinding.FragmentSetupBinding
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.model.ButtonState
 import org.citra.citra_emu.model.PageButton
 import org.citra.citra_emu.model.PageState
@@ -629,7 +629,7 @@ class SetupFragment : Fragment() {
 
     private fun finishSetup() {
         preferences.edit()
-            .putBoolean(Settings.PREF_FIRST_APP_LAUNCH, false)
+            .putBoolean(CitraSettings.PREF_FIRST_APP_LAUNCH, false)
             .apply()
         mainActivity.finishSetup(binding.root.findNavController())
     }

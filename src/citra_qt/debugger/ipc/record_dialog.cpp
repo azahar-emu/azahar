@@ -1,6 +1,6 @@
 // Copyright 2019 Citra Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <fmt/format.h>
 #include "citra_qt/debugger/ipc/record_dialog.h"

@@ -1,10 +1,11 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
+#include "core/hle/service/hid/hid.h"
 #include "core/tracer/recorder.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/renderer_base.h"
@@ -48,6 +49,17 @@ void RendererBase::EndFrame() {
     render_window.PollEvents();
 
     system.frame_limiter.DoFrameLimiting(system.CoreTiming().GetGlobalTimeUs());
+
+    // On fast enough devices, the time limiter sleep spans most of the 16ms period
+    // between VBlank events. If an input event lands in that period, then the change
+    // will not reflect in HID until the next HID event. For applications that only
+    // check the input just after VBlank, it will cause them to lose the event until
+    // the next frame. Sacrifice HID timing accuracy for input latency by triggering
+    // the event just after VBlank (frame limiting behaviour is not accurate anyways).
+    if (const auto hid = Service::HID::GetModule(system)) {
+        hid->RestartPadUpdates();
+    }
+
     system.perf_stats->BeginSystemFrame();
 }
 

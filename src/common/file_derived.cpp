@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
@@ -88,7 +88,8 @@ bool SubIOFile::Open() {
         m_good = false;
         return false;
     }
-    if (Child()->GetSize() < m_sub_file_offset + m_sub_file_capacity) {
+    const u64 child_size = Child()->GetSize();
+    if (m_sub_file_offset > child_size || m_sub_file_capacity > child_size - m_sub_file_offset) {
         // Child file isn't large enough to contain the requested fragment.
         m_good = false;
         return false;

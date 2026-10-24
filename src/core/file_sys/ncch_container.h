@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -240,7 +240,8 @@ public:
     static std::unique_ptr<FileUtil::IOFileBase> AutoOpenNCCHNCSD(const std::string& filepath);
     static std::unique_ptr<FileUtil::IOFileBase> AutoOpenNCCHNCSD(FileUtil::IOFileBase* file);
 
-    NCCHContainer(const std::string& filepath, u32 ncch_offset = 0, u32 partition = 0);
+    NCCHContainer(const std::string& filepath, u32 partition = 0);
+    NCCHContainer(FileUtil::IOFileBase* file, u32 partition = 0);
     NCCHContainer() {}
 
     Loader::ResultStatus OpenFile(const std::string& filepath, u32 ncch_offset = 0,
@@ -355,7 +356,19 @@ public:
         return file->GetType().HasCompressedType();
     }
 
-    NCCH_Header ncch_header;
+    bool IsFileBundle() {
+        return file->GetType().HasType(FileUtil::IOType::Type::TarIOFile);
+    }
+
+    const std::unique_ptr<FileUtil::IOFileBase>& GetFile() {
+        return file;
+    }
+
+    bool IsLoaded() {
+        return is_loaded;
+    }
+
+    NCCH_Header ncch_header{};
     ExeFs_Header exefs_header;
     ExHeader_Header exheader_header;
 

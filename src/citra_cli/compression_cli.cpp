@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <filesystem>
 #include <iostream>
@@ -95,26 +95,34 @@ int ParseCompressionCommand(int argc, char* argv[]) {
         output_dir_path = strip_path_filename(source_path);
     }
 
-    auto compress_info = Loader::GetCompressFileInfo(source_path, is_compressing);
+    auto loader_info = Loader::GetLoaderFileInfo(source_path);
 
-    if (!compress_info.has_value()) {
+    if (!loader_info.is_valid || !loader_info.is_compress_supported) {
         std::cout << "fail: Failed to get compress info for file." << common_error_addendum
                   << std::endl;
         return 1;
     }
 
+    if (loader_info.is_compressed && is_compressing) {
+        std::cout << "fail: File is already compressed." << common_error_addendum << std::endl;
+        return 1;
+    } else if (!loader_info.is_compressed && !is_compressing) {
+        std::cout << "fail: File is already decompressed." << common_error_addendum << std::endl;
+        return 1;
+    }
+
     std::string extension; // The extension that the final processed file should have
     if (is_compressing) {
-        extension = compress_info.value().first.recommended_compressed_extension;
+        extension = loader_info.recommended_compressed_extension;
     } else {
-        extension = compress_info.value().first.recommended_uncompressed_extension;
+        extension = loader_info.recommended_plain_extension;
     }
 
     std::string output_path = build_output_path(source_path, extension, output_dir_path.value());
 
     bool success = perform_z3ds_operation(
-        is_compressing, source_path, output_path, compress_info.value().first.underlying_magic,
-        compress_info.value().second, nullptr, compress_info.value().first.default_metadata);
+        is_compressing, source_path, output_path, loader_info.underlying_magic,
+        loader_info.default_compress_frame_size, nullptr, loader_info.default_metadata);
     if (!success) {
         FileUtil::Delete(output_path);
         std::cout << "fail: Failed to perform Z3DS operation." << common_error_addendum

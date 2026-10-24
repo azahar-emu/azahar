@@ -25,10 +25,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     common_precompiled_headers.h
     common_types.h
     construct.h
-    dynamic_library/dynamic_library.cpp
-    dynamic_library/dynamic_library.h
-    dynamic_library/ffmpeg.cpp
-    dynamic_library/ffmpeg.h
+    dynamic_library.cpp
+    dynamic_library.h
     error.cpp
     error.h
     expected.h
@@ -88,6 +86,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     string_util.cpp
     string_util.h
     swap.h
+    tar_file.cpp
+    tar_file.h
     texture.cpp
     texture.h
     thread.cpp
@@ -98,6 +98,7 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     timer.cpp
     timer.h
     unique_function.h
+    unroll.h
     vector_math.h
     web_util.cpp
     web_util.h
@@ -107,7 +108,7 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     x64/xbyak_util.h
     zstd_compression.cpp
     zstd_compression.h
-)
+  )
 
 target_include_directories(citra_common PUBLIC ${CMAKE_BINARY_DIR}/src)
 
@@ -154,8 +155,8 @@ endif()
 
 create_target_directory_groups(citra_common)
 
-target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)
-target_link_libraries(citra_common PRIVATE cryptopp zstd)
+target_link_libraries(citra_common PUBLIC fmt microprofile Boost::boost Boost::serialization Boost::iostreams)
+target_link_libraries(citra_common PRIVATE cryptopp microtar citra_zstd)
 
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(citra_common PRIVATE xbyak)
@@ -175,4 +176,8 @@ if (BACKTRACE_LIBRARY AND ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND CMAKE_CXX_CO
     target_compile_definitions(citra_common PRIVATE CITRA_LINUX_GCC_BACKTRACE)
 endif()
 
-target_link_libraries(citra_common PUBLIC xxHash::xxhash)
+if (USE_SYSTEM_XXHASH)
+    target_link_libraries(citra_common PUBLIC xxhash)
+else()
+    target_link_libraries(citra_common PUBLIC xxHash::xxhash)
+endif()

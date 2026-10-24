@@ -1,6 +1,6 @@
-// Copyright 2017-2024 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cmath>
 #include <list>
@@ -31,7 +31,9 @@ public:
     ~KeyButton();
 
     bool GetStatus() const override {
-        return status.load();
+        // Make sure presses that are shorter than the read period are also seen.
+        const bool pressed_since_read = pressed_since_last_read.exchange(false);
+        return status.load() || pressed_since_read;
     }
 
     friend class ButtonList;
@@ -39,6 +41,7 @@ public:
 private:
     std::shared_ptr<ButtonList> button_list;
     std::atomic<bool> status{false};
+    mutable std::atomic<bool> pressed_since_last_read{false};
 };
 
 struct KeyButtonPair {
@@ -65,6 +68,9 @@ public:
         for (const KeyButtonPair& pair : list) {
             if (pair.button_id == button_id) {
                 pair.key_button->status.store(pressed);
+                if (pressed) {
+                    pair.key_button->pressed_since_last_read.store(true);
+                }
                 button_found = true;
             }
         }
@@ -76,6 +82,9 @@ public:
         std::lock_guard<std::mutex> guard(mutex);
         for (const KeyButtonPair& pair : list) {
             pair.key_button->status.store(pressed);
+            if (pressed) {
+                pair.key_button->pressed_since_last_read.store(true);
+            }
         }
     }
 

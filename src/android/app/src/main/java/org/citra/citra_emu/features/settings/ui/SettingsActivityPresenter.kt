@@ -1,17 +1,18 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.text.TextUtils
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
+import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
@@ -19,8 +20,11 @@ import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.TurboHelper
 
-class SettingsActivityPresenter(private val activityView: SettingsActivityView) {
-    val settings: Settings get() = activityView.settings
+class SettingsActivityPresenter(
+    private val activityView: SettingsActivityView,
+    private val viewModel: SettingsViewModel
+) {
+    val editingSettings: CitraSettings get() = viewModel.editingSettings
 
     private var shouldSave = false
     private lateinit var menuTag: String
@@ -29,6 +33,9 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String) {
         this.menuTag = menuTag
         this.gameId = gameId
+        // merge the active settings into the local settings activity instance
+        editingSettings.mergeSettings(CitraSettings.activeSettings)
+
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)
         }
@@ -47,13 +54,6 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     }
 
     private fun loadSettingsUI() {
-        if (!settings.isLoaded) {
-            if (!TextUtils.isEmpty(gameId)) {
-                settings.loadSettings(gameId, activityView)
-            } else {
-                settings.loadSettings(activityView)
-            }
-        }
         activityView.showSettingsFragment(menuTag, false, gameId)
         activityView.onSettingsFileLoaded()
     }
@@ -84,7 +84,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             return
         }
 
-        if (BooleanSetting.ANDROID_HIDE_IMAGES.boolean) {
+        if (editingSettings.get(BooleanSetting.ANDROID_HIDE_IMAGES)) {
             if (!nomediaFileExists) {
                 Log.info("[SettingsActivity]: Attempting to create .nomedia in user data directory")
                 FileUtil.createFile(dataDirTreeUri.toString(), ".nomedia")
@@ -98,14 +98,16 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     fun onStop(finishing: Boolean) {
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
-            settings.saveSettings(activityView)
-            // added to ensure that layout changes take effect as soon as settings window closes
+            if (editingSettings.isPerGame()) {
+                SettingsFile.saveCustomFile(editingSettings, activityView)
+            } else {
+                SettingsFile.saveGlobalFile(editingSettings, activityView)
+            }
+            // merge the edited settings back into the active settings
+            CitraSettings.activeSettings.mergeSettings(editingSettings)
             NativeLibrary.reloadSettings()
-            NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
-            updateAndroidImageVisibility()
-            TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
+            applyChangedSettings()
         }
-        NativeLibrary.reloadSettings()
     }
 
     fun onSettingChanged() {
@@ -114,6 +116,12 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
 
     fun onSettingsReset() {
         shouldSave = false
+    }
+
+    fun applyChangedSettings() {
+        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
+        updateAndroidImageVisibility()
+        TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
     }
 
     fun saveState(outState: Bundle) {

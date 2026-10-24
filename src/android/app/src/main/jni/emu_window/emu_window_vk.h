@@ -1,6 +1,6 @@
-// Copyright 2022-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -15,7 +15,9 @@ public:
                              bool is_secondary);
     ~EmuWindow_Android_Vulkan() override = default;
 
-    void PollEvents() override {}
+    void PollEvents() override {
+        ReportFrameWork();
+    }
 
     std::unique_ptr<GraphicsContext> CreateSharedContext() const override;
 

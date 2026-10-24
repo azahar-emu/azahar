@@ -1,10 +1,11 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <bitset>
+#include <unordered_set>
 
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
@@ -66,6 +67,9 @@ public:
     void SwitchCache(u64 title_id, const std::atomic_bool& stop_loading = std::atomic_bool{false},
                      const VideoCore::DiskResourceLoadCallback& callback = {});
 
+    /// Returns true when the emulator crashed the last time it loaded the caches of the title
+    bool LoadCacheCrashed(u64 title_id) const;
+
     /// Binds a pipeline using the provided information
     bool BindPipeline(PipelineInfo& info, bool wait_built = false);
 
@@ -87,6 +91,10 @@ public:
 
     /// Binds a fragment shader generated from PICA state
     void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
+
+    /// Queries which channels need min/max blend emulation in the fragment shader
+    void QueryBlendEmulation(const Pica::RegsInternal& regs, bool& rgb_emulation,
+                             bool& alpha_emulation) const;
 
     /// Gets the current program ID
     u64 GetProgramID() const {
@@ -118,6 +126,15 @@ private:
     /// Switches the disk cache at runtime to use a different title ID
     void SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
                          const VideoCore::DiskResourceLoadCallback& callback);
+
+    /// Marks the cache of the title as being loaded. Returns true when the flag was created.
+    bool SetCacheLoadFlag(u64 title_id);
+
+    /// Clears the load flag of the title once the cached pipelines are built
+    void QueueClearCacheLoadFlag(u64 title_id);
+
+    /// Returns the path of the file that marks the caches of the title as being loaded
+    std::string GetLoadFlagPath(u64 title_id) const;
 
     /// Builds the rasterizer pipeline layout
     void BuildLayout();
@@ -163,6 +180,8 @@ private:
     u64 current_program_id{0};
     std::vector<std::shared_ptr<ShaderDiskCache>> disk_caches;
     std::shared_ptr<ShaderDiskCache> curr_disk_cache{};
+
+    std::unordered_set<u64> load_flag_titles;
 };
 
 } // namespace Vulkan

@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 #include "common/common_types.h"
+#include "common/file_derived.h"
 #include "common/file_util.h"
 #include "core/file_sys/romfs_reader.h"
 #include "core/hle/kernel/kernel.h"
@@ -32,6 +33,24 @@ enum class FileType {
     ELF,
     THREEDSX, // 3DSX
     ARTIC,
+};
+
+/// Return type for functions in Loader namespace
+enum class ResultStatus {
+    Success,
+    Error,
+    ErrorInvalidFormat,
+    ErrorNotImplemented,
+    ErrorNotLoaded,
+    ErrorNotUsed,
+    ErrorAlreadyLoaded,
+    ErrorMemoryAllocationFailed,
+    ErrorEncrypted,
+    ErrorGbaTitle,
+    ErrorArtic,
+    ErrorNotFound,
+    ErrorPatches,
+    ErrorPatchesInvalidTitle,
 };
 
 /**
@@ -60,36 +79,23 @@ FileType GuessFromExtension(const std::string& extension);
 /**
  * Convert a FileType into a string which can be displayed to the user.
  */
-const char* GetFileTypeString(FileType type, bool is_compressed = false);
-
-/// Return type for functions in Loader namespace
-enum class ResultStatus {
-    Success,
-    Error,
-    ErrorInvalidFormat,
-    ErrorNotImplemented,
-    ErrorNotLoaded,
-    ErrorNotUsed,
-    ErrorAlreadyLoaded,
-    ErrorMemoryAllocationFailed,
-    ErrorEncrypted,
-    ErrorGbaTitle,
-    ErrorArtic,
-    ErrorNotFound,
-    ErrorPatches,
-    ErrorPatchesInvalidTitle,
-};
+const char* GetFileTypeString(FileType type, bool is_compressed = false, bool is_bundle = false);
 
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    struct CompressFileInfo {
-        bool is_supported{};
+    struct LoaderFileInfo {
+        bool is_valid{};
+        bool is_compress_supported{};
+        bool is_bundle_supported{};
         bool is_compressed{};
+        bool is_bundled{};
         std::array<u8, 4> underlying_magic{};
         std::string recommended_compressed_extension;
-        std::string recommended_uncompressed_extension;
+        std::string recommended_bundle_extension;
+        std::string recommended_plain_extension;
         std::unordered_map<std::string, std::vector<u8>> default_metadata;
+        std::size_t default_compress_frame_size{};
     };
 
     explicit AppLoader(Core::System& system_, FileUtil::IOFile&& file)
@@ -187,9 +193,11 @@ public:
     /**
      * Get the icon (typically icon section) of the application
      * @param buffer Reference to buffer to store data
+     * @param prefer_update_icon Prefer reading the update data icon if available
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadIcon([[maybe_unused]] std::vector<u8>& buffer) {
+    virtual ResultStatus ReadIcon([[maybe_unused]] std::vector<u8>& buffer,
+                                  [[maybe_unused]] bool prefer_update_icon) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -272,9 +280,11 @@ public:
     /**
      * Get the title of the application
      * @param title Reference to store the application title into
+     * @param prefer_update_title Prefer reading the update data title if available
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadTitle([[maybe_unused]] std::string& title) {
+    virtual ResultStatus ReadTitle([[maybe_unused]] std::string& title,
+                                   [[maybe_unused]] bool prefer_update_title) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -290,9 +300,11 @@ public:
         return false;
     }
 
-    virtual CompressFileInfo GetCompressFileInfo() {
-        CompressFileInfo info{};
-        info.is_supported = false;
+    virtual LoaderFileInfo GetLoaderFileInfo() {
+        LoaderFileInfo info{};
+        info.is_valid = true;
+        info.is_compress_supported = false;
+        info.is_bundle_supported = false;
         return info;
     }
 
@@ -300,9 +312,15 @@ public:
         return false;
     }
 
+    virtual bool IsFileBundle() {
+        return false;
+    }
+
     virtual std::string GetFilePath() {
         return file ? file->Filename() : "";
     }
+
+    virtual void LoadBundle() {}
 
 protected:
     Core::System& system;
@@ -318,7 +336,16 @@ protected:
  */
 std::unique_ptr<AppLoader> GetLoader(const std::string& filename);
 
-std::optional<std::pair<Loader::AppLoader::CompressFileInfo, size_t>> GetCompressFileInfo(
-    const std::string& filepath, bool compress);
+/**
+ * Get file information for the given file path (see LoaderFileInfo).
+ */
+Loader::AppLoader::LoaderFileInfo GetLoaderFileInfo(const std::string& filepath);
+
+/**
+ * Creates a bundle ROM file.
+ */
+ResultStatus CreateBundleFile(const std::string& out_path, const std::string& main_file,
+                              const std::vector<std::string>& dependencies,
+                              std::function<FileUtil::ProgressCallback>&& progress_callback);
 
 } // namespace Loader

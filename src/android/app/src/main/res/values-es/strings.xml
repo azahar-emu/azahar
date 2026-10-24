@@ -26,7 +26,6 @@
     <string name="select_games_folder">Seleccionar Directorio de Aplicaciones</string>
     <string name="select_games_folder_description">Permite que Azahar rellene la lista de aplicaciones</string>
     <string name="about">Acerca de</string>
-    <string name="citra_description">Un emulador de 3DS de código abierto</string>
     <string name="about_description">Versión de compilación, créditos y más</string>
     <string name="games_dir_selected">Directorio de aplicaciones seleccionado</string>
     <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>
@@ -445,7 +444,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error cargando la aplicación</string>
     <string name="loader_error_invalid_format">Formato de aplicación inválido</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[El formato de la aplicación no está soportado.<br>Por favor asegúrate de usar uno de los formatos compatibles:<ul><li>Imagenes de cartucho:<b>.cci/.zcci/.3ds</b></li><li>Archivos instalables:<b>.cia/.zcia</b></li><li>Títulos Homebrew:<b>.3dsx/.z3dsx</b></li><li>Contenedores NCCH:<b>.cxi/.zcxi/.app</b></li><li>Archivos ELF:<b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Modo de sistema no válido</string>
     <string name="loader_error_invalid_system_mode_description">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
     <string name="loader_error_applying_patches">Error al aplicar parches</string>

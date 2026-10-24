@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
@@ -137,10 +137,10 @@ void ResourceLimit::ApplyAppMaxCPUSetting(std::shared_ptr<Kernel::Process>& proc
             if (static_cast<u32>(time) > 100 && static_cast<u32>(time) < 200) {
                 // This code path is actually unused
                 final_mode = Core1ScheduleMode::Multi;
-                set_cpu_time = limit_cpu_time = static_cast<u32>(time) - 100;
+                set_cpu_time = static_cast<u32>(time) - 100;
             } else {
                 final_mode = Core1ScheduleMode::Single;
-                set_cpu_time = limit_cpu_time = time;
+                set_cpu_time = time;
             }
         }
     } else {
