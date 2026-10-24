@@ -16,7 +16,12 @@ interface SettingsActivityView {
      * @param menuTag    Identifier for the settings group that should be displayed.
      * @param addToStack Whether or not this fragment should replace a previous one.
      */
-    fun showSettingsFragment(menuTag: String, addToStack: Boolean, gameId: String)
+    fun showSettingsFragment(
+        menuTag: String,
+        addToStack: Boolean,
+        gameId: String,
+        gameTitle: String
+    )
 
     /**
      * Called by a contained Fragment to get access to the Setting HashMap

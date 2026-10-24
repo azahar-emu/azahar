@@ -165,6 +165,7 @@ class MainActivity :
                 R.id.homeSettingsFragment -> SettingsActivity.launch(
                     this,
                     SettingsFile.FILE_NAME_CONFIG,
+                    "",
                     ""
                 )
             }
@@ -293,6 +294,7 @@ class MainActivity :
     fun finishSetup(navController: NavController) {
         navController.navigate(R.id.action_firstTimeSetupFragment_to_gamesFragment)
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
+        SettingsFile.loadSettings(CitraSettings.activeSettings)
     }
 
     private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {

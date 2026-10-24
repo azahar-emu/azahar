@@ -6,6 +6,9 @@ package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.textview.MaterialTextView
+import org.citra.citra_emu.R
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
@@ -43,4 +46,31 @@ abstract class SettingViewHolder<out T : SettingsItem>(
     abstract override fun onClick(clicked: View)
 
     abstract override fun onLongClick(clicked: View): Boolean
+
+    fun showGlobalMessageIfNeeded(globalMessage: MaterialTextView, position: Int) {
+        globalMessage.visibility = View.GONE
+
+        setting ?: return
+        // Show "Revert to global" button in Custom Settings if applicable.
+        globalMessage.visibility = View.GONE
+
+        val settings = adapter.fragmentView.activityView?.editingSettings
+        val showGlobal = settings?.isPerGame() == true &&
+            setting?.setting != null &&
+            settings.hasOverride(setting!!.setting!!)
+
+        if (showGlobal) {
+            globalMessage.visibility = View.VISIBLE
+            globalMessage.setText(R.string.use_global)
+            return
+        }
+        val showMessage =
+            settings?.isPerGame() == false && CitraSettings.activeSettings.isPerGame() &&
+                CitraSettings.activeSettings.hasOverride(setting!!.setting!!)
+
+        if (showMessage) {
+            globalMessage.visibility = View.VISIBLE
+            globalMessage.setText(R.string.editing_global_when_customized)
+        }
+    }
 }

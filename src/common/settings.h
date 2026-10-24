@@ -21,6 +21,7 @@ namespace Settings {
 
 enum class GraphicsAPI {
     Software = 0,
+
     OpenGL = 1,
     Vulkan = 2,
 };

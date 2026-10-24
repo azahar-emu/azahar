@@ -404,7 +404,22 @@ class EmulationFragment :
                     SettingsActivity.launch(
                         requireContext(),
                         SettingsFile.FILE_NAME_CONFIG,
+                        null,
                         null
+                    )
+
+                    true
+                }
+
+                R.id.menu_application_settings -> {
+                    val titleId = NativeLibrary.getRunningTitleId()
+
+                    val gameId = java.lang.String.format("%016X", titleId)
+                    SettingsActivity.launch(
+                        requireContext(),
+                        SettingsFile.FILE_NAME_CONFIG,
+                        gameId,
+                        game.title
                     )
 
                     true

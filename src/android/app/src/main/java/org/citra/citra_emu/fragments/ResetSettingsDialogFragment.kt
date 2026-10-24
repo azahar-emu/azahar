@@ -14,10 +14,17 @@ import org.citra.citra_emu.features.settings.ui.SettingsActivity
 class ResetSettingsDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val settingsActivity = requireActivity() as SettingsActivity
+        var title = R.string.reset_all_settings
+        var description = R.string.reset_all_settings_description
 
+        // if this is a per-game Settings object, reset to global instead
+        if (settingsActivity.editingSettings.isPerGame()) {
+            title = R.string.reset_settings_to_global
+            description = R.string.reset_settings_to_global_description
+        }
         return MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.reset_all_settings)
-            .setMessage(R.string.reset_all_settings_description)
+            .setTitle(title)
+            .setMessage(description)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 settingsActivity.onSettingsReset()
             }

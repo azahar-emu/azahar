@@ -89,9 +89,13 @@ class CitraSettings {
         perGameOverrides.clear()
     }
 
-    fun removePerGameSettings() {
+    fun changeToGlobalContext() {
         perGameOverrides.clear()
         gameId = null
+    }
+
+    fun clearAllOverrides() {
+        perGameOverrides.clear()
     }
 
     companion object {

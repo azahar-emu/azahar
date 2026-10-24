@@ -6,7 +6,6 @@ package org.citra.citra_emu.features.settings.ui
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
@@ -21,7 +20,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.preference.PreferenceManager
 import com.google.android.material.color.MaterialColors
-import java.io.IOException
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
@@ -29,7 +28,6 @@ import org.citra.citra_emu.databinding.ActivitySettingsBinding
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.utils.SettingsFile
-import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.InsetsHelper
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.SystemSaveGame
@@ -58,9 +56,23 @@ class SettingsActivity :
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val launcher = intent
-        val gameID = launcher.getStringExtra(ARG_GAME_ID) ?: ""
+        val gameId = launcher.getStringExtra(ARG_GAME_ID) ?: ""
+        val gameTitle = launcher.getStringExtra(ARG_GAME_TITLE) ?: ""
         val menuTag = launcher.getStringExtra(ARG_MENU_TAG) ?: ""
-        presenter.onCreate(savedInstanceState, menuTag, gameID)
+
+        val parsedId = gameId.toLongOrNull(16)
+        if (parsedId == 0L) {
+            // gameId of 0 means this is homebrew or another unsupported situation.
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.per_app_settings_unsupported)
+                .setMessage(R.string.per_app_settings_unsupported_description)
+                .setPositiveButton(android.R.string.ok, null)
+                .setCancelable(false)
+                .setOnDismissListener { finish() }
+                .show()
+        }
+
+        presenter.onCreate(savedInstanceState, menuTag, gameId, gameTitle)
 
         // Show "Back" button in the action bar for navigation
         setSupportActionBar(binding.toolbarSettings)
@@ -134,7 +146,12 @@ class SettingsActivity :
         presenter.onStop(isFinishing)
     }
 
-    override fun showSettingsFragment(menuTag: String, addToStack: Boolean, gameId: String) {
+    override fun showSettingsFragment(
+        menuTag: String,
+        addToStack: Boolean,
+        gameId: String,
+        gameTitle: String
+    ) {
         if (!addToStack && settingsFragment != null) {
             return
         }
@@ -153,7 +170,7 @@ class SettingsActivity :
         }
         transaction.replace(
             R.id.frame_content,
-            SettingsFragment.newInstance(menuTag, gameId),
+            SettingsFragment.newInstance(menuTag, gameId, gameTitle),
             FRAGMENT_TAG
         )
         transaction.commit()
@@ -196,55 +213,45 @@ class SettingsActivity :
     }
 
     fun onSettingsReset() {
-        // This function deletes the main config file AND any other config files
-        // that will store per-game settings and reloads from the default.
+        // if we are editing per-game settings, delete the per app file only
+        if (editingSettings.isPerGame()) {
+            // reset to global settings, save, and exit
+            editingSettings.clearAllOverrides()
+            SettingsFile.deletePerAppFile(editingSettings.gameId)
+        } else {
+            // This function deletes the main config file AND any other config files
+            // that will store per-game settings and reloads from the default.
+            val controllerKeys =
+                CitraSettings.buttonKeys + CitraSettings.circlePadKeys + CitraSettings.cStickKeys +
+                    CitraSettings.dPadAxisKeys + CitraSettings.dPadButtonKeys +
+                    CitraSettings.triggerKeys
+            val editor =
+                PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
+            controllerKeys.forEach { editor.remove(it) }
+            editor.apply()
 
-        // TODO: if in a per-game settings context, replace this with a ResetToGlobal option
-        // Prevents saving to a non-existent settings file
+            SettingsFile.deleteAndResetSettingsFile()
+            SettingsFile.deletePerAppSettingsDirectory()
+
+            // Set default values for system config file
+            SystemSaveGame.apply {
+                setUsername("AZAHAR")
+                setBirthday(11, 7)
+                setSystemLanguage(1)
+                setSoundOutputMode(1)
+                setCountryCode(49)
+                setPlayCoins(42)
+            }
+        }
+
         presenter.onSettingsReset()
 
-        val controllerKeys =
-            CitraSettings.buttonKeys + CitraSettings.circlePadKeys + CitraSettings.cStickKeys +
-                CitraSettings.dPadAxisKeys + CitraSettings.dPadButtonKeys +
-                CitraSettings.triggerKeys
-        val editor =
-            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
-        controllerKeys.forEach { editor.remove(it) }
-        editor.apply()
-
-        // Delete settings file because the user may have changed values that do not exist in the UI
-        // TODO: once per-game settings are added, delete the per-game config folder as well
-        val settingsFile = SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)
-        if (!settingsFile.delete()) {
-            throw IOException("Failed to delete $settingsFile")
-        }
-
-        // Set the root of the document tree before we create a new config file or the native code
-        // will fail when creating the file.
-        if (DirectoryInitialization.setCitraUserDirectory()) {
-            CitraApplication.documentsTree.setRoot(Uri.parse(DirectoryInitialization.userPath))
-            NativeLibrary.createConfigFile()
-        } else {
-            throw IllegalStateException("Azahar directory unavailable when accessing config file!")
-        }
-
-        // clear the active setttings and reload them from the default, then merge them into the
-        // currently edited settings. This mostly doesn't matter since the activity ends after this
-        // function, but if we
+        // sync all settings to the new blank file(s)
         CitraSettings.activeSettings.clearAll()
         editingSettings.clearAll()
         SettingsFile.loadSettings(CitraSettings.activeSettings)
+        editingSettings.mergeSettings(CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
-
-        // Set default values for system config file
-        SystemSaveGame.apply {
-            setUsername("AZAHAR")
-            setBirthday(11, 7)
-            setSystemLanguage(1)
-            setSoundOutputMode(1)
-            setCountryCode(49)
-            setPlayCoins(42)
-        }
 
         showToastMessage(getString(R.string.settings_reset), true)
         presenter.applyChangedSettings()
@@ -285,13 +292,20 @@ class SettingsActivity :
     companion object {
         private const val ARG_MENU_TAG = "menu_tag"
         private const val ARG_GAME_ID = "game_id"
+        private const val ARG_GAME_TITLE = "game_title"
         private const val FRAGMENT_TAG = "settings"
 
         @JvmStatic
-        fun launch(context: Context, menuTag: String?, gameId: String?) {
+        fun launch(
+            context: Context,
+            menuTag: String?,
+            gameId: String? = null,
+            gameTitle: String? = null
+        ) {
             val settings = Intent(context, SettingsActivity::class.java)
             settings.putExtra(ARG_MENU_TAG, menuTag)
             settings.putExtra(ARG_GAME_ID, gameId)
+            settings.putExtra(ARG_GAME_TITLE, gameTitle)
             context.startActivity(settings)
         }
 
@@ -299,11 +313,13 @@ class SettingsActivity :
             context: Context,
             launcher: ActivityResultLauncher<Intent>,
             menuTag: String?,
-            gameId: String?
+            gameId: String? = null,
+            gameTitle: String? = null
         ) {
             val settings = Intent(context, SettingsActivity::class.java)
             settings.putExtra(ARG_MENU_TAG, menuTag)
             settings.putExtra(ARG_GAME_ID, gameId)
+            settings.putExtra(ARG_GAME_TITLE, gameTitle)
             launcher.launch(settings)
         }
     }
