@@ -240,6 +240,7 @@ if (ENABLE_QT)
         "pauseWhenInBackground"
         "muteWhenInBackground"
         "hideInactiveMouse"
+        "useOnScreenSoftwareKeyboard"
         "inserted_cartridge"
         "enable_discord_presence"
         "iconSize"
