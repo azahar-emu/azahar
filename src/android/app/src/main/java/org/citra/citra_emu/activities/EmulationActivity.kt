@@ -259,8 +259,6 @@ class EmulationActivity : AppCompatActivity() {
             }
         }
         super.onResume()
-
-        foldDualScreenController.startCoverControls()
     }
 
     override fun onStop() {

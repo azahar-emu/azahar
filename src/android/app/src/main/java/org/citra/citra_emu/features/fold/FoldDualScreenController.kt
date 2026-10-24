@@ -14,10 +14,12 @@ import androidx.window.area.WindowAreaInfo
 import androidx.window.area.WindowAreaPresentationSessionCallback
 import androidx.window.area.WindowAreaSessionPresenter
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.utils.Log
 
 class FoldDualScreenController(
     private val activity: Activity,
@@ -27,23 +29,29 @@ class FoldDualScreenController(
 
     private val windowAreaController = WindowAreaController.getOrCreate()
     private val executor = ContextCompat.getMainExecutor(activity)
+
+    @Volatile
     private var presentationSession: WindowAreaSessionPresenter? = null
     private var targetAreaInfo: WindowAreaInfo? = null
     private var coverArtwork: Bitmap? = null
+    private var collectorJob: Job? = null
+    private var isStartingSession = false
 
     fun init() {
-        scope.launch {
+        collectorJob?.cancel()
+        collectorJob = scope.launch {
             windowAreaController.windowAreaInfos
                 .distinctUntilChanged()
                 .collect { areaInfos ->
-                    // Find folding cover screen area
                     targetAreaInfo = areaInfos.firstOrNull { info ->
                         val capability = info.getCapability(WindowAreaCapability.Operation.OPERATION_PRESENT_ON_AREA)
                         capability.status == WindowAreaCapability.Status.WINDOW_AREA_STATUS_AVAILABLE
                     }
 
-                    if (targetAreaInfo != null && presentationSession == null) {
+                    if (targetAreaInfo != null && presentationSession == null && !isStartingSession) {
                         startCoverControls()
+                    } else if (targetAreaInfo == null && presentationSession != null) {
+                        stopCoverControls()
                     }
                 }
         }
@@ -51,48 +59,61 @@ class FoldDualScreenController(
 
     fun setCoverArtwork(bitmap: Bitmap?) {
         coverArtwork = bitmap
-        // Update live if session is already running
-        (presentationSession as? WindowAreaSessionPresenter)?.let { session ->
-            val iv = session.context.resources
-        }
     }
 
+    @Synchronized
     fun startCoverControls() {
         val token: Binder? = targetAreaInfo?.token
-        if (token != null && presentationSession == null) {
-            windowAreaController.presentContentOnWindowArea(
-                token = token,
-                activity = activity,
-                executor = executor,
-                windowAreaPresentationSessionCallback = this
-            )
+        if (token != null && presentationSession == null && !isStartingSession) {
+            try {
+                isStartingSession = true
+                windowAreaController.presentContentOnWindowArea(
+                    token = token,
+                    activity = activity,
+                    executor = executor,
+                    windowAreaPresentationSessionCallback = this
+                )
+            } catch (e: Exception) {
+                Log.error("[FoldDualScreenController] Failed to start presentation session: ${e.message}")
+                isStartingSession = false
+            }
         }
     }
 
+    @Synchronized
     fun stopCoverControls() {
-        presentationSession?.close()
-        presentationSession = null
+        try {
+            presentationSession?.close()
+        } catch (e: Exception) {
+            Log.error("[FoldDualScreenController] Error closing session: ${e.message}")
+        } finally {
+            presentationSession = null
+            isStartingSession = false
+        }
     }
 
     override fun onSessionStarted(session: WindowAreaSessionPresenter) {
         presentationSession = session
+        isStartingSession = false
 
-        val coverView = LayoutInflater.from(session.context).inflate(R.layout.fold_cover_controls, null)
+        try {
+            val coverView = LayoutInflater.from(session.context).inflate(R.layout.fold_cover_controls, null)
 
-        val artworkImageView = coverView.findViewById<ImageView>(R.id.cover_artwork_view)
-        if (coverArtwork != null) {
-            artworkImageView.setImageBitmap(coverArtwork)
-        } else {
-            // fallback to default drawable in res/drawable folder
-            // artworkImageView.setImageResource(R.drawable.default_3ds_shell)
+            val artworkImageView = coverView.findViewById<ImageView>(R.id.cover_artwork_view)
+            if (coverArtwork != null) {
+                artworkImageView?.setImageBitmap(coverArtwork)
+            }
+
+            bindShoulderTouchZones(coverView)
+            session.setContentView(coverView)
+        } catch (e: Exception) {
+            Log.error("[FoldDualScreenController] Failed inflating cover content: ${e.message}")
         }
-
-        bindShoulderTouchZones(coverView)
-        session.setContentView(coverView)
     }
 
     override fun onSessionEnded(t: Throwable?) {
         presentationSession = null
+        isStartingSession = false
     }
 
     override fun onContainerVisibilityChanged(isVisible: Boolean) {
