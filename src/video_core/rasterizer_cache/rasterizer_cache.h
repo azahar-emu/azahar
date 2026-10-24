@@ -1360,7 +1360,7 @@ void RasterizerCache<T>::InvalidateRegion(PAddr addr, u32 size, SurfaceId region
         }
         const auto interval = surface.GetInterval() & invalid_interval;
         surface.MarkInvalid(interval);
-        if (!surface.IsFullyInvalid()) {
+        if (!surface.IsFullyInvalid() && !surface.IsCustom()) {
             return;
         }
         remove_surfaces.push_back(surface_id);
