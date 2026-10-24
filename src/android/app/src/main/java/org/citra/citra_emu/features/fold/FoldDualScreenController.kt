@@ -107,15 +107,15 @@ class FoldDualScreenController(
         setupTouch(rootView.findViewById(R.id.touch_zone_r), NativeLibrary.ButtonType.TRIGGER_R)
     }
 
-    private fun setupTouch(view: View?, buttonCode: Int) {
+    private fun setupTouch(view: View?, buttonType: Int) {
         view?.setOnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-                    onButtonEvent(buttonCode, true)
+                    onButtonEvent(buttonType, NativeLibrary.ButtonState.PRESSED)
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
-                    onButtonEvent(buttonCode, false)
+                    onButtonEvent(buttonType, NativeLibrary.ButtonState.RELEASED)
                     true
                 }
                 else -> false
