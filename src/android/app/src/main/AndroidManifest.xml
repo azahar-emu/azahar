@@ -67,6 +67,7 @@
 
         <activity
             android:name="org.citra.citra_emu.activities.EmulationActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden"
             android:exported="true"
             android:theme="@style/Theme.Citra.Main"
             android:launchMode="singleTop">
