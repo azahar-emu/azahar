@@ -46,6 +46,14 @@
         <meta-data android:name="android.game_mode_config"
             android:resource="@xml/game_mode_config" />
 
+        <!-- Allow dual-screen access on One UI -->
+        <meta-data
+            android:name="com.samsung.android.multidisplay.keep_process_alive"
+            android:value="true" />
+        <meta-data
+            android:name="androidx.window.area.OPERATION_PRESENT_ON_AREA"
+            android:value="true" />
+
         <activity
             android:name="org.citra.citra_emu.ui.main.MainActivity"
             android:theme="@style/Theme.Citra.Splash.Main"
