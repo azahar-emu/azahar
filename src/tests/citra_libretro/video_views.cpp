@@ -117,6 +117,7 @@ bool ignore_calls = false;
 retro_core_options_update_display_callback_t update_display = nullptr;
 /// The options the core has hidden or shown; the others show.
 std::map<std::string, bool> display;
+const retro_core_options_v2* options = nullptr;
 
 bool Environment(unsigned cmd, void* data) {
     if (ignore_calls) {
@@ -128,6 +129,7 @@ bool Environment(unsigned cmd, void* data) {
         return true;
     case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
         display.clear();
+        options = static_cast<const retro_core_options_v2*>(data);
         return true;
     case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK:
         update_display =
@@ -468,4 +470,19 @@ TEST_CASE("Option visibility reaches the frontend", "[libretro]") {
     FakeFrontend::frontend_layout = "off";
     REQUIRE(FakeFrontend::update_display());
     REQUIRE(display == shown);
+}
+
+TEST_CASE("Stereoscopic 3D Depth starts halfway", "[libretro]") {
+    Common::Log::DisableLoggingInTests();
+    retro_set_environment(FakeFrontend::Environment);
+    REQUIRE(FakeFrontend::options != nullptr);
+
+    const retro_core_option_v2_definition* depth = nullptr;
+    for (auto* option = FakeFrontend::options->definitions; option->key; ++option) {
+        if (std::string(option->key) == "citra_factor_3d") {
+            depth = option;
+        }
+    }
+    REQUIRE(depth != nullptr);
+    REQUIRE(std::string(depth->default_value) == "50");
 }
