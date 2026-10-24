@@ -170,6 +170,11 @@ option(ENABLE_CCACHE "Use ccache to speed up subsequent builds" OFF)
 
 # Handle incompatible options for libretro builds
 if(ENABLE_LIBRETRO)
+    if(ANDROID)
+        # libretro builds use Android API level 21, which does not support std::aligned_alloc(added in API level 28)
+        # and causes a compilation error. Mitigate this error by disabling the automatic detection and usage of std::aligned_alloc.
+        add_definitions(-DBOOST_ASIO_DISABLE_STD_ALIGNED_ALLOC)
+    endif()
     # Check for explicitly-set conflicting options
     set(_CONFLICTS "")
     foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)

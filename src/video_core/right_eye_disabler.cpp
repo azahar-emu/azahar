@@ -21,7 +21,7 @@ bool RightEyeDisabler::ShouldAllowCmdQueueTrigger(PAddr addr, u32 size) {
     cmd_queue_trigger_happened = true;
 
     auto guess = gpu.impl->pica.GuessCmdRenderProperties(addr, size);
-    if (guess.vp_height == top_screen_size && !top_screen_blocked) {
+    if (guess.has_draw && guess.vp_height == top_screen_size && !top_screen_blocked) {
         if (top_screen_buf == 0) {
             top_screen_buf = guess.paddr;
         }
