@@ -622,7 +622,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
             {  "80",  "80%" }, {  "90",  "90%" }, { "100", "100%" },
             { nullptr, nullptr }
         },
-        "0"
+        "50"
     },
 
     // Storage Category
@@ -1108,7 +1108,7 @@ static void ParseLayoutOptions(void) {
         GetStereoRenderOption(LibRetro::FetchVariable(config::layout::render_3d, "off"));
 
     LibRetro::settings.factor_3d =
-        static_cast<u32>(std::stoi(LibRetro::FetchVariable(config::layout::factor_3d, "0")));
+        static_cast<u32>(std::stoi(LibRetro::FetchVariable(config::layout::factor_3d, "50")));
 
     Settings::values.swap_screen =
         LibRetro::FetchVariable(config::layout::swap_screen, "Top") == "Bottom";
