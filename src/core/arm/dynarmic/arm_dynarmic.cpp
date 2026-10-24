@@ -320,7 +320,11 @@ void ARM_Dynarmic::ClearInstructionCache() {
 }
 
 void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
-    jit->InvalidateCacheRange(start_address, length);
+    // Each address space has its own JIT. This core may currently be running a different process
+    // than the one whose code changed, so invalidate the range in all of them.
+    for (const auto& j : jits) {
+        j.second->InvalidateCacheRange(start_address, length);
+    }
 }
 
 void ARM_Dynarmic::ClearExclusiveState() {

@@ -442,6 +442,7 @@ private:
     Result InvalidateProcessDataCache(Handle process_handle, VAddr address, u32 size);
     Result StoreProcessDataCache(Handle process_handle, VAddr address, u32 size);
     Result FlushProcessDataCache(Handle process_handle, VAddr address, u32 size);
+    void InvalidateCodeAfterDataCacheWriteback(const Process& process, VAddr address, u32 size);
     Result CreateAddressArbiter(Handle* out_handle);
     Result ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value, s64 nanoseconds);
     void Break(u8 break_reason);
@@ -1089,7 +1090,7 @@ Result SVC::InvalidateProcessDataCache(Handle process_handle, VAddr address, u32
     return ResultSuccess;
 }
 
-/// Stores the specified cache range (stubbed as we do not emulate cache).
+/// Stores the specified cache range (data cache is not emulated).
 Result SVC::StoreProcessDataCache(Handle process_handle, VAddr address, u32 size) {
     const std::shared_ptr<Process> process =
         kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
@@ -1097,10 +1098,11 @@ Result SVC::StoreProcessDataCache(Handle process_handle, VAddr address, u32 size
 
     LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
 
+    InvalidateCodeAfterDataCacheWriteback(*process, address, size);
     return ResultSuccess;
 }
 
-/// Flushes the specified cache range (stubbed as we do not emulate cache).
+/// Flushes the specified cache range (data cache is not emulated).
 Result SVC::FlushProcessDataCache(Handle process_handle, VAddr address, u32 size) {
     const std::shared_ptr<Process> process =
         kernel.GetCurrentProcess()->handle_table.Get<Process>(process_handle);
@@ -1108,7 +1110,36 @@ Result SVC::FlushProcessDataCache(Handle process_handle, VAddr address, u32 size
 
     LOG_DEBUG(Kernel_SVC, "called address=0x{:08X}, size=0x{:08X}", address, size);
 
+    InvalidateCodeAfterDataCacheWriteback(*process, address, size);
     return ResultSuccess;
+}
+
+/// Code patchers such as CTRPF's Process::Patch only write back the data cache after modifying
+/// code and never invalidate the instruction cache. On hardware the small ARM11 instruction cache
+/// picks up the new code almost immediately, but translated blocks would persist indefinitely, so
+/// drop any blocks in the written range when it overlaps executable memory.
+void SVC::InvalidateCodeAfterDataCacheWriteback(const Process& process, VAddr address, u32 size) {
+    if (size == 0) {
+        return;
+    }
+    const u64 end = static_cast<u64>(address) + size;
+    const auto& vma_map = process.vm_manager.vma_map;
+    bool executable = false;
+    for (auto it = process.vm_manager.FindVMA(address);
+         it != vma_map.end() && it->second.base < end; ++it) {
+        if (it->second.meminfo_state != MemoryState::Free &&
+            (static_cast<u8>(it->second.permissions) & static_cast<u8>(VMAPermission::Execute))) {
+            executable = true;
+            break;
+        }
+    }
+    if (!executable) {
+        return;
+    }
+
+    for (std::size_t i = 0; i < system.GetNumCores(); i++) {
+        system.GetCore(i).InvalidateCacheRange(address, size);
+    }
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
