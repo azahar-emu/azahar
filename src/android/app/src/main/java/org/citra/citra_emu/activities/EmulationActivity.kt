@@ -150,6 +150,7 @@ class EmulationActivity : AppCompatActivity() {
         foldDualScreenController = FoldDualScreenController(this, lifecycleScope) { buttonType, state ->
             NativeLibrary.onGamePadEvent(NativeLibrary.TOUCHSCREEN_DEVICE, buttonType, state)
         }
+        Log.info("[EmulationActivity] Calling foldDualScreenController.init()")
         foldDualScreenController.init()
 
         val navHostFragment =
@@ -351,6 +352,9 @@ class EmulationActivity : AppCompatActivity() {
             isRotationBlocked = false
             applyOrientationSettings()
         }
+
+        foldDualScreenController.init()
+
         Toast.makeText(
             applicationContext,
             getString(R.string.emulation_menu_help),

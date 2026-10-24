@@ -3,6 +3,7 @@ package org.citra.citra_emu.features.fold
 import android.app.Activity
 import android.graphics.Bitmap
 import android.os.Binder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -15,11 +16,10 @@ import androidx.window.area.WindowAreaPresentationSessionCallback
 import androidx.window.area.WindowAreaSessionPresenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.utils.Log
 
 class FoldDualScreenController(
     private val activity: Activity,
@@ -38,31 +38,41 @@ class FoldDualScreenController(
     private var isStartingSession = false
 
     fun init() {
-        Log.info("[FoldDualScreenController] Initializing collector...")
+        Log.e("FoldController", "Initialising activity: $activity")
+
         collectorJob?.cancel()
         collectorJob = scope.launch {
-            windowAreaController.windowAreaInfos
-                .distinctUntilChanged()
-                .collect { areaInfos ->
-                    Log.info("[FoldDualScreenController] WindowAreaInfos updated, count = ${areaInfos.size}")
+            try {
+                windowAreaController.windowAreaInfos.collectLatest { areaInfos ->
+                    Log.e("FoldController", "WindowAreaInfos received. Count = ${areaInfos.size}")
+
+                    for (info in areaInfos) {
+                        val capability = info.getCapability(WindowAreaCapability.Operation.OPERATION_PRESENT_ON_AREA)
+                        Log.e(
+                            "FoldController",
+                            "-> Area type: ${info.type}, Capability Status: ${capability.status}"
+                        )
+                    }
 
                     targetAreaInfo = areaInfos.firstOrNull { info ->
                         val capability = info.getCapability(WindowAreaCapability.Operation.OPERATION_PRESENT_ON_AREA)
-                        Log.info("[FoldDualScreenController] Area ${info.type} capability status: ${capability.status}")
                         capability.status == WindowAreaCapability.Status.WINDOW_AREA_STATUS_AVAILABLE
                     }
 
                     if (targetAreaInfo != null) {
-                        Log.info("[FoldDualScreenController] Target area available! Trying to start controls...")
+                        Log.e("FoldController", "Target Area is available, requesting start")
                         if (presentationSession == null && !isStartingSession) {
                             activity.runOnUiThread {
                                 startCoverControls()
                             }
                         }
                     } else {
-                        Log.info("[FoldDualScreenController] No available window area for presentation currently.")
+                        Log.e("FoldController", "No available window area for presentation currently")
                     }
                 }
+            } catch (t: Throwable) {
+                Log.e("FoldController", "Exception in windowAreaInfos flow", t)
+            }
         }
     }
 
@@ -74,32 +84,32 @@ class FoldDualScreenController(
     fun startCoverControls() {
         val area = targetAreaInfo
         if (area == null) {
-            Log.error("[FoldDualScreenController] Cannot start: targetAreaInfo is null")
+            Log.e("FoldController", "startCoverControls aborted: targetAreaInfo is null")
             return
         }
 
         val token: Binder? = area.token
         if (token == null) {
-            Log.error("[FoldDualScreenController] Cannot start: Area token is null")
+            Log.e("FoldController", "startCoverControls aborted: token is null")
             return
         }
 
         if (presentationSession != null || isStartingSession) {
-            Log.info("[FoldDualScreenController] Session already starting or active.")
+            Log.e("FoldController", "Session already running or starting. Skipping.")
             return
         }
 
         try {
             isStartingSession = true
-            Log.info("[FoldDualScreenController] Calling presentContentOnWindowArea...")
+            Log.e("FoldController", "Calling presentContentOnWindowArea with token: $token")
             windowAreaController.presentContentOnWindowArea(
                 token = token,
                 activity = activity,
                 executor = executor,
                 windowAreaPresentationSessionCallback = this
             )
-        } catch (e: Exception) {
-            Log.error("[FoldDualScreenController] Exception starting session: ${e.message}")
+        } catch (t: Throwable) {
+            Log.e("FoldController", "Failed to start window area presentation", t)
             isStartingSession = false
         }
     }
@@ -107,10 +117,10 @@ class FoldDualScreenController(
     @Synchronized
     fun stopCoverControls() {
         try {
-            Log.info("[FoldDualScreenController] Stopping cover controls...")
+            Log.e("FoldController", "Closing presentation session...")
             presentationSession?.close()
-        } catch (e: Exception) {
-            Log.error("[FoldDualScreenController] Error closing session: ${e.message}")
+        } catch (t: Throwable) {
+            Log.e("FoldController", "Error closing session", t)
         } finally {
             presentationSession = null
             isStartingSession = false
@@ -118,7 +128,7 @@ class FoldDualScreenController(
     }
 
     override fun onSessionStarted(session: WindowAreaSessionPresenter) {
-        Log.info("[FoldDualScreenController] onSessionStarted triggered!")
+        Log.e("FoldController", ">>> onSessionStarted RECEIVED! <<<")
         presentationSession = session
         isStartingSession = false
 
@@ -132,20 +142,20 @@ class FoldDualScreenController(
 
             bindShoulderTouchZones(coverView)
             session.setContentView(coverView)
-            Log.info("[FoldDualScreenController] Cover view successfully attached to session!")
-        } catch (e: Exception) {
-            Log.error("[FoldDualScreenController] Failed inflating cover content: ${e.message}")
+            Log.e("FoldController", "setContentView applied successfully to Cover Screen!")
+        } catch (t: Throwable) {
+            Log.e("FoldController", "Error in onSessionStarted layout setup", t)
         }
     }
 
     override fun onSessionEnded(t: Throwable?) {
-        Log.info("[FoldDualScreenController] onSessionEnded. Reason: ${t?.message}")
+        Log.e("FoldController", "onSessionEnded called. Throwable: ${t?.message}")
         presentationSession = null
         isStartingSession = false
     }
 
     override fun onContainerVisibilityChanged(isVisible: Boolean) {
-        Log.info("[FoldDualScreenController] onContainerVisibilityChanged: isVisible = $isVisible")
+        Log.e("FoldController", "onContainerVisibilityChanged: isVisible = $isVisible")
         if (!isVisible) {
             onButtonEvent(NativeLibrary.ButtonType.TRIGGER_L, NativeLibrary.ButtonState.RELEASED)
             onButtonEvent(NativeLibrary.ButtonType.TRIGGER_R, NativeLibrary.ButtonState.RELEASED)

@@ -81,6 +81,10 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     fun updateDisplay() {
+        // disable for Fold testing
+        return
+
+
         // return early if the parent context is dead or dying
         if (context is android.app.Activity && (context.isFinishing || context.isDestroyed)) {
             return
@@ -146,14 +150,14 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     override fun onDisplayAdded(displayId: Int) {
-        updateDisplay()
+        //updateDisplay()
     }
 
     override fun onDisplayRemoved(displayId: Int) {
-        updateDisplay()
+        //updateDisplay()
     }
     override fun onDisplayChanged(displayId: Int) {
-        updateDisplay()
+        //updateDisplay()
     }
 }
 class SecondaryDisplayPresentation(
