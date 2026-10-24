@@ -27,6 +27,7 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     private val vd: VirtualDisplay
     var preferredDisplayId = -1
     var currentDisplayId = -1
+    var forceHiddenDisplay = true
 
     val availableDisplays: List<Display>
         get() = getSecondaryDisplays()
@@ -81,16 +82,13 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     fun updateDisplay() {
-        // disable for Fold testing
-        return
-
-
         // return early if the parent context is dead or dying
         if (context is android.app.Activity && (context.isFinishing || context.isDestroyed)) {
             return
         }
 
-        val displayToUse = if (availableDisplays.isEmpty() ||
+        val displayToUse = if (forceHiddenDisplay ||
+            availableDisplays.isEmpty() ||
             // Theoretically, the NONE option is no longer selectable, but
             // I am leaving this in for backwards compatibility
             CitraSettings.activeSettings.get(IntSetting.SECONDARY_DISPLAY_LAYOUT) ==
@@ -150,14 +148,14 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     override fun onDisplayAdded(displayId: Int) {
-        //updateDisplay()
+        updateDisplay()
     }
 
     override fun onDisplayRemoved(displayId: Int) {
-        //updateDisplay()
+        updateDisplay()
     }
     override fun onDisplayChanged(displayId: Int) {
-        //updateDisplay()
+        updateDisplay()
     }
 }
 class SecondaryDisplayPresentation(

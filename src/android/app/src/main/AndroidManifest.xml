@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false"/>
@@ -76,6 +77,8 @@
         <activity
             android:name="org.citra.citra_emu.activities.EmulationActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden"
+            android:resizeableActivity="false"
+            tools:replace="android:resizeableActivity"
             android:exported="true"
             android:theme="@style/Theme.Citra.Main"
             android:launchMode="singleTop">

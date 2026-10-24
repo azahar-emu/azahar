@@ -175,7 +175,7 @@ class EmulationActivity : AppCompatActivity() {
         // once per-game settings are added, load them here!
 
         secondaryDisplayManager = SecondaryDisplay(this)
-        //secondaryDisplayManager.updateDisplay()
+        secondaryDisplayManager.updateDisplay()
 
         NativeLibrary.initMultiplayer()
 
@@ -297,7 +297,7 @@ class EmulationActivity : AppCompatActivity() {
         foldDualScreenController?.stopCoverControls()
         isCoverScreenActive = false
 
-        //secondaryDisplayManager.releasePresentation()
+        secondaryDisplayManager.releasePresentation()
         super.onStop()
     }
 
@@ -308,7 +308,8 @@ class EmulationActivity : AppCompatActivity() {
 
     public override fun onRestart() {
         super.onRestart()
-        //secondaryDisplayManager.updateDisplay()
+
+        secondaryDisplayManager.updateDisplay()
         NativeLibrary.reloadCameraDevices()
     }
 
