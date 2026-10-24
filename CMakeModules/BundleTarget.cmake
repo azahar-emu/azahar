@@ -79,6 +79,12 @@ if (BUNDLE_TARGET_EXECUTE)
             # We want to use the Windows media plugin instead, which is also included.
             file(REMOVE "${executable_parent_dir}/plugins/multimedia/ffmpegmediaplugin.dll")
         elseif (APPLE)
+
+            foreach (lib_file IN LISTS BUNDLE_EXTRA_LIBRARIES)
+                file(MAKE_DIRECTORY "${executable_path}/Contents/Frameworks")
+                symlink_safe_copy("${lib_file}" "${executable_path}/Contents/Frameworks")
+            endforeach()
+            
             get_filename_component(executable_name "${executable_path}" NAME_WE)
             find_program(macdeployqt_executable macdeployqt6 PATHS "${QT_HOST_PATH}/bin")
 
@@ -117,6 +123,10 @@ if (BUNDLE_TARGET_EXECUTE)
             set(extra_linuxdeploy_args --plugin qt)
         endif()
 
+        if (BUNDLE_EXTRA_LIBRARIES)
+            set(extra_library_args --library "${BUNDLE_EXTRA_LIBRARIES}")
+        endif()
+
         # Set up app icon
         file(COPY_FILE "${source_path}/dist/azahar.svg" "${CMAKE_BINARY_DIR}/dist/org.azahar_emu.Azahar.svg")
 
@@ -125,6 +135,7 @@ if (BUNDLE_TARGET_EXECUTE)
             ${extra_linuxdeploy_env}
             "${linuxdeploy_executable}"
             ${extra_linuxdeploy_args}
+            ${extra_library_args}
             --plugin checkrt
             --executable "${executable_path}"
             --icon-file "${CMAKE_BINARY_DIR}/dist/org.azahar_emu.Azahar.svg"
@@ -175,6 +186,12 @@ if (BUNDLE_TARGET_EXECUTE)
                 symlink_safe_copy("${lib_file}" "${lib_dir}")
             endforeach()
         endif()
+
+        foreach (lib_file IN LISTS BUNDLE_EXTRA_LIBRARIES)
+            file(MAKE_DIRECTORY ${lib_dir})
+            message(STATUS "Bundling extra library ${lib_file}")
+            symlink_safe_copy("${lib_file}" "${lib_dir}")
+        endforeach()
 
         # Add libs directory to executable rpath where applicable.
         if (APPLE)
@@ -336,6 +353,12 @@ else()
             add_dependencies(bundle ${target_name})
         endif()
 
+        # Pass SDL3 (dlopen'd by sdl2-compat, so invisible to dependency scanners)
+        set(bundle_extra_libraries "")
+        if (TARGET SDL3::SDL3-shared)
+            set(bundle_extra_libraries "$<TARGET_FILE:SDL3::SDL3-shared>")
+        endif()
+
         add_custom_command(TARGET ${dest_target} POST_BUILD
             COMMAND ${CMAKE_COMMAND}
             "-DQT_HOST_PATH=\"${QT_HOST_PATH}\""
@@ -346,6 +369,7 @@ else()
             "-DBINARY_PATH=${CMAKE_BINARY_DIR}"
             "-DEXECUTABLE_PATH=${bundle_executable_path}"
             "-DBUNDLE_LIBRARY_PATHS=\"${bundle_library_paths}\""
+            "-DBUNDLE_EXTRA_LIBRARIES=${bundle_extra_libraries}"
             "-DBUNDLE_QT=${bundle_qt}"
             "-DIN_PLACE=${in_place}"
             "-DIS_MINGW=${MINGW}"
