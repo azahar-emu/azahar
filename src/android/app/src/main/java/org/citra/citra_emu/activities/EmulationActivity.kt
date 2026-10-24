@@ -74,7 +74,10 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
     lateinit var secondaryDisplayManager: SecondaryDisplay
-    private lateinit var foldDualScreenController : FoldDualScreenController
+    private var foldDualScreenController: FoldDualScreenController? = null
+
+    @Volatile
+    private var isCoverScreenActive = false
 
     private val onShutdown = Runnable {
         if (intent.getBooleanExtra("launchedFromShortcut", false)) {
@@ -102,6 +105,39 @@ class EmulationActivity : AppCompatActivity() {
         if (!PermissionsHandler.hasWriteAccess(applicationContext)) return false
         return DirectoryInitialization.start() ==
             DirectoryInitialization.DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
+    }
+
+    fun startFoldCoverScreen() {
+        if (!isCoverScreenActive && isEmulationRunning && isEmulationReady) {
+            isCoverScreenActive = true
+            android.util.Log.e("FoldController", "Creating and starting FoldDualScreenController")
+
+            if (foldDualScreenController == null) {
+                foldDualScreenController = FoldDualScreenController(this, lifecycleScope) { buttonType, state ->
+                    NativeLibrary.onGamePadEvent(NativeLibrary.TOUCHSCREEN_DEVICE, buttonType, state)
+                }
+            }
+            foldDualScreenController?.init()
+        }
+    }
+
+    fun toggleFoldCoverScreen() {
+        if (isCoverScreenActive) {
+            android.util.Log.e("FoldController", "User toggled Cover Screen OFF")
+            foldDualScreenController?.stopCoverControls()
+            isCoverScreenActive = false
+            Toast.makeText(this, "Cover controls disabled", Toast.LENGTH_SHORT).show()
+        } else {
+            android.util.Log.e("FoldController", "User toggled Cover Screen ON")
+            isCoverScreenActive = true
+            if (foldDualScreenController == null) {
+                foldDualScreenController = FoldDualScreenController(this, lifecycleScope) { buttonType, state ->
+                    NativeLibrary.onGamePadEvent(NativeLibrary.TOUCHSCREEN_DEVICE, buttonType, state)
+                }
+            }
+            foldDualScreenController?.init()
+            Toast.makeText(this, "Cover controls enabled", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -146,12 +182,6 @@ class EmulationActivity : AppCompatActivity() {
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
         setContentView(binding.root)
-
-        foldDualScreenController = FoldDualScreenController(this, lifecycleScope) { buttonType, state ->
-            NativeLibrary.onGamePadEvent(NativeLibrary.TOUCHSCREEN_DEVICE, buttonType, state)
-        }
-        Log.info("[EmulationActivity] Calling foldDualScreenController.init()")
-        foldDualScreenController.init()
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
@@ -211,6 +241,7 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStop()
 
         isEmulationReady = false
+        isCoverScreenActive = false
         isRotationBlocked = true
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         emulationViewModel.setEmulationStarted(false)
@@ -263,7 +294,8 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        foldDualScreenController.stopCoverControls()
+        foldDualScreenController?.stopCoverControls()
+        isCoverScreenActive = false
 
         //secondaryDisplayManager.releasePresentation()
         super.onStop()
@@ -295,11 +327,13 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        foldDualScreenController?.stopCoverControls()
+        foldDualScreenController = null
+        isCoverScreenActive = false
         EmulationLifecycleUtil.removeHook(onShutdown)
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
-        foldDualScreenController.onEmulationStopped()
         secondaryDisplayManager.releasePresentation()
         secondaryDisplayManager.releaseVD()
 
@@ -353,8 +387,6 @@ class EmulationActivity : AppCompatActivity() {
             isRotationBlocked = false
             applyOrientationSettings()
         }
-
-        foldDualScreenController.onEmulationStarted()
 
         Toast.makeText(
             applicationContext,
@@ -660,7 +692,7 @@ class EmulationActivity : AppCompatActivity() {
             NativeLibrary.onGamePadEvent(
                 NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_DOWN,
-                NativeLibrary.ButtonState.PRESSED
+                NativeLibrary.ButtonState.RELEASED
             )
         }
         return true

@@ -327,6 +327,12 @@ class EmulationFragment :
                     true
                 }
 
+                R.id.menu_fold_cover_screen -> {
+                    emulationActivity.toggleFoldCoverScreen()
+                    binding.drawerLayout.close()
+                    true
+                }
+
                 R.id.menu_emulation_savestates -> {
                     showSavestateMenu()
                     true

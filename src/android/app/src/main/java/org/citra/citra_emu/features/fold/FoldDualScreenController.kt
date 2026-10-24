@@ -14,6 +14,7 @@ import androidx.window.area.WindowAreaController
 import androidx.window.area.WindowAreaInfo
 import androidx.window.area.WindowAreaPresentationSessionCallback
 import androidx.window.area.WindowAreaSessionPresenter
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -32,46 +33,36 @@ class FoldDualScreenController(
 
     @Volatile
     private var presentationSession: WindowAreaSessionPresenter? = null
-    private var targetAreaInfo: WindowAreaInfo? = null
     private var coverArtwork: Bitmap? = null
     private var collectorJob: Job? = null
     private var isStartingSession = false
-    @Volatile
-    private var isEmulationActive = false
 
     fun init() {
         Log.e("FoldController", "Initialising activity: $activity")
-
         collectorJob?.cancel()
+        isStartingSession = false
+
         collectorJob = scope.launch {
             try {
                 windowAreaController.windowAreaInfos.collectLatest { areaInfos ->
                     Log.e("FoldController", "WindowAreaInfos received. Count = ${areaInfos.size}")
 
-                    for (info in areaInfos) {
+                    val availableRearArea = areaInfos.firstOrNull { info ->
                         val capability = info.getCapability(WindowAreaCapability.Operation.OPERATION_PRESENT_ON_AREA)
-                        Log.e(
-                            "FoldController",
-                            "-> Area type: ${info.type}, Capability Status: ${capability.status}"
-                        )
-                    }
-
-                    targetAreaInfo = areaInfos.firstOrNull { info ->
-                        val capability = info.getCapability(WindowAreaCapability.Operation.OPERATION_PRESENT_ON_AREA)
+                        Log.e("FoldController", "Area: ${info.type}, Status: ${capability.status}")
                         capability.status == WindowAreaCapability.Status.WINDOW_AREA_STATUS_AVAILABLE
                     }
 
-                    if (targetAreaInfo != null) {
+                    if (availableRearArea != null) {
                         Log.e("FoldController", "Target Area is available, requesting start")
-                        if (isEmulationActive && presentationSession == null && !isStartingSession) {
-                            activity.runOnUiThread {
-                                startCoverControls()
-                            }
+                        activity.runOnUiThread {
+                            startCoverControls(availableRearArea)
                         }
                     } else {
                         Log.e("FoldController", "No available window area for presentation currently")
                     }
                 }
+            } catch (e: CancellationException) {
             } catch (t: Throwable) {
                 Log.e("FoldController", "Exception in windowAreaInfos flow", t)
             }
@@ -82,36 +73,21 @@ class FoldDualScreenController(
         coverArtwork = bitmap
     }
 
-    fun onEmulationStarted() {
-        isEmulationActive = true
-        if (targetAreaInfo != null && presentationSession == null && !isStartingSession) {
-            activity.runOnUiThread {
-                startCoverControls()
-            }
-        }
-    }
-
-    fun onEmulationStopped() {
-        isEmulationActive = false
-        stopCoverControls()
-    }
-
     @Synchronized
-    fun startCoverControls() {
-        val area = targetAreaInfo
-        if (area == null) {
+    private fun startCoverControls(area: WindowAreaInfo) {
+        val token: Binder? = area.token
+        if (token == null) {
             Log.e("FoldController", "startCoverControls aborted: targetAreaInfo is null")
             return
         }
 
-        val token: Binder? = area.token
-        if (token == null) {
+        if (presentationSession != null) {
             Log.e("FoldController", "startCoverControls aborted: token is null")
             return
         }
 
-        if (presentationSession != null || isStartingSession) {
-            Log.e("FoldController", "Session already running or starting. Skipping.")
+        if (isStartingSession) {
+            Log.e("FoldController", "startCoverControls: already starting or running a session")
             return
         }
 
@@ -132,8 +108,10 @@ class FoldDualScreenController(
 
     @Synchronized
     fun stopCoverControls() {
+        Log.e("FoldController", "stopCoverControls called")
+        collectorJob?.cancel()
+        collectorJob = null
         try {
-            Log.e("FoldController", "Closing presentation session...")
             presentationSession?.close()
         } catch (t: Throwable) {
             Log.e("FoldController", "Error closing session", t)
@@ -144,12 +122,14 @@ class FoldDualScreenController(
     }
 
     override fun onSessionStarted(session: WindowAreaSessionPresenter) {
-        Log.e("FoldController", ">>> onSessionStarted RECEIVED! <<<")
+        Log.e("FoldController", "onSessionStarted success")
         presentationSession = session
         isStartingSession = false
 
         try {
             val coverView = LayoutInflater.from(session.context).inflate(R.layout.fold_cover_controls, null)
+            coverView.isFocusable = false
+            coverView.isFocusableInTouchMode = false
 
             val artworkImageView = coverView.findViewById<ImageView>(R.id.cover_artwork_view)
             if (coverArtwork != null) {
@@ -158,9 +138,9 @@ class FoldDualScreenController(
 
             bindShoulderTouchZones(coverView)
             session.setContentView(coverView)
-            Log.e("FoldController", "setContentView applied successfully to Cover Screen!")
+            Log.e("FoldController", "setContentView applied to rear screen successfully")
         } catch (t: Throwable) {
-            Log.e("FoldController", "Error in onSessionStarted layout setup", t)
+            Log.e("FoldController", "Error setting cover view", t)
         }
     }
 
