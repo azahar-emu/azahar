@@ -35,6 +35,10 @@ target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} catch2 nihstro-headers
 if (ENABLE_LIBRETRO)
     target_sources(tests PRIVATE citra_libretro/video_views.cpp)
     target_link_libraries(tests PRIVATE $<TARGET_OBJECTS:citra_libretro_common> libretro)
+    if (ENABLE_OPENGL)
+        # citra_libretro/emu_window/libretro_window.h includes the GL headers.
+        target_link_libraries(tests PRIVATE glad)
+    endif()
 endif()
 
 add_test(NAME tests COMMAND tests)

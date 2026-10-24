@@ -9,6 +9,7 @@
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include "citra_libretro/core_settings.h"
+#include "citra_libretro/emu_window/libretro_window.h"
 #include "citra_libretro/video_views.h"
 #include "common/logging/backend.h"
 #include "common/settings.h"
@@ -17,6 +18,12 @@
 namespace {
 
 using LibRetro::VideoViews::Mode;
+
+constexpr Mode own{};
+constexpr Mode pair_2d{.active = true};
+constexpr Mode pair_stereo{.active = true, .stereo = true};
+constexpr Mode single_2d{.active = true, .single = true};
+constexpr Mode single_stereo{.active = true, .stereo = true, .single = true};
 
 class TestWindow final : public Frontend::EmuWindow {
 public:
@@ -71,18 +78,17 @@ void RequireViews(const std::vector<retro_video_view>& views,
 }
 
 /// The map for the layout Azahar computes when it packs for views.
-std::vector<retro_video_view> MapFor(bool stereo, bool swapped, u32 scale) {
-    Settings::values.layout_option = Settings::LayoutOption::Default;
-    Settings::values.render_3d =
-        stereo ? Settings::StereoRenderOption::SideBySideFull : Settings::StereoRenderOption::Off;
+std::vector<retro_video_view> MapFor(const Mode& mode, bool swapped, u32 scale) {
+    LibRetro::VideoViews::SetCurrentMode(mode);
+    LibRetro::ApplyLayoutSettings();
     Settings::values.swap_screen = swapped;
-    const auto [width, height] = LibRetro::VideoViews::PackedSize(stereo, scale);
+    const auto [width, height] = LibRetro::VideoViews::PackedSize(mode, swapped, scale);
     TestWindow window;
     window.UpdateCurrentFramebufferLayout(width, height);
     const auto& layout = window.GetFramebufferLayout();
     REQUIRE(layout.width == width);
     REQUIRE(layout.height == height);
-    return LibRetro::VideoViews::BuildMap(layout, stereo, swapped);
+    return LibRetro::VideoViews::BuildMap(layout, mode.stereo, swapped);
 }
 
 template <typename Display>
@@ -98,9 +104,7 @@ std::set<std::string> Keys(const Display& display, bool visible) {
 
 /// The frontend's visibility of the Layout options the views override.
 std::map<std::string, bool> LayoutDisplay(bool visible) {
-    return {{"citra_layout_option", visible},
-            {"citra_large_screen_proportion", visible},
-            {"citra_render_3d", visible}};
+    return {{"citra_large_screen_proportion", visible}, {"citra_render_3d", visible}};
 }
 
 /// Answers the calls the core options' visibility makes.
@@ -181,36 +185,55 @@ TEST_CASE("VideoViews::SelectMode", "[libretro]") {
     constexpr unsigned headset = RETRO_VIDEO_VIEWS_STATUS_HMD | presents | stereo;
     constexpr auto def = LayoutOption::Default;
     constexpr auto large = LayoutOption::LargeScreen;
+    constexpr auto single = LayoutOption::SingleScreen;
     constexpr auto off = StereoRenderOption::Off;
     constexpr auto anaglyph = StereoRenderOption::Anaglyph;
-    const Mode own{};
-    const Mode views_2d{true, false};
-    const Mode views_stereo{true, true};
+    // Prominent 3DS Screen.
+    constexpr bool top = false;
+    constexpr bool bottom = true;
 
-    REQUIRE(SelectMode(true, def, off, presents, true) == views_2d);
-    REQUIRE(SelectMode(true, def, off, presents | stereo, true) == views_stereo);
+    REQUIRE(SelectMode(true, def, off, top, presents, true) == pair_2d);
+    REQUIRE(SelectMode(true, def, off, top, presents | stereo, true) == pair_stereo);
     // The software renderer draws one eye.
-    REQUIRE(SelectMode(true, def, off, presents | stereo, false) == views_2d);
-    REQUIRE(SelectMode(true, def, off, stereo, true) == own);
-    REQUIRE(SelectMode(true, def, off, 0, true) == own);
+    REQUIRE(SelectMode(true, def, off, top, presents | stereo, false) == pair_2d);
+    REQUIRE(SelectMode(true, def, off, top, stereo, true) == own);
+    REQUIRE(SelectMode(true, def, off, top, 0, true) == own);
+    // Swapped screens still pair up.
+    REQUIRE(SelectMode(true, def, off, bottom, presents, true) == pair_2d);
+    REQUIRE(SelectMode(true, def, off, bottom, presents | stereo, true) == pair_stereo);
 
     // In 2D a layout or 3D mode of the user's own stays; the frontend's stereo takes over.
-    REQUIRE(SelectMode(true, large, off, presents, true) == own);
-    REQUIRE(SelectMode(true, large, off, presents | stereo, true) == views_stereo);
-    REQUIRE(SelectMode(true, def, anaglyph, presents, true) == own);
-    REQUIRE(SelectMode(true, def, anaglyph, presents | stereo, true) == views_stereo);
-    REQUIRE(SelectMode(true, large, off, presents | stereo, false) == views_2d);
-    REQUIRE(SelectMode(true, large, off, 0, true) == own);
+    REQUIRE(SelectMode(true, large, off, top, presents, true) == own);
+    REQUIRE(SelectMode(true, large, off, top, presents | stereo, true) == pair_stereo);
+    REQUIRE(SelectMode(true, def, anaglyph, top, presents, true) == own);
+    REQUIRE(SelectMode(true, def, anaglyph, top, presents | stereo, true) == pair_stereo);
+    REQUIRE(SelectMode(true, large, off, top, presents | stereo, false) == pair_2d);
+    REQUIRE(SelectMode(true, large, off, top, 0, true) == own);
+
+    // Single Screen Only sends the prominent screen alone, in 2D as in stereo.
+    REQUIRE(SelectMode(true, single, off, top, presents, true) == single_2d);
+    REQUIRE(SelectMode(true, single, off, bottom, presents, true) == single_2d);
+    REQUIRE(SelectMode(true, single, off, top, presents | stereo, true) == single_stereo);
+    REQUIRE(SelectMode(true, single, off, top, presents | stereo, false) == single_2d);
+    REQUIRE(SelectMode(true, single, anaglyph, top, presents, true) == own);
+    REQUIRE(SelectMode(true, single, anaglyph, top, presents | stereo, true) == single_stereo);
+    REQUIRE(SelectMode(true, single, off, top, 0, true) == own);
+    // Only the top screen has 3D, so the bottom screen alone is drawn once.
+    REQUIRE(SelectMode(true, single, off, bottom, presents | stereo, true) == single_2d);
 
     // A headset shows both eyes, even from a frontend whose window shows no views.
-    REQUIRE(SelectMode(true, large, anaglyph, headset, true) == views_stereo);
-    REQUIRE(SelectMode(true, large, anaglyph, headset, false) == views_2d);
+    REQUIRE(SelectMode(true, large, anaglyph, top, headset, true) == pair_stereo);
+    REQUIRE(SelectMode(true, large, anaglyph, top, headset, false) == pair_2d);
+    REQUIRE(SelectMode(true, single, anaglyph, top, headset, true) == single_stereo);
+    REQUIRE(SelectMode(true, single, anaglyph, bottom, headset, true) == single_2d);
 
     // "Frontend Layout and 3D" is Off.
-    for (const auto layout : {def, large}) {
+    for (const auto layout : {def, large, single}) {
         for (const auto mode_3d : {off, anaglyph}) {
-            for (const unsigned status : {0u, presents, presents | stereo, headset}) {
-                REQUIRE(SelectMode(false, layout, mode_3d, status, true) == own);
+            for (const bool swapped : {top, bottom}) {
+                for (const unsigned status : {0u, presents, presents | stereo, headset}) {
+                    REQUIRE(SelectMode(false, layout, mode_3d, swapped, status, true) == own);
+                }
             }
         }
     }
@@ -218,44 +241,61 @@ TEST_CASE("VideoViews::SelectMode", "[libretro]") {
 
 TEST_CASE("VideoViews::PackedSize", "[libretro]") {
     using LibRetro::VideoViews::PackedSize;
-    REQUIRE(PackedSize(false, 1).first == 400u);
-    REQUIRE(PackedSize(false, 1).second == 480u);
-    REQUIRE(PackedSize(true, 1).first == 800u);
-    REQUIRE(PackedSize(true, 1).second == 480u);
-    REQUIRE(PackedSize(false, 3).first == 1200u);
-    REQUIRE(PackedSize(false, 3).second == 1440u);
-    REQUIRE(PackedSize(true, 10).first == 8000u);
-    REQUIRE(PackedSize(true, 10).second == 4800u);
+    using Size = std::pair<u32, u32>;
+    REQUIRE(PackedSize(pair_2d, false, 1) == Size{400, 480});
+    REQUIRE(PackedSize(pair_stereo, false, 1) == Size{800, 480});
+    REQUIRE(PackedSize(pair_2d, false, 3) == Size{1200, 1440});
+    REQUIRE(PackedSize(pair_stereo, false, 10) == Size{8000, 4800});
+    // Swapped screens pack the same frame.
+    REQUIRE(PackedSize(pair_2d, true, 1) == Size{400, 480});
+    REQUIRE(PackedSize(pair_stereo, true, 1) == Size{800, 480});
+
+    // Single Screen Only packs the prominent screen alone.
+    REQUIRE(PackedSize(single_2d, false, 1) == Size{400, 240});
+    REQUIRE(PackedSize(single_stereo, false, 1) == Size{800, 240});
+    REQUIRE(PackedSize(single_2d, false, 3) == Size{1200, 720});
+    REQUIRE(PackedSize(single_2d, true, 1) == Size{320, 240});
+    REQUIRE(PackedSize(single_2d, true, 3) == Size{960, 720});
 }
 
 TEST_CASE("The 2D map follows Azahar's default layout", "[libretro]") {
     Common::Log::DisableLoggingInTests();
     SettingsGuard guard;
-    RequireViews(MapFor(false, false, 1),
+    RequireViews(MapFor(pair_2d, false, 1),
                  {{0, 0, 400, 240, 0, EYE_NONE}, {40, 240, 320, 240, 1, EYE_NONE}});
-    RequireViews(MapFor(false, false, 2),
+    RequireViews(MapFor(pair_2d, false, 2),
                  {{0, 0, 800, 480, 0, EYE_NONE}, {80, 480, 640, 480, 1, EYE_NONE}});
 }
 
 TEST_CASE("The stereo map follows the full side-by-side draw", "[libretro]") {
     Common::Log::DisableLoggingInTests();
     SettingsGuard guard;
-    RequireViews(MapFor(true, false, 1), {{0, 0, 400, 240, 0, EYE_LEFT},
-                                          {400, 0, 400, 240, 0, EYE_RIGHT},
-                                          {40, 240, 320, 240, 1, EYE_NONE}});
-    RequireViews(MapFor(true, false, 3), {{0, 0, 1200, 720, 0, EYE_LEFT},
-                                          {1200, 0, 1200, 720, 0, EYE_RIGHT},
-                                          {120, 720, 960, 720, 1, EYE_NONE}});
+    RequireViews(MapFor(pair_stereo, false, 1), {{0, 0, 400, 240, 0, EYE_LEFT},
+                                                 {400, 0, 400, 240, 0, EYE_RIGHT},
+                                                 {40, 240, 320, 240, 1, EYE_NONE}});
+    RequireViews(MapFor(pair_stereo, false, 3), {{0, 0, 1200, 720, 0, EYE_LEFT},
+                                                 {1200, 0, 1200, 720, 0, EYE_RIGHT},
+                                                 {120, 720, 960, 720, 1, EYE_NONE}});
 }
 
 TEST_CASE("Swapped screens put the bottom screen first", "[libretro]") {
     Common::Log::DisableLoggingInTests();
     SettingsGuard guard;
-    RequireViews(MapFor(false, true, 1),
+    RequireViews(MapFor(pair_2d, true, 1),
                  {{0, 240, 400, 240, 1, EYE_NONE}, {40, 0, 320, 240, 0, EYE_NONE}});
-    RequireViews(MapFor(true, true, 1), {{0, 240, 400, 240, 1, EYE_LEFT},
-                                         {400, 240, 400, 240, 1, EYE_RIGHT},
-                                         {40, 0, 320, 240, 0, EYE_NONE}});
+    RequireViews(MapFor(pair_stereo, true, 1), {{0, 240, 400, 240, 1, EYE_LEFT},
+                                                {400, 240, 400, 240, 1, EYE_RIGHT},
+                                                {40, 0, 320, 240, 0, EYE_NONE}});
+}
+
+TEST_CASE("Single Screen Only maps the prominent screen alone", "[libretro]") {
+    Common::Log::DisableLoggingInTests();
+    SettingsGuard guard;
+    RequireViews(MapFor(single_2d, false, 1), {{0, 0, 400, 240, 0, EYE_NONE}});
+    RequireViews(MapFor(single_2d, false, 2), {{0, 0, 800, 480, 0, EYE_NONE}});
+    RequireViews(MapFor(single_2d, true, 1), {{0, 0, 320, 240, 0, EYE_NONE}});
+    RequireViews(MapFor(single_stereo, false, 1),
+                 {{0, 0, 400, 240, 0, EYE_LEFT}, {400, 0, 400, 240, 0, EYE_RIGHT}});
 }
 
 TEST_CASE("Views mode overrides Azahar's layout and gates the 3D slider", "[libretro]") {
@@ -275,7 +315,7 @@ TEST_CASE("Views mode overrides Azahar's layout and gates the 3D slider", "[libr
     REQUIRE(Settings::values.factor_3d.GetValue() == 50u);
 
     // Views in 2D: one eye is drawn, so the slider is down.
-    LibRetro::VideoViews::SetCurrentMode(Mode{true, false});
+    LibRetro::VideoViews::SetCurrentMode(pair_2d);
     LibRetro::ApplyLayoutSettings();
     REQUIRE(Settings::values.layout_option.GetValue() == Settings::LayoutOption::Default);
     REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off);
@@ -284,13 +324,25 @@ TEST_CASE("Views mode overrides Azahar's layout and gates the 3D slider", "[libr
     REQUIRE(Settings::values.factor_3d.GetValue() == 0u);
 
     // Views in stereo: the full side-by-side draw, slider at Depth.
-    LibRetro::VideoViews::SetCurrentMode(Mode{true, true});
+    LibRetro::VideoViews::SetCurrentMode(pair_stereo);
     LibRetro::ApplyLayoutSettings();
     REQUIRE(Settings::values.layout_option.GetValue() == Settings::LayoutOption::Default);
     REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::SideBySideFull);
     REQUIRE(Settings::values.render_3d_which_display.GetValue() ==
             Settings::StereoWhichDisplay::Both);
     REQUIRE(Settings::values.factor_3d.GetValue() == 50u);
+
+    // Single Screen Only packs one screen, in stereo or in 2D.
+    LibRetro::VideoViews::SetCurrentMode(single_stereo);
+    LibRetro::ApplyLayoutSettings();
+    REQUIRE(Settings::values.layout_option.GetValue() == Settings::LayoutOption::SingleScreen);
+    REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::SideBySideFull);
+    REQUIRE(Settings::values.factor_3d.GetValue() == 50u);
+    LibRetro::VideoViews::SetCurrentMode(single_2d);
+    LibRetro::ApplyLayoutSettings();
+    REQUIRE(Settings::values.layout_option.GetValue() == Settings::LayoutOption::SingleScreen);
+    REQUIRE(Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off);
+    REQUIRE(Settings::values.factor_3d.GetValue() == 0u);
 
     // Azahar's own 3D mode Off: the slider is down.
     LibRetro::settings.render_3d = Settings::StereoRenderOption::Off;
@@ -308,7 +360,9 @@ TEST_CASE("Views geometry and frame limits", "[libretro]") {
     Settings::values.layout_option = Settings::LayoutOption::Default;
     retro_system_av_info info{};
 
-    LibRetro::VideoViews::SetCurrentMode(Mode{true, true});
+    Settings::values.swap_screen = false;
+
+    LibRetro::VideoViews::SetCurrentMode(pair_stereo);
     Settings::values.resolution_factor = 10;
     retro_get_system_av_info(&info);
     REQUIRE(info.geometry.base_width == 8000u);
@@ -316,11 +370,26 @@ TEST_CASE("Views geometry and frame limits", "[libretro]") {
     REQUIRE(info.geometry.max_width >= info.geometry.base_width);
     REQUIRE(info.geometry.max_height >= info.geometry.base_height);
 
-    LibRetro::VideoViews::SetCurrentMode(Mode{true, false});
+    LibRetro::VideoViews::SetCurrentMode(pair_2d);
     Settings::values.resolution_factor = 1;
     retro_get_system_av_info(&info);
     REQUIRE(info.geometry.base_width == 400u);
     REQUIRE(info.geometry.base_height == 480u);
+    REQUIRE(ComputeLayoutGeometry().emulated_pointer);
+
+    // Single Screen Only: the prominent screen alone. The top screen has no touch screen to
+    // point at.
+    LibRetro::VideoViews::SetCurrentMode(single_stereo);
+    retro_get_system_av_info(&info);
+    REQUIRE(info.geometry.base_width == 800u);
+    REQUIRE(info.geometry.base_height == 240u);
+    REQUIRE_FALSE(ComputeLayoutGeometry().emulated_pointer);
+    Settings::values.swap_screen = true;
+    LibRetro::VideoViews::SetCurrentMode(single_2d);
+    retro_get_system_av_info(&info);
+    REQUIRE(info.geometry.base_width == 320u);
+    REQUIRE(info.geometry.base_height == 240u);
+    REQUIRE(ComputeLayoutGeometry().emulated_pointer);
 
     // Outside views mode Azahar's own layout sizes the frame.
     LibRetro::VideoViews::SetCurrentMode(Mode{});
@@ -334,9 +403,9 @@ TEST_CASE("Stereo views hide the Layout options they override", "[libretro]") {
     using LibRetro::LayoutOptionsDisplay;
     constexpr unsigned presents = RETRO_VIDEO_VIEWS_STATUS_PRESENTS;
     constexpr unsigned stereo = RETRO_VIDEO_VIEWS_STATUS_STEREO;
-    // Prominent 3DS Screen, Screen Swap Mode and Stereoscopic 3D Depth still apply.
-    const std::set<std::string> overridden{"citra_layout_option", "citra_large_screen_proportion",
-                                           "citra_render_3d"};
+    // Prominent 3DS Screen, Screen Swap Mode and Stereoscopic 3D Depth still apply, and Screen
+    // Layout picks whether one screen is sent or both.
+    const std::set<std::string> overridden{"citra_large_screen_proportion", "citra_render_3d"};
 
     REQUIRE(Keys(LayoutOptionsDisplay(true, presents | stereo), false) == overridden);
     REQUIRE(Keys(LayoutOptionsDisplay(true, presents | stereo), true).empty());

@@ -482,9 +482,10 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "screen layout, stereo 3D mode and a shader for each screen and eye. "
         "'Auto' does this where the frontend can: always in its stereo 3D "
         "modes and on a headset, and in its 2D mode only while Screen Layout "
-        "is Default Top-Bottom and Stereoscopic 3D Mode is Off. Otherwise, "
-        "and always with 'Off', Screen Layout and Stereoscopic 3D Mode apply. "
-        "Prominent 3DS Screen picks which screen the frontend shows first.",
+        "is Default Top-Bottom or Single Screen Only and Stereoscopic 3D Mode "
+        "is Off. Otherwise, and always with 'Off', Screen Layout and "
+        "Stereoscopic 3D Mode apply. Prominent 3DS Screen picks which screen "
+        "the frontend shows first.",
         nullptr,
         config::category::layout,
         {
@@ -498,8 +499,10 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::layout::layout_option,
         "Screen Layout",
         "Screen Layout",
-        "Choose how the 3DS screens are arranged in the display. Not used while "
-        "the frontend lays out the screens (Frontend Layout and 3D).",
+        "Choose how the 3DS screens are arranged in the display. While the "
+        "frontend lays out the screens (Frontend Layout and 3D), Single Screen "
+        "Only gives it the prominent screen alone, and every other layout "
+        "gives it both screens.",
         nullptr,
         config::category::layout,
         {
@@ -1123,7 +1126,8 @@ static void ParseLayoutOptions(void) {
 void ApplyLayoutSettings(void) {
     const auto& views = VideoViews::CurrentMode();
     if (views.active) {
-        Settings::values.layout_option = Settings::LayoutOption::Default;
+        Settings::values.layout_option =
+            views.single ? Settings::LayoutOption::SingleScreen : Settings::LayoutOption::Default;
         Settings::values.render_3d = views.stereo ? Settings::StereoRenderOption::SideBySideFull
                                                   : Settings::StereoRenderOption::Off;
     } else {
@@ -1144,15 +1148,15 @@ void ApplyLayoutSettings(void) {
     Settings::values.factor_3d = both_eyes ? LibRetro::settings.factor_3d : 0u;
 }
 
-std::array<retro_core_option_display, 3> LayoutOptionsDisplay(bool frontend_layout,
+std::array<retro_core_option_display, 2> LayoutOptionsDisplay(bool frontend_layout,
                                                               unsigned status) {
     // The frontend's stereo modes use views whatever these say; in its 2D mode they decide
-    // whether views are used.
+    // whether views are used. Screen Layout always shows, as it picks whether the views are of
+    // one screen or both.
     const bool visible = !(frontend_layout && (status & RETRO_VIDEO_VIEWS_STATUS_PRESENTS) &&
                            (status & RETRO_VIDEO_VIEWS_STATUS_STEREO));
-    return {{{config::layout::layout_option, visible},
-             {config::layout::large_screen_proportion, visible},
-             {config::layout::render_3d, visible}}};
+    return {
+        {{config::layout::large_screen_proportion, visible}, {config::layout::render_3d, visible}}};
 }
 
 bool UpdateLayoutOptionsDisplay(bool frontend_layout, unsigned status) {

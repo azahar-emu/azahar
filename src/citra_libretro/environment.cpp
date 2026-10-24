@@ -329,7 +329,8 @@ void retro_get_system_av_info(struct retro_system_av_info* info) {
     info->geometry.base_width = geom.width;
     info->geometry.base_height = geom.height;
     // Max must cover the largest layout at 10x: the stereo views packing, 8000x4800.
-    const auto [max_width, max_height] = LibRetro::VideoViews::PackedSize(true, 10);
+    const auto [max_width, max_height] =
+        LibRetro::VideoViews::PackedSize({.active = true, .stereo = true}, false, 10);
     info->geometry.max_width = max_width;
     info->geometry.max_height = max_height;
     info->geometry.aspect_ratio = (float)geom.width / (float)geom.height;
