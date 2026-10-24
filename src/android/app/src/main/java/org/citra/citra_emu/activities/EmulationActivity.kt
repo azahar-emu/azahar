@@ -299,6 +299,7 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
+        foldDualScreenController.onEmulationStopped()
         secondaryDisplayManager.releasePresentation()
         secondaryDisplayManager.releaseVD()
 
@@ -353,7 +354,7 @@ class EmulationActivity : AppCompatActivity() {
             applyOrientationSettings()
         }
 
-        foldDualScreenController.init()
+        foldDualScreenController.onEmulationStarted()
 
         Toast.makeText(
             applicationContext,

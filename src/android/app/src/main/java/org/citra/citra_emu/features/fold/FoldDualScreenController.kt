@@ -36,6 +36,8 @@ class FoldDualScreenController(
     private var coverArtwork: Bitmap? = null
     private var collectorJob: Job? = null
     private var isStartingSession = false
+    @Volatile
+    private var isEmulationActive = false
 
     fun init() {
         Log.e("FoldController", "Initialising activity: $activity")
@@ -61,7 +63,7 @@ class FoldDualScreenController(
 
                     if (targetAreaInfo != null) {
                         Log.e("FoldController", "Target Area is available, requesting start")
-                        if (presentationSession == null && !isStartingSession) {
+                        if (isEmulationActive && presentationSession == null && !isStartingSession) {
                             activity.runOnUiThread {
                                 startCoverControls()
                             }
@@ -78,6 +80,20 @@ class FoldDualScreenController(
 
     fun setCoverArtwork(bitmap: Bitmap?) {
         coverArtwork = bitmap
+    }
+
+    fun onEmulationStarted() {
+        isEmulationActive = true
+        if (targetAreaInfo != null && presentationSession == null && !isStartingSession) {
+            activity.runOnUiThread {
+                startCoverControls()
+            }
+        }
+    }
+
+    fun onEmulationStopped() {
+        isEmulationActive = false
+        stopCoverControls()
     }
 
     @Synchronized
