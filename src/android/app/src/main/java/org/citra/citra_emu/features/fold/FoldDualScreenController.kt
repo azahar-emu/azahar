@@ -163,8 +163,8 @@ class FoldDualScreenController(
     }
 
     private fun bindShoulderTouchZones(rootView: View) {
-        setupTouch(rootView.findViewById(R.id.touch_zone_l), NativeLibrary.ButtonType.TRIGGER_L)
-        setupTouch(rootView.findViewById(R.id.touch_zone_r), NativeLibrary.ButtonType.TRIGGER_R)
+        setupTouch(rootView.findViewById(R.id.touch_zone_l), NativeLibrary.ButtonType.TRIGGER_R)
+        setupTouch(rootView.findViewById(R.id.touch_zone_r), NativeLibrary.ButtonType.TRIGGER_L)
     }
 
     private fun setupTouch(view: View?, buttonType: Int) {
