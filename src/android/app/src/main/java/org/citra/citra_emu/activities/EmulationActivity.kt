@@ -138,7 +138,7 @@ class EmulationActivity : AppCompatActivity() {
         }
         // once per-game settings are added, load them here!
 
-        //secondaryDisplayManager = SecondaryDisplay(this)
+        secondaryDisplayManager = SecondaryDisplay(this)
         //secondaryDisplayManager.updateDisplay()
 
         NativeLibrary.initMultiplayer()
