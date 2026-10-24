@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -50,9 +50,14 @@ struct BlendConfig {
         eq = static_cast<Pica::FramebufferRegs::BlendEquation>(UINT32_MAX);
     }
 
-    bool RequiresMinMaxEmulation() {
+    bool RequiresMinMaxEmulation() const {
         return eq == Pica::FramebufferRegs::BlendEquation::Min ||
                eq == Pica::FramebufferRegs::BlendEquation::Max;
+    }
+
+    bool UsesNoOpFactors() const {
+        return src_factor == Pica::FramebufferRegs::BlendFactor::One &&
+               dst_factor == Pica::FramebufferRegs::BlendFactor::One;
     }
 };
 static_assert(std::has_unique_object_representations_v<BlendConfig>);
@@ -402,7 +407,10 @@ struct FSConfig {
     [[nodiscard]] bool UsesSpirvIncompatibleConfig() const {
         const auto texture0_type = texture.texture0_type.Value();
         return texture0_type == Pica::TexturingRegs::TextureConfig::ShadowCube ||
-               framebuffer.shadow_rendering.Value();
+               framebuffer.shadow_rendering.Value() ||
+               // Min/max blend emulation is only implemented in the GLSL generator.
+               framebuffer.requested_rgb_blend.RequiresMinMaxEmulation() ||
+               framebuffer.requested_alpha_blend.RequiresMinMaxEmulation();
     }
 
     void ApplyProfile(const Profile& profile) {

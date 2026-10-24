@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <memory>
@@ -19,19 +19,6 @@
 #include "common/param_package.h"
 #include "core/core.h"
 #include "ui_configure_input.h"
-
-const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
-    ConfigureInput::analog_sub_buttons{{
-        "up",
-        "down",
-        "left",
-        "right",
-        "up_left",
-        "up_right",
-        "down_left",
-        "down_right",
-        "modifier",
-    }};
 
 enum class AnalogSubButtons {
     up,
@@ -60,99 +47,26 @@ static QString GetKeyName(int key_code) {
     }
 }
 
-static void SetAnalogButton(const Common::ParamPackage& input_param,
-                            Common::ParamPackage& analog_param, const std::string& button_name) {
-    if (analog_param.Get("engine", "") != "analog_from_button") {
-        analog_param = {
-            {"engine", "analog_from_button"},
-        };
-    }
-    analog_param.Set(button_name, input_param.Serialize());
-}
-
 static QString ButtonToText(const Common::ParamPackage& param) {
-    if (!param.Has("engine")) {
-        return QObject::tr("[not set]");
-    }
-    const auto engine_str = param.Get("engine", "");
-    if (engine_str == "keyboard") {
+    if (param.Get("engine", "") == "keyboard") {
         return GetKeyName(param.Get("code", 0));
+    } else {
+        return QString::fromStdString(InputCommon::ButtonToText(param));
     }
-
-    if (engine_str == "sdl") {
-        if (param.Has("hat")) {
-            const QString hat_str = QString::fromStdString(param.Get("hat", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("Hat %1 %2").arg(hat_str, direction_str);
-        }
-
-        if (param.Has("axis")) {
-            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("Axis %1%2").arg(axis_str, direction_str);
-        }
-
-        if (param.Has("button")) {
-            const QString button_str = QString::fromStdString(param.Get("button", ""));
-
-            return QObject::tr("Button %1").arg(button_str);
-        }
-
-        return {};
-    }
-
-    if (engine_str == "gcpad") {
-        if (param.Has("axis")) {
-            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("GC Axis %1%2").arg(axis_str, direction_str);
-        }
-        if (param.Has("button")) {
-            const QString button_str = QString::number(int(std::log2(param.Get("button", 0))));
-            return QObject::tr("GC Button %1").arg(button_str);
-        }
-        return GetKeyName(param.Get("code", 0));
-    }
-
-    return QObject::tr("[unknown]");
 }
 
 static QString AnalogToText(const Common::ParamPackage& param, const std::string& dir) {
-    if (!param.Has("engine")) {
-        return QObject::tr("[not set]");
+    // If this is an analog stick made from buttons, keyboards will need to be handled
+    // here at the frontend rather than at InputCommon
+    // It might be nice to move the GetKeyName code to input_common, but would need a non-QT way of
+    // doing it
+    if (param.Get("engine", "") == "analog_from_button") {
+        auto dir_param = Common::ParamPackage(param.Get(dir, ""));
+        if (dir_param.Get("engine", "") == "keyboard") {
+            return GetKeyName(dir_param.Get("code", 0));
+        }
     }
-
-    const auto engine_str = param.Get("engine", "");
-    if (engine_str == "analog_from_button") {
-        return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
-    }
-
-    const QString axis_x_str{QString::fromStdString(param.Get("axis_x", ""))};
-    const QString axis_y_str{QString::fromStdString(param.Get("axis_y", ""))};
-    static const QString plus_str{QString::fromStdString("+")};
-    static const QString minus_str{QString::fromStdString("-")};
-    if (engine_str == "sdl" || engine_str == "gcpad") {
-        if (dir == "modifier") {
-            return QObject::tr("[unused]");
-        }
-        if (dir == "left") {
-            return QObject::tr("Axis %1%2").arg(axis_x_str, minus_str);
-        }
-        if (dir == "right") {
-            return QObject::tr("Axis %1%2").arg(axis_x_str, plus_str);
-        }
-        if (dir == "up") {
-            return QObject::tr("Axis %1%2").arg(axis_y_str, plus_str);
-        }
-        if (dir == "down") {
-            return QObject::tr("Axis %1%2").arg(axis_y_str, minus_str);
-        }
-        return {};
-    }
-    return QObject::tr("[unknown]");
+    return QString::fromStdString(InputCommon::AnalogToText(param, dir));
 }
 
 ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
@@ -167,6 +81,17 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
 
     ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
 
+    // clang-format off
+    analog_sub_buttons = {
+        "up",       "down",      "left",       "right",    "up_left",
+        "up_right", "down_left", "down_right", "modifier",
+    };
+
+    analog_sub_button_names = {
+        tr("Up"),       tr("Down"),      tr("Left"),       tr("Right"),    tr("Up-Left"),
+        tr("Up-Right"), tr("Down-Left"), tr("Down-Right"), tr("Modifier"),
+    };
+
     button_map = {
         ui->buttonA,      ui->buttonB,        ui->buttonX,        ui->buttonY,
         ui->buttonDpadUp, ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight,
@@ -175,6 +100,17 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         ui->buttonHome,   ui->buttonPower,
     };
 
+    button_names = {
+        tr("A Button"),     tr("B Button"),      tr("X Button"),     tr("Y Button"),
+        tr("D-Pad Up"),     tr("D-Pad Down"),    tr("D-Pad Left"),   tr("D-Pad Right"),
+        tr("L Button"),     tr("R Button"),      tr("Start Button"), tr("Select Button"),
+        tr("Debug"),        tr("GPIO4"),         tr("ZL Button"),    tr("ZR Button"),
+        tr("Home Button"),  tr("Power Button")
+    };
+    // clang-format on
+
+    /// A group of five QPushButtons represent one analog input. The buttons each represent up,
+    /// down, left, right, and modifier, respectively.
     analog_map_buttons = {{
         {
             ui->buttonCircleUp,
@@ -200,6 +136,7 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         },
     }};
 
+    analog_names = {tr("Circle Pad"), tr("C-Stick")};
     analog_map_stick = {ui->buttonCircleAnalog, ui->buttonCStickAnalog};
     analog_map_deadzone_and_modifier_slider = {ui->sliderCirclePadDeadzoneAndModifier,
                                                ui->sliderCStickDeadzoneAndModifier};
@@ -214,24 +151,7 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
             HandleClick(
                 button_map[button_id],
                 [this, button_id](Common::ParamPackage params) {
-                    // Workaround for ZL & ZR for analog triggers like on XBOX controllors.
-                    // Analog triggers (from controllers like the XBOX controller) would not
-                    // work due to a different range of their signals (from 0 to 255 on
-                    // analog triggers instead of -32768 to 32768 on analog joysticks). The
-                    // SDL driver misinterprets analog triggers as analog joysticks.
-                    // TODO: reinterpret the signal range for analog triggers to map the
-                    // values correctly. This is required for the correct emulation of the
-                    // analog triggers of the GameCube controller.
-                    if (button_id == Settings::NativeButton::ZL ||
-                        button_id == Settings::NativeButton::ZR) {
-                        params.Set("direction", "+");
-                        params.Set("threshold", "0.5");
-                    }
-                    buttons_param[button_id] = std::move(params);
-                    // If the user closes the dialog, the changes are reverted in
-                    // `GMainWindow::OnConfigure()`
-                    ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
+                    SetBinding({InputBindingType::NativeButton, QString(), button_id}, params);
                 },
                 InputCommon::Polling::DeviceType::Button);
         });
@@ -239,18 +159,14 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                 [this, button_id](const QPoint& menu_location) {
                     QMenu context_menu;
                     context_menu.addAction(tr("Clear"), this, [&] {
-                        buttons_param[button_id].Clear();
-                        button_map[button_id]->setText(tr("[not set]"));
-                        ApplyConfiguration();
-                        Settings::SaveProfile(ui->profile->currentIndex());
+                        ClearBinding({InputBindingType::NativeButton, QString(), button_id});
                     });
                     context_menu.addAction(tr("Restore Default"), this, [&] {
-                        buttons_param[button_id] =
+                        Common::ParamPackage default_mapping =
                             Common::ParamPackage{InputCommon::GenerateKeyboardParam(
                                 QtConfig::default_buttons[button_id])};
-                        button_map[button_id]->setText(ButtonToText(buttons_param[button_id]));
-                        ApplyConfiguration();
-                        Settings::SaveProfile(ui->profile->currentIndex());
+                        SetBinding({InputBindingType::NativeButton, QString(), button_id},
+                                   default_mapping);
                     });
                     context_menu.exec(button_map[button_id]->mapToGlobal(menu_location));
                 });
@@ -267,10 +183,9 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                         HandleClick(
                             analog_map_buttons[analog_id][sub_button_id],
                             [this, analog_id, sub_button_id](const Common::ParamPackage& params) {
-                                SetAnalogButton(params, analogs_param[analog_id],
-                                                analog_sub_buttons[sub_button_id]);
-                                ApplyConfiguration();
-                                Settings::SaveProfile(ui->profile->currentIndex());
+                                SetBinding({InputBindingType::AnalogFromButton, QString(),
+                                            analog_id, sub_button_id},
+                                           params);
                             },
                             InputCommon::Polling::DeviceType::Button);
                     });
@@ -279,20 +194,15 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                     [this, analog_id, sub_button_id](const QPoint& menu_location) {
                         QMenu context_menu;
                         context_menu.addAction(tr("Clear"), this, [&] {
-                            analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
-                            analog_map_buttons[analog_id][sub_button_id]->setText(tr("[not set]"));
-                            ApplyConfiguration();
-                            Settings::SaveProfile(ui->profile->currentIndex());
+                            ClearBinding({InputBindingType::AnalogFromButton, QString(), analog_id,
+                                          sub_button_id});
                         });
                         context_menu.addAction(tr("Restore Default"), this, [&] {
                             Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
                                 QtConfig::default_analogs[analog_id][sub_button_id])};
-                            SetAnalogButton(params, analogs_param[analog_id],
-                                            analog_sub_buttons[sub_button_id]);
-                            analog_map_buttons[analog_id][sub_button_id]->setText(AnalogToText(
-                                analogs_param[analog_id], analog_sub_buttons[sub_button_id]));
-                            ApplyConfiguration();
-                            Settings::SaveProfile(ui->profile->currentIndex());
+                            SetBinding({InputBindingType::AnalogFromButton, QString(), analog_id,
+                                        sub_button_id},
+                                       params);
                         });
                         context_menu.exec(analog_map_buttons[analog_id][sub_button_id]->mapToGlobal(
                             menu_location));
@@ -307,9 +217,7 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                 HandleClick(
                     analog_map_stick[analog_id],
                     [this, analog_id](const Common::ParamPackage& params) {
-                        analogs_param[analog_id] = params;
-                        ApplyConfiguration();
-                        Settings::SaveProfile(ui->profile->currentIndex());
+                        SetBinding({InputBindingType::NativeAnalog, QString(), analog_id}, params);
                     },
                     InputCommon::Polling::DeviceType::Analog);
             }
@@ -329,7 +237,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                         analogs_param[analog_id].Set("modifier_scale", slider_value / 100.0f);
                     }
                     ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
                 });
     }
 
@@ -339,40 +246,22 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         HandleClick(
             ui->buttonCircleMod,
             [this](const Common::ParamPackage& params) {
-                for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs;
-                     analog_id++) {
-                    SetAnalogButton(params, analogs_param[analog_id], "modifier");
-                }
-                ApplyConfiguration();
-                Settings::SaveProfile(ui->profile->currentIndex());
+                SetBinding({InputBindingType::CModButton, QString()}, params);
             },
             InputCommon::Polling::DeviceType::Button);
     });
+    ui->buttonCircleMod->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->buttonCircleMod, &QPushButton::customContextMenuRequested, this,
             [&](const QPoint& menu_location) {
                 QMenu context_menu;
                 context_menu.addAction(tr("Clear"), this, [&] {
-                    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs;
-                         analog_id++) {
-                        analogs_param[analog_id].Erase("modifier");
-                    }
-                    ui->buttonCircleMod->setText(tr("[not set]"));
-                    ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
+                    ClearBinding({InputBindingType::CModButton, QString()});
                 });
 
                 context_menu.addAction(tr("Restore Default"), this, [&] {
-                    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs;
-                         analog_id++) {
-                        Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
-                            QtConfig::default_analogs[analog_id][static_cast<u32>(
-                                AnalogSubButtons::modifier)])};
-                        SetAnalogButton(params, analogs_param[analog_id], "modifier");
-                        ui->buttonCircleMod->setText(
-                            AnalogToText(analogs_param[analog_id], "modifier"));
-                    }
-                    ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
+                    Common::ParamPackage params{
+                        InputCommon::GenerateKeyboardParam(QtConfig::default_analogs[0][4])};
+                    SetBinding({InputBindingType::CModButton, QString()}, params);
                 });
                 context_menu.exec(ui->buttonCircleMod->mapToGlobal(menu_location));
             });
@@ -396,7 +285,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
 
     connect(ui->profile, qOverload<int>(&QComboBox::currentIndexChanged), this, [this](int i) {
         ApplyConfiguration();
-        Settings::SaveProfile(Settings::values.current_input_profile_index);
         Settings::LoadProfile(i);
         LoadConfiguration();
     });
@@ -408,7 +296,8 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         Common::ParamPackage params;
         for (auto& poller : device_pollers) {
             params = poller->GetNextInput();
-            if (params.Has("engine")) {
+            // skip button downs and only process button ups to maintain former behavior
+            if (params.Has("engine") && !params.Has("down")) {
                 SetPollingResult(params, false);
                 return;
             }
@@ -420,17 +309,142 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
 
 ConfigureInput::~ConfigureInput() = default;
 
+/**
+ * Returns true if we find a conflict and should stop, otherwise it clears the map and returns true.
+ */
+bool ConfigureInput::CheckForDuplicateMap(const Common::ParamPackage& params,
+                                          InputBinding this_binding) {
+    auto const current_binding = GetMapping(params);
+    bool abort = false;
+    if (current_binding.binding_type != InputBindingType::Empty &&
+        !(current_binding.binding_type == this_binding.binding_type &&
+          current_binding.index == this_binding.index &&
+          current_binding.sub_index == this_binding.sub_index)) {
+        auto response =
+            QMessageBox::information(this, tr("Key Already Bound"),
+                                     tr("This key is already bound to the '%1' input.\n\n"
+                                        "Continuing will unbind the previous input. Proceed?")
+                                         .arg(current_binding.name),
+                                     QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        if (response == QMessageBox::No) {
+            abort = true;
+        } else {
+            ClearBinding(current_binding);
+        }
+    }
+    return abort;
+}
+
+void ConfigureInput::SetBinding(InputBinding binding, const Common::ParamPackage& params) {
+    bool abort = CheckForDuplicateMap(params, binding);
+    if (!abort) {
+        if (binding.binding_type == InputBindingType::NativeButton) {
+            const auto button_id = binding.index;
+            // Workaround for ZL & ZR for analog triggers like on XBOX controllors.
+            // Analog triggers (from controllers like the XBOX controller) would not
+            // work due to a different range of their signals (from 0 to 255 on
+            // analog triggers instead of -32768 to 32768 on analog joysticks). The
+            // SDL driver misinterprets analog triggers as analog joysticks.
+            // TODO: reinterpret the signal range for analog triggers to map the
+            // values correctly. This is required for the correct emulation of the
+            // analog triggers of the GameCube controller.
+            Common::ParamPackage new_params = params;
+            if (button_id == Settings::NativeButton::ZL ||
+                button_id == Settings::NativeButton::ZR) {
+                new_params.Set("direction", "+");
+                new_params.Set("threshold", "0.5");
+            }
+            buttons_param[button_id] = std::move(new_params);
+        } else if (binding.binding_type == InputBindingType::AnalogFromButton) {
+            const auto button_name = analog_sub_buttons[binding.sub_index];
+            if (analogs_param[binding.index].Get("engine", "") != "analog_from_button") {
+                analogs_param[binding.index] = {
+                    {"engine", "analog_from_button"},
+                };
+            }
+            analogs_param[binding.index].Set(button_name, params.Serialize());
+        } else if (binding.binding_type == InputBindingType::NativeAnalog) {
+            const auto analog_id = binding.index;
+            analogs_param[analog_id] = params;
+        } else if (binding.binding_type == InputBindingType::CModButton) {
+            for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
+                if (analogs_param[analog_id].Get("engine", "") != "analog_from_button") {
+                    analogs_param[analog_id] = {
+                        {"engine", "analog_from_button"},
+                    };
+                }
+                analogs_param[analog_id].Set("modifier", params.Serialize());
+            }
+        }
+    }
+
+    ApplyConfiguration();
+    UpdateButtonLabels();
+    Settings::SaveProfile(ui->profile->currentIndex());
+}
+
 void ConfigureInput::ApplyConfiguration() {
 
     Settings::values.use_artic_base_controller = ui->use_artic_controller->isChecked();
     UISettings::values.use_on_screen_software_keyboard = ui->use_onscreen_keyboard->isChecked();
 
+    Settings::values.current_input_profile.maptype =
+        static_cast<Settings::InputMappingType>(ui->comboBoxMappingType->currentIndex());
+
     std::transform(buttons_param.begin(), buttons_param.end(),
                    Settings::values.current_input_profile.buttons.begin(),
-                   [](const Common::ParamPackage& param) { return param.Serialize(); });
+                   [](Common::ParamPackage& param) {
+                       if (param.Get("engine", "keyboard") == "sdl") {
+                           if (Settings::values.current_input_profile.maptype ==
+                               Settings::InputMappingType::AllControllers)
+                               param.Set("maptype", "all");
+                           else if (Settings::values.current_input_profile.maptype ==
+                                    Settings::InputMappingType::Guid)
+                               param.Set("maptype", "guid");
+                           else
+                               param.Set("maptype", "guid+port");
+                       } else {
+                           param.Erase("maptype");
+                       }
+                       return param.Serialize();
+                   });
     std::transform(analogs_param.begin(), analogs_param.end(),
                    Settings::values.current_input_profile.analogs.begin(),
-                   [](const Common::ParamPackage& param) { return param.Serialize(); });
+                   [this](Common::ParamPackage& param) {
+                       if (param.Get("engine", "keyboard") == "sdl") {
+                           if (Settings::values.current_input_profile.maptype ==
+                               Settings::InputMappingType::AllControllers) {
+                               param.Set("maptype", "all");
+                           } else if (Settings::values.current_input_profile.maptype ==
+                                      Settings::InputMappingType::Guid) {
+                               param.Set("maptype", "guid");
+                           } else {
+                               param.Set("maptype", "guid+port");
+                           }
+                       } else if (param.Get("engine", "keyboard") == "analog_from_button") {
+                           for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM - 1;
+                                ++sub_button_id) {
+                               auto dir = param.Get(analog_sub_buttons[sub_button_id], "");
+                               if (dir != "") {
+                                   auto dir_param = Common::ParamPackage(param.Get(dir, ""));
+                                   if (Settings::values.current_input_profile.maptype ==
+                                       Settings::InputMappingType::AllControllers) {
+                                       dir_param.Set("maptype", "all");
+                                   } else if (Settings::values.current_input_profile.maptype ==
+                                              Settings::InputMappingType::Guid) {
+                                       dir_param.Set("maptype", "guid");
+                                   } else {
+                                       dir_param.Set("maptype", "guid+port");
+                                   }
+                                   param.Set(dir, dir_param.Serialize());
+                               }
+                           }
+                       } else {
+                           param.Erase("maptype");
+                       }
+                       return param.Serialize();
+                   });
+    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::ApplyProfile() {
@@ -441,26 +455,106 @@ void ConfigureInput::EmitInputKeysChanged() {
     emit InputKeysChanged(GetUsedKeyboardKeys());
 }
 
-void ConfigureInput::OnHotkeysChanged(QList<QKeySequence> new_key_list) {
+void ConfigureInput::OnHotkeysChanged(
+    QMap<QKeySequence, ConfigureInput::InputBinding> new_key_list) {
     hotkey_list = new_key_list;
 }
 
-QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
-    QList<QKeySequence> list;
-    for (int button = 0; button < Settings::NativeButton::NumButtons; button++) {
+void ConfigureInput::OnClearBinding(ConfigureInput::InputBinding binding) {
+    ClearBinding(binding);
+}
+
+bool sameInput(const Common::ParamPackage& param1, const Common::ParamPackage& param2) {
+    // if the engines or guid's don't match, return false as default
+    if (!param1.Has("engine") || !param2.Has("engine"))
+        return false;
+    if (param1.Get("engine", "") != param2.Get("engine", ""))
+        return false;
+    if (param1.Get("guid", "") != param2.Get("guid", ""))
+        return false;
+
+    const bool sameCode = param1.Get("code", -1) == param2.Get("code", -2);
+    const bool sameButton = param1.Get("button", -1) == param2.Get("button", -2);
+    const bool sameAxisAndDirection = param1.Get("axis", -1) == param2.Get("axis", -2) &&
+                                      param1.Get("direction", "a") == param2.Get("direction", "b");
+    const bool sameAxisXAndAxisY = param1.Get("axis_x", -1) == param2.Get("axis_x", -2) &&
+                                   param1.Get("axis_y", -1) == param2.Get("axis_y", -2);
+    const bool sameHatAndDirection = param1.Get("hat", -1) == param2.Get("hat", -2) &&
+                                     param1.Get("direction", "a") == param2.Get("direction", "b");
+    return sameCode || sameButton || sameAxisAndDirection || sameAxisXAndAxisY ||
+           sameHatAndDirection;
+}
+
+ConfigureInput::InputBinding ConfigureInput::GetMapping(const Common::ParamPackage& param) {
+    if (!param.Has("engine"))
+        return {InputBindingType::Empty, QString(), 0};
+    // check for a button map
+    for (int button = 0; button < Settings::NativeButton::NumButtons; ++button) {
         const auto& button_param = buttons_param[button];
-        if (button_param.Get("engine", "") == "keyboard") {
-            list << QKeySequence(button_param.Get("code", 0));
+        if (sameInput(param, button_param)) {
+            return {InputBindingType::NativeButton, button_names[button], button};
         }
     }
-
+    // check for an analog map
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; ++analog_id) {
         const auto& analog_param = analogs_param[analog_id];
         if (analog_param.Get("engine", "") == "analog_from_button") {
             for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; ++sub_button_id) {
                 const Common::ParamPackage sub_button{
                     analog_param.Get(analog_sub_buttons[sub_button_id], "")};
-                list << QKeySequence(sub_button.Get("code", 0));
+                if (sameInput(param, sub_button)) {
+                    const auto input_ui_string = QStringLiteral("%1 (%2)").arg(
+                        analog_names[analog_id], analog_sub_button_names[sub_button_id]);
+
+                    if (analog_sub_buttons[sub_button_id] == "modifier") {
+                        return {InputBindingType::CModButton, input_ui_string, 0};
+                    }
+                    return {InputBindingType::AnalogFromButton, input_ui_string, analog_id,
+                            sub_button_id};
+                }
+            }
+        } else if (sameInput(param, analog_param)) {
+            return {InputBindingType::NativeAnalog, analog_names[analog_id], analog_id};
+        }
+    }
+
+    if (param.Get("engine", "") == "keyboard" &&
+        hotkey_list.contains(QKeySequence(param.Get("code", 0)))) {
+        return hotkey_list[QKeySequence(param.Get("code", 0))];
+    }
+
+    return {InputBindingType::Empty, QStringLiteral(""), 0};
+}
+
+QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureInput::GetUsedKeyboardKeys() {
+    QMap<QKeySequence, ConfigureInput::InputBinding> list;
+    for (int button = 0; button < Settings::NativeButton::NumButtons; button++) {
+        const auto& button_param = buttons_param[button];
+        if (button_param.Get("engine", "") == "keyboard") {
+            list[QKeySequence(button_param.Get("code", 0))] = ConfigureInput::InputBinding{
+                InputBindingType::NativeButton, button_names[button], button};
+        }
+    }
+
+    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; ++analog_id) {
+        const auto& analog_param = analogs_param[analog_id];
+        if (analog_param.Get("engine", "") == "analog_from_button") {
+            // stop one early so as not to include the "modifier" option
+            for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM - 1;
+                 ++sub_button_id) {
+                const Common::ParamPackage sub_button{
+                    analog_param.Get(analog_sub_buttons[sub_button_id], "")};
+                list[QKeySequence(sub_button.Get("code", 0))] = ConfigureInput::InputBinding{
+                    InputBindingType::AnalogFromButton,
+                    QStringLiteral("%1 (%2)").arg(analog_names[analog_id],
+                                                  analog_sub_button_names[sub_button_id]),
+                    analog_id, sub_button_id};
+            }
+            // add the circle mod button if it exist
+            const Common::ParamPackage modButton{analog_param.Get("modifier", "")};
+            if (modButton.Get("code", 0) != 0) {
+                list[QKeySequence(modButton.Get("code", 0))] =
+                    InputBinding{InputBindingType::CModButton, tr("Circle Mod")};
             }
         }
     }
@@ -469,8 +563,9 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
 }
 
 void ConfigureInput::LoadConfiguration() {
-
     ui->use_artic_controller->setChecked(Settings::values.use_artic_base_controller.GetValue());
+    ui->comboBoxMappingType->setCurrentIndex(
+        static_cast<int>(Settings::values.current_input_profile.maptype));
     ui->use_artic_controller->setEnabled(!system.IsPoweredOn());
     ui->use_onscreen_keyboard->setChecked(
         UISettings::values.use_on_screen_software_keyboard.GetValue());
@@ -499,7 +594,30 @@ void ConfigureInput::RestoreDefaults() {
     UpdateButtonLabels();
 
     ApplyConfiguration();
-    Settings::SaveProfile(Settings::values.current_input_profile_index);
+}
+
+void ConfigureInput::ClearBinding(InputBinding binding) {
+    if (binding.binding_type == InputBindingType::NativeButton) {
+        buttons_param[binding.index].Clear();
+        button_map[binding.index]->setText(tr("[not set]"));
+    } else if (binding.binding_type == InputBindingType::AnalogFromButton) {
+        const auto analog_id = binding.index;
+        const auto sub_button_id = binding.sub_index;
+        analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
+        analog_map_buttons[analog_id][sub_button_id]->setText(tr("[not set]"));
+    } else if (binding.binding_type == InputBindingType::NativeAnalog) {
+        const auto analog_id = binding.index;
+        analogs_param[analog_id].Clear();
+        UpdateButtonLabels();
+    } else if (binding.binding_type == InputBindingType::Hotkey) {
+        emit ClearHotkey(binding);
+    } else if (binding.binding_type == InputBindingType::CModButton) {
+        for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
+            analogs_param[analog_id].Erase("modifier");
+        }
+        ui->buttonCircleMod->setText(tr("[not set]"));
+    }
+    ApplyConfiguration();
 }
 
 void ConfigureInput::ClearAll() {
@@ -513,7 +631,6 @@ void ConfigureInput::ClearAll() {
     UpdateButtonLabels();
 
     ApplyConfiguration();
-    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::UpdateButtonLabels() {
@@ -587,16 +704,21 @@ void ConfigureInput::MapFromButton(const Common::ParamPackage& params) {
 
 void ConfigureInput::AutoMap() {
     ui->buttonAutoMap->setEnabled(false);
-    if (QMessageBox::information(this, tr("Information"),
-                                 tr("After pressing OK, press any button on your joystick"),
-                                 QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+    QMessageBox box(this);
+    box.setWindowTitle(tr("Auto map Controller"));
+    box.setText(tr("After pressing OK, press the A (right) button on your gamepad"));
+    box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    QPixmap pixmap(QStringLiteral(":/icons/default/256x256/automap_face_buttons.png"));
+    pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    box.setIconPixmap(pixmap);
+    int result = box.exec();
+    if (result == QMessageBox::Cancel) {
         ui->buttonAutoMap->setEnabled(true);
         return;
     }
     input_setter = [this](const Common::ParamPackage& params) {
         MapFromButton(params);
         ApplyConfiguration();
-        Settings::SaveProfile(ui->profile->currentIndex());
     };
     device_pollers = InputCommon::Polling::GetPollers(InputCommon::Polling::DeviceType::Button);
     want_keyboard_keys = false;
@@ -632,7 +754,7 @@ void ConfigureInput::HandleClick(QPushButton* button,
     poll_timer->start(200);     // Check for new inputs every 200ms
 }
 
-void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool abort) {
+void ConfigureInput::StopPolling() {
     releaseKeyboard();
     releaseMouse();
     timeout_timer->stop();
@@ -640,11 +762,13 @@ void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool a
     for (auto& poller : device_pollers) {
         poller->Stop();
     }
+}
 
+void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool abort) {
+    StopPolling();
     if (!abort && input_setter) {
         (*input_setter)(params);
     }
-
     UpdateButtonLabels();
     input_setter.reset();
 }
@@ -655,19 +779,12 @@ void ConfigureInput::keyPressEvent(QKeyEvent* event) {
 
     if (event->key() != Qt::Key_Escape && event->key() != previous_key_code) {
         if (want_keyboard_keys) {
-            // Check if key is already bound
-            if (hotkey_list.contains(QKeySequence(event->key())) ||
-                GetUsedKeyboardKeys().contains(QKeySequence(event->key()))) {
-                SetPollingResult({}, true);
-                QMessageBox::critical(this, tr("Error!"),
-                                      tr("You're using a key that's already bound."));
-                return;
-            }
-            SetPollingResult(Common::ParamPackage{InputCommon::GenerateKeyboardParam(event->key())},
-                             false);
+            auto param = Common::ParamPackage(InputCommon::GenerateKeyboardParam(event->key()));
+            previous_key_code = 0;
+            SetPollingResult(param, false);
         } else {
-            // Escape key wasn't pressed and we don't want any keyboard keys, so don't stop
-            // polling
+            // Escape key wasn't pressed and we don't want any keyboard keys, so don't
+            // stop polling
             return;
         }
     }
@@ -694,7 +811,6 @@ void ConfigureInput::NewProfile() {
     }
 
     ApplyConfiguration();
-    Settings::SaveProfile(ui->profile->currentIndex());
     Settings::CreateProfile(name.toStdString());
     ui->profile->addItem(name);
     ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);

@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cstring>
 #include <QFileDialog>
@@ -235,6 +235,8 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             &ConfigureSystem::UpdateInitTime);
     connect(ui->combo_init_ticks_type, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureSystem::UpdateInitTicks);
+    connect(ui->combo_battery_state_source, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            &ConfigureSystem::UpdateBatterySource);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
     connect(ui->button_regenerate_mac, &QPushButton::clicked, this, &ConfigureSystem::RefreshMAC);
@@ -253,16 +255,18 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
         ui->button_secure_info->setEnabled(false);
         const QString file_path_qtstr = QFileDialog::getOpenFileName(
             this, tr("Select SecureInfo_A/B"), QString(),
-            tr("SecureInfo_A/B (SecureInfo_A SecureInfo_B);;All Files (*.*)"));
+            QStringLiteral("SecureInfo_A/B (SecureInfo_A SecureInfo_B);;") + tr("All Files") +
+                QStringLiteral(" (*.*)"));
         ui->button_secure_info->setEnabled(true);
         InstallSecureData(file_path_qtstr.toStdString(), HW::UniqueData::GetSecureInfoAPath());
     });
     connect(ui->button_friend_code_seed, &QPushButton::clicked, this, [this] {
         ui->button_friend_code_seed->setEnabled(false);
-        const QString file_path_qtstr =
-            QFileDialog::getOpenFileName(this, tr("Select LocalFriendCodeSeed_A/B"), QString(),
-                                         tr("LocalFriendCodeSeed_A/B (LocalFriendCodeSeed_A "
-                                            "LocalFriendCodeSeed_B);;All Files (*.*)"));
+        const QString file_path_qtstr = QFileDialog::getOpenFileName(
+            this, tr("Select LocalFriendCodeSeed_A/B"), QString(),
+            QStringLiteral(
+                "LocalFriendCodeSeed_A/B (LocalFriendCodeSeed_A LocalFriendCodeSeed_B);;") +
+                tr("All Files") + QStringLiteral(" (*.*)"));
         ui->button_friend_code_seed->setEnabled(true);
         InstallSecureData(file_path_qtstr.toStdString(),
                           HW::UniqueData::GetLocalFriendCodeSeedBPath());
@@ -271,14 +275,17 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
         ui->button_otp->setEnabled(false);
         const QString file_path_qtstr =
             QFileDialog::getOpenFileName(this, tr("Select encrypted OTP file"), QString(),
-                                         tr("Binary file (*.bin);;All Files (*.*)"));
+                                         tr("Binary file") + QStringLiteral(" (*.bin);;") +
+                                             tr("All Files") + QStringLiteral(" (*.*)"));
         ui->button_otp->setEnabled(true);
         InstallSecureData(file_path_qtstr.toStdString(), HW::UniqueData::GetOTPPath());
     });
     connect(ui->button_movable, &QPushButton::clicked, this, [this] {
         ui->button_movable->setEnabled(false);
-        const QString file_path_qtstr = QFileDialog::getOpenFileName(
-            this, tr("Select movable.sed"), QString(), tr("Sed file (*.sed);;All Files (*.*)"));
+        const QString file_path_qtstr =
+            QFileDialog::getOpenFileName(this, tr("Select movable.sed"), QString(),
+                                         tr("Sed file") + QStringLiteral(" (*.sed);;") +
+                                             tr("All Files") + QStringLiteral(" (*.*)"));
         ui->button_movable->setEnabled(true);
         InstallSecureData(file_path_qtstr.toStdString(), HW::UniqueData::GetMovablePath());
     });
@@ -293,6 +300,7 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
 
     SetupPerGameUI();
     ConfigureTime();
+    UpdateBatterySource(ui->combo_battery_state_source->currentIndex());
 }
 
 ConfigureSystem::~ConfigureSystem() = default;
@@ -332,6 +340,10 @@ void ConfigureSystem::SetConfiguration() {
         static_cast<u8>(Settings::values.init_ticks_type.GetValue()));
     ui->edit_init_ticks_value->setText(
         QString::number(Settings::values.init_ticks_override.GetValue()));
+    ui->combo_battery_state_source->setCurrentIndex(
+        static_cast<u32>(Settings::values.battery_state_source.GetValue()));
+    ui->battery_charging->setChecked(Settings::values.battery_charging.GetValue());
+    ui->battery_level->setCurrentIndex(Settings::values.battery_level.GetValue());
 
     ui->spinBox_steps_per_hour->setValue(Settings::values.steps_per_hour.GetValue());
 
@@ -475,6 +487,10 @@ void ConfigureSystem::ApplyConfiguration() {
             static_cast<Settings::InitTicks>(ui->combo_init_ticks_type->currentIndex());
         Settings::values.init_ticks_override =
             static_cast<s64>(ui->edit_init_ticks_value->text().toLongLong());
+        Settings::values.battery_state_source = static_cast<Settings::BatteryLevelSource>(
+            ui->combo_battery_state_source->currentIndex());
+        Settings::values.battery_charging = ui->battery_charging->isChecked();
+        Settings::values.battery_level = static_cast<u8>(ui->battery_level->currentIndex());
 
         Settings::values.steps_per_hour = static_cast<u16>(ui->spinBox_steps_per_hour->value());
 
@@ -557,6 +573,16 @@ void ConfigureSystem::UpdateInitTicks(int init_ticks_type) {
 
     ui->label_init_ticks_value->setVisible(is_fixed && is_global);
     ui->edit_init_ticks_value->setVisible(is_fixed && is_global);
+}
+
+void ConfigureSystem::UpdateBatterySource(int battery_source) {
+    const bool is_global = Settings::IsConfiguringGlobal();
+    const bool is_fixed = static_cast<Settings::BatteryLevelSource>(battery_source) ==
+                          Settings::BatteryLevelSource::Fixed;
+
+    ui->label_battery_state->setVisible(is_fixed && is_global);
+    ui->battery_charging->setVisible(is_fixed && is_global);
+    ui->battery_level->setVisible(is_fixed && is_global);
 }
 
 void ConfigureSystem::RefreshConsoleID() {
@@ -734,6 +760,11 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->edit_username->setVisible(false);
     ui->spinBox_play_coins->setVisible(false);
     ui->spinBox_steps_per_hour->setVisible(false);
+    ui->label_battery_state_source->setVisible(false);
+    ui->combo_battery_state_source->setVisible(false);
+    ui->label_battery_state->setVisible(false);
+    ui->battery_charging->setVisible(false);
+    ui->battery_level->setVisible(false);
     ui->combo_birthday->setVisible(false);
     ui->combo_birthmonth->setVisible(false);
     ui->combo_init_clock->setVisible(false);

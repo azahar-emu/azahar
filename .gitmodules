@@ -76,9 +76,6 @@
 [submodule "faad2"]
 	path = externals/faad2/faad2
 	url = https://github.com/knik0/faad2
-[submodule "library-headers"]
-	path = externals/library-headers
-	url = https://github.com/azahar-emu/ext-library-headers.git
 [submodule "libadrenotools"]
 	path = externals/libadrenotools
 	url = https://github.com/bylaws/libadrenotools
@@ -106,3 +103,6 @@
 [submodule "externals/cryptopp"]
 	path = externals/cryptopp
 	url = https://github.com/cryptopp-modern/cryptopp-modern.git
+[submodule "microtar"]
+	path = externals/microtar
+	url = https://github.com/azahar-emu/microtar

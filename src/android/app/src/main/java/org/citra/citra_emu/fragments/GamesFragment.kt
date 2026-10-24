@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -29,12 +29,16 @@ import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
@@ -233,6 +237,58 @@ class GamesFragment : Fragment() {
         setInsets()
     }
 
+    private fun getMajorVersion(version: String): Int? = version.split('.')[0].toIntOrNull()
+
+    private fun isPrereleaseBuild(): Boolean {
+        val version = BuildConfig.GIT_VERSION
+        return (
+            version.contains("alpha") ||
+                version.contains("beta") ||
+                version.contains("rc") ||
+                version.contains("test")
+            )
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Perform update check
+        @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
+        if (!BuildConfig.DEBUG &&
+            !BuildUtil.isGooglePlayBuild &&
+            CitraSettings.activeSettings.get(BooleanSetting.CHECK_FOR_UPDATES) &&
+            !homeViewModel.updatePromptShown
+        ) {
+            Thread({
+                val checkForPrereleaseUpdates =
+                    isPrereleaseBuild() ||
+                        (CitraSettings.activeSettings.get(IntSetting.UPDATE_CHECK_CHANNEL) == 1)
+                val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
+
+                if (!latestReleaseTag.isNullOrEmpty() &&
+                    latestReleaseTag != BuildConfig.GIT_VERSION
+                ) {
+                    val latestMajorVersion = getMajorVersion(latestReleaseTag)
+                    val currentMajorVersion = getMajorVersion(BuildConfig.GIT_VERSION)
+                    if (latestMajorVersion != null &&
+                        currentMajorVersion != null &&
+                        currentMajorVersion <= latestMajorVersion
+                    ) {
+                        UpdateAvailableNotificationFragment.newInstance(
+                            latestReleaseTag,
+                            checkForPrereleaseUpdates
+                        )
+                            .show(
+                                requireActivity().supportFragmentManager,
+                                UpdateAvailableNotificationFragment.TAG
+                            )
+                    }
+                }
+            }).start()
+            homeViewModel.updatePromptShown = true
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -240,7 +296,7 @@ class GamesFragment : Fragment() {
 
     private fun setAdapter(games: List<Game>) {
         val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        if (preferences.getBoolean(Settings.PREF_SHOW_HOME_APPS, false)) {
+        if (preferences.getBoolean(CitraSettings.PREF_SHOW_HOME_APPS, false)) {
             (binding.gridGames.adapter as GameAdapter).submitList(games)
         } else {
             val filteredList = games.filter { !it.isSystemTitle }
@@ -277,7 +333,7 @@ class GamesFragment : Fragment() {
         val leftInsets = barInsets.left + cutoutInsets.left
         val rightInsets = barInsets.right + cutoutInsets.right
         val mlpSwipe = binding.swipeRefresh.layoutParams as MarginLayoutParams
-        if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
+        if (view.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
             mlpSwipe.leftMargin = leftInsets + spacingNavigationRail
             mlpSwipe.rightMargin = rightInsets
         } else {

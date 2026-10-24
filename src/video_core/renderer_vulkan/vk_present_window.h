@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <atomic>
 #include <condition_variable>
@@ -61,6 +61,10 @@ public:
 
     u32 ImageCount() const noexcept {
         return swapchain.GetImageCount();
+    }
+
+    vk::Format GetSurfaceFormat() const noexcept {
+        return swapchain.GetSurfaceFormat().format;
     }
 
 private:

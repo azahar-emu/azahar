@@ -1,6 +1,6 @@
 // Copyright 2022 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 // Copyright 2017 socram8888/amiitool
 // Licensed under MIT

@@ -1,6 +1,6 @@
-// Copyright 2024 Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/settings.h"
 #include "right_eye_disabler.h"
@@ -21,7 +21,7 @@ bool RightEyeDisabler::ShouldAllowCmdQueueTrigger(PAddr addr, u32 size) {
     cmd_queue_trigger_happened = true;
 
     auto guess = gpu.impl->pica.GuessCmdRenderProperties(addr, size);
-    if (guess.vp_height == top_screen_size && !top_screen_blocked) {
+    if (guess.has_draw && guess.vp_height == top_screen_size && !top_screen_blocked) {
         if (top_screen_buf == 0) {
             top_screen_buf = guess.paddr;
         }

@@ -1,6 +1,6 @@
-// Copyright 2018 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <iterator>
@@ -260,7 +260,7 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
     auto* const keys = new QGridLayout;
     const auto rows = IsNumberPad() ? GetNumberPadRows() : GetLetterRows(uppercase);
 
-    for (int row = 0; row < std::size(rows); ++row) {
+    for (std::size_t row = 0; row < rows.size(); ++row) {
         std::vector<QPushButton*> key_button_row;
         std::vector<QPushButton*> button_row;
         for (int column = 0; column < rows[row].size(); ++column) {
@@ -270,7 +270,7 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
             button->setFocusPolicy(Qt::NoFocus);
             connect(button, &QPushButton::clicked, this,
                     [this, button] { AppendText(button->text()); });
-            keys->addWidget(button, row, column);
+            keys->addWidget(button, static_cast<int>(row), column);
             key_button_row.push_back(button);
             button_row.push_back(button);
         }

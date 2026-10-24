@@ -156,6 +156,10 @@ else()
     target_compile_definitions(microprofile INTERFACE MICROPROFILE_ENABLED=0)
 endif()
 
+# microtar
+add_library(microtar STATIC ./microtar/src/microtar.c)
+target_include_directories(microtar PUBLIC ./microtar/src)
+
 # Nihstro
 add_library(nihstro-headers INTERFACE)
 target_include_directories(nihstro-headers INTERFACE ./nihstro/include)
@@ -169,25 +173,8 @@ endif()
 add_subdirectory(open_source_archives EXCLUDE_FROM_ALL)
 
 # faad2
-add_subdirectory(faad2 EXCLUDE_FROM_ALL)
-
-# Dynamic library headers
-add_library(library-headers INTERFACE)
-
-if (USE_SYSTEM_FFMPEG_HEADERS)
-    find_path(SYSTEM_FFMPEG_INCLUDES NAMES libavutil/avutil.h)
-    if (SYSTEM_FFMPEG_INCLUDES STREQUAL "SYSTEM_FFMPEG_INCLUDES-NOTFOUND")
-        message(WARNING "System FFmpeg headers not found. Falling back on bundled headers.")
-    else()
-        message(STATUS "Using system FFmpeg headers.")
-        target_include_directories(library-headers SYSTEM INTERFACE ${SYSTEM_FFMPEG_INCLUDES})
-        set(FOUND_FFMPEG_HEADERS ON)
-    endif()
-endif()
-if (NOT FOUND_FFMPEG_HEADERS)
-    message(STATUS "Using bundled ffmpeg headers.")
-    target_include_directories(library-headers INTERFACE ./library-headers/ffmpeg/include)
-    target_disable_warnings(library-headers)
+if(NOT USE_SYSTEM_FAAD)
+    add_subdirectory(faad2 EXCLUDE_FROM_ALL)
 endif()
 
 # SoundTouch
@@ -201,7 +188,13 @@ endif()
 
 # Teakra
 set(BUILD_TESTING OFF CACHE BOOL "")
-add_subdirectory(teakra EXCLUDE_FROM_ALL)
+if (USE_SYSTEM_TEAKRA)
+    find_package(teakra CONFIG REQUIRED)
+    message(STATUS "Using system Teakra")
+else()
+    message(STATUS "Using bundled Teakra")
+    add_subdirectory(teakra EXCLUDE_FROM_ALL)
+endif()
 
 # SDL2
 if (ENABLE_SDL2 AND NOT USE_SYSTEM_SDL2)
@@ -218,15 +211,26 @@ endif()
 # Zstandard
 if(USE_SYSTEM_ZSTD)
     find_package(zstd REQUIRED)
-    add_library(zstd INTERFACE)
+
+    add_library(citra_zstd INTERFACE)
+
     if(TARGET zstd::libzstd_shared)
-        message(STATUS "Found system Zstandard")
+        target_link_libraries(citra_zstd INTERFACE zstd::libzstd_shared)
+    elseif(TARGET zstd::libzstd_static)
+        target_link_libraries(citra_zstd INTERFACE zstd::libzstd_static)
+    elseif(TARGET libzstd_static)
+        target_link_libraries(citra_zstd INTERFACE libzstd_static)
+    else()
+        message(FATAL_ERROR "No usable zstd CMake target was found")
     endif()
-    target_link_libraries(zstd INTERFACE zstd::libzstd_shared)
 else()
-    set(ZSTD_LEGACY_SUPPORT OFF)
-    set(ZSTD_BUILD_PROGRAMS OFF)
-    set(ZSTD_BUILD_SHARED OFF)
+    # These must be cache values because zstd's own CMake files define options.
+    set(ZSTD_LEGACY_SUPPORT OFF CACHE BOOL "" FORCE)
+    set(ZSTD_BUILD_PROGRAMS OFF CACHE BOOL "" FORCE)
+    set(ZSTD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(ZSTD_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(ZSTD_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+
     add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
 
     target_include_directories(libzstd_static INTERFACE
@@ -235,17 +239,22 @@ else()
     )
 
     add_library(zstd_seekable STATIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_compress.c>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_decompress.c>
+        ${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_compress.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_decompress.c
     )
+
     target_include_directories(zstd_seekable PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/lib/common>
+        ${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format
+        ${CMAKE_CURRENT_SOURCE_DIR}/zstd/lib/common
     )
+
     target_link_libraries(zstd_seekable PUBLIC libzstd_static)
 
-    add_library(zstd INTERFACE)
-    target_link_libraries(zstd INTERFACE libzstd_static zstd_seekable)
+    add_library(citra_zstd INTERFACE)
+    target_link_libraries(citra_zstd INTERFACE
+        libzstd_static
+        zstd_seekable
+    )
 endif()
 
 # ENet
@@ -405,7 +414,7 @@ if (ENABLE_OPENAL)
         if (BSD STREQUAL "OpenBSD")
             set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "")
         endif()
-        set(ALSOFT_EMBED_HRTF_DATA OFF CACHE BOOL "")
+        set(ALSOFT_EMBED_HRTF_DATA ON CACHE BOOL "")
         set(ALSOFT_EXAMPLES OFF CACHE BOOL "")
         set(ALSOFT_INSTALL OFF CACHE BOOL "")
         set(ALSOFT_INSTALL_CONFIG OFF CACHE BOOL "")
@@ -439,9 +448,13 @@ if (ENABLE_VULKAN)
     endif()
 
     # spirv-tools
-    # TODO: Implement USE_SYSTEM_SPIRV_TOOLS -OS
-    set(SPIRV_SKIP_EXECUTABLES ON)
-    add_subdirectory(spirv-tools EXCLUDE_FROM_ALL)
+    if(USE_SYSTEM_SPIRV_TOOLS)
+        find_package(SPIRV-Tools REQUIRED)
+        set(ALLOW_EXTERNAL_SPIRV_TOOLS ON)
+    else()
+        set(SPIRV_SKIP_EXECUTABLES ON)
+        add_subdirectory(spirv-tools EXCLUDE_FROM_ALL)
+    endif()
 
     # glslang
     if(USE_SYSTEM_GLSLANG)
@@ -512,16 +525,18 @@ if (ENABLE_VULKAN)
     endif()
 endif()
 
-set(XXHASH_BUILD_XXHSUM OFF)
-add_subdirectory(xxHash/cmake_unofficial EXCLUDE_FROM_ALL)
-target_compile_definitions(xxhash PRIVATE XXH_FORCE_MEMORY_ACCESS=2)
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-    target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_SSE2)
-    message(STATUS "Enabling SSE2 for xxHash")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|armv8")
-    target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_NEON)
-    message(STATUS "Enabling NEON for xxHash")
-else()
-    target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_SCALAR)
-    message(STATUS "Disabling SIMD for xxHash")
+if(NOT USE_SYSTEM_XXHASH)
+    set(XXHASH_BUILD_XXHSUM OFF)
+    add_subdirectory(xxHash/cmake_unofficial EXCLUDE_FROM_ALL)
+    target_compile_definitions(xxhash PRIVATE XXH_FORCE_MEMORY_ACCESS=2)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+        target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_SSE2)
+        message(STATUS "Enabling SSE2 for xxHash")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|armv8")
+        target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_NEON)
+        message(STATUS "Enabling NEON for xxHash")
+    else()
+        target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_SCALAR)
+        message(STATUS "Disabling SIMD for xxHash")
+    endif()
 endif()

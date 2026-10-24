@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <QBoxLayout>
 #include <QComboBox>
@@ -650,8 +650,8 @@ void GraphicsSurfaceWidget::OnUpdate() {
 }
 
 void GraphicsSurfaceWidget::SaveSurface() {
-    const QString png_filter = tr("Portable Network Graphic (*.png)");
-    const QString bin_filter = tr("Binary data (*.bin)");
+    const QString png_filter = tr("Portable Network Graphic") + QStringLiteral(" (*.png)");
+    const QString bin_filter = tr("Binary data") + QStringLiteral(" (*.bin)");
 
     QString selected_filter;
     const QString filename = QFileDialog::getSaveFileName(

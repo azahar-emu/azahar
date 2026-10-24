@@ -6,61 +6,160 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>441</width>
-    <height>727</height>
+    <width>716</width>
+    <height>694</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>ConfigureInput</string>
-  </property>
   <layout class="QVBoxLayout" name="rootLayout">
+   <property name="spacing">
+    <number>2</number>
+   </property>
+   <property name="leftMargin">
+    <number>12</number>
+   </property>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Profile</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="profile"/>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonNew">
-       <property name="text">
-        <string>New</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonDelete">
-       <property name="text">
-        <string>Delete</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonRename">
-       <property name="text">
-        <string>Rename</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_40">
+      <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="leftMargin">
+       <number>12</number>
+      </property>
+      <property name="topMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>12</number>
+      </property>
+      <property name="bottomMargin">
+       <number>8</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Profile</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="profile"/>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonNew">
+          <property name="text">
+           <string>New</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonDelete">
+          <property name="text">
+           <string>Delete</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonRename">
+          <property name="text">
+           <string>Rename</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <item alignment="Qt::AlignRight">
+         <widget class="QLabel" name="label_16">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>166</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>1920192</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Some mappings cannot be applied to all controllers, such as back buttons</string>
+          </property>
+          <property name="text">
+           <string>Apply Game Controller Maps To:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="comboBoxMappingType">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>0</height>
+           </size>
+          </property>
+          <item>
+           <property name="text">
+            <string>All controllers</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Controllers of the mapped type</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Only the mapped controller</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QScrollArea" name="scrollArea">
@@ -68,6 +167,14 @@
       <bool>true</bool>
      </property>
      <widget class="QWidget" name="scrollAreaContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>675</width>
+        <height>996</height>
+       </rect>
+      </property>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
         <layout class="QGridLayout" name="gridLayout_7">
@@ -88,7 +195,7 @@
               <item>
                <widget class="QLabel" name="label_18">
                 <property name="text">
-                 <string>ZR:</string>
+                 <string notr="true">ZR:</string>
                 </property>
                </widget>
               </item>
@@ -106,7 +213,7 @@
               <item>
                <widget class="QLabel" name="label_17">
                 <property name="text">
-                 <string>L:</string>
+                 <string notr="true">L:</string>
                 </property>
                </widget>
               </item>
@@ -124,7 +231,7 @@
               <item>
                <widget class="QLabel" name="label_20">
                 <property name="text">
-                 <string>ZL:</string>
+                 <string notr="true">ZL:</string>
                 </property>
                </widget>
               </item>
@@ -142,7 +249,7 @@
               <item>
                <widget class="QLabel" name="label_19">
                 <property name="text">
-                 <string>R:</string>
+                 <string notr="true">R:</string>
                 </property>
                </widget>
               </item>
@@ -175,7 +282,7 @@
               <item>
                <widget class="QLabel" name="label_4">
                 <property name="text">
-                 <string>Y:</string>
+                 <string notr="true">Y:</string>
                 </property>
                </widget>
               </item>
@@ -193,7 +300,7 @@
               <item>
                <widget class="QLabel" name="label_3">
                 <property name="text">
-                 <string>X:</string>
+                 <string notr="true">X:</string>
                 </property>
                </widget>
               </item>
@@ -211,7 +318,7 @@
               <item>
                <widget class="QLabel" name="label_2">
                 <property name="text">
-                 <string>B:</string>
+                 <string notr="true">B:</string>
                 </property>
                </widget>
               </item>
@@ -229,7 +336,7 @@
               <item>
                <widget class="QLabel" name="label">
                 <property name="text">
-                 <string>A:</string>
+                 <string notr="true">A:</string>
                 </property>
                </widget>
               </item>
@@ -439,7 +546,7 @@
               <item>
                <widget class="QLabel" name="label_41">
                 <property name="text">
-                 <string>GPIO14:</string>
+                 <string notr="true">GPIO14:</string>
                 </property>
                </widget>
               </item>

@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Originally MIT-licensed code from The Pixellizer Group
 
@@ -102,17 +102,6 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
         (static_cast<u32>(process.codeset->program_id >> 32) & TITLE_ID_APP_MASK) !=
             TITLE_ID_APP_VALUE) {
         return;
-    }
-    {
-        // Same check as original plugin loader, plugins are not supported in homebrew apps
-        u32 value1, value2;
-        kernel.memory.ReadBlock(process, process.codeset->CodeSegment().addr, &value1, 4);
-        kernel.memory.ReadBlock(process, process.codeset->CodeSegment().addr + 32, &value2, 4);
-        // Check for "B #0x20" and "MOV R4, LR" instructions
-        bool is_homebrew = u32_le(value1) == 0xEA000006 && u32_le(value2) == 0xE1A0400E;
-        if (is_homebrew) {
-            return;
-        }
     }
     FileSys::Plugin3GXLoader plugin_loader;
     const auto low_title_Id = plgldr_context.user_load_parameters.low_title_Id;

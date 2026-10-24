@@ -1,6 +1,6 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright 2020-2025 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <QFileDialog>
 #include <QPushButton>
@@ -51,7 +51,7 @@ QString MoviePlayDialog::GetGamePath() const {
 void MoviePlayDialog::OnToolButtonClicked() {
     const QString path =
         QFileDialog::getOpenFileName(this, tr("Play Movie"), UISettings::values.movie_playback_path,
-                                     tr("Citra TAS Movie (*.ctm)"));
+                                     tr("Citra TAS Movie") + QStringLiteral(" (*.ctm)"));
     if (path.isEmpty()) {
         return;
     }

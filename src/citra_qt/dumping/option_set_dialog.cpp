@@ -1,6 +1,6 @@
-// Copyright 2020 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <unordered_map>
 #include <QCheckBox>
@@ -9,6 +9,10 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "ui_option_set_dialog.h"
+
+extern "C" {
+#include <libavutil/opt.h>
+}
 
 static const std::unordered_map<AVOptionType, const char*> TypeNameMap{{
     {AV_OPT_TYPE_BOOL, QT_TR_NOOP("boolean")},
@@ -27,7 +31,7 @@ static const std::unordered_map<AVOptionType, const char*> TypeNameMap{{
     {AV_OPT_TYPE_STRING, QT_TR_NOOP("string")},
     {AV_OPT_TYPE_DICT, QT_TR_NOOP("dictionary")},
     {AV_OPT_TYPE_VIDEO_RATE, QT_TR_NOOP("video rate")},
-    {AV_OPT_TYPE_CHANNEL_LAYOUT, QT_TR_NOOP("channel layout")},
+    {AV_OPT_TYPE_CHLAYOUT, QT_TR_NOOP("channel layout")},
 }};
 
 static const std::unordered_map<AVOptionType, const char*> TypeDescriptionMap{{
@@ -39,7 +43,7 @@ static const std::unordered_map<AVOptionType, const char*> TypeDescriptionMap{{
     {AV_OPT_TYPE_DICT,
      QT_TR_NOOP("Comma-splitted list of &lt;key>=&lt;value>. Do not put spaces.")},
     {AV_OPT_TYPE_VIDEO_RATE, QT_TR_NOOP("&lt;num>/&lt;den>, or preset values like 'pal'.")},
-    {AV_OPT_TYPE_CHANNEL_LAYOUT, QT_TR_NOOP("Hexadecimal channel layout mask starting with '0x'.")},
+    {AV_OPT_TYPE_CHLAYOUT, QT_TR_NOOP("Channel layout string")},
 }};
 
 /// Get the preset values of an option. returns {display value, real value}
@@ -70,7 +74,7 @@ std::vector<std::pair<QString, QString>> GetPresetValues(const VideoDumper::Opti
         std::vector<std::pair<QString, QString>> out;
         // Add in all named constants
         for (const auto& constant : option.named_constants) {
-            out.emplace_back(QObject::tr("%1 (0x%2)")
+            out.emplace_back(QStringLiteral("%1 (0x%2)")
                                  .arg(QString::fromStdString(constant.name))
                                  .arg(constant.value, 0, 16),
                              QString::fromStdString(constant.name));
@@ -85,7 +89,7 @@ std::vector<std::pair<QString, QString>> GetPresetValues(const VideoDumper::Opti
 void OptionSetDialog::InitializeUI(const std::string& initial_value) {
     const QString type_name =
         TypeNameMap.count(option.type) ? tr(TypeNameMap.at(option.type)) : tr("unknown");
-    ui->nameLabel->setText(tr("%1 &lt;%2> %3")
+    ui->nameLabel->setText(QStringLiteral("%1 &lt;%2> %3")
                                .arg(QString::fromStdString(option.name), type_name,
                                     QString::fromStdString(option.description)));
     if (TypeDescriptionMap.count(option.type)) {
@@ -160,7 +164,7 @@ void OptionSetDialog::InitializeUI(const std::string& initial_value) {
         layout_type = 2;
 
         for (const auto& constant : option.named_constants) {
-            auto* checkBox = new QCheckBox(tr("%1 (0x%2) %3")
+            auto* checkBox = new QCheckBox(QStringLiteral("%1 (0x%2) %3")
                                                .arg(QString::fromStdString(constant.name))
                                                .arg(constant.value, 0, 16)
                                                .arg(QString::fromStdString(constant.description)));

@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings
 
@@ -11,6 +11,7 @@ object SettingKeys {
     // Shared
     external fun use_artic_base_controller(): String
     external fun use_cpu_jit(): String
+    external fun use_fastinterp(): String
     external fun cpu_clock_percentage(): String
     external fun is_new_3ds(): String
     external fun lle_applets(): String
@@ -24,6 +25,9 @@ object SettingKeys {
     external fun init_time(): String
     external fun init_ticks_type(): String
     external fun init_ticks_override(): String
+    external fun battery_state_source(): String
+    external fun battery_charging(): String
+    external fun battery_level(): String
     external fun plugin_loader(): String
     external fun allow_plugin_loader(): String
     external fun steps_per_hour(): String
@@ -39,6 +43,7 @@ object SettingKeys {
     external fun use_disk_shader_cache(): String
     external fun shaders_accurate_mul(): String
     external fun use_vsync(): String
+    external fun use_skip_duplicate_frames(): String
     external fun use_shader_jit(): String
     external fun resolution_factor(): String
     external fun frame_limit(): String
@@ -126,6 +131,10 @@ object SettingKeys {
     external fun udp_input_port(): String
     external fun udp_pad_index(): String
     external fun record_frame_times(): String
+    external fun web_api_url(): String
+    external fun network_token(): String
+    external fun check_for_update_on_start(): String
+    external fun update_check_channel(): String
 
     // Android
     external fun expand_to_cutout_area(): String
@@ -142,4 +151,5 @@ object SettingKeys {
     external fun screen_orientation(): String
     external fun performance_overlay_position(): String
     external fun enable_secondary_display(): String
+    external fun combo_button_buttons(): String
 }

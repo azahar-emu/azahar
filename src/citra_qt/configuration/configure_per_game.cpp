@@ -1,10 +1,10 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Copyright 2020 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the misc/licenses/gplv2.txt file included.
 
 #include <utility>
 #include <vector>
@@ -86,7 +86,7 @@ ConfigurePerGame::~ConfigurePerGame() = default;
 void ConfigurePerGame::ResetDefaults() {
     const auto config_file_name = title_id == 0 ? filename : fmt::format("{:016X}", title_id);
     QMessageBox::StandardButton answer = QMessageBox::question(
-        this, tr("Azahar"),
+        this, QStringLiteral("Azahar"),
         tr("Are you sure you want to <b>reset your settings for this application</b>?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
@@ -159,11 +159,11 @@ void ConfigurePerGame::LoadConfiguration() {
     }
 
     std::string title;
-    if (loader->ReadTitle(title) == Loader::ResultStatus::Success)
+    if (loader->ReadTitle(title, false) == Loader::ResultStatus::Success)
         ui->display_name->setText(QString::fromStdString(title));
 
     std::vector<u8> bytes;
-    if (loader->ReadIcon(bytes) == Loader::ResultStatus::Success) {
+    if (loader->ReadIcon(bytes, false) == Loader::ResultStatus::Success) {
         scene->clear();
 
         QPixmap map = GetQPixmapFromSMDH(bytes);
@@ -173,8 +173,8 @@ void ConfigurePerGame::LoadConfiguration() {
 
     ui->display_filepath->setText(QString::fromStdString(filename));
 
-    ui->display_format->setText(QString::fromStdString(
-        Loader::GetFileTypeString(loader->GetFileType(), loader->IsFileCompressed())));
+    ui->display_format->setText(QString::fromStdString(Loader::GetFileTypeString(
+        loader->GetFileType(), loader->IsFileCompressed(), loader->IsFileBundle())));
 
     const auto valueText = ReadableByteSize(FileUtil::GetSize(filename));
     ui->display_size->setText(valueText);

@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.utils
 
@@ -20,6 +20,8 @@ object GameHelper {
     const val KEY_GAME_PATH = "game_path"
     const val KEY_GAMES = "Games"
 
+    // Since the game val in GetGame is tied to the JNI we need to cache the game list in order to use it elsewhere
+    var cachedGameList = mutableListOf<Game>()
     private lateinit var preferences: SharedPreferences
 
     fun getGames(): List<Game> {
@@ -46,6 +48,7 @@ object GameHelper {
             .putStringSet(KEY_GAMES, serializedGames)
             .apply()
 
+        cachedGameList = games.toMutableList()
         return games.toList()
     }
 
@@ -59,10 +62,14 @@ object GameHelper {
         }
 
         files.forEach {
+            val filename = FileUtil.getFilename(it.uri)
+            if (filename.startsWith(".")) {
+                return@forEach
+            }
             if (it.isDirectory) {
                 addGamesRecursive(games, FileUtil.listFiles(it.uri), depth - 1)
             } else {
-                if (Game.allExtensions.contains(FileUtil.getExtension(it.uri))) {
+                if (Game.extensions.contains(FileUtil.getExtension(it.uri))) {
                     games.add(
                         getGame(
                             it.uri,

@@ -1,6 +1,6 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -237,7 +237,11 @@ namespace FileSys {
  */
 class NCCHContainer {
 public:
-    NCCHContainer(const std::string& filepath, u32 ncch_offset = 0, u32 partition = 0);
+    static std::unique_ptr<FileUtil::IOFileBase> AutoOpenNCCHNCSD(const std::string& filepath);
+    static std::unique_ptr<FileUtil::IOFileBase> AutoOpenNCCHNCSD(FileUtil::IOFileBase* file);
+
+    NCCHContainer(const std::string& filepath, u32 partition = 0);
+    NCCHContainer(FileUtil::IOFileBase* file, u32 partition = 0);
     NCCHContainer() {}
 
     Loader::ResultStatus OpenFile(const std::string& filepath, u32 ncch_offset = 0,
@@ -349,17 +353,26 @@ public:
     }
 
     bool IsFileCompressed() {
-        return file->IsCompressed();
+        return file->GetType().HasCompressedType();
     }
 
-    NCCH_Header ncch_header;
+    bool IsFileBundle() {
+        return file->GetType().HasType(FileUtil::IOType::Type::TarIOFile);
+    }
+
+    const std::unique_ptr<FileUtil::IOFileBase>& GetFile() {
+        return file;
+    }
+
+    bool IsLoaded() {
+        return is_loaded;
+    }
+
+    NCCH_Header ncch_header{};
     ExeFs_Header exefs_header;
     ExHeader_Header exheader_header;
 
 private:
-    std::unique_ptr<FileUtil::IOFile> Reopen(const std::unique_ptr<FileUtil::IOFile>& orig_file,
-                                             const std::string& new_filename = "");
-
     bool has_header = false;
     bool has_exheader = false;
     bool has_exefs = false;
@@ -371,13 +384,11 @@ private:
     bool is_loaded = false;
     bool is_compressed = false;
 
-    u32 ncch_offset = 0; // Offset to NCCH header, can be 0 for NCCHs or non-zero for CIAs/NCSDs
-    u32 exefs_offset = 0;
     u32 partition = 0;
 
     std::string filepath;
-    std::unique_ptr<FileUtil::IOFile> file;
-    std::unique_ptr<FileUtil::IOFile> exefs_file;
+    std::unique_ptr<FileUtil::IOFileBase> file;
+    std::unique_ptr<FileUtil::IOFileBase> exefs_file;
 };
 
 } // namespace FileSys
