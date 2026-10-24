@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <QAction>
 #include <QShortcut>
@@ -88,6 +88,12 @@ Qt::ShortcutContext HotkeyRegistry::GetShortcutContext(const QString& group,
 void HotkeyRegistry::SetAction(const QString& group, const QString& action_name, QAction* action) {
     Hotkey& hk = hotkey_groups[group][action_name];
     hk.action = action;
+}
+
+void HotkeyRegistry::SetHoldCallback(const QString& group, const QString& action,
+                                     std::function<void(bool)> callback) {
+    hotkey_groups[group][action].hold_callback = std::move(callback);
+    hold_hotkeys.insert(&hotkey_groups[group][action]);
 }
 
 QString HotkeyRegistry::SequenceToString(QString controller_keyseq) {
