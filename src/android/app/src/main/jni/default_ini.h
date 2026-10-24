@@ -463,6 +463,16 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0: Old 3DS (default), 1: New 3DS
 )") DECLARE_KEY(is_new_3ds) BOOST_HANA_STRING(R"(
 
+# Battery state source
+# 0: Device battery (default), 1: Static
+)") DECLARE_KEY(battery_state_source) BOOST_HANA_STRING(R"(
+
+# Battery charging state
+)") DECLARE_KEY(battery_charging) BOOST_HANA_STRING(R"(
+
+# Battery level percentage
+)") DECLARE_KEY(battery_level) BOOST_HANA_STRING(R"(
+
 # Whether to use LLE system applets, if installed
 # 0: No, 1 (default): Yes
 )") DECLARE_KEY(lle_applets) BOOST_HANA_STRING(R"(
