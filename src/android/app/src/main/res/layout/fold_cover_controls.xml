@@ -1,55 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="#000000">
 
-    <!-- Background -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_panel_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.035" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_panel_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.967" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_panel_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.065" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_panel_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.875" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_hinge_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.885" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_hinge_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.096" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_hinge_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.895" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_cam_y"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.11" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_cam1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.363" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_cam2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.622" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_led"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.285" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_cap_led_x"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.035" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_cap_led_y"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.945" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/cover_shell"
+        app:layout_constraintBottom_toTopOf="@id/g_hinge_top"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/cover_hinge"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/g_hinge_right"
+        app:layout_constraintStart_toEndOf="@id/g_hinge_left"
+        app:layout_constraintTop_toBottomOf="@id/g_hinge_top" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/cover_hinge_cap_left"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/g_hinge_left"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/g_hinge_top" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/cover_hinge_cap_right"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/g_hinge_right"
+        app:layout_constraintTop_toBottomOf="@id/g_hinge_top" />
+
+    <View
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:background="@drawable/cover_led"
+        app:layout_constraintBottom_toBottomOf="@id/g_cap_led_y"
+        app:layout_constraintEnd_toEndOf="@id/g_cap_led_x"
+        app:layout_constraintStart_toStartOf="@id/g_cap_led_x"
+        app:layout_constraintTop_toTopOf="@id/g_cap_led_y" />
+
+    <View
+        android:layout_width="7dp"
+        android:layout_height="7dp"
+        android:background="@drawable/cover_led"
+        app:layout_constraintBottom_toBottomOf="@id/g_cam_y"
+        app:layout_constraintEnd_toEndOf="@id/g_led"
+        app:layout_constraintStart_toStartOf="@id/g_led"
+        app:layout_constraintTop_toTopOf="@id/g_cam_y" />
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/cover_lens"
+        app:layout_constraintBottom_toBottomOf="@id/g_cam_y"
+        app:layout_constraintEnd_toEndOf="@id/g_cam1"
+        app:layout_constraintStart_toStartOf="@id/g_cam1"
+        app:layout_constraintTop_toTopOf="@id/g_cam_y" />
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/cover_lens"
+        app:layout_constraintBottom_toBottomOf="@id/g_cam_y"
+        app:layout_constraintEnd_toEndOf="@id/g_cam2"
+        app:layout_constraintStart_toStartOf="@id/g_cam2"
+        app:layout_constraintTop_toTopOf="@id/g_cam_y" />
+
     <ImageView
         android:id="@+id/cover_artwork_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        tools:ignore="MissingConstraints" />
 
-    <!-- Darkened -->
     <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#66000000" />
+        android:id="@+id/touch_zone_l"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/cover_zone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/g_half"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:padding="24dp">
+    <View
+        android:id="@+id/touch_zone_r"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/cover_zone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/g_half"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- L Button -->
-        <TextView
-            android:id="@+id/touch_zone_l"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginEnd="12dp"
-            android:background="#33FFFFFF"
-            android:gravity="center"
-            android:text="R"
-            android:textColor="@android:color/white"
-            android:textSize="56sp"
-            android:textStyle="bold" />
-
-        <!-- R Button -->
-        <TextView
-            android:id="@+id/touch_zone_r"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:background="#33FFFFFF"
-            android:gravity="center"
-            android:text="L"
-            android:textColor="@android:color/white"
-            android:textSize="56sp"
-            android:textStyle="bold" />
-
-    </LinearLayout>
-</FrameLayout>
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/g_half"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -167,12 +167,12 @@ class FoldDualScreenController(
         view?.setOnTouchListener { v, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-                    v.setBackgroundColor(0x88FFFFFF.toInt())
+                    v.isPressed = true
                     onButtonEvent(buttonType, NativeLibrary.ButtonState.PRESSED)
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
-                    v.setBackgroundColor(0x33FFFFFF)
+                    v.isPressed = false
                     onButtonEvent(buttonType, NativeLibrary.ButtonState.RELEASED)
                     true
                 }

@@ -10,7 +10,7 @@
     <item
         android:id="@+id/menu_fold_cover_screen"
         android:icon="@drawable/ic_controller"
-        android:title="3DS Cover Controls"
+        android:title="Outer Screen Toggle"
         app:showAsAction="never" />
 
     <item
