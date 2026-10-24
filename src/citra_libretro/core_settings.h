@@ -56,7 +56,7 @@ void ApplyLayoutSettings(void);
 
 /// Whether to show the Layout options the frontend's views can override, for the "Frontend
 /// Layout and 3D" option (true for Auto) and the frontend's RETRO_VIDEO_VIEWS_STATUS_ flags.
-std::array<retro_core_option_display, 3> LayoutOptionsDisplay(bool frontend_layout,
+std::array<retro_core_option_display, 2> LayoutOptionsDisplay(bool frontend_layout,
                                                               unsigned status);
 
 /// Shows or hides those options in the frontend's menu; returns whether any changed.

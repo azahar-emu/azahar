@@ -238,9 +238,11 @@ void EmuWindow_LibRetro::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> _m
 LayoutGeometry ComputeLayoutGeometry() {
     const auto& views = LibRetro::VideoViews::CurrentMode();
     if (views.active) {
+        const bool swapped = Settings::values.swap_screen.GetValue();
         const auto [width, height] = LibRetro::VideoViews::PackedSize(
-            views.stereo, Settings::values.resolution_factor.GetValue());
-        return {width, height, true};
+            views, swapped, Settings::values.resolution_factor.GetValue());
+        // As for Single Screen Only below, the top screen alone has no touch screen to point at.
+        return {width, height, !(views.single && !swapped)};
     }
 
     unsigned baseX;

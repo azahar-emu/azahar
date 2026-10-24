@@ -246,7 +246,7 @@ static void UpdateVideoViews() {
     LibRetro::UpdateLayoutOptionsDisplay(LibRetro::settings.frontend_layout, status);
     const auto mode = LibRetro::VideoViews::SelectMode(
         LibRetro::settings.frontend_layout, LibRetro::settings.layout_option,
-        LibRetro::settings.render_3d, status,
+        LibRetro::settings.render_3d, Settings::values.swap_screen.GetValue(), status,
         Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::Software);
     const bool changed = mode != LibRetro::VideoViews::CurrentMode();
 
