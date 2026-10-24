@@ -63,7 +63,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
         COMMAND ${dllwalker_command} > ${dll_list_filename}
     )
     add_custom_command(TARGET citra_meta POST_BUILD
-        COMMAND cat ${dll_list_filename} | xargs -I {} ${CMAKE_COMMAND} -E copy {} $<TARGET_FILE_DIR:citra_meta>
+        COMMAND cat ${dll_list_filename} | grep -vi /SDL2.dll | xargs -I {} ${CMAKE_COMMAND} -E copy {} $<TARGET_FILE_DIR:citra_meta>
         COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:citra_meta>/plugins/"
         COMMAND ${CMAKE_COMMAND} -E copy_directory /opt/mxe/usr/x86_64-w64-mingw32.shared/qt6/plugins/ "$<TARGET_FILE_DIR:citra_meta>/plugins/"
         COMMAND_EXPAND_LISTS
