@@ -515,16 +515,16 @@ if (CLANG_FORMAT)
     set(CCOMMENT "Running clang format against all the .h and .cpp files in src/")
     if (WIN32)
         if(MINGW)
-            add_custom_target(clang-format
+            add_custom_target(citra-clang-format
                 COMMAND find `cygpath -u ${SRCS}` -iname *.h -o -iname *.cpp -o -iname *.mm | xargs `cygpath -u ${CLANG_FORMAT}` -i
                 COMMENT ${CCOMMENT})
         else()
-            add_custom_target(clang-format
+            add_custom_target(citra-clang-format
                 COMMAND powershell.exe -Command "Get-ChildItem '${SRCS}/*' -Include *.cpp,*.h,*.mm -Recurse | Foreach {&'${CLANG_FORMAT}' -i $_.fullname}"
                 COMMENT ${CCOMMENT})
         endif()
     else()
-        add_custom_target(clang-format
+        add_custom_target(citra-clang-format
             COMMAND find ${SRCS} -iname *.h -o -iname *.cpp -o -iname *.mm | xargs ${CLANG_FORMAT} -i
             COMMENT ${CCOMMENT})
     endif()
