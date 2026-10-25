@@ -1,42 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Cover layout with a placeholder skin. I'm not good at design, previous attempt looked ugly so I removed it.
-     skin_group  = decorative views, ideally it would look like a 3DS top cover (currently one flat red view)
-     plain_group = plain L/R labels and divider
-     To add skin: add views above the touch zones and list their
-     ids in skin_group's constraint_referenced_ids. -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000">
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_half"
+        android:id="@+id/guideline_center"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.5" />
 
-    <!-- Placeholder - one flat red fill -->
-    <View
-        android:id="@+id/skin_placeholder"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#82231F"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/skin_group"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:constraint_referenced_ids="skin_placeholder" />
-
+    <!-- Left half of the cover screen sends trigger R, it is mirrored -->
     <View
         android:id="@+id/touch_zone_l"
         android:layout_width="0dp"
@@ -45,8 +22,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/g_half" />
+        app:layout_constraintEnd_toStartOf="@id/guideline_center" />
 
+    <!-- Right half of cover screen sends trigger L, it is mirrored -->
     <View
         android:id="@+id/touch_zone_r"
         android:layout_width="0dp"
@@ -54,58 +32,45 @@
         android:background="#33FFFFFF"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/g_half"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Plain mode -->
     <TextView
-        android:id="@+id/plain_label_l"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="R"
+        android:text="@string/fold_cover_label_left"
         android:textColor="#55FFFFFF"
         android:textSize="48sp"
         android:textStyle="bold"
+        android:importantForAccessibility="no"
+        android:clickable="false"
+        android:focusable="false"
         app:layout_constraintTop_toTopOf="@id/touch_zone_l"
         app:layout_constraintBottom_toBottomOf="@id/touch_zone_l"
         app:layout_constraintStart_toStartOf="@id/touch_zone_l"
         app:layout_constraintEnd_toEndOf="@id/touch_zone_l" />
 
     <TextView
-        android:id="@+id/plain_label_r"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="L"
+        android:text="@string/fold_cover_label_right"
         android:textColor="#55FFFFFF"
         android:textSize="48sp"
         android:textStyle="bold"
+        android:importantForAccessibility="no"
+        android:clickable="false"
+        android:focusable="false"
         app:layout_constraintTop_toTopOf="@id/touch_zone_r"
         app:layout_constraintBottom_toBottomOf="@id/touch_zone_r"
         app:layout_constraintStart_toStartOf="@id/touch_zone_r"
         app:layout_constraintEnd_toEndOf="@id/touch_zone_r" />
 
     <View
-        android:id="@+id/plain_divider"
         android:layout_width="1dp"
         android:layout_height="0dp"
         android:background="#33FFFFFF"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@id/g_half"
-        app:layout_constraintEnd_toEndOf="@id/g_half" />
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/plain_group"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:constraint_referenced_ids="plain_label_l,plain_label_r,plain_divider" />
-
-    <!-- Referenced by the controller and unused for now -->
-    <ImageView
-        android:id="@+id/cover_artwork_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        android:importantForAccessibility="no"
-        tools:ignore="MissingConstraints" />
+        app:layout_constraintStart_toStartOf="@id/guideline_center"
+        app:layout_constraintEnd_toEndOf="@id/guideline_center" />
 </androidx.constraintlayout.widget.ConstraintLayout>

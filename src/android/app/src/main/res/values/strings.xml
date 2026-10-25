@@ -1127,5 +1127,10 @@
     <string name="update_check_channel_stable">Stable</string>
     <string name="update_check_channel_prerelease">Prerelease</string>
     <string name="toggle_cover_skin">Toggle cover screen skin</string>
+    <string name="fold_cover_menu_title">Cover screen controls</string>
+    <string name="fold_cover_enabled">Cover controls enabled</string>
+    <string name="fold_cover_disabled">Cover controls disabled</string>
+    <string name="fold_cover_label_left">R</string>
+    <string name="fold_cover_label_right">L</string>
 
 </resources>

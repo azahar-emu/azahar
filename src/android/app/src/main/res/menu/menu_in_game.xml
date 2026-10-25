@@ -10,11 +10,9 @@
     <item
         android:id="@+id/menu_fold_cover_screen"
         android:icon="@drawable/ic_controller"
-        android:title="Outer Screen Toggle"
+        android:title="@string/fold_cover_menu_title"
+        android:visible="false"
         app:showAsAction="never" />
-    <item
-        android:id="@+id/menu_toggle_cover_skin"
-        android:title="@string/toggle_cover_skin" />
     <item
         android:id="@+id/menu_emulation_savestates"
         android:icon="@drawable/ic_save"

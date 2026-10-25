@@ -329,13 +329,8 @@ class EmulationFragment :
                 }
 
                 R.id.menu_fold_cover_screen -> {
-                    emulationActivity.toggleFoldCoverScreen()
+                    emulationActivity.foldCover.toggle()
                     binding.drawerLayout.close()
-                    true
-                }
-
-                R.id.menu_toggle_cover_skin -> {
-                    (requireActivity() as EmulationActivity).toggleFoldCoverSkin()
                     true
                 }
 
@@ -527,9 +522,8 @@ class EmulationFragment :
             launch {
                 repeatOnLifecycle(Lifecycle.State.CREATED) {
                     FoldSupport.status.collect {
-                        val show = FoldSupport.canPresent
-                        binding.inGameMenu.menu.findItem(R.id.menu_fold_cover_screen)?.isVisible = show
-                        binding.inGameMenu.menu.findItem(R.id.menu_toggle_cover_skin)?.isVisible = show
+                        binding.inGameMenu.menu.findItem(R.id.menu_fold_cover_screen)?.isVisible =
+                            emulationActivity.foldCover.isAvailable
                     }
                 }
             }

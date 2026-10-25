@@ -27,7 +27,6 @@ import androidx.core.os.BundleCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.preference.PreferenceManager
@@ -40,8 +39,7 @@ import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
-import org.citra.citra_emu.features.fold.FoldDualScreenController
-import org.citra.citra_emu.features.fold.FoldSupport
+import org.citra.citra_emu.features.fold.FoldCoverManager
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
@@ -75,10 +73,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
     lateinit var secondaryDisplayManager: SecondaryDisplay
-    private var foldDualScreenController: FoldDualScreenController? = null
-
-    @Volatile
-    private var isCoverScreenActive = false
+    val foldCover = FoldCoverManager(this)
 
     private val onShutdown = Runnable {
         if (intent.getBooleanExtra("launchedFromShortcut", false)) {
@@ -146,8 +141,8 @@ class EmulationActivity : AppCompatActivity() {
         secondaryDisplayManager = SecondaryDisplay(this)
         secondaryDisplayManager.updateDisplay()
 
-        // track if device is a foldable and supports cover screen presentation
-        FoldSupport.observe(this)
+        // foldable manager
+        foldCover.attach()
 
         NativeLibrary.initMultiplayer()
 
@@ -194,9 +189,6 @@ class EmulationActivity : AppCompatActivity() {
             return
         }
 
-        // pass game icon or artwork to controller
-        // foldDualScreenController.setCoverArtwork(game.icon)
-
         NativeLibrary.playTimeManagerStart(game.titleId)
     }
 
@@ -213,8 +205,7 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStop()
 
         isEmulationReady = false
-        isCoverScreenActive = false
-        foldDualScreenController?.stopCoverControls()
+        foldCover.onStop()
         isRotationBlocked = true
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         emulationViewModel.setEmulationStarted(false)
@@ -267,9 +258,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        foldDualScreenController?.stopCoverControls()
-        isCoverScreenActive = false
-
+        foldCover.onStop()
         secondaryDisplayManager.releasePresentation()
         super.onStop()
     }
@@ -301,9 +290,8 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        foldDualScreenController?.stopCoverControls()
-        foldDualScreenController = null
-        isCoverScreenActive = false
+
+        foldCover.onDestroy()
         EmulationLifecycleUtil.removeHook(onShutdown)
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
@@ -451,37 +439,6 @@ class EmulationActivity : AppCompatActivity() {
                 R.string.amiibo_load_error_message
             ).show(supportFragmentManager, MessageDialogFragment.TAG)
         }
-    }
-
-    fun toggleFoldCoverScreen() {
-        if (!FoldSupport.isSupported) return
-        if (isCoverScreenActive) {
-            android.util.Log.e("FoldController", "User toggled Cover Screen OFF")
-            foldDualScreenController?.stopCoverControls()
-            isCoverScreenActive = false
-            Toast.makeText(this, "Cover controls disabled", Toast.LENGTH_SHORT).show()
-        } else {
-            android.util.Log.e("FoldController", "User toggled Cover Screen ON")
-            isCoverScreenActive = true
-            if (foldDualScreenController == null) {
-                foldDualScreenController = FoldDualScreenController(this, lifecycleScope) { buttonType, state ->
-                    NativeLibrary.onGamePadEvent(NativeLibrary.TOUCHSCREEN_DEVICE, buttonType, state)
-                }
-            }
-            foldDualScreenController?.init()
-            Toast.makeText(this, "Cover controls enabled", Toast.LENGTH_SHORT).show()
-        }
-    }
-    fun toggleFoldCoverSkin() {
-        if (!FoldSupport.isSupported) return
-        val enabled = !FoldDualScreenController.isSkinEnabled(this)
-        FoldDualScreenController.saveSkinEnabled(this, enabled)
-        foldDualScreenController?.refreshSkin()
-        Toast.makeText(
-            this,
-            if (enabled) "Cover skin: on" else "Cover skin: off (plain L/R)",
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
