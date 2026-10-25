@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <functional>
 #include "common/common_types.h"
@@ -81,6 +82,11 @@ public:
         [[maybe_unused]] const DiskResourceLoadCallback& callback) {}
 
     virtual void SwitchDiskResources([[maybe_unused]] u64 title_id) {}
+
+#ifdef ENABLE_FREECAM
+    virtual void SetFreeCam([[maybe_unused]] const std::array<f32, 16>& matrix,
+                            [[maybe_unused]] bool skip_2d) {}
+#endif
 
     /// Returns true when the emulator crashed the last time it loaded the disk resources of the
     /// title, so loading them again may crash it again.

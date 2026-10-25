@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <string_view>
 #include <fmt/format.h>
@@ -26,6 +26,7 @@ layout (binding = 0, std140) uniform vs_pica_data {
 } uniforms;
 )";
 
+// clang-format off
 constexpr std::string_view VSUniformBlockDef = R"(
 #ifdef VULKAN
 layout (set = 0, binding = 1, std140) uniform vs_data {
@@ -35,7 +36,13 @@ layout (binding = 1, std140) uniform vs_data {
     bool enable_clip1;
     bool flip_viewport;
     vec4 clip_coef;
-};
+)"
+#ifdef ENABLE_FREECAM
+R"(    mat4 freecam_matrix;
+    bool freecam_skip_2d;
+)"
+#endif
+R"(};
 
 const vec2 EPSILON_Z = vec2(0.000001f, -1.00001f);
 
@@ -49,7 +56,27 @@ vec4 SanitizeVertex(vec4 vtx_pos) {
     }
     return vtx_pos;
 }
-)";
+)"
+#ifdef ENABLE_FREECAM
+R"(
+vec4 ApplyFreeCam(vec4 clip_pos) {
+    if (freecam_skip_2d && abs(clip_pos.w - 1.0) < 0.0001) {
+        return clip_pos;
+    }
+    return freecam_matrix * clip_pos;
+}
+)"
+#endif
+;
+// clang-format on
+
+#ifdef ENABLE_FREECAM
+constexpr std::string_view PositionOutput =
+    "    gl_Position = ApplyFreeCam(vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w));\n";
+#else
+constexpr std::string_view PositionOutput =
+    "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+#endif
 
 static std::string GetVertexInterfaceDeclaration(bool is_output, bool use_clip_planes,
                                                  bool separable_shader) {
@@ -123,8 +150,8 @@ void main() {
     if (flip_viewport) {
         vtx_pos.y = -vtx_pos.y;
     }
-    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
 )";
+    out += PositionOutput;
     if (use_clip_planes) {
         out += R"(
         gl_ClipDistance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
@@ -245,7 +272,7 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
         out += "    if (flip_viewport) {\n";
         out += "        vtx_pos.y = -vtx_pos.y;\n";
         out += "    }\n";
-        out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+        out += PositionOutput;
         if (extra.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
             out += "    if (enable_clip1) {\n";
@@ -347,7 +374,7 @@ struct Vertex {
     out += "    if (flip_viewport) {\n";
     out += "        vtx_pos.y = -vtx_pos.y;\n";
     out += "    }\n";
-    out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
+    out += PositionOutput;
     if (extra.use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
         out += "    if (enable_clip1) {\n";

@@ -1,9 +1,10 @@
-// Copyright 2023-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
+#include <array>
 #include "common/vector_math.h"
 #include "video_core/pica/regs_lighting.h"
 
@@ -72,9 +73,23 @@ struct VSUniformData {
     u32 enable_clip1;
     u32 flip_viewport;
     alignas(16) Common::Vec4f clip_coef;
+#ifdef ENABLE_FREECAM
+    alignas(16) std::array<Common::Vec4f, 4> freecam_matrix{
+        Common::Vec4f{1.f, 0.f, 0.f, 0.f},
+        Common::Vec4f{0.f, 1.f, 0.f, 0.f},
+        Common::Vec4f{0.f, 0.f, 1.f, 0.f},
+        Common::Vec4f{0.f, 0.f, 0.f, 1.f},
+    };
+    u32 freecam_skip_2d{1};
+#endif
 };
+#ifdef ENABLE_FREECAM
+static_assert(sizeof(VSUniformData) == 112,
+              "The size of the VSUniformData does not match the structure in the shader");
+#else
 static_assert(sizeof(VSUniformData) == 32,
               "The size of the VSUniformData does not match the structure in the shader");
+#endif
 static_assert(sizeof(VSUniformData) < 16384,
               "VSUniformData structure must be less than 16kb as per the OpenGL spec");
 

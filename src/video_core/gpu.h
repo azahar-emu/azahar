@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -94,6 +95,13 @@ public:
     }
 
     void ApplyPerProgramSettings(u64 program_ID);
+
+#ifdef ENABLE_FREECAM
+    /// Sets the free camera transform, a transform matrix applied to the position
+    /// of every vertex.
+    /// skip_2d leaves vertices with w == ~1 (most 2D elements) untouched.
+    void SetFreeCam(const std::array<f32, 16>& matrix, bool skip_2d);
+#endif
 
     /// Recreates the renderer (for GL context reset in libretro)
     void RecreateRenderer(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window);

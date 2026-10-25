@@ -1,7 +1,8 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
+#include <cstring>
 #include "common/alignment.h"
 #include "common/math_util.h"
 #include "core/memory.h"
@@ -141,6 +142,15 @@ RasterizerAccelerated::VertexArrayInfo RasterizerAccelerated::AnalyzeVertexArray
     return {vertex_min, vertex_max, vs_input_size};
 }
 
+#ifdef ENABLE_FREECAM
+void RasterizerAccelerated::SetFreeCam(const std::array<f32, 16>& matrix, bool skip_2d) {
+    static_assert(sizeof(vs_data.freecam_matrix) == sizeof(matrix));
+    std::memcpy(vs_data.freecam_matrix.data(), matrix.data(), sizeof(matrix));
+    vs_data.freecam_skip_2d = skip_2d ? 1u : 0u;
+    vs_data_dirty = true;
+}
+#endif
+
 void RasterizerAccelerated::SyncDrawUniforms() {
     auto& dirty = pica.dirty_regs;
 
@@ -148,7 +158,7 @@ void RasterizerAccelerated::SyncDrawUniforms() {
     // that we don't depend on. So avoid the dirty table and check manually
     const bool is_flipped = regs.framebuffer.framebuffer.IsFlipped();
     const bool prev_flipped = std::exchange(vs_data.flip_viewport, is_flipped);
-    vs_data_dirty = is_flipped != prev_flipped;
+    vs_data_dirty |= is_flipped != prev_flipped;
 
     // Sync clip plane uniforms
     if (dirty.CheckClipping()) {
