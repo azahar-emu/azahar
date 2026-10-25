@@ -84,6 +84,7 @@ import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.viewmodel.EmulationViewModel
+import org.citra.citra_emu.features.fold.FoldSupport
 
 class EmulationFragment :
     Fragment(),
@@ -520,6 +521,15 @@ class EmulationFragment :
                                 EmulationMenuSettings.drawerLockMode
                             )
                         }
+                    }
+                }
+            }
+            launch {
+                repeatOnLifecycle(Lifecycle.State.CREATED) {
+                    FoldSupport.status.collect {
+                        val show = FoldSupport.canPresent
+                        binding.inGameMenu.menu.findItem(R.id.menu_fold_cover_screen)?.isVisible = show
+                        binding.inGameMenu.menu.findItem(R.id.menu_toggle_cover_skin)?.isVisible = show
                     }
                 }
             }
