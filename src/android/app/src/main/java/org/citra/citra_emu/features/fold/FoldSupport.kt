@@ -44,7 +44,9 @@ object FoldSupport {
                         infos.firstOrNull { it.type == WindowAreaInfo.Type.TYPE_REAR_FACING }
                     }
                     .map { info ->
-                        info?.getCapability(WindowAreaCapability.Operation.OPERATION_PRESENT_ON_AREA)
+                        info?.getCapability(
+                            WindowAreaCapability.Operation.OPERATION_PRESENT_ON_AREA
+                        )
                             ?.status
                             ?: WindowAreaCapability.Status.WINDOW_AREA_STATUS_UNSUPPORTED
                     }

@@ -67,6 +67,7 @@ import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.SecondaryDisplayLayout
+import org.citra.citra_emu.features.fold.FoldSupport
 import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
@@ -85,7 +86,6 @@ import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.viewmodel.EmulationViewModel
-import org.citra.citra_emu.features.fold.FoldSupport
 
 class EmulationFragment :
     Fragment(),

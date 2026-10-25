@@ -139,11 +139,13 @@ class FoldDualScreenController(
                     onButtonEvent(buttonType, NativeLibrary.ButtonState.PRESSED)
                     true
                 }
+
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
                     v.setBackgroundColor(IDLE_COLOR)
                     onButtonEvent(buttonType, NativeLibrary.ButtonState.RELEASED)
                     true
                 }
+
                 else -> false
             }
         }

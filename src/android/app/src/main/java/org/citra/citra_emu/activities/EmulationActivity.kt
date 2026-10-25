@@ -103,7 +103,6 @@ class EmulationActivity : AppCompatActivity() {
             DirectoryInitialization.DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
 
@@ -290,7 +289,6 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-
         foldCover.onDestroy()
         EmulationLifecycleUtil.removeHook(onShutdown)
         NativeLibrary.playTimeManagerStop()
