@@ -300,6 +300,19 @@ void RPCServer::HandleGetPerfStats(Packet& packet, PerfStatsMode mode) {
     packet.SendReply();
 }
 
+#ifdef ENABLE_FREECAM
+void RPCServer::HandleSetFreeCam(Packet& packet, u32 flags, std::span<const u8> matrix) {
+    if (system.IsPoweredOn()) {
+        std::array<f32, 16> values;
+        std::memcpy(values.data(), matrix.data(), sizeof(values));
+        system.GPU().SetFreeCam(values, (flags & FreeCamFlags::Skip2D) != 0);
+    }
+
+    packet.SetPacketDataSize(0);
+    packet.SendReply();
+}
+#endif
+
 bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
     if (packet_header.version == CURRENT_VERSION) {
         switch (packet_header.packet_type) {
@@ -314,6 +327,13 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
                 return true;
             }
             break;
+#ifdef ENABLE_FREECAM
+        case PacketType::SetFreeCam:
+            if (packet_header.packet_size >= FREECAM_PACKET_SIZE) {
+                return true;
+            }
+            break;
+#endif
         default:
             break;
         }
@@ -378,6 +398,13 @@ void RPCServer::DispatchRequest(std::unique_ptr<Packet> request_packet) {
         HandleGetPerfStats(*request_packet, (PerfStatsMode)arg1);
         success = true;
         break;
+#ifdef ENABLE_FREECAM
+    case PacketType::SetFreeCam:
+        HandleSetFreeCam(*request_packet, arg1,
+                         packet_data.subspan(sizeof(u32) * 2, FREECAM_MATRIX_SIZE));
+        success = true;
+        break;
+#endif
     default:
         break;
     }

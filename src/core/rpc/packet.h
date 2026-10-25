@@ -21,7 +21,15 @@ enum class PacketType : u32 {
     TakeScreenshot = 5,
     ReadScreenshot = 6,
     GetPerfStats = 7,
+    SetFreeCam = 8,
 };
+
+namespace FreeCamFlags {
+enum : u32 {
+    /// Do not transform vertices that are already in (w == ~1), keeping most 2D HUDs in place.
+    Skip2D = 1 << 0,
+};
+} // namespace FreeCamFlags
 
 struct PacketHeader {
     u32 version;
@@ -96,6 +104,10 @@ constexpr u32 MAX_PACKET_SIZE = MIN_PACKET_SIZE + MAX_PACKET_DATA_SIZE;
 constexpr u32 MAX_READ_SIZE = MAX_PACKET_DATA_SIZE;
 
 constexpr u32 MAX_PROCESSES_IN_LIST = (MAX_PACKET_DATA_SIZE - sizeof(u32)) / sizeof(ProcessInfo);
+
+/// SetFreeCam payload: u32 flags, u32 reserved, then a 4x4 float matrix.
+constexpr u32 FREECAM_MATRIX_SIZE = sizeof(float) * 16;
+constexpr u32 FREECAM_PACKET_SIZE = (sizeof(u32) * 2) + FREECAM_MATRIX_SIZE;
 
 class Packet {
 public:

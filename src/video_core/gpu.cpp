@@ -436,6 +436,12 @@ GraphicsDebugger& GPU::Debugger() {
     return impl->gpu_debugger;
 }
 
+#ifdef ENABLE_FREECAM
+void GPU::SetFreeCam(const std::array<f32, 16>& matrix, bool skip_2d) {
+    impl->rasterizer->SetFreeCam(matrix, skip_2d);
+}
+#endif
+
 void GPU::ApplyPerProgramSettings(u64 program_ID) {
     auto hack = Common::Hacks::hack_manager.GetHack(
         Common::Hacks::HackType::ACCURATE_MULTIPLICATION, program_ID);
