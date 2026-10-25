@@ -12,7 +12,9 @@
         android:icon="@drawable/ic_controller"
         android:title="Outer Screen Toggle"
         app:showAsAction="never" />
-
+    <item
+        android:id="@+id/menu_toggle_cover_skin"
+        android:title="@string/toggle_cover_skin" />
     <item
         android:id="@+id/menu_emulation_savestates"
         android:icon="@drawable/ic_save"

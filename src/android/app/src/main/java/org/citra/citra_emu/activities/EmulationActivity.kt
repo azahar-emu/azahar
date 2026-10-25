@@ -139,6 +139,16 @@ class EmulationActivity : AppCompatActivity() {
             Toast.makeText(this, "Cover controls enabled", Toast.LENGTH_SHORT).show()
         }
     }
+    fun toggleFoldCoverSkin() {
+        val enabled = !FoldDualScreenController.isSkinEnabled(this)
+        FoldDualScreenController.saveSkinEnabled(this, enabled)
+        foldDualScreenController?.refreshSkin()
+        Toast.makeText(
+            this,
+            if (enabled) "Cover skin: on" else "Cover skin: off (plain L/R)",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)

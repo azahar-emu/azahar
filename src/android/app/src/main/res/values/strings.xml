@@ -1126,5 +1126,6 @@
     <string name="update_check_channel_description">Which update channel to use when checking for updates.</string>
     <string name="update_check_channel_stable">Stable</string>
     <string name="update_check_channel_prerelease">Prerelease</string>
+    <string name="toggle_cover_skin">Toggle cover screen skin</string>
 
 </resources>

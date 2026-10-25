@@ -333,6 +333,11 @@ class EmulationFragment :
                     true
                 }
 
+                R.id.menu_toggle_cover_skin -> {
+                    (requireActivity() as EmulationActivity).toggleFoldCoverSkin()
+                    true
+                }
+
                 R.id.menu_emulation_savestates -> {
                     showSavestateMenu()
                     true

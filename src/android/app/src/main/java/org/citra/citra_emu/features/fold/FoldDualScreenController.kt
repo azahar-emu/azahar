@@ -1,6 +1,8 @@
 package org.citra.citra_emu.features.fold
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.graphics.Bitmap
 import android.os.Binder
 import android.util.Log
@@ -9,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import androidx.window.area.WindowAreaCapability
 import androidx.window.area.WindowAreaController
 import androidx.window.area.WindowAreaInfo
@@ -36,6 +39,8 @@ class FoldDualScreenController(
     private var coverArtwork: Bitmap? = null
     private var collectorJob: Job? = null
     private var isStartingSession = false
+    private var coverView: View? = null
+
 
     fun init() {
         Log.e("FoldController", "Initialising activity: $activity")
@@ -118,6 +123,7 @@ class FoldDualScreenController(
         } finally {
             presentationSession = null
             isStartingSession = false
+            coverView = null
         }
     }
 
@@ -137,6 +143,8 @@ class FoldDualScreenController(
             }
 
             bindShoulderTouchZones(coverView)
+            this.coverView = coverView
+            applySkin(coverView)
             session.setContentView(coverView)
             Log.e("FoldController", "setContentView applied to rear screen successfully")
         } catch (t: Throwable) {
@@ -148,6 +156,7 @@ class FoldDualScreenController(
         Log.e("FoldController", "onSessionEnded called. Throwable: ${t?.message}")
         presentationSession = null
         isStartingSession = false
+        coverView = null
     }
 
     override fun onContainerVisibilityChanged(isVisible: Boolean) {
@@ -163,6 +172,7 @@ class FoldDualScreenController(
         setupTouch(rootView.findViewById(R.id.touch_zone_r), NativeLibrary.ButtonType.TRIGGER_L)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupTouch(view: View?, buttonType: Int) {
         view?.setOnTouchListener { v, event ->
             when (event.actionMasked) {
@@ -178,6 +188,31 @@ class FoldDualScreenController(
                 }
                 else -> false
             }
+        }
+    }
+
+    fun refreshSkin() {
+        activity.runOnUiThread { coverView?.let { applySkin(it) } }
+    }
+
+    private fun applySkin(root: View) {
+        val skin = isSkinEnabled(activity)
+        root.findViewById<View>(R.id.skin_group)?.visibility =
+            if (skin) View.VISIBLE else View.GONE
+        root.findViewById<View>(R.id.plain_group)?.visibility =
+            if (skin) View.GONE else View.VISIBLE
+    }
+
+    companion object {
+        private const val KEY_SKIN = "fold_cover_skin_enabled"
+
+        // view starts with plain view, press toggle to get fancy view
+        fun isSkinEnabled(context: Context): Boolean =
+            PreferenceManager.getDefaultSharedPreferences(context).getBoolean(KEY_SKIN, false)
+
+        fun saveSkinEnabled(context: Context, enabled: Boolean) {
+            PreferenceManager.getDefaultSharedPreferences(context)
+                .edit().putBoolean(KEY_SKIN, enabled).apply()
         }
     }
 }

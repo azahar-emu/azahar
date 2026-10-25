@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Cover layout with a placeholder skin. I'm not good at design, previous attempt looked ugly so I removed it.
+     skin_group  = decorative views, ideally it would look like a 3DS top cover (currently one flat red view)
+     plain_group = plain L/R labels and divider
+     To add skin: add views above the touch zones and list their
+     ids in skin_group's constraint_referenced_ids. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,200 +13,99 @@
     android:background="#000000">
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_panel_left"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.035" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_panel_right"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.967" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_panel_top"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.065" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_panel_bottom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.875" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_hinge_top"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.885" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_hinge_left"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.096" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_hinge_right"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.895" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_cam_y"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.11" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_cam1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.363" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_cam2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.622" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_led"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.285" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_cap_led_x"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.035" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/g_cap_led_y"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.945" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/cover_shell"
-        app:layout_constraintBottom_toTopOf="@id/g_hinge_top"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/cover_hinge"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/g_hinge_right"
-        app:layout_constraintStart_toEndOf="@id/g_hinge_left"
-        app:layout_constraintTop_toBottomOf="@id/g_hinge_top" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/cover_hinge_cap_left"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/g_hinge_left"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/g_hinge_top" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/cover_hinge_cap_right"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/g_hinge_right"
-        app:layout_constraintTop_toBottomOf="@id/g_hinge_top" />
-
-    <View
-        android:layout_width="8dp"
-        android:layout_height="8dp"
-        android:background="@drawable/cover_led"
-        app:layout_constraintBottom_toBottomOf="@id/g_cap_led_y"
-        app:layout_constraintEnd_toEndOf="@id/g_cap_led_x"
-        app:layout_constraintStart_toStartOf="@id/g_cap_led_x"
-        app:layout_constraintTop_toTopOf="@id/g_cap_led_y" />
-
-    <View
-        android:layout_width="7dp"
-        android:layout_height="7dp"
-        android:background="@drawable/cover_led"
-        app:layout_constraintBottom_toBottomOf="@id/g_cam_y"
-        app:layout_constraintEnd_toEndOf="@id/g_led"
-        app:layout_constraintStart_toStartOf="@id/g_led"
-        app:layout_constraintTop_toTopOf="@id/g_cam_y" />
-
-    <View
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/cover_lens"
-        app:layout_constraintBottom_toBottomOf="@id/g_cam_y"
-        app:layout_constraintEnd_toEndOf="@id/g_cam1"
-        app:layout_constraintStart_toStartOf="@id/g_cam1"
-        app:layout_constraintTop_toTopOf="@id/g_cam_y" />
-
-    <View
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/cover_lens"
-        app:layout_constraintBottom_toBottomOf="@id/g_cam_y"
-        app:layout_constraintEnd_toEndOf="@id/g_cam2"
-        app:layout_constraintStart_toStartOf="@id/g_cam2"
-        app:layout_constraintTop_toTopOf="@id/g_cam_y" />
-
-    <ImageView
-        android:id="@+id/cover_artwork_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:importantForAccessibility="no"
-        android:visibility="gone"
-        tools:ignore="MissingConstraints" />
-
-    <View
-        android:id="@+id/touch_zone_l"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/cover_zone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/g_half"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:id="@+id/touch_zone_r"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/cover_zone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/g_half"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/g_half"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.5" />
+
+    <!-- Placeholder - one flat red fill -->
+    <View
+        android:id="@+id/skin_placeholder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#82231F"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/skin_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="skin_placeholder" />
+
+    <View
+        android:id="@+id/touch_zone_l"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#33FFFFFF"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/g_half" />
+
+    <View
+        android:id="@+id/touch_zone_r"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#33FFFFFF"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/g_half"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Plain mode -->
+    <TextView
+        android:id="@+id/plain_label_l"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="R"
+        android:textColor="#55FFFFFF"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="@id/touch_zone_l"
+        app:layout_constraintBottom_toBottomOf="@id/touch_zone_l"
+        app:layout_constraintStart_toStartOf="@id/touch_zone_l"
+        app:layout_constraintEnd_toEndOf="@id/touch_zone_l" />
+
+    <TextView
+        android:id="@+id/plain_label_r"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="L"
+        android:textColor="#55FFFFFF"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="@id/touch_zone_r"
+        app:layout_constraintBottom_toBottomOf="@id/touch_zone_r"
+        app:layout_constraintStart_toStartOf="@id/touch_zone_r"
+        app:layout_constraintEnd_toEndOf="@id/touch_zone_r" />
+
+    <View
+        android:id="@+id/plain_divider"
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:background="#33FFFFFF"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@id/g_half"
+        app:layout_constraintEnd_toEndOf="@id/g_half" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/plain_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="plain_label_l,plain_label_r,plain_divider" />
+
+    <!-- Referenced by the controller and unused for now -->
+    <ImageView
+        android:id="@+id/cover_artwork_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:importantForAccessibility="no"
+        tools:ignore="MissingConstraints" />
 </androidx.constraintlayout.widget.ConstraintLayout>
