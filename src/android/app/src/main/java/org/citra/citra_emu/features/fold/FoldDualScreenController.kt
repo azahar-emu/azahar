@@ -16,6 +16,7 @@ import androidx.window.area.WindowAreaController
 import androidx.window.area.WindowAreaInfo
 import androidx.window.area.WindowAreaPresentationSessionCallback
 import androidx.window.area.WindowAreaSessionPresenter
+import androidx.window.core.ExperimentalWindowApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -25,6 +26,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.Log
 
 // shows L/R touch zones on a foldable phone's cover screen
+@OptIn(ExperimentalWindowApi::class)
 class FoldDualScreenController(
     private val activity: Activity,
     private val scope: CoroutineScope,
@@ -90,6 +92,7 @@ class FoldDualScreenController(
         }
     }
 
+    @SuppressLint("InflateParams")
     override fun onSessionStarted(session: WindowAreaSessionPresenter) {
         presentationSession = session
         isStartingSession = false
