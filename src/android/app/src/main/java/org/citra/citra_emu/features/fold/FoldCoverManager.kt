@@ -1,3 +1,7 @@
+// Copyright 2026 tahirwrth
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
+
 package org.citra.citra_emu.features.fold
 
 import android.widget.Toast
