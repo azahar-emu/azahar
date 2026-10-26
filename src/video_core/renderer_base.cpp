@@ -31,7 +31,12 @@ u32 RendererBase::GetResolutionScaleFactor() {
 }
 
 u8 RendererBase::GetSampleCount() const {
+#if defined(__APPLE__)
+    // TODO(wunk): Implement proper MSAA support on MacOS
+    return 1;
+#else
     return Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
+#endif
 }
 
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {

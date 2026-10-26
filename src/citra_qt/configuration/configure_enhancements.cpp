@@ -32,6 +32,23 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
         }
         combobox.setItemData(item_index, 0, Qt::UserRole - 1);
     };
+
+#if defined(__APPLE__)
+    // Remove ALL MSAA options
+    // TODO(wunk): Implement proper MSAA support on MacOS
+    DisableComboboxItem(*ui->antialiasing_combobox,
+                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx2));
+    DisableComboboxItem(*ui->antialiasing_combobox,
+                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx4));
+
+    // If selecting any MSAA options, reset to 'None'
+    if (Settings::GetAntiAliasingSampleCount(static_cast<Settings::AntiAliasingMethod>(
+            ui->antialiasing_combobox->currentIndex())) > 1) {
+        ui->antialiasing_combobox->setCurrentIndex(
+            static_cast<int>(Settings::AntiAliasingMethod::None));
+    }
+#endif
+
     DisableComboboxItem(*ui->antialiasing_combobox,
                         static_cast<int>(Settings::AntiAliasingMethod::MSAAx8));
     DisableComboboxItem(*ui->antialiasing_combobox,
