@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "video_core/renderer_vulkan/vk_texture_runtime.h"
 
@@ -1175,17 +1175,17 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
                                      flags, traits.aspect, false, DebugName(true));
         current = Type::Scaled;
 
-    handles[Type::Copy].Destroy();
+        handles[Type::Copy].Destroy();
 
-    runtime.renderpass_cache.EndRendering();
-    scheduler.Record(
-        [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
-            std::array<vk::ImageMemoryBarrier, 1> barriers;
-            MakeInitBarriers(aspect, 1, raw_images, barriers);
-            cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
-                                   vk::PipelineStageFlagBits::eTopOfPipe,
-                                   vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
-        });
+        runtime.renderpass_cache.EndRendering();
+        scheduler.Record(
+            [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
+                std::array<vk::ImageMemoryBarrier, 1> barriers;
+                MakeInitBarriers(aspect, 1, raw_images, barriers);
+                cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+                                       vk::PipelineStageFlagBits::eTopOfPipe,
+                                       vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
+            });
 
         for (u32 level = 0; level < levels; level++) {
             const VideoCore::TextureBlit blit = {
