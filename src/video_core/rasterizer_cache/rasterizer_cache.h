@@ -1126,6 +1126,9 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
         return true;
     }
 
+    // The dump check looks at this flag so set it before that upload runs
+    surface.flags |= SurfaceFlagBits::Custom;
+
     // Decode finishes on a later frame, so the callback checks the slot again before uploading
     const SurfaceParams expected_surface = surface;
 

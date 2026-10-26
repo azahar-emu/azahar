@@ -2,6 +2,10 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
+// Copyright 2020 yuzu Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the misc/licenses/gplv2.txt file included.
+
 #pragma once
 
 #include <bit>
