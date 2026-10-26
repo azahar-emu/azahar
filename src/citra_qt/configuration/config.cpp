@@ -51,57 +51,77 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfi
     },
 }};
 
-// This shouldn't have anything except static initializers (no functions). So
-// QKeySequence(...).toString() is NOT ALLOWED HERE.
-// This must be in alphabetical order according to action name as it must have the same order as
-// UISetting::values.shortcuts, which is alphabetically ordered.
+// These will be alphabetized when displayed, but the order doesn't matter here.
+// All hotkeys left at default context of Qt::ApplicationShortcut for now
+// TODO: determine if some hotkeys should only be applied in certain widgets and update group and
+// context
+
 // clang-format off
 const std::vector<UISettings::Shortcut> QtConfig::default_hotkeys{ {
-     {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Configure"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+,"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Configure Current Application"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+."), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Debug Unschedule All"),     QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Debug Schedule All"),       QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"),      QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Exit Azahar"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Q"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Exit Fullscreen"),          QStringLiteral("Main Window"), {QStringLiteral("Esc"),    QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Fullscreen"),               QStringLiteral("Main Window"), {QStringLiteral("F11"),    QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Increase 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl++"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Increase Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("+"),      QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Load from Newest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Browse Public Rooms"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Create Room"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+N"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Direct Connect to Room"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Shift"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Leave Room"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+L"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Show Current Room"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+R"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Quick Save"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Quick Load"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Save to Oldest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+C"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle 3D"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+3"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Custom Textures"),   QStringLiteral("Main Window"), {QStringLiteral("F7"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Filter Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Per-Application Speed"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"),    QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Turbo Mode"),        QStringLiteral("Main Window"), {QStringLiteral(""),      QStringLiteral(""), Qt::ApplicationShortcut}},
-    } };
+     {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), QStringLiteral("")}},
+     {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), QStringLiteral("")}},
+     {QStringLiteral("Configure"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+,"), QStringLiteral("")}},
+     {QStringLiteral("Configure Current Application"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+."), QStringLiteral("")}},
+     {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     QStringLiteral("")}},
+     {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Debug Unschedule All"),     QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Debug Schedule All"),       QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), QStringLiteral("")}},
+     {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"),      QStringLiteral("")}},
+     {QStringLiteral("Exit Azahar"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Q"), QStringLiteral("")}},
+     {QStringLiteral("Exit Fullscreen"),          QStringLiteral("Main Window"), {QStringLiteral("Esc"),    QStringLiteral("")}},
+     {QStringLiteral("Fullscreen"),               QStringLiteral("Main Window"), {QStringLiteral("F11"),    QStringLiteral("")}},
+     {QStringLiteral("Increase 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl++"), QStringLiteral("")}},
+     {QStringLiteral("Increase Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("+"),      QStringLiteral("")}},
+     {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     QStringLiteral("")}},
+     {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), QStringLiteral("")}},
+     {QStringLiteral("Load from Newest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), QStringLiteral("")}},
+     {QStringLiteral("Multiplayer Browse Public Rooms"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), QStringLiteral("")}},
+     {QStringLiteral("Multiplayer Create Room"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+N"), QStringLiteral("")}},
+     {QStringLiteral("Multiplayer Direct Connect to Room"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Shift"), QStringLiteral("")}},
+     {QStringLiteral("Multiplayer Leave Room"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+L"), QStringLiteral("")}},
+     {QStringLiteral("Multiplayer Show Current Room"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+R"), QStringLiteral("")}},
+     {QStringLiteral("Quick Save"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Quick Load"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     QStringLiteral("")}},
+     {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     QStringLiteral("")}},
+     {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     QStringLiteral("")}},
+     {QStringLiteral("Save to Oldest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+C"), QStringLiteral("")}},
+     {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"),     QStringLiteral("")}},
+     {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"),     QStringLiteral("")}},
+     {QStringLiteral("Toggle 3D"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+3"), QStringLiteral("")}},
+     {QStringLiteral("Toggle Custom Textures"),   QStringLiteral("Main Window"), {QStringLiteral("F7"),     QStringLiteral("")}},
+     {QStringLiteral("Toggle Filter Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F"), QStringLiteral("")}},
+     {QStringLiteral("Toggle Per-Application Speed"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), QStringLiteral("")}},
+     {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"),    QStringLiteral("")}},
+     {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), QStringLiteral("")}},
+     {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral("")}},
+     {QStringLiteral("Toggle Turbo Mode"),        QStringLiteral("Main Window"), {QStringLiteral(""),      QStringLiteral("")}},
+     
+      // Navigation shortcuts will only be shown on the Controller Hotkeys pane, to duplicate keyboard navigation
+     // They will be ignored in the render_window and secondary_window at implementation, so still leave as default Qt::ApplicationShortcut context
+     {QStringLiteral("Move down (Down Arrow)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:12,engine:sdl,maptype:all,name:D-Pad Down")}},
+     {QStringLiteral("Move up (Up Arrow)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:11,engine:sdl,maptype:all,name:D-Pad Up")}},
+     {QStringLiteral("Move left (Left Arrow)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:13,engine:sdl,maptype:all,name:D-Pad Left")}},
+     {QStringLiteral("Move right (Right Arrow)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:14,engine:sdl,maptype:all,name:D-Pad Right")}},
+     {QStringLiteral("Confirm / Run game (Enter)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:0,engine:sdl,maptype:all,name:A / ✖ Button")}},
+    {QStringLiteral("Go back / Cancel (Esc)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:1,engine:sdl,maptype:all,name:B / ● Button")}},
+    {QStringLiteral("Change Focus Forward (Tab)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:10,engine:sdl,maptype:all,name:RB")}},
+    {QStringLiteral("Change Focus Backward (Shift+Tab)"),     QStringLiteral("Navigation"), {QStringLiteral(""),
+            QStringLiteral("api:controller,button:9,engine:sdl,maptype:all,name:LB")}},
+    }};
 // clang-format on
 
 void QtConfig::Initialize(const std::string& config_name) {
@@ -521,7 +541,8 @@ void QtConfig::ReadDataStorageValues() {
 void QtConfig::ReadDebuggingValues() {
     qt_config->beginGroup(QStringLiteral("Debugging"));
 
-    // Intentionally not using the QT default setting as this is intended to be changed in the ini
+    // Intentionally not using the QT default setting as this is intended to be changed in the
+    // ini
     Settings::values.record_frame_times =
         qt_config->value(Settings::QKeys::record_frame_times, false).toBool();
     ReadBasicSetting(Settings::values.use_gdbstub);
@@ -758,9 +779,9 @@ void QtConfig::ReadShortcutValues() {
     for (const auto& [name, group, shortcut] : default_hotkeys) {
         qt_config->beginGroup(group);
         qt_config->beginGroup(name);
-        // No longer using ReadSetting for shortcut.second as it innacurately returns a value of 1
-        // for WidgetWithChildrenShortcut which is a value of 3. Needed to fix shortcuts the open
-        // a file dialog in windowed mode
+        // No longer using ReadSetting for shortcut.second as it innacurately returns a value of
+        // 1 for WidgetWithChildrenShortcut which is a value of 3. Needed to fix shortcuts the
+        // open a file dialog in windowed mode
         UISettings::values.shortcuts.push_back(
             {name,
              group,
@@ -1120,7 +1141,8 @@ void QtConfig::SaveDataStorageValues() {
 void QtConfig::SaveDebuggingValues() {
     qt_config->beginGroup(QStringLiteral("Debugging"));
 
-    // Intentionally not using the QT default setting as this is intended to be changed in the ini
+    // Intentionally not using the QT default setting as this is intended to be changed in the
+    // ini
     qt_config->setValue(Settings::QKeys::record_frame_times, Settings::values.record_frame_times);
     WriteBasicSetting(Settings::values.use_gdbstub);
     WriteBasicSetting(Settings::values.gdbstub_port);

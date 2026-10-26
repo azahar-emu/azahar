@@ -21,6 +21,7 @@ enum class MediaType : u32;
 class GameListWorker;
 class GameListDir;
 class GameListSearchField;
+class GameListTreeView;
 class GMainWindow;
 class QFileSystemWatcher;
 class QHBoxLayout;
@@ -94,6 +95,10 @@ public:
 
     static const QStringList supported_file_extensions;
 
+    GameListTreeView* GetGameTreeView() {
+        return tree_view;
+    }
+
 signals:
     void GameChosen(const QString& game_path);
     void ShouldCancelWorker();
@@ -137,10 +142,11 @@ private:
     void changeEvent(QEvent*) override;
     void RetranslateUI();
 
+protected:
     GameListSearchField* search_field;
     GMainWindow* main_window = nullptr;
     QVBoxLayout* layout = nullptr;
-    QTreeView* tree_view = nullptr;
+    GameListTreeView* tree_view = nullptr;
     QStandardItemModel* item_model = nullptr;
     GameListWorker* current_worker = nullptr;
     QFileSystemWatcher* watcher = nullptr;
