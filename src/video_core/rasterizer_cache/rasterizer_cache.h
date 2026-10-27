@@ -1410,12 +1410,16 @@ SurfaceId RasterizerCache<T>::CreateSurface(const SurfaceParams& params,
         const u64 resource_free_tick = runtime.GetResourceFreeTick();
         // Try to find a matching texture in the deletion queue
         const auto it = std::find_if(sentenced.begin(), sentenced.end(), [&](const auto& pair) {
-            return (slot_surfaces[pair.first] == params) &&
-                   // Only recycle the texture if its resolution scale is equal or less than the
-                   // incoming texture
-                   (slot_surfaces[pair.first].res_scale <= params.res_scale) &&
-                   // Only recycle the texture if the texture runtime is completely done with it
-                   (resource_free_tick > pair.second);
+            return
+                // Only recycle the texture if:
+                // The texture-runtime is completely done with it
+                (resource_free_tick > pair.second)
+                // The surface parameters match the incoming texture
+                && (slot_surfaces[pair.first] == params)
+                // Its resolution scale is equal or less than the incoming texture
+                && (slot_surfaces[pair.first].res_scale <= params.res_scale)
+                // Its sample count is equal or less than the incoming texture
+                && (slot_surfaces[pair.first].sample_count <= params.sample_count);
         });
         // If a matching texture was found in the deletion queue, recycle it.
         if (it != sentenced.end()) {
