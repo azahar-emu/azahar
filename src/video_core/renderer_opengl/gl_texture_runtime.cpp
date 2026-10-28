@@ -489,7 +489,7 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 }
 
-void Surface::Download(const VideoCore::BufferTextureCopy& download,
+bool Surface::Download(const VideoCore::BufferTextureCopy& download,
                        const VideoCore::StagingData& staging) {
     const DebugScope scope(*runtime, Common::Vec4f{}, "Surface::Download");
 
@@ -512,7 +512,7 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
 
     // Try to download without using an fbo. This should succeed on recent desktop drivers
     if (DownloadWithoutFbo(download, staging)) {
-        return;
+        return true;
     }
 
     OpenGLState state = OpenGLState::GetCurState();
@@ -528,6 +528,7 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
                  unscaled_height, tuple.format, tuple.type, staging.mapped.data());
 
     glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+    return true;
 }
 
 bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,

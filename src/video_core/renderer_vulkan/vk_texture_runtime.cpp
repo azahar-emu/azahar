@@ -57,16 +57,16 @@ struct RecordParams {
 // Guards against recording VK_NULL_HANDLE images (e.g. from surfaces whose backing image was
 // destroyed or never allocated). Submitting null images segfaults MoltenVK's async queue
 // (null + 0x58 deref); skipping degrades to a missed copy for a frame.
-[[nodiscard]] bool CheckImagesValid(vk::Image src_image, vk::Image dst_image, const char* op) {
-    if (!src_image || !dst_image) {
-        LOG_ERROR(Render_Vulkan, "Skipping {} with null image", op);
+[[nodiscard]] bool CheckImageValid(vk::Image image, const char* op) {
+    if (!image) {
+        LOG_WARNING(Render_Vulkan, "Skipping {} with null image", op);
         return false;
     }
     return true;
 }
 
-[[nodiscard]] bool CheckImageValid(vk::Image image, const char* op) {
-    return CheckImagesValid(image, image, op);
+[[nodiscard]] bool CheckImagesValid(vk::Image src_image, vk::Image dst_image, const char* op) {
+    return CheckImageValid(src_image, op) && CheckImageValid(dst_image, op);
 }
 
 vk::Filter MakeFilter(VideoCore::PixelFormat pixel_format) {
@@ -344,8 +344,7 @@ bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
 
     if (!source.traits.needs_conversion && !dest.traits.needs_conversion &&
         source.type == dest.type) {
-        CopyTextures(source, dest, copy);
-        return true;
+        return CopyTextures(source, dest, copy);
     }
 
     if (src_format == PixelFormat::D24S8 && dst_format == PixelFormat::RGBA8) {
@@ -368,6 +367,10 @@ bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
         .src_access = surface.AccessFlags(),
         .src_image = surface.Image(),
     };
+
+    if (!CheckImageValid(params.src_image, "texture clear")) {
+        return false;
+    }
 
     if (clear.texture_rect == surface.GetScaledRect()) {
         scheduler.Record([params, clear](vk::CommandBuffer cmdbuf) {
@@ -522,6 +525,10 @@ bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
         .dst_image = dest.Image(),
     };
 
+    if (!CheckImagesValid(params.src_image, params.dst_image, "texture copy")) {
+        return false;
+    }
+
     boost::container::small_vector<vk::ImageCopy, 2> vk_copies;
     std::ranges::transform(copies, std::back_inserter(vk_copies), [&](const auto& copy) {
         return vk::ImageCopy{
@@ -631,7 +638,8 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
     };
 
     // A surface whose image was destroyed (or never allocated) carries VK_NULL_HANDLE.
-    // Callers ignore the return value, so skipping is safe.
+    // Display transfers fall back to the software blitter on failure; other callers
+    // skip the blit and keep the previous contents for a frame.
     if (!CheckImagesValid(params.src_image, params.dst_image, "texture blit")) {
         return false;
     }
@@ -897,6 +905,10 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
     };
 
     if (!CheckImageValid(params.src_image, "texture upload")) {
+        // Keep Map/Commit pairing consistent with Download: the caller already wrote into
+        // staging.mapped and no GPU commands reference it, so committing only releases it
+        // for reuse.
+        runtime.upload_buffer.Commit(staging.size);
         return;
     }
 
@@ -985,6 +997,9 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
     const Common::Rectangle rect{0U, height, width, 0U};
 
     const auto upload = [&](Type type, VideoCore::CustomTexture* texture) {
+        if (!CheckImageValid(Image(type), "custom texture upload")) {
+            return;
+        }
         const u32 custom_size = static_cast<u32>(texture->data.size());
         const RecordParams params = {
             .aspect = vk::ImageAspectFlagBits::eColor,
@@ -1051,7 +1066,7 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
     }
 }
 
-void Surface::Download(const VideoCore::BufferTextureCopy& download,
+bool Surface::Download(const VideoCore::BufferTextureCopy& download,
                        const VideoCore::StagingData& staging) {
     SCOPE_EXIT({
         scheduler.Finish();
@@ -1060,9 +1075,13 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
 
     runtime.renderpass_cache.EndRendering();
 
+    if (!CheckImageValid(Image(), "texture download")) {
+        return false;
+    }
+
     if (pixel_format == PixelFormat::D24S8) {
-        runtime.blit_helper.DepthToBuffer(*this, runtime.download_buffer.Handle(), download);
-        return;
+        return runtime.blit_helper.DepthToBuffer(*this, runtime.download_buffer.Handle(),
+                                                download);
     }
 
     if (res_scale != 1) {
@@ -1084,7 +1103,7 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
     };
 
     if (!CheckImageValid(params.src_image, "texture download")) {
-        return;
+        return false;
     }
 
     scheduler.Record(
@@ -1139,6 +1158,7 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
                                    vk::DependencyFlagBits::eByRegion, memory_write_barrier, {},
                                    image_write_barrier);
         });
+    return true;
 }
 
 void Surface::ScaleUp(u32 new_scale) {
