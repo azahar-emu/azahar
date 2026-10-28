@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/scope_exit.h"
 #include "common/settings.h"
@@ -170,6 +170,10 @@ const FormatTuple& TextureRuntime::GetFormatTuple(PixelFormat pixel_format) cons
 const FormatTuple& TextureRuntime::GetFormatTuple(VideoCore::CustomPixelFormat pixel_format) {
     const std::size_t format_index = static_cast<std::size_t>(pixel_format);
     return CUSTOM_TUPLES[format_index];
+}
+
+bool TextureRuntime::SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const {
+    return driver.IsCustomFormatSupported(pixel_format);
 }
 
 bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
