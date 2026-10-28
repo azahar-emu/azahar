@@ -217,6 +217,9 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         state.debug.Assign(buttons[Debug - BUTTON_HID_BEGIN]->GetStatus());
         state.gpio14.Assign(buttons[Gpio14 - BUTTON_HID_BEGIN]->GetStatus());
 
+        const InputOverride input = GetInputOverride();
+        state.hex |= input.buttons;
+
         // Get current circle pad position and update circle pad direction
         float circle_pad_x_f, circle_pad_y_f;
         std::tie(circle_pad_x_f, circle_pad_y_f) = circle_pad->GetStatus();
@@ -229,6 +232,12 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         // These are rounded rather than truncated on actual hardware
         s16 circle_pad_new_x = static_cast<s16>(std::roundf(circle_pad_x_f * MAX_CIRCLEPAD_POS));
         s16 circle_pad_new_y = static_cast<s16>(std::roundf(circle_pad_y_f * MAX_CIRCLEPAD_POS));
+        if (input.circle_pad_set) {
+            circle_pad_new_x =
+                std::clamp<s16>(input.circle_pad_x, -MAX_CIRCLEPAD_POS, MAX_CIRCLEPAD_POS);
+            circle_pad_new_y =
+                std::clamp<s16>(input.circle_pad_y, -MAX_CIRCLEPAD_POS, MAX_CIRCLEPAD_POS);
+        }
         s16 circle_pad_x = (circle_pad_new_x +
                             std::accumulate(circle_pad_old_x.begin(), circle_pad_old_x.end(), 0)) /
                            CIRCLE_PAD_AVERAGING;
@@ -291,6 +300,11 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         }
         touch_entry.x = static_cast<u16>(x * Core::kScreenBottomWidth);
         touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
+        if (!pressed && input.touch_pressed) {
+            pressed = true;
+            touch_entry.x = std::min<u16>(input.touch_x, Core::kScreenBottomWidth - 1);
+            touch_entry.y = std::min<u16>(input.touch_y, Core::kScreenBottomHeight - 1);
+        }
         touch_entry.valid.Assign(pressed ? 1 : 0);
 
         system.Movie().HandleTouchStatus(touch_entry);
@@ -721,6 +735,16 @@ void Module::ReloadInputDevices() {
 
 const PadState& Module::GetState() const {
     return state;
+}
+
+void Module::SetInputOverride(const InputOverride& input) {
+    std::scoped_lock lock{input_override_mutex};
+    input_override = input;
+}
+
+Module::InputOverride Module::GetInputOverride() const {
+    std::scoped_lock lock{input_override_mutex};
+    return input_override;
 }
 
 std::shared_ptr<Module> GetModule(Core::System& system) {
