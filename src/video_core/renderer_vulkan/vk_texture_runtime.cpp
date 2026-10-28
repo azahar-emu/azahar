@@ -54,6 +54,21 @@ struct RecordParams {
     vk::Image dst_image;
 };
 
+// Guards against recording VK_NULL_HANDLE images (e.g. from surfaces whose backing image was
+// destroyed or never allocated). Submitting null images segfaults MoltenVK's async queue
+// (null + 0x58 deref); skipping degrades to a missed copy for a frame.
+[[nodiscard]] bool CheckImagesValid(vk::Image src_image, vk::Image dst_image, const char* op) {
+    if (!src_image || !dst_image) {
+        LOG_ERROR(Render_Vulkan, "Skipping {} with null image", op);
+        return false;
+    }
+    return true;
+}
+
+[[nodiscard]] bool CheckImageValid(vk::Image image, const char* op) {
+    return CheckImagesValid(image, image, op);
+}
+
 vk::Filter MakeFilter(VideoCore::PixelFormat pixel_format) {
     switch (pixel_format) {
     case VideoCore::PixelFormat::D16:
@@ -615,6 +630,12 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
         .dst_image = dest.Image(),
     };
 
+    // A surface whose image was destroyed (or never allocated) carries VK_NULL_HANDLE.
+    // Callers ignore the return value, so skipping is safe.
+    if (!CheckImagesValid(params.src_image, params.dst_image, "texture blit")) {
+        return false;
+    }
+
     scheduler.Record([params, blit](vk::CommandBuffer cmdbuf) {
         const std::array source_offsets = {
             vk::Offset3D{static_cast<s32>(blit.src_rect.left),
@@ -875,6 +896,10 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
         .src_image = Image(Type::Base),
     };
 
+    if (!CheckImageValid(params.src_image, "texture upload")) {
+        return;
+    }
+
     scheduler.Record([buffer = runtime.upload_buffer.Handle(), format = traits.native, params,
                       staging, upload](vk::CommandBuffer cmdbuf) {
         boost::container::static_vector<vk::BufferImageCopy, 2> buffer_image_copies;
@@ -1057,6 +1082,10 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
         .src_access = AccessFlags(),
         .src_image = Image(Type::Base),
     };
+
+    if (!CheckImageValid(params.src_image, "texture download")) {
+        return;
+    }
 
     scheduler.Record(
         [buffer = runtime.download_buffer.Handle(), params, download](vk::CommandBuffer cmdbuf) {
@@ -1370,8 +1399,13 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
     const auto src_type = up_scale ? Type::Base : Type::Scaled;
     const auto dst_type = up_scale ? Type::Scaled : Type::Base;
 
-    scheduler.Record([src_image = Image(src_type), aspect = Aspect(), filter = vk::Filter::eNearest,
-                      dst_image = Image(dst_type), blit](vk::CommandBuffer render_cmdbuf) {
+    const vk::Image src_image = Image(src_type);
+    const vk::Image dst_image = Image(dst_type);
+    if (!CheckImagesValid(src_image, dst_image, "scale blit")) {
+        return;
+    }
+    scheduler.Record([src_image, aspect = Aspect(), filter = vk::Filter::eNearest,
+                      dst_image, blit](vk::CommandBuffer render_cmdbuf) {
         const std::array source_offsets = {
             vk::Offset3D{static_cast<s32>(blit.src_rect.left),
                          static_cast<s32>(blit.src_rect.bottom), 0},
