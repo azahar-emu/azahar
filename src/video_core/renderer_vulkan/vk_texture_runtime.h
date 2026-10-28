@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -115,6 +115,10 @@ public:
 
     const Instance& GetInstance() const {
         return instance;
+    }
+
+    bool SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const {
+        return instance.GetTraits(pixel_format).transfer_support;
     }
 
     Scheduler& GetScheduler() const {
