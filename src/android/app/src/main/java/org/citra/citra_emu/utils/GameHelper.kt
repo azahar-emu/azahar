@@ -4,12 +4,8 @@
 
 package org.citra.citra_emu.utils
 
-import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
-import android.os.ParcelFileDescriptor
-import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -161,31 +157,5 @@ object GameHelper {
         }
 
         return newGame
-    }
-
-    fun getIntentUri(intent: Intent): Uri? =
-        intent.data ?: intent.getStringExtra("SelectedGame")?.toUri()
-
-    /** Returns the Game and the fd backing it (null if none). The caller must close the fd. */
-    fun getGameFromIntent(context: Context, intent: Intent): Pair<Game, Int?>? {
-        val uri = getIntentUri(intent) ?: return null
-        var fd: Int? = null
-        val gameUri = if (BuildUtil.isGooglePlayBuild || uri.toString().startsWith("!")) {
-            uri
-        } else {
-            fd = context.contentResolver.openFileDescriptor(uri, "r")?.detachFd() ?: return null
-            "fd://$fd".toUri()
-        }
-        return try {
-            getGame(
-                gameUri,
-                isInstalled = false,
-                addedToLibrary = false,
-                mediaType = Game.MediaType.GAME_CARD
-            ) to fd
-        } catch (e: Exception) {
-            fd?.let { ParcelFileDescriptor.adoptFd(it).close() }
-            null
-        }
     }
 }

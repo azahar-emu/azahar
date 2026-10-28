@@ -232,7 +232,7 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.layout_option);
     ReadSetting("Layout", Settings::values.screen_gap);
     ReadSetting("Layout", Settings::values.small_screen_position);
-    ReadSetting("Layout", Settings::values.screen_gap);
+    ReadSetting("Layout", Settings::values.large_screen_proportion);
     ReadSetting("Layout", Settings::values.custom_top_x);
     ReadSetting("Layout", Settings::values.custom_top_y);
     ReadSetting("Layout", Settings::values.custom_top_width);

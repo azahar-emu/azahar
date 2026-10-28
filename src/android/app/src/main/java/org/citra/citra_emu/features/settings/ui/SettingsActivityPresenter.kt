@@ -36,25 +36,26 @@ class SettingsActivityPresenter(
         this.menuTag = menuTag
         this.gameId = gameId
         this.gameTitle = gameTitle
-        // merge the active settings into the local settings activity instance
-        editingSettings.mergeSettings(CitraSettings.activeSettings)
-
-        perGameInGlobalContext = gameId != "" && !CitraSettings.activeSettings.isPerGame()
-
-        // sync the active settings into my local settings appropriately
-        // if we are editing global settings rom a game, this should just work
-        // to sync only the global settings into the local version
-        editingSettings.gameId = gameId
-        editingSettings.mergeSettings(CitraSettings.activeSettings)
-
-        // if we are editing per-game settings when the game is not loaded,
-        // we need to load the per-game settings now from the ini file
-        if (perGameInGlobalContext) {
-            SettingsFile.loadSettings(editingSettings, gameId)
-        }
 
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)
+        } else {
+            // merge the active settings into the local settings activity instance
+            editingSettings.mergeSettings(CitraSettings.activeSettings)
+
+            perGameInGlobalContext = gameId != null && !CitraSettings.activeSettings.isPerGame()
+
+            // sync the active settings into my local settings appropriately
+            // if we are editing global settings rom a game, this should just work
+            // to sync only the global settings into the local version
+            editingSettings.gameId = gameId
+            editingSettings.mergeSettings(CitraSettings.activeSettings)
+
+            // if we are editing per-game settings when the game is not loaded,
+            // we need to load the per-game settings now from the ini file
+            if (perGameInGlobalContext) {
+                SettingsFile.loadSettings(editingSettings, gameId)
+            }
         }
     }
 
