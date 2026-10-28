@@ -9,7 +9,6 @@
 #include <cstring>
 
 #include "citra_qt/network_streaming/network_streamer.h"
-#include "common/dynamic_library/ffmpeg.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/frontend/emu_window.h"
@@ -80,18 +79,13 @@ bool NetworkStreamer::IsDumping() const {
 }
 
 bool NetworkStreamer::InitEncoder() {
-    if (!DynamicLibrary::FFmpeg::LoadFFmpeg()) {
-        LOG_ERROR(Frontend, "NetworkStreamer: could not load FFmpeg");
-        return false;
-    }
-
-    const AVCodec* codec = DynamicLibrary::FFmpeg::avcodec_find_encoder_by_name("libx264");
+    const AVCodec* codec = avcodec_find_encoder_by_name("libx264");
     if (!codec) {
         LOG_ERROR(Frontend, "NetworkStreamer: libx264 encoder not available");
         return false;
     }
 
-    codec_context = DynamicLibrary::FFmpeg::avcodec_alloc_context3(codec);
+    codec_context = avcodec_alloc_context3(codec);
     codec_context->width = Width;
     codec_context->height = Height;
     codec_context->time_base = {1, 60};
@@ -106,10 +100,10 @@ bool NetworkStreamer::InitEncoder() {
     codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     AVDictionary* options = nullptr;
-    DynamicLibrary::FFmpeg::av_dict_set(&options, "preset", "ultrafast", 0);
-    DynamicLibrary::FFmpeg::av_dict_set(&options, "tune", "zerolatency", 0);
+    av_dict_set(&options, "preset", "ultrafast", 0);
+    av_dict_set(&options, "tune", "zerolatency", 0);
 
-    if (DynamicLibrary::FFmpeg::avcodec_open2(codec_context, codec, &options) < 0) {
+    if (avcodec_open2(codec_context, codec, &options) < 0) {
         LOG_ERROR(Frontend, "NetworkStreamer: could not open video encoder");
         return false;
     }
@@ -122,42 +116,42 @@ bool NetworkStreamer::InitEncoder() {
 
     // Filter graph: converts the raw BGRA frames the dumping pipeline hands us into the
     // yuv420p the encoder wants, mirroring FFmpegVideoStream::InitFilters in ffmpeg_backend.cpp.
-    filter_graph = DynamicLibrary::FFmpeg::avfilter_graph_alloc();
-    const AVFilter* source = DynamicLibrary::FFmpeg::avfilter_get_by_name("buffer");
-    const AVFilter* sink = DynamicLibrary::FFmpeg::avfilter_get_by_name("buffersink");
+    filter_graph = avfilter_graph_alloc();
+    const AVFilter* source = avfilter_get_by_name("buffer");
+    const AVFilter* sink = avfilter_get_by_name("buffersink");
 
     const std::string in_args = fmt::format("video_size={}x{}:pix_fmt={}:time_base=1/60:"
                                             "pixel_aspect=1",
                                             Width, Height, static_cast<int>(AV_PIX_FMT_BGRA));
-    if (DynamicLibrary::FFmpeg::avfilter_graph_create_filter(
+    if (avfilter_graph_create_filter(
             &buffersrc_ctx, source, "in", in_args.c_str(), nullptr, filter_graph) < 0) {
         LOG_ERROR(Frontend, "NetworkStreamer: could not create buffer source");
         return false;
     }
-    if (DynamicLibrary::FFmpeg::avfilter_graph_create_filter(&buffersink_ctx, sink, "out", nullptr,
+    if (avfilter_graph_create_filter(&buffersink_ctx, sink, "out", nullptr,
                                                              nullptr, filter_graph) < 0) {
         LOG_ERROR(Frontend, "NetworkStreamer: could not create buffer sink");
         return false;
     }
 
-    AVFilterInOut* outputs = DynamicLibrary::FFmpeg::avfilter_inout_alloc();
-    outputs->name = DynamicLibrary::FFmpeg::av_strdup("in");
+    AVFilterInOut* outputs = avfilter_inout_alloc();
+    outputs->name = av_strdup("in");
     outputs->filter_ctx = buffersrc_ctx;
     outputs->pad_idx = 0;
     outputs->next = nullptr;
 
-    AVFilterInOut* inputs = DynamicLibrary::FFmpeg::avfilter_inout_alloc();
-    inputs->name = DynamicLibrary::FFmpeg::av_strdup("out");
+    AVFilterInOut* inputs = avfilter_inout_alloc();
+    inputs->name = av_strdup("out");
     inputs->filter_ctx = buffersink_ctx;
     inputs->pad_idx = 0;
     inputs->next = nullptr;
 
     const bool parsed =
-        DynamicLibrary::FFmpeg::avfilter_graph_parse_ptr(filter_graph, "format=yuv420p", &inputs,
+        avfilter_graph_parse_ptr(filter_graph, "format=yuv420p", &inputs,
                                                          &outputs, nullptr) >= 0 &&
-        DynamicLibrary::FFmpeg::avfilter_graph_config(filter_graph, nullptr) >= 0;
-    DynamicLibrary::FFmpeg::avfilter_inout_free(&outputs);
-    DynamicLibrary::FFmpeg::avfilter_inout_free(&inputs);
+        avfilter_graph_config(filter_graph, nullptr) >= 0;
+    avfilter_inout_free(&outputs);
+    avfilter_inout_free(&inputs);
     if (!parsed) {
         LOG_ERROR(Frontend, "NetworkStreamer: could not build filter graph");
         return false;
@@ -168,12 +162,12 @@ bool NetworkStreamer::InitEncoder() {
 
 void NetworkStreamer::FreeEncoder() {
     if (filter_graph) {
-        DynamicLibrary::FFmpeg::avfilter_graph_free(&filter_graph);
+        avfilter_graph_free(&filter_graph);
     }
     buffersrc_ctx = nullptr;
     buffersink_ctx = nullptr;
     if (codec_context) {
-        DynamicLibrary::FFmpeg::avcodec_free_context(&codec_context);
+        avcodec_free_context(&codec_context);
     }
 }
 
@@ -407,7 +401,7 @@ void NetworkStreamer::EncodeAndSend(const VideoDumper::VideoFrame& frame) {
         return; // No viewer connected - skip encoding entirely.
     }
 
-    AVFrame* src_frame = DynamicLibrary::FFmpeg::av_frame_alloc();
+    AVFrame* src_frame = av_frame_alloc();
     src_frame->format = AV_PIX_FMT_BGRA;
     src_frame->width = Width;
     src_frame->height = Height;
@@ -415,12 +409,12 @@ void NetworkStreamer::EncodeAndSend(const VideoDumper::VideoFrame& frame) {
     src_frame->linesize[0] = static_cast<int>(frame.stride);
     src_frame->pts = next_pts++;
 
-    if (DynamicLibrary::FFmpeg::av_buffersrc_add_frame(buffersrc_ctx, src_frame) >= 0) {
-        AVFrame* filtered = DynamicLibrary::FFmpeg::av_frame_alloc();
-        while (DynamicLibrary::FFmpeg::av_buffersink_get_frame(buffersink_ctx, filtered) >= 0) {
-            if (DynamicLibrary::FFmpeg::avcodec_send_frame(codec_context, filtered) >= 0) {
-                AVPacket* pkt = DynamicLibrary::FFmpeg::av_packet_alloc();
-                while (DynamicLibrary::FFmpeg::avcodec_receive_packet(codec_context, pkt) >= 0) {
+    if (av_buffersrc_add_frame(buffersrc_ctx, src_frame) >= 0) {
+        AVFrame* filtered = av_frame_alloc();
+        while (av_buffersink_get_frame(buffersink_ctx, filtered) >= 0) {
+            if (avcodec_send_frame(codec_context, filtered) >= 0) {
+                AVPacket* pkt = av_packet_alloc();
+                while (avcodec_receive_packet(codec_context, pkt) >= 0) {
                     const SocketHandle active_fd = client_fd.load();
                     if (active_fd != InvalidSocketHandle) {
                         const u32 flags = (pkt->flags & AV_PKT_FLAG_KEY) ? BUFFER_FLAG_KEY_FRAME : 0;
@@ -432,19 +426,19 @@ void NetworkStreamer::EncodeAndSend(const VideoDumper::VideoFrame& frame) {
                         frames_sent++;
                         SendChunk(active_fd, pkt->data, pkt->size, flags);
                     }
-                    DynamicLibrary::FFmpeg::av_packet_free(&pkt);
-                    pkt = DynamicLibrary::FFmpeg::av_packet_alloc();
+                    av_packet_free(&pkt);
+                    pkt = av_packet_alloc();
                 }
-                DynamicLibrary::FFmpeg::av_packet_free(&pkt);
+                av_packet_free(&pkt);
             }
-            DynamicLibrary::FFmpeg::av_frame_unref(filtered);
+            av_frame_unref(filtered);
         }
-        DynamicLibrary::FFmpeg::av_frame_free(&filtered);
+        av_frame_free(&filtered);
     }
     // src_frame's data[] points at caller-owned memory (frame.data) - do not let av_frame_free
     // touch it; av_frame_free() only frees buffers allocated via the ref-counted AVBufferRef
     // API (none were created here), so this is safe to free directly.
-    DynamicLibrary::FFmpeg::av_frame_free(&src_frame);
+    av_frame_free(&src_frame);
 }
 
 } // namespace NetworkStreaming
