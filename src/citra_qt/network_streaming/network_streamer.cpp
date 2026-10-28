@@ -312,6 +312,7 @@ void NetworkStreamer::AcceptLoop() {
         inet_ntop(AF_INET, &client_addr.sin_addr, addr_str, sizeof(addr_str));
         LOG_INFO(Frontend, "NetworkStreamer: viewer connected from {}", addr_str);
 
+        force_keyframe = true;
         const SocketHandle old_fd = client_fd.exchange(fd);
         if (old_fd != InvalidSocketHandle) {
             shutdown(NativeSocket(old_fd), kShutdownBoth);
@@ -408,6 +409,9 @@ void NetworkStreamer::EncodeAndSend(const VideoDumper::VideoFrame& frame) {
     src_frame->data[0] = const_cast<u8*>(frame.data.data());
     src_frame->linesize[0] = static_cast<int>(frame.stride);
     src_frame->pts = next_pts++;
+    if (force_keyframe.exchange(false)) {
+        src_frame->pict_type = AV_PICTURE_TYPE_I;
+    }
 
     if (av_buffersrc_add_frame(buffersrc_ctx, src_frame) >= 0) {
         AVFrame* filtered = av_frame_alloc();

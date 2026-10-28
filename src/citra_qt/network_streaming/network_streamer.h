@@ -78,6 +78,8 @@ private:
     std::atomic_bool running{false};
     SocketHandle server_fd = InvalidSocketHandle;
     std::atomic<SocketHandle> client_fd{InvalidSocketHandle};
+    // Set when a viewer connects so the next frame is a keyframe it can start decoding from.
+    std::atomic<bool> force_keyframe{false};
     std::thread accept_thread;
     std::thread touch_thread;
     std::mutex send_mutex;
