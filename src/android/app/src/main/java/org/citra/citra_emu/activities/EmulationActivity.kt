@@ -143,9 +143,8 @@ class EmulationActivity : AppCompatActivity() {
         isRotationBlocked = true
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
 
-        // load per-game settings.
-        // TODO: come up with a system for homebrew which all have titleId = 0
-        if (game != null && game.titleId != 0L) loadGameSettings(game)
+        // load settings
+        loadGameSettings(game)
 
         super.onCreate(savedInstanceState)
 
@@ -291,12 +290,14 @@ class EmulationActivity : AppCompatActivity() {
             } else {
                 val fd = contentResolver.openFileDescriptor(uri, "r")
                 if (fd != null) {
-                    return GameHelper.getGame(
+                    val game = GameHelper.getGame(
                         "fd://${fd.fd}".toUri(),
                         isInstalled = false,
                         addedToLibrary = false,
                         mediaType = Game.MediaType.GAME_CARD
                     )
+                    fd.close()
+                    return game
                 } else {
                     return null
                 }

@@ -51,6 +51,8 @@ abstract class SettingViewHolder<out T : SettingsItem>(
         globalMessage.visibility = View.GONE
 
         setting ?: return
+        setting?.setting ?: return
+
         // Show "Revert to global" button in Custom Settings if applicable.
         globalMessage.visibility = View.GONE
 
