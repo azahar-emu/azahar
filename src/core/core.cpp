@@ -493,21 +493,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         kernel->RestoreIPCRecorder(std::move(restore_ipc_recorder));
     }
 
-    if (auto am = Service::AM::GetModule(*this)) {
-        bool bundle_registered = false;
-        if (!GetCartridge().empty()) {
-            auto tar = FileUtil::TarArchive::OpenTarArchive(GetCartridge());
-            if (tar) {
-                tar.reset();
-                am->GetBundleCIAHandler()->RegisterBundle(GetCartridge());
-                bundle_registered = true;
-            }
-        }
-        if (!bundle_registered) {
-            app_loader->LoadBundle();
-        }
-        am->ScanForAllTitles();
-    }
+    LoadAMTitles();
 
     std::shared_ptr<Kernel::Process> process;
     const Loader::ResultStatus load_result{app_loader->Load(process)};
@@ -587,6 +573,26 @@ void System::Reschedule() {
 
     curr_core_reschedule_pending = false;
     kernel->GetThreadManager(running_core->GetID()).Reschedule();
+}
+
+void System::LoadAMTitles() {
+    auto am = Service::AM::GetModule(*this);
+    if (!am) {
+        return;
+    }
+    bool bundle_registered = false;
+    if (!GetCartridge().empty()) {
+        auto tar = FileUtil::TarArchive::OpenTarArchive(GetCartridge());
+        if (tar) {
+            tar.reset();
+            am->GetBundleCIAHandler()->RegisterBundle(GetCartridge());
+            bundle_registered = true;
+        }
+    }
+    if (!bundle_registered) {
+        app_loader->LoadBundle();
+    }
+    am->ScanForAllTitles();
 }
 
 System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
@@ -971,11 +977,6 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
     }
     ar & num_cores;
 
-    // TODO(PabloMK7): Figure out why this is the case
-    if (!lle_modules.empty()) {
-        throw std::runtime_error("Savestates are not supported with LLE modules enabled");
-    }
-
     ar & lle_modules;
     Kernel::MemoryMode mem_mode{};
     if (!Archive::is_loading::value) {
@@ -1026,6 +1027,9 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         if (Settings::values.custom_textures) {
             custom_tex_manager->FindCustomTextures();
         }
+
+        // The title lists and bundles of AM are not saved, they come from the host files.
+        LoadAMTitles();
 
         // Re-register gpu callback, because gsp service changed after service_manager got
         // serialized

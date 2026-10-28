@@ -476,6 +476,10 @@ private:
     /// Reschedule the core emulation
     void Reschedule();
 
+    /// Registers the bundle being run, if any, and scans the installed titles in AM. Done at boot
+    /// and after a savestate load, which creates AM again.
+    void LoadAMTitles();
+
     /// AppLoader used to load the current executing application
     std::unique_ptr<Loader::AppLoader> app_loader;
 
