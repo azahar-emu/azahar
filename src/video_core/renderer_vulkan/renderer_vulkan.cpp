@@ -240,7 +240,10 @@ void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::Framebu
         Core::PerfStats::game_frames_updated) {
         Frame* frame = window.GetRenderFrame();
 
-        if (layout.width != frame->width || layout.height != frame->height) {
+        // A frame with a null image must be (re)created even if the size appears to match.
+        // Otherwise VK_NULL_HANDLE gets recorded into the present blit/barriers, which
+        // segfaults MoltenVK's async queue (null + 0x58 deref).
+        if (!frame->image || layout.width != frame->width || layout.height != frame->height) {
             window.WaitPresent();
             scheduler.Finish();
             window.RecreateFrame(frame, layout.width, layout.height);

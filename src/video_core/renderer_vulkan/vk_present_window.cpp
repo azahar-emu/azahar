@@ -371,6 +371,14 @@ void PresentWindow::NotifySurfaceChanged() {
 }
 
 void PresentWindow::CopyToSwapchain(Frame* frame) {
+    // Last-resort guard: presenting a frame with no image records VK_NULL_HANDLE into
+    // barriers/blit and segfaults MoltenVK's async queue. Drop the frame instead; the
+    // caller recycles it back to the free queue.
+    if (!frame->image || !frame->image_view) {
+        LOG_ERROR(Render_Vulkan, "Skipping present of frame with null image ({}x{})", frame->width,
+                  frame->height);
+        return;
+    }
     const auto recreate_swapchain = [&] {
 #ifdef ANDROID
         {
