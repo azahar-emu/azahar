@@ -20,6 +20,9 @@ class RequestType(enum.IntEnum):
     TakeScreenshot = 5,
     ReadScreenshot = 6,
     GetPerfStats = 7,
+    SetFreeCam = 8,
+    SaveState = 9,
+    LoadState = 10,
 
 class ScreenshotResult(enum.IntEnum):
     Success = 0,
@@ -258,6 +261,27 @@ class AzaharRPC:
         if len(reply_data) < 0x54:
             return None
         return dict(zip(PERF_STATS_FIELDS, struct.unpack("<10dI", reply_data[:0x54])))
+
+    def _save_load_state(self, request_type, slot):
+        timeout = 20.0 if self.timeout is None else max(self.timeout, 20.0)
+        reply_data = self._request(request_type, struct.pack("II", slot, 0), timeout, resend=False)
+        return len(reply_data) >= 4 and struct.unpack("I", reply_data[:4])[0] != 0
+
+    def save_state(self, slot):
+        """
+        Requests a savestate in the given slot (0 to 10, slot 0 is hidden in the Qt menus).
+        Returns True if the request was accepted. The state is written shortly after the reply,
+        on the emulation thread.
+        """
+        return self._save_load_state(RequestType.SaveState, slot)
+
+    def load_state(self, slot):
+        """
+        Requests loading the savestate in the given slot (0 to 10). Returns True if the request
+        was accepted. Loading restarts the RPC server, so requests sent right after may need to
+        be retried.
+        """
+        return self._save_load_state(RequestType.LoadState, slot)
 
 if "__main__" == __name__:
     import doctest

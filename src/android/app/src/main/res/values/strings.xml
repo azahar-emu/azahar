@@ -644,6 +644,7 @@
     <string name="cia_file_not_found">Installation Failed. CIA file not found.</string>
     <string name="system_archive_general">A system archive</string>
     <string name="save_load_error">Save/Load Error</string>
+    <string name="savestate_error_message"><![CDATA[The savestate could not be created or restored.<br/><br/>%1$s]]></string>
     <string name="fatal_error">Fatal Error</string>
     <string name="fatal_error_message">A fatal error occurred. Check the log for details.\nContinuing emulation may result in crashes and bugs.</string>
     <string name="unsupported_encrypted">Unsupported encrypted application</string>

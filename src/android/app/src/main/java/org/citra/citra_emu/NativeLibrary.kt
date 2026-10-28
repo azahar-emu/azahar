@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.OpenableColumns
 import android.text.Html
+import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.view.Surface
 import android.view.View
@@ -302,7 +303,10 @@ object NativeLibrary {
 
             CoreError.ErrorSavestate -> {
                 title = emulationActivity.getString(R.string.save_load_error)
-                message = details
+                message = emulationActivity.getString(
+                    R.string.savestate_error_message,
+                    TextUtils.htmlEncode(details)
+                )
                 canContinue = true
             }
 
