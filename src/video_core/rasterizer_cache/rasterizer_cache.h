@@ -1126,7 +1126,7 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
         return true;
     }
 
-    // The dump check looks at this flag so set it before that upload runs
+    // Dump skips a surface that already has this flag, so set it before that upload
     surface.flags |= SurfaceFlagBits::Custom;
 
     // Decode finishes on a later frame, so the callback checks the slot again before uploading
@@ -1185,9 +1185,11 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
             }
         }
 
-        // Mark the surface custom only after the checks pass. A new base material replaces the
-        // image in this slot; the previous image is sentenced and the page table keeps surface_id
+        // Queuing set this flag on the old surface. Set it again for a surface that was
+        // recreated with the same guest parameters before the image is replaced.
         target.flags |= SurfaceFlagBits::Custom;
+        // A new base material replaces the image in this slot. The previous image is sentenced
+        // and the page table keeps surface_id
         if (!target.IsCustom() || (level == 0 && target.material != material)) {
             const SurfaceBase old_surface{target};
             const SurfaceId old_id =
