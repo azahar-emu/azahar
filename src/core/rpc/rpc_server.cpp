@@ -13,6 +13,7 @@
 #include "core/core.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
 #include "core/rpc/packet.h"
 #include "core/rpc/rpc_server.h"
@@ -274,6 +275,25 @@ void RPCServer::HandleReadScreenshot(Packet& packet, u32 offset, u32 data_size) 
     packet.SendReply();
 }
 
+void RPCServer::HandleSetInput(Packet& packet, const InputInfo& input) {
+    if (const auto hid = Service::HID::GetModule(system)) {
+        hid->SetInputOverride({
+            .buttons = input.buttons,
+            .home = (input.flags & InputFlags::Home) != 0,
+            .power = (input.flags & InputFlags::Power) != 0,
+            .touch_pressed = (input.flags & InputFlags::Touch) != 0,
+            .touch_x = input.touch_x,
+            .touch_y = input.touch_y,
+            .circle_pad_set = (input.flags & InputFlags::CirclePad) != 0,
+            .circle_pad_x = input.circle_pad_x,
+            .circle_pad_y = input.circle_pad_y,
+        });
+    }
+
+    packet.SetPacketDataSize(0);
+    packet.SendReply();
+}
+
 void RPCServer::HandleGetPerfStats(Packet& packet, PerfStatsMode mode) {
     u32 written_bytes = 0;
 
@@ -339,6 +359,11 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
         case PacketType::SaveState:
         case PacketType::LoadState:
             if (packet_header.packet_size >= (sizeof(u32) * 2)) {
+                return true;
+            }
+            break;
+        case PacketType::SetInput:
+            if (packet_header.packet_size >= sizeof(InputInfo)) {
                 return true;
             }
             break;
@@ -419,6 +444,13 @@ void RPCServer::DispatchRequest(std::unique_ptr<Packet> request_packet) {
                             request_packet->GetPacketType() == PacketType::LoadState, arg1);
         success = true;
         break;
+    case PacketType::SetInput: {
+        InputInfo input;
+        std::memcpy(&input, packet_data.data(), sizeof(input));
+        HandleSetInput(*request_packet, input);
+        success = true;
+        break;
+    }
 #ifdef ENABLE_FREECAM
     case PacketType::SetFreeCam:
         HandleSetFreeCam(*request_packet, arg1,

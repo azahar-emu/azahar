@@ -23,6 +23,7 @@ class RequestType(enum.IntEnum):
     SetFreeCam = 8,
     SaveState = 9,
     LoadState = 10,
+    SetInput = 11,
 
 class ScreenshotResult(enum.IntEnum):
     Success = 0,
@@ -38,6 +39,16 @@ SCREENSHOT_FLAG_RAW_RGB = 1 << 1
 PERF_STATS_FIELDS = ("system_fps", "game_fps", "time_vblank_interval", "time_hle_svc",
                      "time_hle_ipc", "time_gpu", "time_swap", "time_remaining",
                      "emulation_speed", "artic_transmitted", "artic_events")
+
+# HID pad bits for set_input
+BUTTONS = {"A": 1 << 0, "B": 1 << 1, "SELECT": 1 << 2, "START": 1 << 3, "RIGHT": 1 << 4,
+           "LEFT": 1 << 5, "UP": 1 << 6, "DOWN": 1 << 7, "R": 1 << 8, "L": 1 << 9,
+           "X": 1 << 10, "Y": 1 << 11, "ZL": 1 << 14, "ZR": 1 << 15}
+INPUT_FLAG_HOME = 1 << 0
+INPUT_FLAG_POWER = 1 << 1
+INPUT_FLAG_TOUCH = 1 << 2
+INPUT_FLAG_CIRCLE_PAD = 1 << 3
+CIRCLE_PAD_MAX = 0x9A
 
 CITRA_PORT = 45987
 
@@ -282,6 +293,35 @@ class AzaharRPC:
         be retried.
         """
         return self._save_load_state(RequestType.LoadState, slot)
+
+    def set_input(self, buttons=(), home=False, power=False, touch=None, circle_pad=None):
+        """
+        Sets input that the emulator applies, combined with its configured
+        input devices. buttons is a tuple of names from BUTTONS, touch an (x, y)
+        position of the bottom screen in pixels (320x240), circle_pad an (x, y) position in
+        raw HID units (-CIRCLE_PAD_MAX to CIRCLE_PAD_MAX). With no arguments, releases everything.
+        The input is held, so to clear it call set_input with no argument.
+
+        >>> c.set_input()
+        """
+        mask = 0
+        for name in buttons:
+            mask |= BUTTONS[name.upper()]
+        flags = 0
+        if home:
+            flags |= INPUT_FLAG_HOME
+        if power:
+            flags |= INPUT_FLAG_POWER
+        touch_x = touch_y = 0
+        if touch is not None:
+            flags |= INPUT_FLAG_TOUCH
+            touch_x, touch_y = touch
+        circle_x = circle_y = 0
+        if circle_pad is not None:
+            flags |= INPUT_FLAG_CIRCLE_PAD
+            circle_x, circle_y = circle_pad
+        self._request(RequestType.SetInput,
+                      struct.pack("<IIHHhh", mask, flags, touch_x, touch_y, circle_x, circle_y))
 
 if "__main__" == __name__:
     import doctest
