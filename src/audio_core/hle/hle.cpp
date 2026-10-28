@@ -1,6 +1,6 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 
@@ -68,6 +68,7 @@ private:
     void Initialize();
     void Sleep();
     void Wakeup();
+    void FinishPendingSleep();
 
     void ResetPipes();
     void WriteU16(DspPipe pipe_number, u16 value);
@@ -83,6 +84,13 @@ private:
 
     DspState dsp_state = DspState::Off;
     std::array<std::vector<u8>, num_dsp_pipe> pipe_data{};
+
+    // On hardware, the DSP firmware enters sleep at its next audio frame, only then sending the
+    // pipe reply and its interrupt, and sets reply register 0 two frames later. We need to emulate
+    // this timing due to races in some games such as NSMB2, where replying immediately causes a
+    // fatal error when opening the home menu.
+    bool sleep_pending = false;
+    u32 sleep_reply_frames = 0;
 
 public:
     HLE::DspMemory* dsp_memory;
@@ -113,6 +121,8 @@ private:
                                                      backup_dsp_memory.raw_memory.size());
         ar & dsp_state;
         ar & pipe_data;
+        ar & sleep_pending;
+        ar & sleep_reply_frames;
         ar & sources;
         ar & mixers;
         // interrupt_handler is reregistered when loading state from DSP_DSP
@@ -149,7 +159,10 @@ u16 DspHle::Impl::RecvData(u32 register_number) {
     ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
 
     // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
-    // or slept.
+    // or slept. While a sleep is in progress it returns the value the reply will have.
+    if (sleep_pending || sleep_reply_frames > 0) {
+        return 1;
+    }
 
     switch (GetDspState()) {
     case AudioCore::DspState::On:
@@ -165,7 +178,7 @@ u16 DspHle::Impl::RecvData(u32 register_number) {
 
 bool DspHle::Impl::RecvDataIsReady(u32 register_number) const {
     ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
-    return true;
+    return !sleep_pending && sleep_reply_frames == 0;
 }
 
 std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, std::size_t length) {
@@ -230,6 +243,9 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
         // Implement this.) Applications store away the state of these structs before
         // sleeping and reset it back after wakeup on behalf of the DSP.
 
+        FinishPendingSleep();
+        sleep_reply_frames = 0;
+
         switch (static_cast<StateChange>(buffer[0])) {
         case StateChange::Initialize:
             LOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
@@ -249,9 +265,7 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
             break;
         case StateChange::Sleep:
             LOG_INFO(Audio_DSP, "Application has requested sleep of DSP hardware");
-            Sleep();
-            AudioPipeWriteStructAddresses();
-            dsp_state = DspState::Sleeping;
+            sleep_pending = true;
             break;
         default:
             LOG_ERROR(Audio_DSP,
@@ -322,6 +336,16 @@ void DspHle::Impl::Sleep() {
     }
     // TODO(PabloMK7): Figure out if we need to save the state
     // of the AAC decoder, probably not.
+}
+
+void DspHle::Impl::FinishPendingSleep() {
+    if (!sleep_pending) {
+        return;
+    }
+    sleep_pending = false;
+    Sleep();
+    AudioPipeWriteStructAddresses();
+    dsp_state = DspState::Sleeping;
 }
 
 void DspHle::Impl::Wakeup() {
@@ -459,6 +483,13 @@ bool DspHle::Impl::Tick() {
 }
 
 void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
+    if (sleep_pending) {
+        FinishPendingSleep();
+        sleep_reply_frames = 2;
+    } else if (sleep_reply_frames > 0 && --sleep_reply_frames == 0) {
+        interrupt_handler(InterruptType::Zero, DspPipe::Debug);
+    }
+
     if (Tick()) {
         // TODO(merry): Signal all the other interrupts as appropriate.
         interrupt_handler(InterruptType::Pipe, DspPipe::Audio);
