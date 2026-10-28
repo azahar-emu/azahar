@@ -229,6 +229,9 @@ void KernelSystem::serialize(Archive& ar, const unsigned int) {
     ar&* timer_manager.get();
     ar & next_process_id;
     ar & process_list;
+    if (Archive::is_saving::value) {
+        stored_processes[current_cpu->GetID()] = current_process;
+    }
     ar & current_process;
     // NB: core count checked in 'core'
     for (auto& thread_manager : thread_managers) {
@@ -250,6 +253,10 @@ void KernelSystem::serialize(Archive& ar, const unsigned int) {
         for (auto& process : process_list) {
             process->vm_manager.Unlock();
         }
+        if (stored_processes[current_cpu->GetID()]) {
+            SetCurrentProcess(stored_processes[current_cpu->GetID()]);
+        }
+        timing.SetCurrentTimer(current_cpu->GetID());
     }
 }
 SERIALIZE_IMPL(KernelSystem)

@@ -1,9 +1,10 @@
-// Copyright 2014-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
+#include <algorithm>
 #include <unordered_map>
 #include <utility>
 #include <boost/serialization/set.hpp>
@@ -36,6 +37,14 @@ struct SocketHolder {
 
     u32 ownerProcess = 0;
 
+    /// Descriptor of a socket whose host socket was lost in a savestate load. Every host call on
+    /// it fails, which the guest sees as an error on that socket.
+    static constexpr SOCKET LostSocket = static_cast<SOCKET>(-1);
+
+    bool IsLost() const {
+        return socket_fd == LostSocket;
+    }
+
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
@@ -43,6 +52,9 @@ private:
         ar & blocking;
         ar & isGlobal;
         ar & ownerProcess;
+        if (Archive::is_loading::value) {
+            socket_fd = LostSocket;
+        }
     }
     friend class boost::serialization::access;
 };
@@ -173,6 +185,12 @@ private:
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
         ar & created_sockets;
         ar & initialized_processes;
+        if (Archive::is_loading::value) {
+            next_socket_id = 3;
+            for (const auto& [id, socket] : created_sockets) {
+                next_socket_id = std::max(next_socket_id, id + 1);
+            }
+        }
     }
     friend class boost::serialization::access;
 };

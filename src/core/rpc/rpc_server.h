@@ -53,6 +53,7 @@ private:
     void HandleTakeScreenshot(std::unique_ptr<Packet> packet, u32 res_scale, ScreenshotFlags flags);
     void HandleReadScreenshot(Packet& packet, u32 offset, u32 data_size);
     void HandleGetPerfStats(Packet& packet, PerfStatsMode mode);
+    void HandleSaveLoadState(Packet& packet, bool load, u32 slot);
 #ifdef ENABLE_FREECAM
     void HandleSetFreeCam(Packet& packet, u32 flags, std::span<const u8> matrix);
 #endif

@@ -22,6 +22,8 @@ enum class PacketType : u32 {
     ReadScreenshot = 6,
     GetPerfStats = 7,
     SetFreeCam = 8,
+    SaveState = 9,
+    LoadState = 10,
 };
 
 namespace FreeCamFlags {

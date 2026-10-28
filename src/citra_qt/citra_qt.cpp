@@ -4069,7 +4069,8 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
         error_severity_icon = QMessageBox::Icon::Critical;
     } else if (result == Core::System::ResultStatus::ErrorSavestate) {
         title = tr("Save/load Error");
-        message = QString::fromStdString(details);
+        message = tr("The savestate could not be created or restored.<br/><br/>%1")
+                      .arg(QString::fromStdString(details).toHtmlEscaped());
         error_severity_icon = QMessageBox::Icon::Warning;
     } else if (result == Core::System::ResultStatus::ErrorArticDisconnected) {
         title = tr("Artic Server");
