@@ -1,13 +1,13 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
-#include <memory>
-#include <string>
 #include <map>
+#include <memory>
 #include <optional>
+#include <string>
 #include "common/settings.h"
 
 class INIReader;
@@ -18,7 +18,7 @@ private:
     std::string android_config_loc;
     std::unique_ptr<INIReader> per_game_config;
     std::string per_game_config_loc;
-    inline static std::map<std::string,std::string> default_android_values;
+    inline static std::map<std::string, std::string> default_android_values;
 
     bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
@@ -26,7 +26,7 @@ private:
 public:
     Config();
     ~Config();
-    static void AddDefaultSettingValue(const std::string& key,const std::string& value);
+    static void AddDefaultSettingValue(const std::string& key, const std::string& value);
     void Reload();
     // Load a per-game config overlay by title id. Does not create files.
     void LoadPerGameConfig(u64 title_id);
@@ -52,5 +52,6 @@ private:
     Type GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting);
 
     template <typename Type>
-    Type GetSettingFromKey(const std::string& group, const std::string& key, std::optional<Type> default_value = std::nullopt);
+    Type GetSettingFromKey(const std::string& group, const std::string& key,
+                           std::optional<Type> default_value = std::nullopt);
 };
