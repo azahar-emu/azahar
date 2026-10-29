@@ -24,6 +24,7 @@ enum class PacketType : u32 {
     SetFreeCam = 8,
     SaveState = 9,
     LoadState = 10,
+    SetInput = 11,
 };
 
 namespace FreeCamFlags {
@@ -32,6 +33,27 @@ enum : u32 {
     Skip2D = 1 << 0,
 };
 } // namespace FreeCamFlags
+
+namespace InputFlags {
+enum : u32 {
+    Home = 1 << 0,
+    Power = 1 << 1,
+    Touch = 1 << 2,     ///< The bottom screen is touched at (touch_x, touch_y)
+    CirclePad = 1 << 3, ///< The circle pad is at (circle_pad_x, circle_pad_y)
+};
+} // namespace InputFlags
+
+/// Input applied at every HID update until the next SetInput request, combined with the
+/// configured input devices. Send it with every field zero to release everything.
+struct InputInfo {
+    u32 buttons;      ///< HID pad bits (A = bit 0 ... ZR = bit 15)
+    u32 flags;        ///< InputFlags
+    u16 touch_x;      ///< Bottom screen pixels, 0 to 319
+    u16 touch_y;      ///< Bottom screen pixels, 0 to 239
+    s16 circle_pad_x; ///< Raw HID units, -0x9A to 0x9A
+    s16 circle_pad_y;
+};
+static_assert(sizeof(InputInfo) == 0x10, "Incorrect InputInfo size");
 
 struct PacketHeader {
     u32 version;

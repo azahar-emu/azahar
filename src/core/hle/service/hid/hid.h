@@ -8,6 +8,7 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <vector>
 #include <boost/serialization/version.hpp>
 #include "common/bit_field.h"
@@ -341,6 +342,22 @@ public:
 
     const PadState& GetState() const;
 
+    /// Input set from outside the configured input devices by the RPC server.
+    struct InputOverride {
+        u32 buttons = 0;
+        bool home = false;
+        bool power = false;
+        bool touch_pressed = false;
+        u16 touch_x = 0;
+        u16 touch_y = 0;
+        bool circle_pad_set = false;
+        s16 circle_pad_x = 0;
+        s16 circle_pad_y = 0;
+    };
+
+    void SetInputOverride(const InputOverride& input);
+    InputOverride GetInputOverride() const;
+
     // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
     static constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;
     static constexpr u64 accelerometer_update_ticks = BASE_CLOCK_RATE_ARM11 / 104;
@@ -398,6 +415,9 @@ private:
     std::unique_ptr<Input::TouchDevice> touch_btn_device;
 
     std::shared_ptr<ArticBaseController> artic_controller;
+
+    mutable std::mutex input_override_mutex;
+    InputOverride input_override;
     std::shared_ptr<Network::ArticBase::Client> artic_client;
 
     template <class Archive>

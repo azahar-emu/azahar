@@ -1,6 +1,6 @@
 // Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/archives.h"
 #include "common/file_util.h"
@@ -18,6 +18,7 @@
 #include "core/hle/service/apt/ns.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
+#include "core/hle/service/hid/hid.h"
 #include "video_core/utils.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::APT::AppletManager)
@@ -1746,13 +1747,18 @@ void AppletManager::ButtonUpdateEvent(std::uintptr_t user_data, s64 cycles_late)
     // where the home menu was already loaded by the user (last condition).
 
     if (GetAppletSlot(AppletSlot::HomeMenu)->registered) {
-        const bool home_state = home_button->GetStatus();
+        Service::HID::Module::InputOverride input{};
+        if (const auto hid = Service::HID::GetModule(system)) {
+            input = hid->GetInputOverride();
+        }
+
+        const bool home_state = home_button->GetStatus() || input.home;
         if (home_state && !last_home_button_state) {
             SendNotification(Notification::HomeButtonSingle);
         }
         last_home_button_state = home_state;
 
-        const bool power_state = power_button->GetStatus();
+        const bool power_state = power_button->GetStatus() || input.power;
         if (power_state && !last_power_button_state) {
             SendNotificationToAll(Notification::PowerButtonClick);
         }
