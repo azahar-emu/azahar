@@ -6,6 +6,8 @@
 
 #include <memory>
 #include <string>
+#include <map>
+#include <optional>
 #include "common/settings.h"
 
 class INIReader;
@@ -24,7 +26,7 @@ private:
 public:
     Config();
     ~Config();
-    static void AddDefaultSettingValue(std::string key, std::string value);
+    static void AddDefaultSettingValue(const std::string& key,const std::string& value);
     void Reload();
     // Load a per-game config overlay by title id. Does not create files.
     void LoadPerGameConfig(u64 title_id);
@@ -48,4 +50,7 @@ private:
      */
     template <typename Type, bool ranged>
     Type GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting);
+
+    template <typename Type>
+    Type GetSettingFromKey(const std::string& group, const std::string& key, std::optional<Type> default_value = std::nullopt);
 };
