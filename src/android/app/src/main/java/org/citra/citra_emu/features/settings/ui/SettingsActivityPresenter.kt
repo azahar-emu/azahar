@@ -42,12 +42,12 @@ class SettingsActivityPresenter(
             // sync the active settings into my local settings appropriately
             // if we are editing global settings rom a game, this should just work
             // to sync only the global settings into the local version
-            editingSettings.gameId = if (gameId == "") gameId else null
+            editingSettings.gameId = if (gameId != "") gameId else null
             editingSettings.mergeSettings(CitraSettings.activeSettings)
 
             // if we are editing per-game settings when the game is not loaded,
             // we need to load the per-game settings now from the ini file
-            if (gameId != "" && !CitraSettings.activeSettings.isPerApp()) {
+            if (gameId != "" && CitraSettings.activeSettings.gameId != gameId) {
                 SettingsFile.loadSettings(editingSettings, gameId)
             }
         }
