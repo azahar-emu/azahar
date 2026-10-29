@@ -237,7 +237,7 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
         boost::replace_all(message, " ", "\u00a0"); // Non-breaking space
         boost::replace_all(message, "-", "\u2011"); // Non-breaking hyphen
         QMessageBox::information(this, QString::fromStdString(title),
-                                  QString::fromStdString(message));
+                                 QString::fromStdString(message));
     }
 
 #else
