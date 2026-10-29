@@ -12,6 +12,9 @@ namespace DefaultINI {
 // All of these setting keys are either not currently used by Android or are too niche to bother
 // documenting (people can contribute documentation if they care), or some other explained reason
 constexpr std::array android_config_omitted_keys = {
+    Settings::Keys::battery_charging,
+    Settings::Keys::battery_level,
+    Settings::Keys::battery_state_source,
     Settings::Keys::enable_gamemode,
     Settings::Keys::use_custom_storage,
     Settings::Keys::init_time_offset,
