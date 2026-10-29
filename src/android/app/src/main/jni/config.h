@@ -16,6 +16,7 @@ private:
     std::string android_config_loc;
     std::unique_ptr<INIReader> per_game_config;
     std::string per_game_config_loc;
+    inline static std::map<std::string,std::string> default_android_values;
 
     bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
@@ -23,7 +24,7 @@ private:
 public:
     Config();
     ~Config();
-
+    static void AddDefaultSettingValue(std::string key, std::string value);
     void Reload();
     // Load a per-game config overlay by title id or fallback name. Does not create files.
     void LoadPerGameConfig(u64 title_id, const std::string& fallback_name = "");

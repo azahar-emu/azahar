@@ -1361,4 +1361,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_deleteVulkanShaderCache(JNIEnv* env
         });
 }
 
+void JNICALL Java_org_citra_citra_1emu_NativeLibrary_addDefaultSetting(
+    JNIEnv* env, jobject obj, jstring key, jstring value) {
+    Config::AddDefaultSettingValue(GetJString(env, key), GetJString(env, value));
+}
+
+
 } // extern "C"

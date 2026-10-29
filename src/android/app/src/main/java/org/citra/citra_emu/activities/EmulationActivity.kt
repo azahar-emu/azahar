@@ -226,16 +226,28 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun loadGameSettings(game: Game?) {
-        // don't let the previous game's overrides leak in
-        CitraSettings.activeSettings.changeToGlobalContext()
+        if (!CitraSettings.defaultsSynced) {
+            CitraSettings.syncDefaultsToNative()
+            NativeLibrary.reloadSettings()
+        }
+
+        // load global settings from file if this is a fresh launch from a launcher
         if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
             SettingsFile.loadSettings(CitraSettings.activeSettings)
         }
+
+        // if this is a game with a supported title ID and the active settings
+        // haven't already loaded the game overrides, load them from file
         if (game != null && game.titleId != 0L) {
-            SettingsFile.loadSettings(
-                CitraSettings.activeSettings,
-                String.format("%016X", game.titleId)
-            )
+            val gameId = String.format("%016X", game.titleId)
+            if (CitraSettings.activeSettings.gameId != gameId) {
+                CitraSettings.activeSettings.clearAllOverrides()
+                CitraSettings.activeSettings.gameId = gameId
+                SettingsFile.loadSettings(
+                    CitraSettings.activeSettings,
+                    gameId
+                )
+            }
         }
 
         if (CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
@@ -246,6 +258,7 @@ class EmulationActivity : AppCompatActivity() {
                 TextureFilter.NOFILTER.int
             )
             SettingsFile.saveSetting(IntSetting.TEXTURE_FILTER, CitraSettings.activeSettings)
+            NativeLibrary.reloadSettings()
             showAnime4kDialog()
         }
     }

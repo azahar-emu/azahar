@@ -4,6 +4,7 @@
 
 package org.citra.citra_emu.features.settings.model
 
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 
 class CitraSettings {
@@ -243,5 +244,23 @@ class CitraSettings {
 
         /** The settings (global and per-game overrides) that are active right now.*/
         val activeSettings = CitraSettings()
+
+        fun syncDefaultsToNative() {
+            val allSettings: List<AbstractSetting<*>> by lazy {
+                BooleanSetting.values().toList() +
+                    IntSetting.values().toList() +
+                    FloatSetting.values().toList() +
+                    StringSetting.values().toList() +
+                    IntListSetting.values().toList()
+            }
+            for (setting in allSettings) {
+                NativeLibrary.addDefaultSetting(
+                    setting.key,
+                    setting.defaultValueToString()
+                )
+            }
+            defaultsSynced = true
+        }
+        var defaultsSynced: Boolean = false
     }
 }
