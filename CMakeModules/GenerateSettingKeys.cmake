@@ -304,6 +304,7 @@ if (ENABLE_LIBRETRO)
         "enable_touch_pointer_timeout"
         "enable_motion"
         "motion_sensitivity"
+        "frontend_layout"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
         set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
