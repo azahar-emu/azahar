@@ -227,9 +227,19 @@ static QString PrettyProductName() {
 
 void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 #ifdef _WIN32
-    boost::replace_all(message, " ", "\u00a0"); // Non-breaking space
-    boost::replace_all(message, "-", "\u2011"); // Non-breaking hyphen
-    QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(message));
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    BOOL isSTDOutputHandled = h != nullptr && h != INVALID_HANDLE_VALUE;
+
+    if (isSTDOutputHandled) {
+        std::cout << message << std::endl;
+    } else {
+        boost::replace_all(message, " ", "\u00a0"); // Non-breaking space
+        boost::replace_all(message, "-", "\u2011"); // Non-breaking hyphen
+        QMessageBox::information(this, QString::fromStdString(title),
+                                 QString::fromStdString(message));
+    }
+
 #else
     std::cout << message << std::endl;
 #endif
