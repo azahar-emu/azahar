@@ -77,15 +77,15 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
 }};
 
 void Config::AddDefaultSettingValue(const std::string& key, const std::string& value) {
-    default_android_values.insert_or_assign(key,value);
+    default_android_values.insert_or_assign(key, value);
 }
 
 template <>
 std::string Config::GetSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    std::string setting_value =
-            default_android_values.contains(setting.GetLabel()) && default_android_values.at(setting.GetLabel()) != "" ?
-            default_android_values.at(setting.GetLabel()) :
-            setting.GetDefault();
+    std::string setting_value = default_android_values.contains(setting.GetLabel()) &&
+                                        default_android_values.at(setting.GetLabel()) != ""
+                                    ? default_android_values.at(setting.GetLabel())
+                                    : setting.GetDefault();
     if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
         setting_value = per_game_config->Get(group, setting.GetLabel(), setting_value);
     } else if (android_config) {
@@ -104,10 +104,11 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<std::string
 
 template <>
 bool Config::GetSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    bool value =
-            default_android_values.contains(setting.GetLabel()) && default_android_values.at(setting.GetLabel()) != "" ?
-            default_android_values.at(setting.GetLabel())== "1" || default_android_values.at(setting.GetLabel()) == "true" :
-            setting.GetDefault();
+    bool value = default_android_values.contains(setting.GetLabel()) &&
+                         default_android_values.at(setting.GetLabel()) != ""
+                     ? default_android_values.at(setting.GetLabel()) == "1" ||
+                           default_android_values.at(setting.GetLabel()) == "true"
+                     : setting.GetDefault();
     if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
         value = per_game_config->GetBoolean(group, setting.GetLabel(), value);
     } else if (android_config) {
@@ -125,9 +126,10 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& sett
 template <typename Type, bool ranged>
 Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
     if constexpr (std::is_floating_point_v<Type>) {
-        double value = default_android_values.contains(setting.GetLabel()) && default_android_values.at(setting.GetLabel()) != "" ?
-                std::stod(default_android_values.at(setting.GetLabel())):
-                static_cast<double>(setting.GetDefault());
+        double value = default_android_values.contains(setting.GetLabel()) &&
+                               default_android_values.at(setting.GetLabel()) != ""
+                           ? std::stod(default_android_values.at(setting.GetLabel()))
+                           : static_cast<double>(setting.GetDefault());
         if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
             value = per_game_config->GetReal(group, setting.GetLabel(), value);
         } else if (android_config) {
@@ -135,9 +137,10 @@ Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged
         }
         return static_cast<Type>(value);
     } else {
-        long value = default_android_values.contains(setting.GetLabel()) && default_android_values.at(setting.GetLabel()) != "" ?
-                     std::stol(default_android_values.at(setting.GetLabel())):
-                     static_cast<long>(setting.GetDefault());
+        long value = default_android_values.contains(setting.GetLabel()) &&
+                             default_android_values.at(setting.GetLabel()) != ""
+                         ? std::stol(default_android_values.at(setting.GetLabel()))
+                         : static_cast<long>(setting.GetDefault());
         if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
             value = per_game_config->GetInteger(group, setting.GetLabel(), value);
         } else if (android_config) {
@@ -159,16 +162,19 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<Type, range
  */
 
 template <typename Type>
-Type Config::GetSettingFromKey(const std::string& group, const std::string& key, std::optional<Type> default_value) {
+Type Config::GetSettingFromKey(const std::string& group, const std::string& key,
+                               std::optional<Type> default_value) {
 
-    const std::string default_str = default_android_values.contains(key) ?
-            default_android_values.at(key) : "";
+    const std::string default_str =
+        default_android_values.contains(key) ? default_android_values.at(key) : "";
 
     const bool has_per_game = per_game_config && per_game_config->HasValue(group, key);
     const bool has_android = android_config && android_config->HasValue(group, key);
 
     if constexpr (std::is_same_v<Type, bool>) {
-        bool value = (default_value && default_str == "") ? *default_value : (default_str == "1" || default_str == "true");
+        bool value = (default_value && default_str == "")
+                         ? *default_value
+                         : (default_str == "1" || default_str == "true");
         if (has_per_game) {
             value = per_game_config->GetBoolean(group, key, value);
         } else if (has_android) {
@@ -176,7 +182,9 @@ Type Config::GetSettingFromKey(const std::string& group, const std::string& key,
         }
         return value;
     } else if constexpr (std::is_floating_point_v<Type>) {
-        double value = (default_value  && default_str == "") ? static_cast<double>(*default_value) : (default_str.empty() ? 0.0 : std::stod(default_str));
+        double value = (default_value && default_str == "")
+                           ? static_cast<double>(*default_value)
+                           : (default_str.empty() ? 0.0 : std::stod(default_str));
         if (has_per_game) {
             value = per_game_config->GetReal(group, key, value);
         } else if (has_android) {
@@ -184,7 +192,9 @@ Type Config::GetSettingFromKey(const std::string& group, const std::string& key,
         }
         return static_cast<Type>(value);
     } else if constexpr (std::is_integral_v<Type>) {
-        long value = (default_value && default_str == "") ? static_cast<long>(*default_value) : (default_str.empty() ? 0L : std::stol(default_str));
+        long value = (default_value && default_str == "")
+                         ? static_cast<long>(*default_value)
+                         : (default_str.empty() ? 0L : std::stol(default_str));
         if (has_per_game) {
             value = per_game_config->GetInteger(group, key, value);
         } else if (has_android) {
@@ -204,13 +214,12 @@ Type Config::GetSettingFromKey(const std::string& group, const std::string& key,
     }
 }
 
-
 void Config::ReadValues() {
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         std::string default_param = InputManager::GenerateButtonParamPackage(default_buttons[i]);
         Settings::values.current_input_profile.buttons[i] = GetSettingFromKey<std::string>(
-                "Controls", Settings::NativeButton::mapping[i], default_param);
+            "Controls", Settings::NativeButton::mapping[i], default_param);
         if (Settings::values.current_input_profile.buttons[i].empty())
             Settings::values.current_input_profile.buttons[i] = default_param;
     }
@@ -218,21 +227,20 @@ void Config::ReadValues() {
     for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
         std::string default_param = InputManager::GenerateAnalogParamPackage(default_analogs[i]);
         Settings::values.current_input_profile.analogs[i] = GetSettingFromKey<std::string>(
-                "Controls", Settings::NativeAnalog::mapping[i], default_param);
+            "Controls", Settings::NativeAnalog::mapping[i], default_param);
         if (Settings::values.current_input_profile.analogs[i].empty())
             Settings::values.current_input_profile.analogs[i] = default_param;
     }
 
     Settings::values.current_input_profile.motion_device = GetSettingFromKey<std::string>(
-            "Controls", "motion_device",
-            "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
+        "Controls", "motion_device",
+        "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
     Settings::values.current_input_profile.touch_device =
-            GetSettingFromKey<std::string>("Controls", "touch_device", "engine:emu_window");
+        GetSettingFromKey<std::string>("Controls", "touch_device", "engine:emu_window");
     Settings::values.current_input_profile.udp_input_address = GetSettingFromKey<std::string>(
-            "Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
-    Settings::values.current_input_profile.udp_input_port =
-            GetSettingFromKey<u16>("Controls", "udp_input_port",
-                                    InputCommon::CemuhookUDP::DEFAULT_PORT);
+        "Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
+    Settings::values.current_input_profile.udp_input_port = GetSettingFromKey<u16>(
+        "Controls", "udp_input_port", InputCommon::CemuhookUDP::DEFAULT_PORT);
 
     ReadSetting("Controls", Settings::values.use_artic_base_controller);
 
@@ -280,7 +288,7 @@ void Config::ReadValues() {
     else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced)
         default_shader = "Horizontal (builtin)";
     Settings::values.pp_shader_name =
-            GetSettingFromKey<std::string>("Renderer", "pp_shader_name", default_shader);
+        GetSettingFromKey<std::string>("Renderer", "pp_shader_name", default_shader);
     ReadSetting("Renderer", Settings::values.filter_mode);
     ReadSetting("Renderer", Settings::values.use_integer_scaling);
 
@@ -355,8 +363,7 @@ void Config::ReadValues() {
     ReadSetting("System", Settings::values.init_clock);
     {
         std::string time =
-                GetSettingFromKey<std::string>("System", Settings::Keys::init_time,
-                                                "946681277");
+            GetSettingFromKey<std::string>("System", Settings::Keys::init_time, "946681277");
         try {
             Settings::values.init_time = std::stoll(time);
         } catch (...) {
@@ -374,31 +381,27 @@ void Config::ReadValues() {
 
     // Camera
     using namespace Service::CAM;
-    Settings::values.camera_name[OuterRightCamera] = GetSettingFromKey<std::string>(
-            "Camera", Settings::Keys::camera_outer_right_name, "ndk");
+    Settings::values.camera_name[OuterRightCamera] =
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_right_name, "ndk");
     Settings::values.camera_config[OuterRightCamera] =
-            GetSettingFromKey<std::string>("Camera",
-                                            Settings::Keys::camera_outer_right_config,
-                                            std::string{Camera::NDK::BackCameraPlaceholder});
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_right_config,
+                                       std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterRightCamera] =
-            GetSettingFromKey<int>("Camera", Settings::Keys::camera_outer_right_flip, 0);
+        GetSettingFromKey<int>("Camera", Settings::Keys::camera_outer_right_flip, 0);
     Settings::values.camera_name[InnerCamera] =
-            GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_inner_name,
-                                            "ndk");
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_inner_name, "ndk");
     Settings::values.camera_config[InnerCamera] =
-            GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_inner_config,
-                                            std::string{Camera::NDK::FrontCameraPlaceholder});
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_inner_config,
+                                       std::string{Camera::NDK::FrontCameraPlaceholder});
     Settings::values.camera_flip[InnerCamera] =
-            GetSettingFromKey<int>("Camera", Settings::Keys::camera_inner_flip, 0);
+        GetSettingFromKey<int>("Camera", Settings::Keys::camera_inner_flip, 0);
     Settings::values.camera_name[OuterLeftCamera] =
-            GetSettingFromKey<std::string>("Camera",
-                                            Settings::Keys::camera_outer_left_name, "ndk");
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_left_name, "ndk");
     Settings::values.camera_config[OuterLeftCamera] =
-            GetSettingFromKey<std::string>("Camera",
-                                            Settings::Keys::camera_outer_left_config,
-                                            std::string{Camera::NDK::BackCameraPlaceholder});
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_left_config,
+                                       std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterLeftCamera] =
-            GetSettingFromKey<int>("Camera", Settings::Keys::camera_outer_left_flip, 0);
+        GetSettingFromKey<int>("Camera", Settings::Keys::camera_outer_left_flip, 0);
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
@@ -424,8 +427,7 @@ void Config::ReadValues() {
     ReadSetting("Debugging", Settings::values.enable_exception_handler);
 
     for (const auto& service_module : Service::service_module_map) {
-        bool use_lle =
-            GetSettingFromKey<bool>("Debugging", "LLE\\" + service_module.name, false);
+        bool use_lle = GetSettingFromKey<bool>("Debugging", "LLE\\" + service_module.name, false);
         Settings::values.lle_modules.emplace(service_module.name, use_lle);
     }
 
