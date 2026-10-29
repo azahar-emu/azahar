@@ -40,15 +40,12 @@ class SettingsActivityPresenter(
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)
         } else {
-            // merge the active settings into the local settings activity instance
-            editingSettings.mergeSettings(CitraSettings.activeSettings)
-
-            perGameInGlobalContext = gameId != null && !CitraSettings.activeSettings.isPerGame()
+            perGameInGlobalContext = gameId != "" && !CitraSettings.activeSettings.isPerGame()
 
             // sync the active settings into my local settings appropriately
             // if we are editing global settings rom a game, this should just work
             // to sync only the global settings into the local version
-            editingSettings.gameId = gameId
+            editingSettings.gameId = if (gameId == "") gameId else null
             editingSettings.mergeSettings(CitraSettings.activeSettings)
 
             // if we are editing per-game settings when the game is not loaded,
