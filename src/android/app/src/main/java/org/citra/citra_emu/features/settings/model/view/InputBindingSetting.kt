@@ -125,7 +125,8 @@ class InputBindingSetting(val abstractSetting: AbstractSetting<*>, titleId: Int)
                 CitraSettings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
                 CitraSettings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
                 CitraSettings.HOTKEY_QUICKLOAD -> Hotkey.QUICKLOAD.button
-                CitraSettings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
+                CitraSettings.HOTKEY_TURBO_TOGGLE -> Hotkey.TURBO_TOGGLE.button
+                CitraSettings.HOTKEY_TURBO_HOLD -> Hotkey.TURBO_HOLD.button
                 CitraSettings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_BUTTON.button
                 else -> -1
             }

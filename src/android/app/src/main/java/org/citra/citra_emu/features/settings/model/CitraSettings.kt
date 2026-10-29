@@ -140,8 +140,9 @@ class CitraSettings {
         const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
         const val HOTKEY_QUICKLOAD = "hotkey_quickpause"
-        const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
         const val HOTKEY_BUTTON_COMBO = "hotkey_button_combo"
+        const val HOTKEY_TURBO_TOGGLE = "hotkey_turbo_limit"
+        const val HOTKEY_TURBO_HOLD = "hotkey_turbo_hold"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -209,7 +210,8 @@ class CitraSettings {
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
             HOTKEY_QUICKLOAD,
-            HOTKEY_TURBO_LIMIT,
+            HOTKEY_TURBO_TOGGLE,
+            HOTKEY_TURBO_HOLD,
             HOTKEY_BUTTON_COMBO
         )
         val hotkeyTitles = listOf(
@@ -221,6 +223,7 @@ class CitraSettings {
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
             R.string.turbo_limit_hotkey,
+            R.string.turbo_hold_hotkey,
             R.string.button_combo
         )
 
