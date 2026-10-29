@@ -7,8 +7,6 @@ package org.citra.citra_emu.viewmodel
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.citra.citra_emu.features.settings.model.CitraSettings
-import org.citra.citra_emu.features.settings.utils.SettingsFile
 
 class EmulationViewModel : ViewModel() {
     val emulationStarted get() = _emulationStarted.asStateFlow()
@@ -22,13 +20,6 @@ class EmulationViewModel : ViewModel() {
 
     val shaderMessage get() = _shaderMessage.asStateFlow()
     private val _shaderMessage = MutableStateFlow("")
-
-    /** Used for the initial load of settings. Call rebuild for later creations. */
-    fun loadSettings(titleId: Long) {
-        if (CitraSettings.activeSettings.getAllGlobal().isNotEmpty()) return // already loaded
-        SettingsFile.loadSettings(CitraSettings.activeSettings, String.format("%016X", titleId))
-    }
-
     fun setShaderProgress(progress: Int) {
         _shaderProgress.value = progress
     }

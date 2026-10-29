@@ -47,17 +47,13 @@ abstract class SettingViewHolder<out T : SettingsItem>(
 
     abstract override fun onLongClick(clicked: View): Boolean
 
-    fun showGlobalMessageIfNeeded(globalMessage: MaterialTextView, position: Int) {
+    fun showGlobalMessageIfNeeded(globalMessage: MaterialTextView) {
         globalMessage.visibility = View.GONE
-
         setting ?: return
         setting?.setting ?: return
 
-        // Show "Revert to global" button in Custom Settings if applicable.
-        globalMessage.visibility = View.GONE
-
         val settings = adapter.fragmentView.activityView?.editingSettings
-        val showGlobal = settings?.isPerGame() == true &&
+        val showGlobal = settings?.isPerApp() == true &&
             setting?.setting != null &&
             settings.hasOverride(setting!!.setting!!)
 
@@ -67,7 +63,7 @@ abstract class SettingViewHolder<out T : SettingsItem>(
             return
         }
         val showMessage =
-            settings?.isPerGame() == false && CitraSettings.activeSettings.isPerGame() &&
+            settings?.isPerApp() == false && CitraSettings.activeSettings.isPerApp() &&
                 CitraSettings.activeSettings.hasOverride(setting!!.setting!!)
 
         if (showMessage) {

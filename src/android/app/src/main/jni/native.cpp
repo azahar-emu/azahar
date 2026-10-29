@@ -298,11 +298,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     // Forces a config reload on game boot, if the user changed settings in the UI
     Config global_config{};
-
-    // Use filename as fallback if title id is zero (e.g., homebrew)
-    const std::string fallback_name =
-        program_id == 0 ? std::string(FileUtil::GetFilename(filepath)) : std::string{};
-    global_config.LoadPerGameConfig(program_id, fallback_name);
+    global_config.LoadPerGameConfig(program_id);
     system.ApplySettings();
     Settings::LogSettings();
 
@@ -1014,11 +1010,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNI
     if (system.IsPoweredOn()) {
         u64 program_id{};
         system.GetAppLoader().ReadProgramId(program_id);
-        // Use the registered ROM path (if any) to derive a fallback name
-        const std::string current_rom_path = FileUtil::GetCurrentRomPath();
-        const std::string fallback_name =
-            program_id == 0 ? std::string(FileUtil::GetFilename(current_rom_path)) : std::string{};
-        cfg.LoadPerGameConfig(program_id, fallback_name);
+        cfg.LoadPerGameConfig(program_id);
     }
 
     if (multiplayer) {

@@ -18,7 +18,7 @@ class ResetSettingsDialogFragment : DialogFragment() {
         var description = R.string.reset_all_settings_description
 
         // if this is a per-game Settings object, reset to global instead
-        if (settingsActivity.editingSettings.isPerGame()) {
+        if (settingsActivity.editingSettings.isPerApp()) {
             title = R.string.reset_settings_to_global
             description = R.string.reset_settings_to_global_description
         }

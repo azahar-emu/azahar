@@ -100,7 +100,7 @@ std::string Config::GetSetting(const std::string& group, Settings::Setting<std::
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    setting = std::move(GetSetting(group, setting));
+    setting = GetSetting(group, setting);
 }
 
 template <>
@@ -392,15 +392,13 @@ void Config::Reload() {
     ReadValues();
 }
 
-void Config::LoadPerGameConfig(u64 title_id, const std::string& fallback_name) {
+void Config::LoadPerGameConfig(u64 title_id) {
     // Determine file name
     std::string name;
     if (title_id != 0) {
         std::ostringstream ss;
         ss << std::uppercase << std::hex << std::setw(16) << std::setfill('0') << title_id;
         name = ss.str();
-    } else {
-        name = fallback_name;
     }
     if (name.empty()) {
         per_game_config.reset();
