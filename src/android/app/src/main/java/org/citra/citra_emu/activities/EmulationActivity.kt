@@ -106,17 +106,6 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.info("[EmulationActivity] intent=$intent")
-        Log.info(
-            "[EmulationActivity] extras=${try {
-                intent.extras?.keySet()?.joinToString()
-            } catch (
-                e: Exception
-            ) {
-                "unreadable: ${e.message}"
-            }}"
-        )
-
         requestWindowFeature(Window.FEATURE_NO_TITLE)
 
         RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
@@ -143,10 +132,10 @@ class EmulationActivity : AppCompatActivity() {
         isRotationBlocked = true
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
 
+        super.onCreate(savedInstanceState)
+
         // load settings
         loadGameSettings(game)
-
-        super.onCreate(savedInstanceState)
 
         secondaryDisplayManager = SecondaryDisplay(this)
         secondaryDisplayManager.updateDisplay()

@@ -57,7 +57,7 @@ class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
             binding.textSettingValue.alpha = 0.5f
         }
 
-        showGlobalMessageIfNeeded(binding.messageUseGlobal, position)
+        showGlobalMessageIfNeeded(binding.messageUseGlobal)
     }
 
     override fun onClick(clicked: View) {

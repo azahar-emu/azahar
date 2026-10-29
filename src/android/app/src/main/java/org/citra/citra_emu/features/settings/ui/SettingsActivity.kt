@@ -214,7 +214,7 @@ class SettingsActivity :
 
     fun onSettingsReset() {
         // if we are editing per-game settings, delete the per app file only
-        if (editingSettings.isPerGame()) {
+        if (editingSettings.isPerApp()) {
             // reset to global settings, save, and exit
             editingSettings.clearAllOverrides()
             SettingsFile.deletePerAppFile(editingSettings.gameId)

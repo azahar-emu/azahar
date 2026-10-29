@@ -74,13 +74,13 @@ class SettingsFragmentPresenter(
     fun onViewCreated(settingsAdapter: SettingsAdapter) {
         this.settingsAdapter = settingsAdapter
         preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        settingsAdapter.isPerGame = !TextUtils.isEmpty(gameId)
+        settingsAdapter.isPerApp = !TextUtils.isEmpty(gameId)
         loadSettingsList()
     }
 
     fun loadSettingsList() {
         titleBase = if (!TextUtils.isEmpty(gameId)) {
-            settingsActivity.getString(R.string.preferences_custom_settings) + " — " +
+            settingsActivity.getString(R.string.application_settings) + " — " +
                 gameTitle
         } else {
             settingsActivity.getString(R.string.preferences_settings)
@@ -223,7 +223,7 @@ class SettingsFragmentPresenter(
 
             add(
                 RunnableSetting(
-                    if (editingSettings.isPerGame()) {
+                    if (editingSettings.isPerApp()) {
                         R.string.reset_settings_to_global
                     } else {
                         R.string.reset_all_settings

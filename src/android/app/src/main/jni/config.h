@@ -26,8 +26,8 @@ public:
     ~Config();
     static void AddDefaultSettingValue(std::string key, std::string value);
     void Reload();
-    // Load a per-game config overlay by title id or fallback name. Does not create files.
-    void LoadPerGameConfig(u64 title_id, const std::string& fallback_name = "");
+    // Load a per-game config overlay by title id. Does not create files.
+    void LoadPerGameConfig(u64 title_id);
 
 private:
     /**

@@ -30,7 +30,6 @@ class SettingsActivityPresenter(
     private lateinit var menuTag: String
     private lateinit var gameId: String
     private lateinit var gameTitle: String
-    private var perGameInGlobalContext = false
 
     fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String, gameTitle: String) {
         this.menuTag = menuTag
@@ -40,8 +39,6 @@ class SettingsActivityPresenter(
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)
         } else {
-            perGameInGlobalContext = gameId != "" && !CitraSettings.activeSettings.isPerGame()
-
             // sync the active settings into my local settings appropriately
             // if we are editing global settings rom a game, this should just work
             // to sync only the global settings into the local version
@@ -50,7 +47,7 @@ class SettingsActivityPresenter(
 
             // if we are editing per-game settings when the game is not loaded,
             // we need to load the per-game settings now from the ini file
-            if (perGameInGlobalContext) {
+            if (gameId != "" && !CitraSettings.activeSettings.isPerApp()) {
                 SettingsFile.loadSettings(editingSettings, gameId)
             }
         }
@@ -113,7 +110,7 @@ class SettingsActivityPresenter(
     fun onStop(finishing: Boolean) {
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
-            if (editingSettings.isPerGame()) {
+            if (editingSettings.isPerApp()) {
                 SettingsFile.saveCustomFile(editingSettings, activityView)
             } else {
                 SettingsFile.saveGlobalFile(editingSettings, activityView)

@@ -72,7 +72,7 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
     DialogInterface.OnClickListener,
     DialogInterface.OnMultiChoiceClickListener {
     private var settings: ArrayList<SettingsItem>? = null
-    var isPerGame: Boolean = false
+    var isPerApp: Boolean = false
     private var clickedItem: SettingsItem? = null
     private var clickedPosition: Int
     private var dialog: AlertDialog? = null
@@ -555,14 +555,14 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
 
         MaterialAlertDialogBuilder(context)
             .setMessage(
-                if (settings.isPerGame()) {
+                if (settings.isPerApp()) {
                     R.string.reset_setting_global_confirmation
                 } else {
                     R.string.reset_setting_confirmation
                 }
             )
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                if (settings.isPerGame()) {
+                if (settings.isPerApp()) {
                     resetSettingToGlobal(setting, position)
                 } else {
                     resetSettingToDefault(setting, position)

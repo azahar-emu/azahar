@@ -434,7 +434,7 @@
     <string name="reset_all_settings_description">All settings will be reset to their default configuration, including all per-app settings. This can not be undone.</string>
     <string name="settings_reset">Settings reset</string>
     <string name="reset_settings_to_global">Reset Per-Application Settings</string>
-    <string name="reset_settings_to_global_description">All custom settings for this application wil be reset to the global value. This cannot be undone. </string>
+    <string name="reset_settings_to_global_description">All custom settings for this application will be reset to the global value. This cannot be undone.</string>
     <string name="select_rtc_date">Select RTC date</string>
     <string name="select_rtc_time">Select RTC time</string>
     <string name="reset_setting_confirmation">Do you want to reset this setting back to its default value?</string>
@@ -460,7 +460,6 @@
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Settings</string>
-    <string name="preferences_custom_settings">Per-Application Settings</string>
     <string name="preferences_general">General</string>
     <string name="preferences_system">System</string>
     <string name="preferences_camera">Camera</string>
