@@ -24,7 +24,7 @@ private:
     void ReadValues();
 
 public:
-    Config();
+    Config(u64 titleId = 0L);
     ~Config();
     static void AddDefaultSettingValue(const std::string& key, const std::string& value);
     void Reload();

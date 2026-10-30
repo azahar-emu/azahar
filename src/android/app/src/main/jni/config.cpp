@@ -24,7 +24,7 @@
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
 
-Config::Config() {
+Config::Config(u64 title_id) {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
     android_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini";
     std::string ini_buffer;
@@ -32,8 +32,7 @@ Config::Config() {
     if (!ini_buffer.empty()) {
         android_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
     }
-
-    Reload();
+    LoadPerGameConfig(title_id);
 }
 
 Config::~Config() = default;
@@ -86,12 +85,11 @@ Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged
 
     if constexpr (std::is_enum_v<Type>) {
         return static_cast<Type>(
-                GetSettingFromKey<int>(group, key, static_cast<int>(setting.GetDefault())));
+            GetSettingFromKey<int>(group, key, static_cast<int>(setting.GetDefault())));
     } else {
         return GetSettingFromKey<Type>(group, key, setting.GetDefault());
     }
 }
-
 
 template <typename Type, bool ranged>
 void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
@@ -209,7 +207,8 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);
     ReadSetting("Renderer", Settings::values.turbo_limit);
-    bool use_frame_limit = GetSettingFromKey<bool>("Renderer", Settings::Keys::use_frame_limit, true);
+    bool use_frame_limit =
+        GetSettingFromKey<bool>("Renderer", Settings::Keys::use_frame_limit, true);
     if (use_frame_limit) {
         ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
