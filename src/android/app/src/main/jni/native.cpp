@@ -298,8 +298,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     }
 
     // Forces a config reload on game boot, if the user changed settings in the UI
-    Config global_config{};
-    global_config.LoadPerGameConfig(program_id);
+    Config game_config(program_id);
     system.ApplySettings();
     Settings::LogSettings();
 
@@ -1004,15 +1003,13 @@ void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
                                                             [[maybe_unused]] jobject obj) {
-    Config cfg{};
     Core::System& system{Core::System::GetInstance()};
-
-    // Load game-specific settings overlay (if a game is running)
+    u64 program_id{};
     if (system.IsPoweredOn()) {
-        u64 program_id{};
         system.GetAppLoader().ReadProgramId(program_id);
-        cfg.LoadPerGameConfig(program_id);
     }
+    Config cfg(program_id);
+    // Load game-specific settings overlay (if a game is running)
 
     if (multiplayer) {
         multiplayer->UpdateCredentials();
@@ -1353,10 +1350,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_deleteVulkanShaderCache(JNIEnv* env
         });
 }
 
-void JNICALL Java_org_citra_citra_1emu_NativeLibrary_addDefaultSetting(
-    JNIEnv* env, jobject obj, jstring key, jstring value) {
+void JNICALL Java_org_citra_citra_1emu_NativeLibrary_addDefaultSetting(JNIEnv* env, jobject obj,
+                                                                       jstring key, jstring value) {
     Config::AddDefaultSettingValue(GetJString(env, key), GetJString(env, value));
 }
-
 
 } // extern "C"
