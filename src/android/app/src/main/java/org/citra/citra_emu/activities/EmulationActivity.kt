@@ -132,6 +132,9 @@ class EmulationActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
+        isActivityRecreated = savedInstanceState != null
+        if (!isActivityRecreated) processGame = null
+
         processGame = processGame ?: GameHelper.getGameFromIntent(this, intent)
         val game = processGame
 
@@ -150,8 +153,6 @@ class EmulationActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
         val navController = navHostFragment.navController
         navController.setGraph(R.navigation.emulation_navigation, intent.extras)
-
-        isActivityRecreated = savedInstanceState != null
 
         // Set these options now so that the SurfaceView the game renders into is the right size.
         enableFullscreenImmersive()

@@ -196,7 +196,6 @@ class EmulationFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (requireActivity().isFinishing) {
-            emulationState.stop()
             return
         }
         binding.surfaceEmulation.holder.addCallback(this)
@@ -519,8 +518,8 @@ class EmulationFragment :
     }
 
     override fun onResume() {
-        if (!::emulationState.isInitialized) return
         super.onResume()
+        if (!::emulationState.isInitialized) return
         if (NativeLibrary.isRunning()) {
             emulationState.unpause()
 
@@ -1693,7 +1692,7 @@ class EmulationFragment :
             if (state == State.STOPPED || !NativeLibrary.isRunning()) {
                 Log.warning("[EmulationFragment] Stop called while already stopped.")
             } else {
-                Log.warning("[EmulationFragment] Stopping emulation.")
+                Log.debug("[EmulationFragment] Stopping emulation.")
             }
             state = State.STOPPED
             NativeLibrary.stopEmulation()
