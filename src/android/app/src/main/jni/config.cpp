@@ -87,10 +87,10 @@ Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged
     if constexpr (std::is_enum_v<Type>) {
         return static_cast<Type>(
             GetSettingFromKey<int>(group, key, static_cast<int>(setting.GetDefault())));
-    } else if constexpr(std::is_same_v<Type, std::string>) {
+    } else if constexpr (std::is_same_v<Type, std::string>) {
         auto v = GetSettingFromKey<std::string>(group, key, setting.GetDefault());
         return v.empty() ? setting.GetDefault() : v;
-    }else{
+    } else {
         return GetSettingFromKey<Type>(group, key, setting.GetDefault());
     }
 }
@@ -149,9 +149,14 @@ Type Config::GetSettingFromKey(const std::string& group, const std::string& key,
     } else if constexpr (std::is_same_v<Type, std::string>) {
         std::string value = (default_value && default_str == "") ? *default_value : default_str;
         if (has_per_game) {
-            value = per_game_config->Get(group, key, value);
+            // config.ini will return empty strings with get so need to make sure not to override
+            auto const configured = per_game_config->Get(group, key, value);
+            if (!configured.empty())
+                value = configured;
         } else if (has_android) {
-            value = android_config->Get(group, key, value);
+            auto const configured = android_config->Get(group, key, value);
+            if (!configured.empty())
+                value = configured;
         }
         return value;
     } else {
