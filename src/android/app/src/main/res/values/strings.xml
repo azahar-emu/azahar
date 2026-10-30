@@ -468,6 +468,7 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Theme and Color</string>
     <string name="preferences_layout">Layout</string>
+    <string name="preferences_title_with_application">%1$s — %2$s</string>
 
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error loading application</string>
