@@ -134,7 +134,7 @@ public:
     void UploadCustom(const VideoCore::Material* material, u32 level);
 
     /// Downloads pixel data to staging from a rectangle region of the surface texture
-    void Download(const VideoCore::BufferTextureCopy& download,
+    bool Download(const VideoCore::BufferTextureCopy& download,
                   const VideoCore::StagingData& staging);
 
     /// Attaches a handle of surface to the specified framebuffer target
