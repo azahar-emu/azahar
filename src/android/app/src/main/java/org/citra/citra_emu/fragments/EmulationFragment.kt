@@ -12,7 +12,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
@@ -73,7 +72,6 @@ import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.model.Game
-import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitializationState
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
@@ -129,71 +127,37 @@ class EmulationFragment :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val intent = requireActivity().intent
-        var intentUri: Uri? = intent.data
-        val oldIntentInfo = Pair(
-            intent.getStringExtra("SelectedGame"),
-            intent.getStringExtra("SelectedTitle")
-        )
-        var intentGame: Game? = null
-        intentUri = if (intentUri == null && oldIntentInfo.first != null) {
-            Uri.parse(oldIntentInfo.first)
-        } else {
-            intentUri
+        // The game should have already been resolved and parsed by the Game Activity and stored in
+        // the view model.
+        val resolvedGame = args.game ?: emulationViewModel.launchGame
+        if (resolvedGame == null) {
+            abortLaunch()
+            return
         }
-        if (intentUri != null) {
-            if (!BuildUtil.isGooglePlayBuild) {
-                val intentUriString = intentUri.toString()
-                // We need to build a special path as the incoming URI may be SAF exclusive
-                Log.warning(
-                    "[EmulationFragment] Cannot determine native path of URI \"" +
-                        intentUriString + "\", using file descriptor instead."
-                )
-                if (!intentUriString.startsWith("!")) {
-                    gameFd =
-                        requireContext().contentResolver.openFileDescriptor(
-                            intentUri,
-                            "r"
-                        )?.detachFd()
-                    intentUri = if (gameFd != null) {
-                        Uri.parse("fd://" + gameFd.toString())
-                    } else {
-                        null
-                    }
-                }
+        game = resolvedGame
+
+        // A cached fd:// path points at a descriptor the activity already closed, so open a live one
+        var launchPath = game.path
+        if (launchPath.startsWith("fd://")) {
+            val uri = GameHelper.getLaunchUri(requireActivity().intent)
+            gameFd = uri?.let {
+                requireContext().contentResolver.openFileDescriptor(it, "r")?.detachFd()
             }
-            intentGame =
-                intentUri?.let {
-                    // isInstalled, addedToLibrary and mediaType do not matter here
-                    GameHelper.getGame(
-                        it,
-                        isInstalled = false,
-                        addedToLibrary = false,
-                        mediaType = Game.MediaType.GAME_CARD
-                    )
-                }
+            if (gameFd == null) {
+                abortLaunch()
+                return
+            }
+            launchPath = "fd://$gameFd"
         }
 
         val insertedCartridge = preferences.getString("insertedCartridge", "")
         NativeLibrary.setInsertedCartridge(insertedCartridge ?: "")
 
-        try {
-            game = args.game ?: intentGame!!
-        } catch (e: NullPointerException) {
-            Toast.makeText(
-                requireContext(),
-                R.string.no_game_present,
-                Toast.LENGTH_SHORT
-            ).show()
-            requireActivity().finish()
-            return
-        }
-
-        Log.info("[EmulationFragment] Starting application " + game.path)
+        Log.info("[EmulationFragment] Starting application " + launchPath)
 
         // So this fragment doesn't restart on configuration changes; i.e. rotation.
         retainInstance = true
-        emulationState = EmulationState(game.path)
+        emulationState = EmulationState(launchPath)
         screenAdjustmentUtil =
             ScreenAdjustmentUtil(
                 requireContext(),
@@ -201,6 +165,11 @@ class EmulationFragment :
             )
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
+    }
+
+    private fun abortLaunch() {
+        Toast.makeText(requireContext(), R.string.no_game_present, Toast.LENGTH_SHORT).show()
+        requireActivity().finish()
     }
 
     override fun onCreateView(
@@ -414,7 +383,7 @@ class EmulationFragment :
                 R.id.menu_application_settings -> {
                     val titleId = NativeLibrary.getRunningTitleId()
 
-                    val gameId = java.lang.String.format("%016X", titleId)
+                    val gameId = String.format("%016X", titleId)
                     SettingsActivity.launch(
                         requireContext(),
                         SettingsFile.FILE_NAME_CONFIG,
@@ -520,6 +489,10 @@ class EmulationFragment :
                             ViewUtils.showView(binding.surfaceInputOverlay)
                             binding.inGameMenu.menu.findItem(R.id.menu_emulation_savestates)
                                 .setVisible(NativeLibrary.getSavestateInfo() != null)
+                            binding.inGameMenu.menu.findItem(
+                                R.id.menu_application_settings
+                            ).isVisible =
+                                NativeLibrary.getRunningTitleId() != 0L
                             binding.drawerLayout.setDrawerLockMode(
                                 EmulationMenuSettings.drawerLockMode
                             )
@@ -543,6 +516,7 @@ class EmulationFragment :
     }
 
     override fun onResume() {
+        if (!::emulationState.isInitialized) return
         super.onResume()
         if (NativeLibrary.isRunning()) {
             emulationState.unpause()
