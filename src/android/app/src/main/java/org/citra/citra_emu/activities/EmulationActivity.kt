@@ -132,10 +132,9 @@ class EmulationActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // load settings
-        val game = emulationViewModel.getOrResolveLaunchGame {
-            GameHelper.getGameFromIntent(this, intent)
-        }
+        processGame = processGame ?: GameHelper.getGameFromIntent(this, intent)
+        val game = processGame
+
         loadGameSettings(game)
 
         secondaryDisplayManager = SecondaryDisplay(this)
@@ -199,8 +198,8 @@ class EmulationActivity : AppCompatActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         emulationViewModel.setEmulationStarted(false)
 
-        val game = GameHelper.getGameFromIntent(this, intent)
-        emulationViewModel.setLaunchGame(game)
+        processGame = GameHelper.getGameFromIntent(this, intent)
+        val game = processGame
         loadGameSettings(game)
 
         if (game != null && game.titleId != 0L) {
@@ -216,6 +215,8 @@ class EmulationActivity : AppCompatActivity() {
             intent.extras,
             NavOptions.Builder().setPopUpTo(R.id.emulationFragment, true).build()
         )
+        isEmulationRunning = true
+        instance = this
     }
 
     private fun loadGameSettings(game: Game?) {
@@ -327,7 +328,11 @@ class EmulationActivity : AppCompatActivity() {
         secondaryDisplayManager.releasePresentation()
         secondaryDisplayManager.releaseVD()
 
-        if (isFinishing) CitraSettings.activeSettings.changeToGlobalContext()
+        if (isFinishing) {
+            CitraSettings.activeSettings.changeToGlobalContext()
+            processGame = null
+            NativeLibrary.stopEmulation()
+        }
 
         super.onDestroy()
     }
@@ -724,7 +729,7 @@ class EmulationActivity : AppCompatActivity() {
 
     companion object {
         private var instance: EmulationActivity? = null
-
+        var processGame: Game? = null
         fun isRunning(): Boolean = instance?.isEmulationRunning ?: false
     }
 }

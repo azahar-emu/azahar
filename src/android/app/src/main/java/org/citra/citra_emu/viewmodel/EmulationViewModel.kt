@@ -7,7 +7,6 @@ package org.citra.citra_emu.viewmodel
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.citra.citra_emu.model.Game
 
 class EmulationViewModel : ViewModel() {
     val emulationStarted get() = _emulationStarted.asStateFlow()
@@ -21,24 +20,6 @@ class EmulationViewModel : ViewModel() {
 
     val shaderMessage get() = _shaderMessage.asStateFlow()
     private val _shaderMessage = MutableStateFlow("")
-
-    private var _launchGame: Game? = null
-    private var launchGameResolved = false
-    val launchGame: Game? get() = _launchGame
-
-    fun getOrResolveLaunchGame(resolve: () -> Game?): Game? {
-        if (!launchGameResolved) {
-            _launchGame = resolve()
-            launchGameResolved = true
-        }
-        return _launchGame
-    }
-
-    fun setLaunchGame(game: Game?) {
-        _launchGame = game
-        launchGameResolved = true
-    }
-
     fun setShaderProgress(progress: Int) {
         _shaderProgress.value = progress
     }
