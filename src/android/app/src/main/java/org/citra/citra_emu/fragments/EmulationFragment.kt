@@ -128,9 +128,9 @@ class EmulationFragment :
         super.onCreate(savedInstanceState)
 
         // The game should have already been resolved and parsed by the Game Activity and stored in
-        // the view model, but otherwise parse it again
+        // the companion object, but otherwise parse it again
         val resolvedGame =
-            emulationViewModel.launchGame
+            EmulationActivity.processGame
                 ?: GameHelper.getGameFromIntent(requireActivity(), requireActivity().intent)
         if (resolvedGame == null) {
             abortLaunch()
@@ -196,6 +196,7 @@ class EmulationFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (requireActivity().isFinishing) {
+            emulationState.stop()
             return
         }
         binding.surfaceEmulation.holder.addCallback(this)
@@ -1689,13 +1690,14 @@ class EmulationFragment :
 
         @Synchronized
         fun stop() {
-            if (state != State.STOPPED) {
-                Log.debug("[EmulationFragment] Stopping emulation.")
-                state = State.STOPPED
-                NativeLibrary.stopEmulation()
-            } else {
+            if (state == State.STOPPED || !NativeLibrary.isRunning()) {
                 Log.warning("[EmulationFragment] Stop called while already stopped.")
+            } else {
+                Log.warning("[EmulationFragment] Stopping emulation.")
             }
+            state = State.STOPPED
+            NativeLibrary.stopEmulation()
+            EmulationActivity.processGame = null
         }
 
         // State changing methods
@@ -1787,7 +1789,9 @@ class EmulationFragment :
                 }
 
                 State.PAUSED -> {
-                    Log.debug("[EmulationFragment] Resuming emulation.")
+                    Log.debug(
+                        "[EmulationFragment] Surface restored while paused. Waiting for resume.."
+                    )
                     unpause()
                 }
 
