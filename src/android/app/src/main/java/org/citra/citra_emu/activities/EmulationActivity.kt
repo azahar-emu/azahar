@@ -23,7 +23,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
-import androidx.core.os.BundleCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -111,7 +110,6 @@ class EmulationActivity : AppCompatActivity() {
         RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
 
         ThemeUtil.setTheme(this)
-        val game = getGameFromIntent(intent)
 
         if (!ensureUserDirectoryReady()) {
             super.onCreate(null) // null: don't restore fragments into an activity we're killing
@@ -135,6 +133,9 @@ class EmulationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         // load settings
+        val game = emulationViewModel.getOrResolveLaunchGame {
+            GameHelper.getGameFromIntent(this, intent)
+        }
         loadGameSettings(game)
 
         secondaryDisplayManager = SecondaryDisplay(this)
@@ -181,8 +182,10 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val launchUri = getLaunchUri(intent)
-        if (launchUri != null && launchUri != Uri.EMPTY && launchUri == getLaunchUri(this.intent)) {
+        val launchUri = GameHelper.getLaunchUri(intent)
+        if (launchUri != null && launchUri != Uri.EMPTY &&
+            launchUri == GameHelper.getLaunchUri(this.intent)
+        ) {
             Log.info("[EmulationActivity] Ignoring relaunch of the running game")
             return
         }
@@ -196,7 +199,8 @@ class EmulationActivity : AppCompatActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         emulationViewModel.setEmulationStarted(false)
 
-        val game = getGameFromIntent(intent)
+        val game = GameHelper.getGameFromIntent(this, intent)
+        emulationViewModel.setLaunchGame(game)
         loadGameSettings(game)
 
         if (game != null && game.titleId != 0L) {
@@ -224,13 +228,18 @@ class EmulationActivity : AppCompatActivity() {
         if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
             SettingsFile.loadSettings(CitraSettings.activeSettings)
         }
+        val gameId = if (game == null ||
+            game.titleId == 0L
+        ) {
+            null
+        } else {
+            String.format("%016X", game.titleId)
+        }
 
-        // if this is a game with a supported title ID and the active settings
-        // haven't already loaded the game overrides, load them from file
-        if (game != null && game.titleId != 0L) {
-            val gameId = String.format("%016X", game.titleId)
-            if (CitraSettings.activeSettings.gameId != gameId) {
-                CitraSettings.activeSettings.clearAllOverrides()
+        // if activeSettings already matches our current game, skip this
+        if (CitraSettings.activeSettings.gameId != gameId) {
+            CitraSettings.activeSettings.changeToGlobalContext()
+            if (gameId != null) {
                 CitraSettings.activeSettings.gameId = gameId
                 SettingsFile.loadSettings(
                     CitraSettings.activeSettings,
@@ -242,71 +251,23 @@ class EmulationActivity : AppCompatActivity() {
         if (CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
             CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
         ) {
-            CitraSettings.activeSettings.setByCurrentState(
-                IntSetting.TEXTURE_FILTER,
-                TextureFilter.NOFILTER.int
-            )
+            if (CitraSettings.activeSettings.hasOverride(IntSetting.GRAPHICS_API)) {
+                // in this case vulkan is a per-app override, so update the per-app setting
+                // which will happen because the settings context is per-app at this point.
+                CitraSettings.activeSettings.setBySettingsContext(
+                    IntSetting.TEXTURE_FILTER,
+                    TextureFilter.NOFILTER.int
+                )
+            } else {
+                // otherwise write global if texture filter is global, override if override
+                CitraSettings.activeSettings.setByCurrentState(
+                    IntSetting.TEXTURE_FILTER,
+                    TextureFilter.NOFILTER.int
+                )
+            }
             SettingsFile.saveSetting(IntSetting.TEXTURE_FILTER, CitraSettings.activeSettings)
             NativeLibrary.reloadSettings()
             showAnime4kDialog()
-        }
-    }
-
-    private fun getLaunchUri(intent: Intent): Uri? = try {
-        val game = intent.extras?.let { extras ->
-            BundleCompat.getParcelable(extras, "game", Game::class.java)
-        }
-        if (game != null) {
-            game.launchIntent.data
-        } else {
-            intent.data ?: intent.getStringExtra("SelectedGame")?.toUri()
-        }
-    } catch (e: Exception) {
-        Log.error("[EmulationActivity] Failed to parse URI from intent: ${e.message}")
-        null
-    }
-
-    /** creates or loads a Game object from an intent */
-    private fun getGameFromIntent(intent: Intent): Game? {
-        val parcelable = try {
-            intent.extras?.let { BundleCompat.getParcelable(it, "game", Game::class.java) }
-        } catch (e: Exception) {
-            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
-            null
-        }
-
-        if (parcelable != null) return parcelable
-
-        val uri: Uri = intent.data
-            ?: intent.getStringExtra("SelectedGame")?.toUri()
-            ?: return null
-
-        try {
-            if (BuildUtil.isGooglePlayBuild || uri.toString().startsWith("!")) {
-                return GameHelper.getGame(
-                    uri,
-                    isInstalled = false,
-                    addedToLibrary = false,
-                    mediaType = Game.MediaType.GAME_CARD
-                )
-            } else {
-                val fd = contentResolver.openFileDescriptor(uri, "r")
-                if (fd != null) {
-                    val game = GameHelper.getGame(
-                        "fd://${fd.fd}".toUri(),
-                        isInstalled = false,
-                        addedToLibrary = false,
-                        mediaType = Game.MediaType.GAME_CARD
-                    )
-                    fd.close()
-                    return game
-                } else {
-                    return null
-                }
-            }
-        } catch (e: Exception) {
-            Log.error("[EmulationActivity] Failed to resolve game from intent: ${e.message}")
-            return null
         }
     }
 
@@ -366,7 +327,7 @@ class EmulationActivity : AppCompatActivity() {
         secondaryDisplayManager.releasePresentation()
         secondaryDisplayManager.releaseVD()
 
-        CitraSettings.activeSettings.changeToGlobalContext()
+        if (isFinishing) CitraSettings.activeSettings.changeToGlobalContext()
 
         super.onDestroy()
     }
