@@ -266,14 +266,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);
     ReadSetting("Renderer", Settings::values.turbo_limit);
-    // Workaround to map Android setting for enabling the frame limiter to the format Citra expects
-    // TODO: test this!
-    bool use_frame_limit = false;
-    if (per_game_config && per_game_config->HasValue("Renderer", "use_frame_limit")) {
-        use_frame_limit = per_game_config->GetBoolean("Renderer", "use_frame_limit", true);
-    } else if (android_config) {
-        use_frame_limit = android_config->GetBoolean("Renderer", "use_frame_limit", true);
-    }
+    bool use_frame_limit = GetSettingFromKey<bool>("Renderer", Settings::Keys::use_frame_limit, true);
     if (use_frame_limit) {
         ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
