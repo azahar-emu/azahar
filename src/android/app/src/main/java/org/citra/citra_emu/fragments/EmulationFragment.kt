@@ -128,8 +128,10 @@ class EmulationFragment :
         super.onCreate(savedInstanceState)
 
         // The game should have already been resolved and parsed by the Game Activity and stored in
-        // the view model.
-        val resolvedGame = args.game ?: emulationViewModel.launchGame
+        // the view model, but otherwise parse it again
+        val resolvedGame =
+            emulationViewModel.launchGame
+                ?: GameHelper.getGameFromIntent(requireActivity(), requireActivity().intent)
         if (resolvedGame == null) {
             abortLaunch()
             return
