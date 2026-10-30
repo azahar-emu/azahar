@@ -80,75 +80,18 @@ void Config::AddDefaultSettingValue(const std::string& key, const std::string& v
     default_android_values.insert_or_assign(key, value);
 }
 
-template <>
-std::string Config::GetSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    std::string setting_value = default_android_values.contains(setting.GetLabel()) &&
-                                        default_android_values.at(setting.GetLabel()) != ""
-                                    ? default_android_values.at(setting.GetLabel())
-                                    : setting.GetDefault();
-    if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
-        setting_value = per_game_config->Get(group, setting.GetLabel(), setting_value);
-    } else if (android_config) {
-        setting_value = android_config->Get(group, setting.GetLabel(), setting_value);
-    }
-    if (setting_value.empty()) {
-        setting_value = setting.GetDefault();
-    }
-    return setting_value;
-}
-
-template <>
-void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    setting = GetSetting(group, setting);
-}
-
-template <>
-bool Config::GetSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    bool value = default_android_values.contains(setting.GetLabel()) &&
-                         default_android_values.at(setting.GetLabel()) != ""
-                     ? default_android_values.at(setting.GetLabel()) == "1" ||
-                           default_android_values.at(setting.GetLabel()) == "true"
-                     : setting.GetDefault();
-    if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
-        value = per_game_config->GetBoolean(group, setting.GetLabel(), value);
-    } else if (android_config) {
-        value = android_config->GetBoolean(group, setting.GetLabel(), value);
-    }
-    return value;
-}
-
-template <>
-void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    setting = GetSetting(group, setting);
-}
-
-// TODO: figure out why ranged isn't being used
 template <typename Type, bool ranged>
 Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
-    if constexpr (std::is_floating_point_v<Type>) {
-        double value = default_android_values.contains(setting.GetLabel()) &&
-                               default_android_values.at(setting.GetLabel()) != ""
-                           ? std::stod(default_android_values.at(setting.GetLabel()))
-                           : static_cast<double>(setting.GetDefault());
-        if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
-            value = per_game_config->GetReal(group, setting.GetLabel(), value);
-        } else if (android_config) {
-            value = android_config->GetReal(group, setting.GetLabel(), value);
-        }
-        return static_cast<Type>(value);
+    std::string key = setting.GetLabel();
+
+    if constexpr (std::is_enum_v<Type>) {
+        return static_cast<Type>(
+                GetSettingFromKey<int>(group, key, static_cast<int>(setting.GetDefault())));
     } else {
-        long value = default_android_values.contains(setting.GetLabel()) &&
-                             default_android_values.at(setting.GetLabel()) != ""
-                         ? std::stol(default_android_values.at(setting.GetLabel()))
-                         : static_cast<long>(setting.GetDefault());
-        if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
-            value = per_game_config->GetInteger(group, setting.GetLabel(), value);
-        } else if (android_config) {
-            value = android_config->GetInteger(group, setting.GetLabel(), value);
-        }
-        return static_cast<Type>(value);
+        return GetSettingFromKey<Type>(group, key, setting.GetDefault());
     }
 }
+
 
 template <typename Type, bool ranged>
 void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
