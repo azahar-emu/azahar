@@ -32,6 +32,7 @@ Config::Config(u64 title_id) {
     if (!ini_buffer.empty()) {
         android_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
     }
+    Reload();
     LoadPerGameConfig(title_id);
 }
 
@@ -86,7 +87,10 @@ Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged
     if constexpr (std::is_enum_v<Type>) {
         return static_cast<Type>(
             GetSettingFromKey<int>(group, key, static_cast<int>(setting.GetDefault())));
-    } else {
+    } else if constexpr(std::is_same_v<Type, std::string>) {
+        auto v = GetSettingFromKey<std::string>(group, key, setting.GetDefault());
+        return v.empty() ? setting.GetDefault() : v;
+    }else{
         return GetSettingFromKey<Type>(group, key, setting.GetDefault());
     }
 }
@@ -386,7 +390,6 @@ void Config::Reload() {
         }
     }
     LoadINI(DefaultINI::android_config_default_file_content);
-    ReadValues();
 }
 
 void Config::LoadPerGameConfig(u64 title_id) {
