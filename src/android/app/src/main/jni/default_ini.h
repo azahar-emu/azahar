@@ -512,7 +512,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(apply_region_free_patch) BOOST_HANA_STRING(R"(
 
 # How the system's battery staste is determined
-# 0: System (default), 1: Fixed (based on below settings
+# 0: System (default), 1: Fixed (based on below settings)
 )") DECLARE_KEY(battery_state_source) BOOST_HANA_STRING(R"(
 
 # The charge level of the virtual 3DS Battery
@@ -520,7 +520,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(battery_level) BOOST_HANA_STRING(R"(
 
 # The charging status of the virtual 3DS battery
-# 0: No, 1 (default): Yes
+# 0: Not Charging, 1 (default): Charging
 )") DECLARE_KEY(battery_charging) BOOST_HANA_STRING(R"(
 
 [Camera]
