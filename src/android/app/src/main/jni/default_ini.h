@@ -511,6 +511,18 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0: Disabled, 1 (default): Enabled
 )") DECLARE_KEY(apply_region_free_patch) BOOST_HANA_STRING(R"(
 
+# How the system's battery staste is determined
+# 0: System (default), 1: Fixed (based on below settings)
+)") DECLARE_KEY(battery_state_source) BOOST_HANA_STRING(R"(
+
+# The charge level of the virtual 3DS Battery
+# 0: Critical (default), 1: 25%, 2: 50%, 3: 75%, 4: 100%
+)") DECLARE_KEY(battery_level) BOOST_HANA_STRING(R"(
+
+# The charging status of the virtual 3DS battery
+# 0: Not Charging, 1 (default): Charging
+)") DECLARE_KEY(battery_charging) BOOST_HANA_STRING(R"(
+
 [Camera]
 # Which camera engine to use for the right outer camera
 # blank: a dummy camera that always returns black image
