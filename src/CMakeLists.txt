@@ -194,6 +194,7 @@ if(ENABLE_FREECAM)
 endif()
 
 add_subdirectory(common)
+add_subdirectory(kiu_qol)
 add_subdirectory(core)
 add_subdirectory(video_core)
 add_subdirectory(audio_core)

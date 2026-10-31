@@ -14,6 +14,7 @@
 #include "video_core/renderer_opengl/gl_texture_mailbox.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+#include "kiu_qol/kiu_controller.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
 
 #include "video_core/host_shaders/opengl_present_anaglyph_frag.h"
@@ -94,6 +95,7 @@ RendererOpenGL::~RendererOpenGL() {
 
 void RendererOpenGL::SwapBuffers() {
     system.perf_stats->StartSwap();
+    render_window.RefreshKiuLayout();
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
@@ -750,7 +752,41 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
             DrawBottomScreen(layout, additional_screen);
         }
     }
+    DrawKiuWidgets(layout);
     ResetSecondLayerOpacity();
+}
+
+void RendererOpenGL::DrawKiuWidgets(const Layout::FramebufferLayout& layout) {
+    const auto widgets = KiuQol::Controller::Get().GetDrawList();
+    if (widgets.empty() || !layout.is_rotated) {
+        return;
+    }
+    const bool stereo_single_screen =
+        layout.render_3d_mode == Settings::StereoRenderOption::Anaglyph ||
+        layout.render_3d_mode == Settings::StereoRenderOption::Interlaced ||
+        layout.render_3d_mode == Settings::StereoRenderOption::ReverseInterlaced;
+    if (layout.render_3d_mode != Settings::StereoRenderOption::Off && !stereo_single_screen) {
+        return; // side-by-side / VR layouts aren't supported by the HUD compositor yet
+    }
+    // ScreenInfo owns its texture and can't be copied, so crop the texcoords in place and
+    // restore them afterwards.
+    auto& bottom = screen_infos[2];
+    const Common::Rectangle<float> base = bottom.display_texcoords;
+    glUniform1i(uniform_layer, 0);
+    for (const auto& w : widgets) {
+        const KiuQol::TexRect t = KiuQol::CropTexcoords(
+            {base.left, base.top, base.right, base.bottom}, w.src);
+        bottom.display_texcoords = Common::Rectangle<float>(t.left, t.top, t.right, t.bottom);
+        ApplySecondLayerOpacity(w.opacity);
+        if (stereo_single_screen) {
+            DrawSingleScreenStereo(bottom, bottom, w.dst.x, w.dst.y, w.dst.w, w.dst.h,
+                                   Layout::DisplayOrientation::Landscape);
+        } else {
+            DrawSingleScreen(bottom, w.dst.x, w.dst.y, w.dst.w, w.dst.h,
+                             Layout::DisplayOrientation::Landscape);
+        }
+    }
+    bottom.display_texcoords = base;
 }
 
 void RendererOpenGL::ApplySecondLayerOpacity(float opacity) {

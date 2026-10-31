@@ -112,6 +112,8 @@ private:
                                 float h, Layout::DisplayOrientation orientation);
 
     void ApplySecondLayerOpacity(float alpha);
+    /// Kid Icarus QOL: composites cropped bottom-screen regions over the top screen.
+    void DrawKiuWidgets(const Layout::FramebufferLayout& layout);
 
     void DrawCursor(const Layout::FramebufferLayout& layout);
 

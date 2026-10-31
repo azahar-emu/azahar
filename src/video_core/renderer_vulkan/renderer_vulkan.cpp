@@ -12,6 +12,7 @@
 #include "video_core/gpu.h"
 #include "video_core/pica/pica_core.h"
 #include "video_core/renderer_vulkan/renderer_vulkan.h"
+#include "kiu_qol/kiu_controller.h"
 #include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 
@@ -1058,9 +1059,32 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         }
     }
 
+    DrawKiuWidgets(layout);
     DrawCursor(layout);
 
     scheduler.Record([](vk::CommandBuffer cmdbuf) { cmdbuf.endRenderPass(); });
+}
+
+void RendererVulkan::DrawKiuWidgets(const Layout::FramebufferLayout& layout) {
+    const auto widgets = KiuQol::Controller::Get().GetDrawList();
+    if (widgets.empty() || !layout.is_rotated ||
+        layout.render_3d_mode != Settings::StereoRenderOption::Off) {
+        return;
+    }
+    // DrawSingleScreen reads texcoords from screen_infos, so crop in place and restore after.
+    auto& bottom = screen_infos[2];
+    const Common::Rectangle<f32> base = bottom.texcoords;
+    draw_info.layer = 0;
+    for (const auto& w : widgets) {
+        const KiuQol::TexRect t =
+            KiuQol::CropTexcoords({base.left, base.top, base.right, base.bottom}, w.src);
+        bottom.texcoords = Common::Rectangle<f32>(t.left, t.top, t.right, t.bottom);
+        ApplySecondLayerOpacity(w.opacity);
+        DrawSingleScreen(2, w.dst.x, w.dst.y, w.dst.w, w.dst.h,
+                         Layout::DisplayOrientation::Landscape);
+    }
+    bottom.texcoords = base;
+    ApplySecondLayerOpacity(1.0f);
 }
 
 void RendererVulkan::DrawCursor(const Layout::FramebufferLayout& layout) {
@@ -1125,6 +1149,7 @@ void RendererVulkan::DrawCursor(const Layout::FramebufferLayout& layout) {
 
 void RendererVulkan::SwapBuffers() {
     system.perf_stats->StartSwap();
+    render_window.RefreshKiuLayout();
     screenRendered = false;
 #ifndef ANDROID
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {

@@ -35,6 +35,8 @@ add_library(citra_core STATIC EXCLUDE_FROM_ALL
     cheats/gateway_cheat.cpp
     cheats/gateway_cheat.h
     core.cpp
+    kiu_integration.cpp
+    kiu_integration.h
     core.h
     core_timing.cpp
     core_timing.h
@@ -509,7 +511,7 @@ endif()
 
 create_target_directory_groups(citra_core)
 
-target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core input_common)
+target_link_libraries(citra_core PUBLIC citra_common kiu_qol PRIVATE audio_core network video_core input_common)
 target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost::iostreams httplib)
 target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt lodepng open_source_archives)
 

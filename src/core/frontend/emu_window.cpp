@@ -7,6 +7,7 @@
 #include "common/settings.h"
 #include "core/3ds.h"
 #include "core/frontend/emu_window.h"
+#include "kiu_qol/kiu_controller.h"
 #include "core/frontend/input.h"
 
 namespace Frontend {
@@ -125,6 +126,11 @@ void EmuWindow::CreateTouchState() {
 }
 
 bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
+    if (!is_secondary && KiuQol::Controller::Get().IsActive()) {
+        KiuQol::Controller::Get().OnPointerPress(static_cast<float>(framebuffer_x),
+                                                 static_cast<float>(framebuffer_y));
+        return true;
+    }
     if (!framebuffer_layout.IsWithinTouchscreen(framebuffer_x, framebuffer_y))
         return false;
     Settings::StereoRenderOption render_3d_mode = get3DMode();
@@ -167,6 +173,10 @@ bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
 }
 
 void EmuWindow::TouchReleased() {
+    if (!is_secondary && KiuQol::Controller::Get().IsActive()) {
+        KiuQol::Controller::Get().OnPointerRelease();
+        return;
+    }
     std::scoped_lock guard{touch_state->mutex};
     if (touch_state->touch_pressed) {
         touch_state->last_press_x = touch_state->touch_x;
@@ -178,6 +188,11 @@ void EmuWindow::TouchReleased() {
 }
 
 void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
+    if (!is_secondary && KiuQol::Controller::Get().IsActive()) {
+        KiuQol::Controller::Get().OnPointerMove(static_cast<float>(framebuffer_x),
+                                                static_cast<float>(framebuffer_y));
+        return;
+    }
     if (!touch_state->touch_pressed)
         return;
 
@@ -268,6 +283,12 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
             break;
         }
     }
+    // Kid Icarus QOL: the top screen fills the window; bottom-screen content is composited on
+    // top of it as HUD widgets by the renderer.
+    kiu_layout_active = !is_secondary && KiuQol::Controller::Get().IsActive();
+    if (kiu_layout_active && !is_portrait_mode) {
+        layout = Layout::SingleFrameLayout(width, height, false, false);
+    }
 #ifdef ANDROID
     if (is_secondary) {
         layout = Layout::AndroidSecondaryLayout(width, height);
@@ -283,7 +304,24 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
         layout = Layout::GetCardboardSettings(layout);
     }
     layout.render_3d_mode = stereo_option;
+    if (!is_secondary) {
+        KiuQol::Controller::Get().SetTopScreenRect(
+            {static_cast<float>(layout.top_screen.left), static_cast<float>(layout.top_screen.top),
+             static_cast<float>(layout.top_screen.GetWidth()),
+             static_cast<float>(layout.top_screen.GetHeight())});
+    }
     NotifyFramebufferLayoutChanged(layout);
+}
+
+void EmuWindow::RefreshKiuLayout() {
+    if (is_secondary || framebuffer_layout.width == 0 || framebuffer_layout.height == 0)
+        return;
+    if (KiuQol::Controller::Get().IsActive() != kiu_layout_active) {
+        u32 width = framebuffer_layout.width;
+        if (get3DMode() == Settings::StereoRenderOption::SideBySideFull)
+            width /= 2;
+        UpdateCurrentFramebufferLayout(width, framebuffer_layout.height);
+    }
 }
 
 void EmuWindow::UpdateMinimumWindowSize(std::pair<unsigned, unsigned> min_size) {

@@ -46,6 +46,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/gsp/gsp.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
+#include "core/kiu_integration.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/plgldr/plgldr.h"
@@ -528,6 +529,8 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     cheat_engine.LoadCheatFile(title_id);
     cheat_engine.Connect(process->process_id);
 
+    KiuIntegration::OnGameLoaded(*this, *app_loader, title_id);
+
     perf_stats = std::make_unique<PerfStats>(title_id);
 
     if (Settings::values.dump_textures) {
@@ -806,6 +809,7 @@ void System::Shutdown(bool is_deserializing) {
 
     // Shutdown emulation session
     is_powered_on = false;
+    KiuIntegration::OnGameStopped();
 
     gpu.reset();
     if (!is_deserializing) {

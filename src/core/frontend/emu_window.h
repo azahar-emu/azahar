@@ -197,6 +197,13 @@ public:
      * @param framebuffer_y Framebuffer y-coordinate that was pressed
      * @returns True if the coordinates are within the touchpad, otherwise false
      */
+    /**
+     * Kid Icarus QOL: re-runs the layout when the single-screen mode turns on or off (it is
+     * decided at game load, after the window already has a layout). Called by the renderer
+     * once per frame; cheap when nothing changed.
+     */
+    void RefreshKiuLayout();
+
     bool TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
 
     /// Signal that a touch released event has occurred (e.g. mouse click released)
@@ -319,6 +326,7 @@ protected:
     }
 
     bool is_secondary{};
+    bool kiu_layout_active{}; ///< layout currently built for the KIU single-screen mode
     bool strict_context_required{};
     WindowSystemInfo window_info;
 

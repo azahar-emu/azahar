@@ -5,6 +5,7 @@
 #include <chrono>
 #include <thread>
 #include <QApplication>
+#include <QCursor>
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QMessageBox>
@@ -25,6 +26,7 @@
 #include "core/perf_stats.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
+#include "kiu_qol/kiu_controller.h"
 #include "input_common/motion_emu.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/gpu.h"
@@ -601,6 +603,30 @@ void GRenderWindow::mousePressEvent(QMouseEvent* event) {
 void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
     if (event->source() == Qt::MouseEventSynthesizedBySystem) {
         return; // touch input is handled in TouchUpdateEvent
+    }
+
+    // Kid Icarus QOL mouse-look: keep the cursor pinned to the window center and feed raw
+    // motion to the virtual stylus.
+    static bool kiu_cursor_hidden = false;
+    auto& kiu = KiuQol::Controller::Get();
+    if (kiu.WantsPointerLock()) {
+        const QPoint center(width() / 2, height() / 2);
+        const QPoint delta = event->pos() - center;
+        if (!delta.isNull()) {
+            const qreal ratio = windowPixelRatio();
+            kiu.OnPointerDelta(static_cast<float>(delta.x() * ratio),
+                               static_cast<float>(delta.y() * ratio));
+            QCursor::setPos(mapToGlobal(center));
+        }
+        if (!kiu_cursor_hidden) {
+            setCursor(QCursor(Qt::BlankCursor));
+            kiu_cursor_hidden = true;
+        }
+        return; // no MouseActivity: it would make the main window unhide the cursor
+    }
+    if (kiu_cursor_hidden) {
+        unsetCursor();
+        kiu_cursor_hidden = false;
     }
 
     auto pos = event->pos();

@@ -18,6 +18,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/hid/hid.h"
+#include "core/kiu_integration.h"
 #include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid_user.h"
 #include "core/hle/service/ir/ir_rst.h"
@@ -304,6 +305,17 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
             pressed = true;
             touch_entry.x = std::min<u16>(input.touch_x, Core::kScreenBottomWidth - 1);
             touch_entry.y = std::min<u16>(input.touch_y, Core::kScreenBottomHeight - 1);
+        }
+        // Kid Icarus single-screen QOL: when active it owns the touch screen (mouse aim,
+        // right-stick stylus, power macros, clicks on HUD widgets).
+        constexpr float pad_update_seconds =
+            static_cast<float>(pad_update_ticks) / static_cast<float>(BASE_CLOCK_RATE_ARM11);
+        if (const auto kiu = KiuIntegration::SampleTouch(system, pad_update_seconds)) {
+            pressed = kiu->pressed;
+            touch_entry.x = static_cast<u16>(
+                std::clamp(kiu->x, 0.0f, static_cast<float>(Core::kScreenBottomWidth - 1)));
+            touch_entry.y = static_cast<u16>(
+                std::clamp(kiu->y, 0.0f, static_cast<float>(Core::kScreenBottomHeight - 1)));
         }
         touch_entry.valid.Assign(pressed ? 1 : 0);
 
