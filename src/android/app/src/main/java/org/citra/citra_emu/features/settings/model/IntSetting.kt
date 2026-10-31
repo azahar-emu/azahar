@@ -84,7 +84,8 @@ enum class IntSetting(
         0
     ),
     ASPECT_RATIO(SettingKeys.aspect_ratio(), CitraSettings.SECTION_LAYOUT, 0),
-    UPDATE_CHECK_CHANNEL(SettingKeys.update_check_channel(), CitraSettings.SECTION_MISC, 0);
+    UPDATE_CHECK_CHANNEL(SettingKeys.update_check_channel(), CitraSettings.SECTION_MISC, 0),
+    SCALING_MODE(SettingKeys.scaling_mode(), CitraSettings.SECTION_RENDERER, 0);
 
     override fun valueFromString(string: String): Int? {
         var value = string.toIntOrNull()
