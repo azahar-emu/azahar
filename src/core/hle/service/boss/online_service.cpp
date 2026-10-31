@@ -1,6 +1,6 @@
-// Copyright 2023-2024 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <boost/serialization/map.hpp>
 #include "common/archives.h"
@@ -367,9 +367,12 @@ Result OnlineService::GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHead
         return ResultUnknown;
     }
 
+    u64_le temp64{};
+    u32_le temp32{};
     switch (type) {
     case NsDataHeaderInfoType::ProgramId:
-        buffer.Write(&entry->header.program_id, 0, size);
+        temp64 = entry->header.program_id;
+        buffer.Write(&temp64, 0, size);
         return ResultSuccess;
     case NsDataHeaderInfoType::Unknown: {
         // TODO: Figure out what this is. Stubbed to zero for now.
@@ -378,16 +381,20 @@ Result OnlineService::GetNsDataHeaderInfo(const u32 ns_data_id, const NsDataHead
         return ResultSuccess;
     }
     case NsDataHeaderInfoType::Datatype:
-        buffer.Write(&entry->header.datatype, 0, size);
+        temp32 = entry->header.datatype;
+        buffer.Write(&temp32, 0, size);
         return ResultSuccess;
     case NsDataHeaderInfoType::PayloadSize:
-        buffer.Write(&entry->header.payload_size, 0, size);
+        temp32 = entry->header.payload_size;
+        buffer.Write(&temp32, 0, size);
         return ResultSuccess;
     case NsDataHeaderInfoType::NsDataId:
-        buffer.Write(&entry->header.ns_data_id, 0, size);
+        temp32 = entry->header.ns_data_id;
+        buffer.Write(&temp32, 0, size);
         return ResultSuccess;
     case NsDataHeaderInfoType::Version:
-        buffer.Write(&entry->header.version, 0, size);
+        temp32 = entry->header.version;
+        buffer.Write(&temp32, 0, size);
         return ResultSuccess;
     case NsDataHeaderInfoType::Everything: {
         const NsDataHeaderInfo info = {
