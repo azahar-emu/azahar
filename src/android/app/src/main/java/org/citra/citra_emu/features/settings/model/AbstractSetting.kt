@@ -13,4 +13,6 @@ interface AbstractSetting<T> {
     fun valueToString(value: T): String = value.toString()
 
     fun valueFromString(string: String): T?
+
+    fun defaultValueToString(): String = valueToString(defaultValue)
 }

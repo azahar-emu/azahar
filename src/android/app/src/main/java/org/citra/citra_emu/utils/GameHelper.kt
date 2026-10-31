@@ -4,8 +4,12 @@
 
 package org.citra.citra_emu.utils
 
+import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import androidx.core.net.toUri
+import androidx.core.os.BundleCompat
 import androidx.preference.PreferenceManager
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -161,5 +165,53 @@ object GameHelper {
         }
 
         return newGame
+    }
+
+    fun getGameFromIntent(context: Context, intent: Intent): Game? {
+        val parcelable = try {
+            intent.extras?.let { BundleCompat.getParcelable(it, "game", Game::class.java) }
+        } catch (e: Exception) {
+            Log.error("[GameHelper] Failed to retrieve game data: ${e.message}")
+            null
+        }
+        if (parcelable != null) return parcelable
+
+        val uri = getLaunchUri(intent) ?: return null
+        return try {
+            if (BuildUtil.isGooglePlayBuild || uri.toString().startsWith("!")) {
+                getGame(
+                    uri,
+                    isInstalled = false,
+                    addedToLibrary = false,
+                    mediaType = Game.MediaType.GAME_CARD
+                )
+            } else {
+                context.contentResolver.openFileDescriptor(uri, "r")?.use { fd ->
+                    getGame(
+                        "fd://${fd.fd}".toUri(),
+                        isInstalled = false,
+                        addedToLibrary = false,
+                        mediaType = Game.MediaType.GAME_CARD
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.error("[GameHelper] Failed to resolve game from intent: ${e.message}")
+            null
+        }
+    }
+
+    fun getLaunchUri(intent: Intent): Uri? = try {
+        val game = intent.extras?.let { extras ->
+            BundleCompat.getParcelable(extras, "game", Game::class.java)
+        }
+        if (game != null) {
+            game.launchIntent.data
+        } else {
+            intent.data ?: intent.getStringExtra("SelectedGame")?.toUri()
+        }
+    } catch (e: Exception) {
+        Log.error("[GameHelper] Failed to parse URI from intent: ${e.message}")
+        null
     }
 }

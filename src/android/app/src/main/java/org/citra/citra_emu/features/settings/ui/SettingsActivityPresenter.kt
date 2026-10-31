@@ -29,15 +29,27 @@ class SettingsActivityPresenter(
     private var shouldSave = false
     private lateinit var menuTag: String
     private lateinit var gameId: String
+    private lateinit var gameTitle: String
 
-    fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String) {
+    fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String, gameTitle: String) {
         this.menuTag = menuTag
         this.gameId = gameId
-        // merge the active settings into the local settings activity instance
-        editingSettings.mergeSettings(CitraSettings.activeSettings)
+        this.gameTitle = gameTitle
 
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)
+        } else {
+            // sync the active settings into my local settings appropriately
+            // if we are editing global settings rom a game, this should just work
+            // to sync only the global settings into the local version
+            editingSettings.gameId = if (gameId != "") gameId else null
+            editingSettings.mergeSettings(CitraSettings.activeSettings)
+
+            // if we are editing per-game settings when the game is not loaded,
+            // we need to load the per-game settings now from the ini file
+            if (gameId != "" && CitraSettings.activeSettings.gameId != gameId) {
+                SettingsFile.loadSettings(editingSettings, gameId)
+            }
         }
     }
 
@@ -54,7 +66,7 @@ class SettingsActivityPresenter(
     }
 
     private fun loadSettingsUI() {
-        activityView.showSettingsFragment(menuTag, false, gameId)
+        activityView.showSettingsFragment(menuTag, false, gameId, gameTitle)
         activityView.onSettingsFileLoaded()
     }
 
@@ -98,7 +110,7 @@ class SettingsActivityPresenter(
     fun onStop(finishing: Boolean) {
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
-            if (editingSettings.isPerGame()) {
+            if (editingSettings.isPerApp()) {
                 SettingsFile.saveCustomFile(editingSettings, activityView)
             } else {
                 SettingsFile.saveGlobalFile(editingSettings, activityView)

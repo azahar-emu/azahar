@@ -46,6 +46,16 @@
             android:textAlignment="viewStart"
             tools:text="@string/frame_limit_enable_description" />
 
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/message_use_global"
+            style="@style/TextAppearance.Material3.LabelMedium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/use_global"
+            android:textColor="?attr/colorPrimary"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </RelativeLayout>

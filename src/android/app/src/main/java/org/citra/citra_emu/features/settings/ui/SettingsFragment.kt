@@ -44,7 +44,8 @@ class SettingsFragment :
         super.onCreate(savedInstanceState)
         val menuTag = requireArguments().getString(ARGUMENT_MENU_TAG)
         val gameId = requireArguments().getString(ARGUMENT_GAME_ID)
-        fragmentPresenter.onCreate(menuTag!!, gameId!!)
+        val gameTitle = requireArguments().getString(ARGUMENT_GAME_TITLE)
+        fragmentPresenter.onCreate(menuTag!!, gameId!!, gameTitle!!)
     }
 
     override fun onCreateView(
@@ -87,7 +88,8 @@ class SettingsFragment :
         activityView!!.showSettingsFragment(
             menuKey,
             true,
-            requireArguments().getString(ARGUMENT_GAME_ID)!!
+            requireArguments().getString(ARGUMENT_GAME_ID)!!,
+            requireArguments().getString(ARGUMENT_GAME_TITLE)!!
         )
     }
 
@@ -118,12 +120,14 @@ class SettingsFragment :
     companion object {
         private const val ARGUMENT_MENU_TAG = "menu_tag"
         private const val ARGUMENT_GAME_ID = "game_id"
+        private const val ARGUMENT_GAME_TITLE = "game_title"
 
-        fun newInstance(menuTag: String?, gameId: String?): Fragment {
+        fun newInstance(menuTag: String?, gameId: String?, gameTitle: String?): Fragment {
             val fragment = SettingsFragment()
             val arguments = Bundle()
             arguments.putString(ARGUMENT_MENU_TAG, menuTag)
             arguments.putString(ARGUMENT_GAME_ID, gameId)
+            arguments.putString(ARGUMENT_GAME_TITLE, gameTitle)
             fragment.arguments = arguments
             return fragment
         }
