@@ -1,6 +1,6 @@
 // Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -256,6 +256,11 @@ public:
         return triangle_fan_supported;
     }
 
+    // Returns true when sampleRateShading, VK_KHR_create_renderpass2, VK_KHR_depth_stencil_resolve
+    bool IsMultiSampleSupported() const {
+        return features.sampleRateShading && create_renderpass2 && depth_stencil_resolve;
+    }
+
     /// Returns true if dynamic indices can be used inside shaders.
     bool IsImageArrayDynamicIndexSupported() const {
         return features.shaderSampledImageArrayDynamicIndexing;
@@ -336,6 +341,8 @@ protected:
     bool null_descriptor{};
     bool fragment_shader_interlock{};
     bool image_format_list{};
+    bool create_renderpass2{};
+    bool depth_stencil_resolve{};
     bool pipeline_creation_cache_control{};
     bool fragment_shader_barycentric{};
     bool shader_stencil_export{};

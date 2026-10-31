@@ -30,6 +30,15 @@ u32 RendererBase::GetResolutionScaleFactor() {
                              : render_window.GetFramebufferLayout().GetScalingRatio();
 }
 
+u8 RendererBase::GetSampleCount() const {
+#if defined(__APPLE__)
+    // TODO(wunk): Implement proper MSAA support on MacOS
+    return 1;
+#else
+    return Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
+#endif
+}
+
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
     const auto update_layout = [is_portrait_mode](Frontend::EmuWindow& window) {
         const Layout::FramebufferLayout& layout = window.GetFramebufferLayout();
