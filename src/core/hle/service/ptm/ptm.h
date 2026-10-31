@@ -53,6 +53,8 @@ public:
     static u16 GetPlayCoins();
     static void SetPlayCoins(u16 play_coins);
 
+    void UpdateSharedPage();
+
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session);
@@ -145,6 +147,8 @@ public:
 
         void GetInfoLEDStatus(Kernel::HLERequestContext& ctx);
 
+        void SetBatteryEmptyLEDPattern(Kernel::HLERequestContext& ctx);
+
         /**
          * PTM::GetSystemTime service function
          *  Outputs:
@@ -161,9 +165,12 @@ private:
     Core::System& system;
 
     bool shell_open = true;
-    bool battery_is_charging = true;
+    bool battery_charger_connected = false;
+    bool battery_is_charging = false;
     ChargeLevels charge_level = ChargeLevels::CompletelyFull;
     bool pedometer_is_counting = false;
+
+    Core::TimingEventType* update_shared_page_event{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

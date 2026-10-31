@@ -1,6 +1,6 @@
-// Copyright 2015 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <chrono>
 #include <cstring>
@@ -72,11 +72,11 @@ Handler::Handler(Core::Timing& timing, u64 override_init_time) : timing(timing) 
     // Some games wait until this value becomes 0x1, before asking running_hw
     shared_page.unknown_value = 0x1;
 
-    // Set to a completely full battery
+    // Set to a completely full battery until PTM updates it
     shared_page.battery_state.charge_level.Assign(
         static_cast<u8>(Service::PTM::ChargeLevels::CompletelyFull));
-    shared_page.battery_state.is_adapter_connected.Assign(1);
-    shared_page.battery_state.is_charging.Assign(1);
+    shared_page.battery_state.is_adapter_connected.Assign(0);
+    shared_page.battery_state.is_charging.Assign(0);
 
     init_time = GetInitTime(override_init_time);
 
@@ -168,6 +168,14 @@ void Handler::Set3DLed(u8 state) {
 
 void Handler::Set3DSlider(float slidestate) {
     shared_page.sliderstate_3d = static_cast<float_le>(slidestate);
+}
+
+void SharedPage::Handler::SetBatteryState(const BatteryState& state) {
+    shared_page.battery_state = state;
+}
+
+const BatteryState& SharedPage::Handler::GetBatteryState() {
+    return shared_page.battery_state;
 }
 
 SharedPageDef& Handler::GetSharedPage() {

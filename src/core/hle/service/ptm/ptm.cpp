@@ -52,20 +52,6 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-
-    switch (Settings::values.battery_state_source.GetValue()) {
-    case Settings::BatteryLevelSource::System: {
-        ptm->charge_level =
-            static_cast<ChargeLevels>(InputCommon::GetSystemBatteryState().percentage * 4 + 1);
-        break;
-    }
-    case Settings::BatteryLevelSource::Fixed: {
-        ptm->charge_level =
-            static_cast<ChargeLevels>(Settings::values.battery_level.GetValue() + 1);
-        break;
-    }
-    }
-
     rb.Push(static_cast<u32>(ptm->charge_level));
 }
 
@@ -74,18 +60,6 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-
-    switch (Settings::values.battery_state_source.GetValue()) {
-    case Settings::BatteryLevelSource::System: {
-        ptm->battery_is_charging = InputCommon::GetSystemBatteryState().charging;
-        break;
-    }
-    case Settings::BatteryLevelSource::Fixed: {
-        ptm->battery_is_charging = Settings::values.battery_charging.GetValue();
-        break;
-    }
-    }
-
     rb.Push(ptm->battery_is_charging);
 }
 
@@ -202,6 +176,21 @@ void Module::Interface::GetInfoLEDStatus(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void Module::Interface::SetBatteryEmptyLEDPattern(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u32 pattern = rp.Pop<u32>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    auto mcu_rtc = MCU::RTC::GetService(ptm->system);
+    if (mcu_rtc) {
+        mcu_rtc->UpdateInfoLEDEmptyBatteryPattern(pattern);
+        rb.Push(ResultSuccess);
+    } else {
+        rb.Push(ResultUnknown);
+    }
+}
+
 void Module::Interface::GetSystemTime(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -290,12 +279,26 @@ Module::Module(Core::System& system_) : system(system_) {
     if (archive_result.Code() == FileSys::ResultNotFormatted) {
         WriteGameCoinData(default_game_coin);
     }
+
+    constexpr u64 update_nanoseconds =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+
+    update_shared_page_event = system.CoreTiming().RegisterEvent(
+        "PTM::UpdateSharedPage",
+        [this, update_nanoseconds](std::uintptr_t user_data, s64 cycles_late) {
+            UpdateSharedPage();
+
+            system.CoreTiming().ScheduleEvent(nsToCycles(update_nanoseconds) - cycles_late,
+                                              update_shared_page_event);
+        });
+    system.CoreTiming().ScheduleEvent(0, update_shared_page_event);
 }
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
     DEBUG_SERIALIZATION_POINT;
     ar & shell_open;
+    ar & battery_charger_connected;
     ar & battery_is_charging;
     ar & charge_level;
     ar & pedometer_is_counting;
@@ -312,6 +315,41 @@ void Module::SetPlayCoins(u16 play_coins) {
     // TODO: This may introduce potential race condition if the game is reading the
     // game coin data at the same time
     WriteGameCoinData(game_coin);
+}
+
+void Module::UpdateSharedPage() {
+    switch (Settings::values.battery_state_source.GetValue()) {
+    case Settings::BatteryLevelSource::System:
+        // NOTE: The 3DS battery levels are not linear:
+        // 1: 5~1%, 2: 10~6%, 3: 30~11%, 4: 60~31%, 5: 100~61%
+        // However, this is not practical for modern devices,
+        // so we deliberately use a linear mapping here.
+        charge_level =
+            static_cast<ChargeLevels>(InputCommon::GetSystemBatteryState().percentage * 4 + 1);
+        break;
+    case Settings::BatteryLevelSource::Fixed:
+        charge_level = static_cast<ChargeLevels>(
+            std::min<u8>(Settings::values.battery_level.GetValue() + 1, 5));
+        break;
+    }
+
+    switch (Settings::values.battery_state_source.GetValue()) {
+    case Settings::BatteryLevelSource::System:
+        battery_is_charging = InputCommon::GetSystemBatteryState().charging;
+        break;
+    case Settings::BatteryLevelSource::Fixed:
+        battery_is_charging = Settings::values.battery_charging.GetValue();
+        break;
+    }
+    // Charging and charger connected is in sync for now.
+    // TODO(PabloMK7): Determine when they may differ.
+    battery_charger_connected = battery_is_charging;
+
+    SharedPage::BatteryState battery_state{};
+    battery_state.is_adapter_connected.Assign(battery_charger_connected);
+    battery_state.is_charging.Assign(battery_is_charging);
+    battery_state.charge_level.Assign(static_cast<u8>(charge_level));
+    system.Kernel().GetSharedPageHandler().SetBatteryState(battery_state);
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session)
