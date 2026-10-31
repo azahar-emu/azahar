@@ -217,6 +217,8 @@ if (APPLE)
     util/metal_util.h
     util/metal_util.mm
   )
+   # metal_util.mm uses CAMetalLayer. This used to come in with static SDL2.
+  target_link_libraries(citra_qt PRIVATE "-framework QuartzCore")
 endif()
 
 file(GLOB COMPAT_LIST
