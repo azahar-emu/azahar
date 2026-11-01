@@ -129,6 +129,22 @@ std::string GetReadableVersion(u32 version) {
                        VK_VERSION_PATCH(version));
 }
 
+#ifdef HAVE_LIBRETRO
+// Some AMD drivers appear to read queue family fields ignored for exclusive images.
+// Normalize VMA image creation inputs at the final Vulkan dispatch point.
+VkResult VKAPI_CALL CreateImageWithNormalizedQueueFamilies(
+    VkDevice device, const VkImageCreateInfo* create_info,
+    const VkAllocationCallbacks* allocation_callbacks, VkImage* image) {
+    VkImageCreateInfo normalized_info = *create_info;
+    if (normalized_info.sharingMode == VK_SHARING_MODE_EXCLUSIVE) {
+        normalized_info.queueFamilyIndexCount = 0;
+        normalized_info.pQueueFamilyIndices = nullptr;
+    }
+    return VULKAN_HPP_DEFAULT_DISPATCHER.vkCreateImage(device, &normalized_info,
+                                                       allocation_callbacks, image);
+}
+#endif
+
 } // Anonymous namespace
 
 Instance::Instance(bool enable_validation, bool dump_command_buffers)
@@ -663,6 +679,11 @@ void Instance::CreateAllocator() {
     const VmaVulkanFunctions functions = {
         .vkGetInstanceProcAddr = VULKAN_HPP_DEFAULT_DISPATCHER.vkGetInstanceProcAddr,
         .vkGetDeviceProcAddr = VULKAN_HPP_DEFAULT_DISPATCHER.vkGetDeviceProcAddr,
+#ifdef HAVE_LIBRETRO
+        // AMD PCI vendor ID. Leave all other drivers and the standalone path unchanged.
+        .vkCreateImage =
+            properties.vendorID == 0x1002 ? &CreateImageWithNormalizedQueueFamilies : nullptr,
+#endif
     };
 
     const VmaAllocatorCreateInfo allocator_info = {
