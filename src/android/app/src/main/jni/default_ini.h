@@ -511,7 +511,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0: Disabled, 1 (default): Enabled
 )") DECLARE_KEY(apply_region_free_patch) BOOST_HANA_STRING(R"(
 
-# How the system's battery staste is determined
+# How the system's battery state is determined
 # 0: System (default), 1: Fixed (based on below settings)
 )") DECLARE_KEY(battery_state_source) BOOST_HANA_STRING(R"(
 
