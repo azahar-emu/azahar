@@ -8,7 +8,6 @@
 #include <sstream>
 #include <unordered_map>
 #include <INIReader.h>
-#include <boost/hana/string.hpp>
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -25,7 +24,7 @@
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
 
-Config::Config() {
+Config::Config(u64 title_id) {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
     android_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini";
     std::string ini_buffer;
@@ -33,8 +32,8 @@ Config::Config() {
     if (!ini_buffer.empty()) {
         android_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
     }
-
     Reload();
+    LoadPerGameConfig(title_id);
 }
 
 Config::~Config() = default;
@@ -77,28 +76,91 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
     InputManager::N3DS_STICK_C,
 }};
 
-template <>
-void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    std::string setting_value =
-        android_config->Get(group, setting.GetLabel(), setting.GetDefault());
-    if (setting_value.empty()) {
-        setting_value = setting.GetDefault();
-    }
-    setting = std::move(setting_value);
+void Config::AddDefaultSettingValue(const std::string& key, const std::string& value) {
+    default_android_values.insert_or_assign(key, value);
 }
 
-template <>
-void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    setting = android_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
+template <typename Type, bool ranged>
+Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
+    std::string key = setting.GetLabel();
+
+    if constexpr (std::is_enum_v<Type>) {
+        return static_cast<Type>(
+            GetSettingFromKey<int>(group, key, static_cast<int>(setting.GetDefault())));
+    } else if constexpr (std::is_same_v<Type, std::string>) {
+        auto v = GetSettingFromKey<std::string>(group, key, setting.GetDefault());
+        return v.empty() ? setting.GetDefault() : v;
+    } else {
+        return GetSettingFromKey<Type>(group, key, setting.GetDefault());
+    }
 }
 
 template <typename Type, bool ranged>
 void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
-    if constexpr (std::is_floating_point_v<Type>) {
-        setting = android_config->GetReal(group, setting.GetLabel(), setting.GetDefault());
+    setting = GetSetting(group, setting);
+}
+
+/**
+ * Use this to get a setting value using a key rather than a Setting object. Specify the type.
+ * Note: default_value is only used as a fallback if there is no matching Kotlin setting that maps
+ * the default value. Kotlin is the main source of truth for all exposed android settings.
+ */
+
+template <typename Type>
+Type Config::GetSettingFromKey(const std::string& group, const std::string& key,
+                               std::optional<Type> default_value) {
+
+    const std::string default_str =
+        default_android_values.contains(key) ? default_android_values.at(key) : "";
+
+    const bool has_per_game = per_game_config && per_game_config->HasValue(group, key);
+    const bool has_android = android_config && android_config->HasValue(group, key);
+
+    if constexpr (std::is_same_v<Type, bool>) {
+        bool value = (default_value && default_str == "")
+                         ? *default_value
+                         : (default_str == "1" || default_str == "true");
+        if (has_per_game) {
+            value = per_game_config->GetBoolean(group, key, value);
+        } else if (has_android) {
+            value = android_config->GetBoolean(group, key, value);
+        }
+        return value;
+    } else if constexpr (std::is_floating_point_v<Type>) {
+        double value = (default_value && default_str == "")
+                           ? static_cast<double>(*default_value)
+                           : (default_str.empty() ? 0.0 : std::stod(default_str));
+        if (has_per_game) {
+            value = per_game_config->GetReal(group, key, value);
+        } else if (has_android) {
+            value = android_config->GetReal(group, key, value);
+        }
+        return static_cast<Type>(value);
+    } else if constexpr (std::is_integral_v<Type>) {
+        long value = (default_value && default_str == "")
+                         ? static_cast<long>(*default_value)
+                         : (default_str.empty() ? 0L : std::stol(default_str));
+        if (has_per_game) {
+            value = per_game_config->GetInteger(group, key, value);
+        } else if (has_android) {
+            value = android_config->GetInteger(group, key, value);
+        }
+        return static_cast<Type>(value);
+    } else if constexpr (std::is_same_v<Type, std::string>) {
+        std::string value = (default_value && default_str == "") ? *default_value : default_str;
+        if (has_per_game) {
+            // config.ini will return empty strings with get so need to make sure not to override
+            auto const configured = per_game_config->Get(group, key, value);
+            if (!configured.empty())
+                value = configured;
+        } else if (has_android) {
+            auto const configured = android_config->Get(group, key, value);
+            if (!configured.empty())
+                value = configured;
+        }
+        return value;
     } else {
-        setting = static_cast<Type>(android_config->GetInteger(
-            group, setting.GetLabel(), static_cast<long>(setting.GetDefault())));
+        static_assert(!sizeof(Type), "Unsupported type for GetSettingFromKey");
     }
 }
 
@@ -106,7 +168,7 @@ void Config::ReadValues() {
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         std::string default_param = InputManager::GenerateButtonParamPackage(default_buttons[i]);
-        Settings::values.current_input_profile.buttons[i] = android_config->GetString(
+        Settings::values.current_input_profile.buttons[i] = GetSettingFromKey<std::string>(
             "Controls", Settings::NativeButton::mapping[i], default_param);
         if (Settings::values.current_input_profile.buttons[i].empty())
             Settings::values.current_input_profile.buttons[i] = default_param;
@@ -114,22 +176,21 @@ void Config::ReadValues() {
 
     for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
         std::string default_param = InputManager::GenerateAnalogParamPackage(default_analogs[i]);
-        Settings::values.current_input_profile.analogs[i] = android_config->GetString(
+        Settings::values.current_input_profile.analogs[i] = GetSettingFromKey<std::string>(
             "Controls", Settings::NativeAnalog::mapping[i], default_param);
         if (Settings::values.current_input_profile.analogs[i].empty())
             Settings::values.current_input_profile.analogs[i] = default_param;
     }
 
-    Settings::values.current_input_profile.motion_device = android_config->GetString(
+    Settings::values.current_input_profile.motion_device = GetSettingFromKey<std::string>(
         "Controls", "motion_device",
         "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
     Settings::values.current_input_profile.touch_device =
-        android_config->GetString("Controls", "touch_device", "engine:emu_window");
-    Settings::values.current_input_profile.udp_input_address = android_config->GetString(
+        GetSettingFromKey<std::string>("Controls", "touch_device", "engine:emu_window");
+    Settings::values.current_input_profile.udp_input_address = GetSettingFromKey<std::string>(
         "Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
-    Settings::values.current_input_profile.udp_input_port =
-        static_cast<u16>(android_config->GetInteger("Controls", "udp_input_port",
-                                                    InputCommon::CemuhookUDP::DEFAULT_PORT));
+    Settings::values.current_input_profile.udp_input_port = GetSettingFromKey<u16>(
+        "Controls", "udp_input_port", InputCommon::CemuhookUDP::DEFAULT_PORT);
 
     ReadSetting("Controls", Settings::values.use_artic_base_controller);
 
@@ -139,9 +200,8 @@ void Config::ReadValues() {
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
     // Renderer
-    Settings::values.use_gles = android_config->GetBoolean("Renderer", "use_gles", true);
-    Settings::values.shaders_accurate_mul =
-        android_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
+    ReadSetting("Renderer", Settings::values.use_gles);
+    ReadSetting("Renderer", Settings::values.shaders_accurate_mul);
     ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
@@ -156,8 +216,9 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);
     ReadSetting("Renderer", Settings::values.turbo_limit);
-    // Workaround to map Android setting for enabling the frame limiter to the format Citra expects
-    if (android_config->GetBoolean("Renderer", "use_frame_limit", true)) {
+    bool use_frame_limit =
+        GetSettingFromKey<bool>("Renderer", Settings::Keys::use_frame_limit, true);
+    if (use_frame_limit) {
         ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
         Settings::values.frame_limit = 0;
@@ -171,7 +232,7 @@ void Config::ReadValues() {
     else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced)
         default_shader = "Horizontal (builtin)";
     Settings::values.pp_shader_name =
-        android_config->GetString("Renderer", "pp_shader_name", default_shader);
+        GetSettingFromKey<std::string>("Renderer", "pp_shader_name", default_shader);
     ReadSetting("Renderer", Settings::values.filter_mode);
     ReadSetting("Renderer", Settings::values.use_integer_scaling);
 
@@ -185,22 +246,11 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.swap_eyes_3d);
     ReadSetting("Renderer", Settings::values.render_3d_which_display);
     // Layout
-    // Somewhat inelegant solution to ensure layout value is between 0 and 5 on read
-    // since older config files may have other values
-    int layoutInt = (int)android_config->GetInteger(
-        "Layout", "layout_option", static_cast<int>(Settings::LayoutOption::LargeScreen));
-    if (layoutInt < 0 || layoutInt > 5) {
-        layoutInt = static_cast<int>(Settings::LayoutOption::LargeScreen);
-    }
-    Settings::values.layout_option = static_cast<Settings::LayoutOption>(layoutInt);
-    Settings::values.screen_gap =
-        static_cast<int>(android_config->GetReal("Layout", "screen_gap", 0));
-    Settings::values.large_screen_proportion =
-        static_cast<float>(android_config->GetReal("Layout", "large_screen_proportion", 2.25));
-    Settings::values.small_screen_position = static_cast<Settings::SmallScreenPosition>(
-        android_config->GetInteger("Layout", "small_screen_position",
-                                   static_cast<int>(Settings::SmallScreenPosition::TopRight)));
+
+    ReadSetting("Layout", Settings::values.layout_option);
     ReadSetting("Layout", Settings::values.screen_gap);
+    ReadSetting("Layout", Settings::values.small_screen_position);
+    ReadSetting("Layout", Settings::values.large_screen_proportion);
     ReadSetting("Layout", Settings::values.custom_top_x);
     ReadSetting("Layout", Settings::values.custom_top_y);
     ReadSetting("Layout", Settings::values.custom_top_width);
@@ -214,14 +264,8 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.cardboard_x_shift);
     ReadSetting("Layout", Settings::values.cardboard_y_shift);
     ReadSetting("Layout", Settings::values.upright_screen);
-
-    Settings::values.portrait_layout_option =
-        static_cast<Settings::PortraitLayoutOption>(android_config->GetInteger(
-            "Layout", "portrait_layout_option",
-            static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
-    Settings::values.secondary_display_layout = static_cast<Settings::SecondaryDisplayLayout>(
-        android_config->GetInteger("Layout", Settings::HKeys::secondary_display_layout.c_str(),
-                                   static_cast<int>(Settings::SecondaryDisplayLayout::None)));
+    ReadSetting("Layout", Settings::values.portrait_layout_option);
+    ReadSetting("Layout", Settings::values.secondary_display_layout);
     ReadSetting("Layout", Settings::values.custom_portrait_top_x);
     ReadSetting("Layout", Settings::values.custom_portrait_top_y);
     ReadSetting("Layout", Settings::values.custom_portrait_top_width);
@@ -263,7 +307,7 @@ void Config::ReadValues() {
     ReadSetting("System", Settings::values.init_clock);
     {
         std::string time =
-            android_config->GetString("System", Settings::HKeys::init_time.c_str(), "946681277");
+            GetSettingFromKey<std::string>("System", Settings::Keys::init_time, "946681277");
         try {
             Settings::values.init_time = std::stoll(time);
         } catch (...) {
@@ -281,27 +325,27 @@ void Config::ReadValues() {
 
     // Camera
     using namespace Service::CAM;
-    Settings::values.camera_name[OuterRightCamera] = android_config->GetString(
-        "Camera", Settings::HKeys::camera_outer_right_name.c_str(), "ndk");
+    Settings::values.camera_name[OuterRightCamera] =
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_right_name, "ndk");
     Settings::values.camera_config[OuterRightCamera] =
-        android_config->GetString("Camera", Settings::HKeys::camera_outer_right_config.c_str(),
-                                  std::string{Camera::NDK::BackCameraPlaceholder});
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_right_config,
+                                       std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterRightCamera] =
-        android_config->GetInteger("Camera", Settings::HKeys::camera_outer_right_flip.c_str(), 0);
+        GetSettingFromKey<int>("Camera", Settings::Keys::camera_outer_right_flip, 0);
     Settings::values.camera_name[InnerCamera] =
-        android_config->GetString("Camera", Settings::HKeys::camera_inner_name.c_str(), "ndk");
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_inner_name, "ndk");
     Settings::values.camera_config[InnerCamera] =
-        android_config->GetString("Camera", Settings::HKeys::camera_inner_config.c_str(),
-                                  std::string{Camera::NDK::FrontCameraPlaceholder});
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_inner_config,
+                                       std::string{Camera::NDK::FrontCameraPlaceholder});
     Settings::values.camera_flip[InnerCamera] =
-        android_config->GetInteger("Camera", Settings::HKeys::camera_inner_flip.c_str(), 0);
+        GetSettingFromKey<int>("Camera", Settings::Keys::camera_inner_flip, 0);
     Settings::values.camera_name[OuterLeftCamera] =
-        android_config->GetString("Camera", Settings::HKeys::camera_outer_left_name.c_str(), "ndk");
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_left_name, "ndk");
     Settings::values.camera_config[OuterLeftCamera] =
-        android_config->GetString("Camera", Settings::HKeys::camera_outer_left_config.c_str(),
-                                  std::string{Camera::NDK::BackCameraPlaceholder});
+        GetSettingFromKey<std::string>("Camera", Settings::Keys::camera_outer_left_config,
+                                       std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterLeftCamera] =
-        android_config->GetInteger("Camera", Settings::HKeys::camera_outer_left_flip.c_str(), 0);
+        GetSettingFromKey<int>("Camera", Settings::Keys::camera_outer_left_flip, 0);
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
@@ -316,7 +360,7 @@ void Config::ReadValues() {
 
     // Debugging
     Settings::values.record_frame_times =
-        android_config->GetBoolean("Debugging", Settings::HKeys::record_frame_times.c_str(), false);
+        GetSettingFromKey<bool>("Debugging", Settings::Keys::record_frame_times, false);
     ReadSetting("Debugging", Settings::values.renderer_debug);
     ReadSetting("Debugging", Settings::values.pica_debugging);
     ReadSetting("Debugging", Settings::values.use_gdbstub);
@@ -327,8 +371,7 @@ void Config::ReadValues() {
     ReadSetting("Debugging", Settings::values.enable_exception_handler);
 
     for (const auto& service_module : Service::service_module_map) {
-        bool use_lle =
-            android_config->GetBoolean("Debugging", "LLE\\" + service_module.name, false);
+        bool use_lle = GetSettingFromKey<bool>("Debugging", "LLE\\" + service_module.name, false);
         Settings::values.lle_modules.emplace(service_module.name, use_lle);
     }
 
@@ -352,5 +395,37 @@ void Config::Reload() {
         }
     }
     LoadINI(DefaultINI::android_config_default_file_content);
+}
+
+void Config::LoadPerGameConfig(u64 title_id) {
+    // Determine file name
+    std::string name;
+    if (title_id != 0) {
+        std::ostringstream ss;
+        ss << std::uppercase << std::hex << std::setw(16) << std::setfill('0') << title_id;
+        name = ss.str();
+    }
+    if (name.empty()) {
+        per_game_config.reset();
+        per_game_config_loc.clear();
+        ReadValues();
+        return;
+    }
+
+    const auto base = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir);
+    per_game_config_loc = base + "custom/" + name + ".ini";
+
+    std::string ini_buffer;
+    FileUtil::ReadFileToString(true, per_game_config_loc, ini_buffer);
+    if (!ini_buffer.empty()) {
+        per_game_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
+        if (per_game_config->ParseError() < 0) {
+            per_game_config.reset();
+        }
+    } else {
+        per_game_config.reset();
+    }
+
+    // Re-apply values so that per-game overrides (if any) take effect immediately.
     ReadValues();
 }

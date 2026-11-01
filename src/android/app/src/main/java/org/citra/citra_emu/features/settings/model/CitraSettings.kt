@@ -4,20 +4,21 @@
 
 package org.citra.citra_emu.features.settings.model
 
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 
 class CitraSettings {
     private val globalValues = HashMap<String, Any>()
-    private val perGameOverrides = HashMap<String, Any>()
+    private val perAppOverrides = HashMap<String, Any>()
 
     var gameId: String? = null
 
-    fun isPerGame(): Boolean = (gameId != null && gameId != "")
+    fun isPerApp(): Boolean = (gameId != null && gameId != "")
 
     fun <T> get(setting: AbstractSetting<T>): T {
         @Suppress("UNCHECKED_CAST")
         return (
-            perGameOverrides[setting.key]
+            perAppOverrides[setting.key]
                 ?: globalValues[setting.key]
                 ?: setting.defaultValue
             ) as T
@@ -33,7 +34,7 @@ class CitraSettings {
     }
 
     fun <T> setOverride(setting: AbstractSetting<T>, value: T) {
-        perGameOverrides[setting.key] = value as Any
+        perAppOverrides[setting.key] = value as Any
     }
 
     /**
@@ -44,7 +45,7 @@ class CitraSettings {
      * This should be used by the Settings menus.
      */
     fun <T> setBySettingsContext(setting: AbstractSetting<T>, value: T) {
-        if (isPerGame()) setOverride(setting, value) else setGlobal(setting, value)
+        if (isPerApp()) setOverride(setting, value) else setGlobal(setting, value)
     }
 
     /**
@@ -67,31 +68,34 @@ class CitraSettings {
             return
         }
 
-        perGameOverrides.clear()
-        other.perGameOverrides.forEach { (key, value) ->
-            perGameOverrides[key] = value
+        perAppOverrides.clear()
+        other.perAppOverrides.forEach { (key, value) ->
+            perAppOverrides[key] = value
         }
     }
 
     fun <T> clearOverride(setting: AbstractSetting<T>) {
-        perGameOverrides.remove(setting.key)
+        perAppOverrides.remove(setting.key)
     }
 
-    fun hasOverride(setting: AbstractSetting<*>): Boolean =
-        perGameOverrides.containsKey(setting.key)
+    fun hasOverride(setting: AbstractSetting<*>): Boolean = perAppOverrides.containsKey(setting.key)
 
-    fun getAllOverrides(): Map<String, Any> = perGameOverrides.toMap()
+    fun getAllOverrides(): Map<String, Any> = perAppOverrides.toMap()
 
     fun getAllGlobal(): Map<String, Any> = globalValues.toMap()
 
     fun clearAll() {
         globalValues.clear()
-        perGameOverrides.clear()
+        perAppOverrides.clear()
     }
 
-    fun removePerGameSettings() {
-        perGameOverrides.clear()
+    fun changeToGlobalContext() {
+        perAppOverrides.clear()
         gameId = null
+    }
+
+    fun clearAllOverrides() {
+        perAppOverrides.clear()
     }
 
     companion object {
@@ -239,5 +243,23 @@ class CitraSettings {
 
         /** The settings (global and per-game overrides) that are active right now.*/
         val activeSettings = CitraSettings()
+
+        fun syncDefaultsToNative() {
+            val allSettings: List<AbstractSetting<*>> by lazy {
+                BooleanSetting.values().toList() +
+                    IntSetting.values().toList() +
+                    FloatSetting.values().toList() +
+                    StringSetting.values().toList() +
+                    IntListSetting.values().toList()
+            }
+            for (setting in allSettings) {
+                NativeLibrary.addDefaultSetting(
+                    setting.key,
+                    setting.defaultValueToString()
+                )
+            }
+            defaultsSynced = true
+        }
+        var defaultsSynced: Boolean = false
     }
 }

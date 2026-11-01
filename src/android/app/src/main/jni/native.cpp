@@ -286,10 +286,24 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         }
     });
 
-    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
+
+    // Load game-specific settings overlay if available
+    u64 program_id{};
+    FileUtil::SetCurrentRomPath(filepath);
+    auto app_loader = Loader::GetLoader(filepath);
+    if (app_loader) {
+        app_loader->ReadProgramId(program_id);
+        system.RegisterAppLoaderEarly(app_loader);
+    }
+
+    // Forces a config reload on game boot, if the user changed settings in the UI
+    Config game_config(program_id);
+    system.ApplySettings();
+    Settings::LogSettings();
+
     bool opengl_windows = false;
-    switch (graphics_api) {
+    switch (Settings::GetWorkingGraphicsAPI()) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
@@ -309,7 +323,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     default:
         LOG_CRITICAL(Frontend,
                      "Unknown or unsupported graphics API {}, falling back to available default",
-                     graphics_api);
+                     Settings::GetWorkingGraphicsAPI());
 #ifdef ENABLE_OPENGL
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
         opengl_windows = true;
@@ -327,19 +341,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 #endif
         break;
     }
-
-    // Forces a config reload on game boot, if the user changed settings in the UI
-    Config{};
-    // Replace with game-specific settings
-    u64 program_id{};
-    FileUtil::SetCurrentRomPath(filepath);
-    auto app_loader = Loader::GetLoader(filepath);
-    if (app_loader) {
-        app_loader->ReadProgramId(program_id);
-        system.RegisterAppLoaderEarly(app_loader);
-    }
-    system.ApplySettings();
-    Settings::LogSettings();
 
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImage::Factory>());
 
@@ -1002,14 +1003,13 @@ void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
                                                             [[maybe_unused]] jobject obj) {
-    Config{};
     Core::System& system{Core::System::GetInstance()};
-
-    // Replace with game-specific settings
+    u64 program_id{};
     if (system.IsPoweredOn()) {
-        u64 program_id{};
         system.GetAppLoader().ReadProgramId(program_id);
     }
+    Config cfg(program_id);
+    // Load game-specific settings overlay (if a game is running)
 
     if (multiplayer) {
         multiplayer->UpdateCredentials();
@@ -1348,6 +1348,11 @@ void Java_org_citra_citra_1emu_NativeLibrary_deleteVulkanShaderCache(JNIEnv* env
             }
             return true;
         });
+}
+
+void JNICALL Java_org_citra_citra_1emu_NativeLibrary_addDefaultSetting(JNIEnv* env, jobject obj,
+                                                                       jstring key, jstring value) {
+    Config::AddDefaultSettingValue(GetJString(env, key), GetJString(env, value));
 }
 
 } // extern "C"
