@@ -136,6 +136,9 @@ if (BUNDLE_TARGET_EXECUTE)
             message(FATAL_ERROR "linuxdeploy failed to create AppDir w/ exit code ${linuxdeploy_appdir_result}:\n${linuxdeploy_appdir_error}")
         endif()
 
+        # appimagetool recommends a PNG/XPM .DirIcon (SVG is discouraged).
+        file(COPY_FILE "${source_path}/dist/azahar.png" "${appdir_path}/org.azahar_emu.Azahar.png")
+
         message(STATUS "Creating AppImage for executable ${executable_path}")
         execute_process(COMMAND ${CMAKE_COMMAND} -E env
             "OUTPUT=${bundle_dir}/${executable_name}.AppImage"
