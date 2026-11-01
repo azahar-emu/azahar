@@ -6,6 +6,7 @@
 
 #include "citra_libretro/core_settings.h"
 #include "citra_libretro/environment.h"
+#include "citra_libretro/video_views.h"
 
 #include "common/file_util.h"
 #include "common/settings.h"
@@ -68,6 +69,7 @@ static constexpr const char* dump_textures = citra_setting(BaseKeys::dump_textur
 } // namespace graphics
 
 namespace layout {
+static constexpr const char* frontend_layout = citra_setting(BaseKeys::frontend_layout);
 static constexpr const char* layout_option = citra_setting(BaseKeys::layout_option);
 static constexpr const char* swap_screen = citra_setting(BaseKeys::swap_screen);
 static constexpr const char* swap_screen_mode = citra_setting(BaseKeys::swap_screen_mode);
@@ -473,10 +475,34 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
 
     // Layout Category
     {
+        config::layout::frontend_layout,
+        "Frontend Layout and 3D",
+        "Frontend Layout and 3D",
+        "Let the frontend lay out the 3DS screens and show 3D, with its own "
+        "screen layout, stereo 3D mode and a shader for each screen and eye. "
+        "'Auto' does this where the frontend can: always in its stereo 3D "
+        "modes and on a headset, and in its 2D mode only while Screen Layout "
+        "is Default Top-Bottom or Single Screen Only and Stereoscopic 3D Mode "
+        "is Off. Otherwise, and always with 'Off', Screen Layout and "
+        "Stereoscopic 3D Mode apply. Prominent 3DS Screen picks which screen "
+        "the frontend shows first.",
+        nullptr,
+        config::category::layout,
+        {
+            { "auto", "Auto" },
+            { "off", "Off" },
+            { nullptr, nullptr }
+        },
+        "auto"
+    },
+    {
         config::layout::layout_option,
         "Screen Layout",
         "Screen Layout",
-        "Choose how the 3DS screens are arranged in the display.",
+        "Choose how the 3DS screens are arranged in the display. While the "
+        "frontend lays out the screens (Frontend Layout and 3D), Single Screen "
+        "Only gives it the prominent screen alone, and every other layout "
+        "gives it both screens.",
         nullptr,
         config::category::layout,
         {
@@ -492,7 +518,9 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::layout::swap_screen,
         "Prominent 3DS Screen",
         "Prominent Screen",
-        "Choose which screen is displayed prominently in single screen or large screen layouts.",
+        "Choose which screen is displayed prominently in single screen or large screen layouts. "
+        "While the frontend lays out the screens (Frontend Layout and 3D), this "
+        "chooses which screen the frontend shows first.",
         nullptr,
         config::category::layout,
         {
@@ -521,7 +549,8 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "Large Screen Proportion",
         "Large Screen Proportion",
         "How many times larger the main screen is compared to the small screen "
-        "in the Large Screen layout.",
+        "in the Large Screen layout. Not used while the frontend lays out the "
+        "screens (Frontend Layout and 3D).",
         nullptr,
         config::category::layout,
         {
@@ -561,7 +590,9 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "single red/cyan image for use with red/cyan glasses. 'Interlaced' alternates "
         "the eyes on odd and even scanlines for interlaced 3D displays, and 'Reverse "
         "Interlaced' swaps which eye is on which line. 'Cardboard VR' outputs side by "
-        "side with lens-distortion correction for Cardboard-style viewers.",
+        "side with lens-distortion correction for Cardboard-style viewers. Not "
+        "used while the frontend lays out the screens (Frontend Layout and 3D); "
+        "its stereo mode applies instead.",
         nullptr,
         config::category::layout,
         {
@@ -580,8 +611,9 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::layout::factor_3d,
         "Stereoscopic 3D Depth",
         "Stereo 3D Depth",
-        "Depth intensity of the stereoscopic 3D effect, as a percentage. Only used "
-        "when a 3D mode is active.",
+        "Depth intensity of the stereoscopic 3D effect, as a percentage. Used while "
+        "both eyes are shown: in the frontend's stereo modes, or with a "
+        "Stereoscopic 3D Mode other than Off.",
         nullptr,
         config::category::layout,
         {
@@ -590,7 +622,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
             {  "80",  "80%" }, {  "90",  "90%" }, { "100", "100%" },
             { nullptr, nullptr }
         },
-        "0"
+        "50"
     },
 
     // Storage Category
@@ -739,7 +771,23 @@ static const retro_core_options_v2 options_v2 = {
     const_cast<retro_core_option_v2_category*>(option_categories),
     const_cast<retro_core_option_v2_definition*>(option_definitions)};
 
+/// Whether the frontend shows the Layout options. New core options show until the core hides
+/// them; only options the frontend took reset this, as RetroArch sets a running core's
+/// environment again, ignoring every call, to read its system info.
+static bool layout_options_visible = true;
+
+static bool RETRO_CALLCONV UpdateOptionsDisplay(void) {
+    unsigned status = 0;
+    if (!LibRetro::GetVideoViewsStatus(&status)) {
+        status = 0;
+    }
+    return UpdateLayoutOptionsDisplay(
+        LibRetro::FetchVariable(config::layout::frontend_layout, "auto") != "off", status);
+}
+
 void RegisterCoreOptions(void) {
+    LibRetro::SetCoreOptionsUpdateDisplayCallback(UpdateOptionsDisplay);
+
     // Try v2 first, then fallback to v1 and v0 if needed
     unsigned version = 0;
     if (!LibRetro::GetCoreOptionsVersion(&version)) {
@@ -751,6 +799,7 @@ void RegisterCoreOptions(void) {
     if (version >= 2) {
         if (LibRetro::SetCoreOptionsV2(&options_v2)) {
             LOG_INFO(Frontend, "V2 core options set successfully");
+            layout_options_visible = true;
             return;
         }
     }
@@ -784,6 +833,7 @@ void RegisterCoreOptions(void) {
 
         if (LibRetro::SetCoreOptionsV1(options_v1.data())) {
             LOG_INFO(Frontend, "V1 core options set successfully");
+            layout_options_visible = true;
             return;
         }
     }
@@ -837,6 +887,7 @@ void RegisterCoreOptions(void) {
     // Set V0 variables
     if (LibRetro::SetVariables(variables.data())) {
         LOG_INFO(Frontend, "V0 core options set successfully");
+        layout_options_visible = true;
     } else {
         LOG_ERROR(Frontend, "Failed to set core options with any version");
     }
@@ -1047,22 +1098,17 @@ static Settings::StereoRenderOption GetStereoRenderOption(const std::string& nam
 }
 
 static void ParseLayoutOptions(void) {
-    Settings::values.layout_option =
+    LibRetro::settings.frontend_layout =
+        LibRetro::FetchVariable(config::layout::frontend_layout, "auto") != "off";
+
+    LibRetro::settings.layout_option =
         GetLayoutOption(LibRetro::FetchVariable(config::layout::layout_option, "default"));
 
-    Settings::values.render_3d =
+    LibRetro::settings.render_3d =
         GetStereoRenderOption(LibRetro::FetchVariable(config::layout::render_3d, "off"));
 
-    Settings::values.factor_3d =
-        static_cast<u32>(std::stoi(LibRetro::FetchVariable(config::layout::factor_3d, "0")));
-
-    // EmuWindow::get3DMode() forces the mode Off on mobile builds while
-    // render_3d_which_display is None, which is its default and which no
-    // libretro code path ever changes — so render_3d alone is inert on Android.
-    Settings::values.render_3d_which_display =
-        (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off)
-            ? Settings::StereoWhichDisplay::None
-            : Settings::StereoWhichDisplay::Both;
+    LibRetro::settings.factor_3d =
+        static_cast<u32>(std::stoi(LibRetro::FetchVariable(config::layout::factor_3d, "50")));
 
     Settings::values.swap_screen =
         LibRetro::FetchVariable(config::layout::swap_screen, "Top") == "Bottom";
@@ -1073,6 +1119,57 @@ static void ParseLayoutOptions(void) {
     auto large_screen_proportion =
         LibRetro::FetchVariable(config::layout::large_screen_proportion, "4.00");
     Settings::values.large_screen_proportion = std::stof(large_screen_proportion);
+
+    ApplyLayoutSettings();
+}
+
+void ApplyLayoutSettings(void) {
+    const auto& views = VideoViews::CurrentMode();
+    if (views.active) {
+        Settings::values.layout_option =
+            views.single ? Settings::LayoutOption::SingleScreen : Settings::LayoutOption::Default;
+        Settings::values.render_3d = views.stereo ? Settings::StereoRenderOption::SideBySideFull
+                                                  : Settings::StereoRenderOption::Off;
+    } else {
+        Settings::values.layout_option = LibRetro::settings.layout_option;
+        Settings::values.render_3d = LibRetro::settings.render_3d;
+    }
+
+    const bool both_eyes =
+        Settings::values.render_3d.GetValue() != Settings::StereoRenderOption::Off;
+
+    // EmuWindow::get3DMode() forces the mode Off on mobile builds while
+    // render_3d_which_display is None, its default, so render_3d alone is
+    // inert on Android.
+    Settings::values.render_3d_which_display =
+        both_eyes ? Settings::StereoWhichDisplay::Both : Settings::StereoWhichDisplay::None;
+
+    // Games render a second eye whenever the slider is up.
+    Settings::values.factor_3d = both_eyes ? LibRetro::settings.factor_3d : 0u;
+}
+
+std::array<retro_core_option_display, 2> LayoutOptionsDisplay(bool frontend_layout,
+                                                              unsigned status) {
+    // The frontend's stereo modes use views whatever these say; in its 2D mode they decide
+    // whether views are used. Screen Layout always shows, as it picks whether the views are of
+    // one screen or both.
+    const bool visible = !(frontend_layout && (status & RETRO_VIDEO_VIEWS_STATUS_PRESENTS) &&
+                           (status & RETRO_VIDEO_VIEWS_STATUS_STEREO));
+    return {
+        {{config::layout::large_screen_proportion, visible}, {config::layout::render_3d, visible}}};
+}
+
+bool UpdateLayoutOptionsDisplay(bool frontend_layout, unsigned status) {
+    const auto display = LayoutOptionsDisplay(frontend_layout, status);
+    // They show and hide together.
+    if (display[0].visible == layout_options_visible) {
+        return false;
+    }
+    for (const auto& option : display) {
+        LibRetro::SetCoreOptionsDisplay(&option);
+    }
+    layout_options_visible = display[0].visible;
+    return true;
 }
 
 static void ParseStorageOptions(void) {
