@@ -226,8 +226,6 @@
     <string name="off">Откл.</string>
     <string name="install">Установить</string>
     <string name="delete">Удалить</string>
-    <string name="reset_all_settings">Сбросить все настройки?</string>
-    <string name="reset_all_settings_description">Все расширенные настройки будут сброшены к стандартной конфигурации. Данное действие необратимо.</string>
     <string name="settings_reset">Настройки сброшены</string>
     <string name="select_rtc_date">Установка даты RTC</string>
     <string name="select_rtc_time">Установка времени RTC</string>

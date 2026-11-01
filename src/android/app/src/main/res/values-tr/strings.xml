@@ -128,7 +128,6 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Bu kontrol bir oyun kolu analog çubuğuna veya D-pad eksenine bağlanmalıdır!</string>
     <string name="input_message_button_only">Bu kontrol bir oyun kolu düğmesine bağlı olmalıdır!</string>
-    <string name="turbo_limit_hotkey">Turbo Hız</string>
     <string name="turbo_enabled_toast">Turbo Hız Aktif</string>
     <string name="turbo_disabled_toast">Turbo Hız Devre Dışı</string>
     <!-- System files strings -->
@@ -316,8 +315,6 @@
     <string name="off">Kapalı</string>
     <string name="install">Yükle</string>
     <string name="delete">Sil</string>
-    <string name="reset_all_settings">Tüm Ayarlar Sıfırlansın Mı?</string>
-    <string name="reset_all_settings_description">Tüm gelişmiş ayarlar varsayılanlara sıfırlanacaktır. Bu işlem geri alınamaz.</string>
     <string name="settings_reset">Ayarları sıfırla</string>
     <string name="select_rtc_date">Gerçek Zamanlı Saat tarihini seç</string>
     <string name="select_rtc_time">Gerçek Zamanlı Saat zamanını seç</string>
@@ -350,14 +347,12 @@
     <string name="preferences_debug">Hata Ayıklama</string>
     <string name="preferences_theme">Tema ve Renk</string>
     <string name="preferences_layout">Düzen</string>
-
     <string name="loader_error_encrypted">ROM\'unuz Şifreli</string>
     <string name="loader_error_file_not_found">ROM dosyası mevcut değil</string>
     <string name="no_game_present">Başlatılabilir oyun yok!</string>
     <string name="core_error_success">Başarılı</string>
     <string name="core_error_loader_encrypted">Şifreli dosya</string>
     <string name="core_error_unknown">Bilinmeyen hata</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Menüye erişmek için Geri\'ye basın</string>
     <string name="emulation_save_state">Durumu Kaydet</string>

@@ -152,7 +152,6 @@
     <string name="button_combo">Botó Combo</string>
     <string name="input_message_analog_only">Aquest control s\'ha d\'assignar a un estic analògic del comandament o a un eix del Pad de Control!</string>
     <string name="input_message_button_only">Aquest control s\'ha d\'assignar a un botó del comandament!</string>
-    <string name="turbo_limit_hotkey">Velocitat Turbo</string>
     <string name="turbo_enabled_toast">Velocitat Turbo Activada</string>
     <string name="turbo_disabled_toast">Velocitat Turbo Desactivada</string>
     <string name="combo_button_settings">Configurar Botó Combo</string>
@@ -404,8 +403,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="off">Apagat</string>
     <string name="install">Instal·lar</string>
     <string name="delete">Eliminar</string>
-    <string name="reset_all_settings">Reiniciar tota la configuració?</string>
-    <string name="reset_all_settings_description">Tota la configuració avançada serà reiniciada al seu valor de fàbrica. No podrà desfer-se.</string>
     <string name="settings_reset">Configuració reiniciada</string>
     <string name="select_rtc_date">Seleccionar data RTC</string>
     <string name="select_rtc_time">Seleccionar hora RTC</string>
@@ -440,7 +437,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="preferences_debug">Depuració</string>
     <string name="preferences_theme">Tema i Color</string>
     <string name="preferences_layout">Estil</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error en carregar l\'aplicació!</string>
     <string name="loader_error_invalid_format">Format d\'aplicació invàlid</string>
@@ -473,7 +469,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="core_error_savestate_build_mismatch">Incompatibilitat de versió d\'estat desat</string>
     <string name="core_error_shutdown_requested">Es va sol·licitar el tancament</string>
     <string name="core_error_unknown">Error desconegut</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Polsa Arrere per a accedir al menú.</string>
     <string name="emulation_save_state">Guardar estat</string>

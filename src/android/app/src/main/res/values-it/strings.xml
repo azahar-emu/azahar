@@ -153,7 +153,6 @@
     <string name="button_combo">Combo Button</string>
     <string name="input_message_analog_only">Questo comando dev\'essere assegnato alla levetta analogica di un gamepad o a un asse dei tasti direzionali!</string>
     <string name="input_message_button_only">Questo comando dev\'essere assegnato a un pulsante del gamepad!</string>
-    <string name="turbo_limit_hotkey">Velocità Turbo</string>
     <string name="turbo_enabled_toast">Velocità Turbo abilitata</string>
     <string name="turbo_disabled_toast">Velocità Turbo disabilitata</string>
     <string name="combo_button_settings">Configura Combo Button</string>
@@ -406,8 +405,6 @@
     <string name="off">Spento</string>
     <string name="install">Installa</string>
     <string name="delete">Cancella</string>
-    <string name="reset_all_settings">Reimpostare tutte le impostazioni?</string>
-    <string name="reset_all_settings_description">Tutte le impostazioni avanzate verranno ripristinate ai valori predefiniti. L\'operazione non è annullabile.</string>
     <string name="settings_reset">Reimpostazione impostazioni</string>
     <string name="select_rtc_date">Seleziona data RTC</string>
     <string name="select_rtc_time">Seleziona orario RTC</string>
@@ -442,7 +439,6 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Tema e colori</string>
     <string name="preferences_layout">Layout</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Errore nel caricamento dell\'applicazione</string>
     <string name="loader_error_invalid_format">Formato applicazione non valido</string>
@@ -476,7 +472,6 @@
     <string name="core_error_savestate_build_mismatch">Versione savestate incompatibile</string>
     <string name="core_error_shutdown_requested">Spegnimento richiesto</string>
     <string name="core_error_unknown">Errore sconosciuto</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Premi Indietro per accedere al menù</string>
     <string name="emulation_save_state">Salva stato</string>
@@ -624,6 +619,7 @@
     <string name="unsupported_encrypted">Applicazione criptata non supportata</string>
     <string name="invalid_system_mode">Modalità di sistema non valida</string>
     <string name="invalid_system_mode_message">Le applicazioni esclusive del New 3DS non possono essere caricate senza abilitare la modalità New 3DS.</string>
+    <string name="shader_cache_crash_message"><![CDATA[Azahar si è chiuso inaspettatamente durante l\'ultima creazione della cache degli shader per questo titolo. Il driver grafico potrebbe essere andato in crash su uno degli shader in cache e continuando potrebbe verificarsi un altro crash.<br/><br/>Per ripristinare la cache degli shader, tieni premuto sull\'applicazione nell\'elenco applicazioni, tocca <b>Elimina cache shader</b> e seleziona <b>Vulkan</b>.]]></string>
     <string name="savestate_build_mismatch_message"><![CDATA[Impossibile caricare il savestate perché è stato creato su una versione diversa di Azahar:<br/><b>Azahar %1$s</b>.<br/><br/>Leggi il nostro articolo sul blog per <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">saperne di più sui savestate</a>.<br/><br/>Per recuperare i tuoi progressi, torna alla versione <b>Azahar %1$s</b>, carica questo savestate e usa la funzione di salvataggio integrata nell\'applicazione.]]></string>
 
     <!-- Disk Shader Cache -->
@@ -789,8 +785,6 @@
     <!-- Texture filters -->
     <string name="anime4k">Anime4K (solo OpenGL)</string>
     <string name="incompatible_texture_filter">Filtro texture non compatibile</string>
-    <string name="incompatible_texture_filter_description">Il filtro texture selezionato (Anime4K) non è compatibile con il renderer Vulkan.\nIl filtro texture verrà impostato su Nessuno.\nProcedere?</string>
-
     <!-- Texture Sampling names -->
     <string name="game_controlled">Controllata dal gioco</string>
     <string name="nearest_neighbor">Nearest Neighbor</string>

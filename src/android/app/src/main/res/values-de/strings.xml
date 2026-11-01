@@ -122,7 +122,6 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Diese Eingabe muss an einen Analogstick oder eine Steuerkreuz-Achse gebunden sein!</string>
     <string name="input_message_button_only">Diese Eingabe muss an einen Gamepad-Knopf gebunden sein!</string>
-    <string name="turbo_limit_hotkey">Turbogeschwindigkeit</string>
     <string name="turbo_enabled_toast">Turbogeschwindigkeit aktiviert</string>
     <string name="turbo_disabled_toast">Turbogeschwindigkeit deaktiviert</string>
     <!-- System files strings -->
@@ -334,8 +333,6 @@
     <string name="off">Aus</string>
     <string name="install">Installieren</string>
     <string name="delete">Löschen</string>
-    <string name="reset_all_settings">Alle Einstellungen zurücksetzen?</string>
-    <string name="reset_all_settings_description">Alle erweiterten Einstellungen werden auf den Werkzustand zurückgesetzt. Dies kann nicht rückgängig gemacht werden.</string>
     <string name="settings_reset">Einstellungen zurückgesetzt</string>
     <string name="select_rtc_date">RTC-Datum auswählen</string>
     <string name="select_rtc_time">RTC-Zeit auswählen</string>
@@ -366,7 +363,6 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Design und Farbe</string>
     <string name="preferences_layout">Anordnung</string>
-
     <string name="loader_error_encrypted">Deine ROM ist verschlüsselt</string>
     <string name="loader_error_file_not_found">ROM-Datei existiert nicht</string>
     <string name="no_game_present">Kein ausführbares Spiel vorhanden!</string>

@@ -139,7 +139,6 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Denne kontrol skal være bundet til et gamepad analogt greb eller akse D-Pad!</string>
     <string name="input_message_button_only">Denne kontrol skal være bundet til en gamepad knap!</string>
-    <string name="turbo_limit_hotkey">Turbohastighed</string>
     <string name="turbo_enabled_toast">Turbohastighed aktiveret</string>
     <string name="turbo_disabled_toast">Turbohastighed deaktiveret</string>
     <!-- System files strings -->
@@ -377,8 +376,6 @@
     <string name="off">Slukket</string>
     <string name="install">Installere</string>
     <string name="delete">Slet</string>
-    <string name="reset_all_settings">Nulstil alle indstillinger?</string>
-    <string name="reset_all_settings_description">Alle avancerede indstillinger vil blive nulstillet til deres standardkonfiguration. Dette kan ikke fortrydes.</string>
     <string name="settings_reset">Indstillinger nulstillet</string>
     <string name="select_rtc_date">Vælg RTC dato</string>
     <string name="select_rtc_time">Vælg RTC tid</string>
@@ -409,7 +406,6 @@
     <string name="preferences_debug">Fejlfinding</string>
     <string name="preferences_theme">Tema og farve</string>
     <string name="preferences_layout">Layout</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Fejl ved indlæsning af applikation</string>
     <string name="loader_error_invalid_format">Ugyldigt ansøgningsformat</string>
@@ -440,7 +436,6 @@
     <string name="core_error_core_exception_raised">Kerneundtagelse hævet</string>
     <string name="core_error_shutdown_requested">Nedlukning anmodet</string>
     <string name="core_error_unknown">Ukendt fejl</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Tryk på Tilbage for at få adgang til menuen.</string>
     <string name="emulation_save_state">Gem tilstand</string>
