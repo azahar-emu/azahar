@@ -37,6 +37,7 @@ import org.citra.citra_emu.camera.StillImageCameraHelper.onFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
+import org.citra.citra_emu.display.NetworkStreamer
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
@@ -72,6 +73,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
     lateinit var secondaryDisplayManager: SecondaryDisplay
+    val networkStreamer: NetworkStreamer by lazy { NetworkStreamer(this) }
 
     private val onShutdown = Runnable {
         if (intent.getBooleanExtra("launchedFromShortcut", false)) {
@@ -287,6 +289,7 @@ class EmulationActivity : AppCompatActivity() {
         instance = null
         secondaryDisplayManager.releasePresentation()
         secondaryDisplayManager.releaseVD()
+        networkStreamer.stop()
 
         CitraSettings.activeSettings.removePerGameSettings()
 
