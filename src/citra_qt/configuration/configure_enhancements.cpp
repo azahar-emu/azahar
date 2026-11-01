@@ -24,35 +24,17 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     ui->resolution_factor_combobox->setEnabled(hardware_graphics);
     ui->antialiasing_combobox->setEnabled(hardware_graphics);
 
-    // TODO(wunk): OpenGL and Vulkan mandate up to MSAAx4 is supported, anything further must be
-    // conditionally detected. Disable these for now.
-    const auto DisableComboboxItem = [](QComboBox& combobox, int item_index) {
-        if (QListView* combobox_view = qobject_cast<QListView*>(combobox.view())) {
+    // TODO(wunk): MSAA requires GPU capabilities to be understood at config-time before the backend
+    // has actually been created. Disable all UI MSAA options until this feature is available.
+    // Hide all AntiAliasing options that involve MSAA.
+    QListView* combobox_view = qobject_cast<QListView*>(ui->antialiasing_combobox->view());
+    for (int item_index = 0; item_index < ui->antialiasing_combobox->count(); ++item_index) {
+        if (Settings::GetAntiAliasingSampleCount(
+                static_cast<Settings::AntiAliasingMethod>(item_index)) > 1) {
             combobox_view->setRowHidden(item_index, true);
+            ui->antialiasing_combobox->setItemData(item_index, 0, Qt::UserRole - 1);
         }
-        combobox.setItemData(item_index, 0, Qt::UserRole - 1);
-    };
-
-#if defined(__APPLE__)
-    // Remove ALL MSAA options
-    // TODO(wunk): Implement proper MSAA support on MacOS
-    DisableComboboxItem(*ui->antialiasing_combobox,
-                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx2));
-    DisableComboboxItem(*ui->antialiasing_combobox,
-                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx4));
-
-    // If selecting any MSAA options, reset to 'None'
-    if (Settings::GetAntiAliasingSampleCount(static_cast<Settings::AntiAliasingMethod>(
-            ui->antialiasing_combobox->currentIndex())) > 1) {
-        ui->antialiasing_combobox->setCurrentIndex(
-            static_cast<int>(Settings::AntiAliasingMethod::None));
     }
-#endif
-
-    DisableComboboxItem(*ui->antialiasing_combobox,
-                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx8));
-    DisableComboboxItem(*ui->antialiasing_combobox,
-                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx16));
 
     connect(ui->render_3d_combobox, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int currentIndex) {
