@@ -238,6 +238,7 @@ class EmulationActivity : AppCompatActivity() {
         // if activeSettings already matches our current game, skip this
         if (CitraSettings.activeSettings.gameId != gameId) {
             CitraSettings.activeSettings.changeToGlobalContext()
+            GamepadHelper.migrateGamepadSharedPrefsToActiveSettings()
             if (gameId != null) {
                 CitraSettings.activeSettings.gameId = gameId
                 SettingsFile.loadCustomSettings(

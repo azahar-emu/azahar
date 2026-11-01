@@ -48,6 +48,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
+import org.citra.citra_emu.features.input.GamepadHelper
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
@@ -98,6 +99,7 @@ class MainActivity :
         ) {
             // load the global settings from the config file at program launch
             SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
+            GamepadHelper.migrateGamepadSharedPrefsToActiveSettings()
         }
 
         ThemeUtil.themeChangeListener(this)
@@ -295,6 +297,7 @@ class MainActivity :
         navController.navigate(R.id.action_firstTimeSetupFragment_to_gamesFragment)
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
         SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
+        GamepadHelper.migrateGamepadSharedPrefsToActiveSettings()
     }
 
     private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {

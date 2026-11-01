@@ -7,27 +7,31 @@ package org.citra.citra_emu.features.input
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
+import androidx.core.content.edit
+import androidx.preference.PreferenceManager
+import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.InputMappingSetting
+import org.citra.citra_emu.utils.Log
 
 /**
- * This object stores names, constants, and helper methods for working with Gamepads
+ * This object stores names,ants, and helper methods for working with Gamepads
  */
 object GamepadHelper {
-    private const val BUTTON_NAME_L3 = "Button L3"
-    private const val BUTTON_NAME_R3 = "Button R3"
-    private const val NINTENDO_VENDOR_ID = 0x057e
+    private val BUTTON_NAME_L3 = "Button L3"
+    private val BUTTON_NAME_R3 = "Button R3"
+    private val NINTENDO_VENDOR_ID = 0x057e
 
     // Linux BTN_DPAD_* values (0x220-0x223). Joy-Con D-pad buttons arrive as
     // KEYCODE_UNKNOWN with these scan codes because Android's input layer doesn't
     // translate them to KEYCODE_DPAD_*. translateEventToKeyId() falls back to
     // the scan code in that case.
-    private const val LINUX_BTN_DPAD_UP = 0x220 // 544
-    private const val LINUX_BTN_DPAD_DOWN = 0x221 // 545
-    private const val LINUX_BTN_DPAD_LEFT = 0x222 // 546
-    private const val LINUX_BTN_DPAD_RIGHT = 0x223 // 547
+    private val LINUX_BTN_DPAD_UP = 0x220 // 544 to 0x220 // 544
+    private val LINUX_BTN_DPAD_DOWN = 0x221 // 545 to 0x221 // 545
+    private val LINUX_BTN_DPAD_LEFT = 0x222 // 546 to 0x222 // 546
+    private val LINUX_BTN_DPAD_RIGHT = 0x223 // 547 to 0x223 // 547
 
     private val buttonNameOverrides = mapOf(
         KeyEvent.KEYCODE_BUTTON_THUMBL to BUTTON_NAME_L3,
@@ -251,7 +255,7 @@ object GamepadHelper {
                 return 0.0f
             }
         } else if (isMogaPro2Hid(inputDevice)) {
-            // This controller has a broken axis that reports a constant value. Ignore it.
+            // This controller has a broken axis that reports aant value. Ignore it.
             if (axis == MotionEvent.AXIS_GENERIC_1) {
                 return 0.0f
             }
@@ -384,4 +388,156 @@ object GamepadHelper {
         R.string.turbo_limit_hotkey,
         R.string.button_combo
     )
+
+    // These keys are no longer used in active code with new installs. Preserved here solely
+    // to do the migration function below. Once the migration is deprecated, these can be deleted.
+    private val new_to_old_keycode_pairs = mapOf(
+        "button_a" to "button_a",
+        "button_b" to "button_b",
+        "button_x" to "button_x",
+        "button_y" to "button_y",
+        "button_select" to "button_select",
+        "button_start" to "button_start",
+        "button_home" to "button_home",
+        "dpad_up" to "button_up",
+        "dpad_down" to "button_down",
+        "dpad_left" to "button_left",
+        "dpad_right" to "button_right",
+        "button_l" to "button_l",
+        "button_r" to "button_r",
+        "button_zl" to "button_zl",
+        "button_zr" to "button_zr",
+        "circlepad_up" to "circlepad_axis_vertical",
+        "circlepad_down" to "circlepad_axis_vertical",
+        "circlepad_right" to "circlepad_axis_horizontal",
+        "circlepad_left" to "circlepad_axis_horizontal",
+        "cstick_up" to "cstick_axis_vertical",
+        "cstick_right" to "cstick_axis_horizontal",
+        "cstick_down" to "cstick_axis_vertical",
+        "cstick_left" to "cstick_axis_horizontal",
+        // check for dpad_axis_vertical and dpad_axis_horizontal manually
+        "hotkey_enable" to "hotkey_enable",
+        "hotkey_swap" to "hotkey_screen_swap",
+        "hotkey_cycle_layout" to "hotkey_toggle_layout",
+        "hotkey_close" to "hotkey_close_game",
+        "hotkey_pause_resume" to "hotkey_pause_or_resume_game",
+        // this is not a typo, there was a typo in the old code
+        "hotkey_quickload" to "hotkey_quickpause",
+        "hotkey_quicksave" to "hotkey_quickload",
+        // TODO: make sure this is still right after rebasing with Turbo Hold
+        "hotkey_turbo_limit" to "hotkey_turbo_limit",
+        "hotkey_combo_button" to "hotkey_button_combo"
+    )
+
+    /**
+     * Migrates any old Shared Preferences input mapping to the new system.
+     * TODO: Decide if we should also remove the preferences after migrating, or keep
+     * them for users who might go back to an old version (though they would have issues with the ini anyway)
+     */
+    fun migrateGamepadSharedPrefsToActiveSettings() {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+
+        val alreadyDone = preferences.getBoolean("InputMapping_Migrated", false)
+        if (alreadyDone) {
+            Log.debug("[Migration] Skipping input migration, already completed")
+            return
+        }
+        Log.info(
+            "[GamepadHelper] Migrating old shared preference input settings to config.ini. This is a one-time action."
+        )
+
+        // map dpad axes first
+        val dpadVerticalMapping = preferences.getString(
+            "InputMapping_ReverseMapping_dpad_axis_vertical_1",
+            ""
+        )
+        if (dpadVerticalMapping != null) {
+            try {
+                val scancodeOrKeycode = dpadVerticalMapping.substringAfterLast("_").toInt()
+                // Read if we are inverted
+                val inverted = preferences.getBoolean("${dpadVerticalMapping}_Inverted", false)
+                val newUpInput = Input(null, scancodeOrKeycode, if (inverted) 1 else -1, 0.5f)
+                val newDownInput = Input(null, scancodeOrKeycode, if (inverted) -1 else 1, 0.5f)
+                CitraSettings.activeSettings.setBySettingsContext(
+                    InputMappingSetting.DPAD_UP,
+                    newUpInput
+                )
+                CitraSettings.activeSettings.setBySettingsContext(
+                    InputMappingSetting.DPAD_DOWN,
+                    newDownInput
+                )
+            } catch (e: NumberFormatException) {
+                Log.debug("[GamepadHelper] Could not get numeric keycode from $dpadVerticalMapping")
+            }
+        }
+        val dpadHorizontalMapping = preferences.getString(
+            "InputMapping_ReverseMapping_dpad_axis_horizontal_0",
+            ""
+        )
+        if (dpadHorizontalMapping != null) {
+            try {
+                val scancodeOrKeycode = dpadHorizontalMapping.substringAfterLast("_").toInt()
+                // Read if we are inverted
+                val inverted = preferences.getBoolean("${dpadHorizontalMapping}_Inverted", false)
+                val newUpInput = Input(null, scancodeOrKeycode, if (inverted) -1 else 1, 0.5f)
+                val newDownInput = Input(null, scancodeOrKeycode, if (inverted) 1 else -1, 0.5f)
+                CitraSettings.activeSettings.setBySettingsContext(
+                    InputMappingSetting.DPAD_RIGHT,
+                    newUpInput
+                )
+                CitraSettings.activeSettings.setBySettingsContext(
+                    InputMappingSetting.DPAD_LEFT,
+                    newDownInput
+                )
+            } catch (e: NumberFormatException) {
+                Log.debug("[GamepadHelper] Could not get numeric keycode from $dpadVerticalMapping")
+            }
+        }
+
+        for (inputMappingSetting in InputMappingSetting.entries) {
+            val lookupkey = new_to_old_keycode_pairs[inputMappingSetting.key] ?: continue
+            val isAxisInPrefs = lookupkey.contains("axis")
+            val axisTag = if (lookupkey.contains("vertical")) "_1" else "_0"
+            val reverseMappingKey =
+                "InputMapping_ReverseMapping_$lookupkey" + if (isAxisInPrefs) axisTag else ""
+            val reverseMapping = preferences.getString(reverseMappingKey, "")
+            val nameMapping = preferences.getString(lookupkey, "")
+            if (reverseMapping == null || reverseMapping == "" ||
+                nameMapping == null || nameMapping == ""
+            ) {
+                continue
+            }
+            val scancodeOrKeycode = try {
+                reverseMapping.substringAfterLast("_").toInt()
+            } catch (e: NumberFormatException) {
+                Log.debug("[GamepadHelper] Could not get numeric keycode from $reverseMapping")
+                continue
+            }
+            if (!isAxisInPrefs) {
+                // if the _Inverted key was not in preferences but the others were, this is a BUTTON.
+                val newInput = Input(scancodeOrKeycode)
+                // make sure to do this while CitraSettings.activeSettings is still in global state
+                CitraSettings.activeSettings.setBySettingsContext(inputMappingSetting, newInput)
+            } else {
+                // Read if we are inverted
+                val inverted = preferences.getBoolean("${reverseMapping}_Inverted", false)
+                val direction =
+                    if (inputMappingSetting.key.contains("up") ||
+                        inputMappingSetting.key.contains("left")
+                    ) {
+                        if (inverted) 1 else -1
+                    } else {
+                        if (inverted) -1 else 1
+                    }
+                val newInput = Input(null, scancodeOrKeycode, direction, 0.5f)
+                CitraSettings.activeSettings.setBySettingsContext(inputMappingSetting, newInput)
+                Log.info(
+                    "[Migration] Successfully migrated ${inputMappingSetting.key} from shared prefs"
+                )
+            }
+        }
+        preferences.edit {
+            putBoolean("InputMapping_Migrated", true)
+        }
+    }
 }
