@@ -167,10 +167,15 @@ enum class InputMappingSetting(
         CitraSettings.SECTION_CONTROLS,
         outKey = Hotkey.QUICKSAVE.button
     ),
-    HOTKEY_TURBO_LIMIT(
-        SettingKeys.hotkey_turbo_limit(),
+    HOTKEY_TURBO_TOGGLE(
+        SettingKeys.hotkey_turbo_toggle(),
         CitraSettings.SECTION_CONTROLS,
-        outKey = Hotkey.TURBO_LIMIT.button
+        outKey = Hotkey.TURBO_TOGGLE.button
+    ),
+    HOTKEY_TURBO_HOLD(
+        SettingKeys.hotkey_turbo_hold(),
+        CitraSettings.SECTION_CONTROLS,
+        outKey = Hotkey.TURBO_HOLD.button
     ),
     HOTKEY_QUICKLOAD(
         SettingKeys.hotkey_quickload(),

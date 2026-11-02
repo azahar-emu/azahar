@@ -112,7 +112,8 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_quickload) BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_quicksave) BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_swap) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(hotkey_turbo_limit) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_turbo_toggle) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_turbo_hold) BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_combo_button) BOOST_HANA_STRING(R"(
 
 [Core]

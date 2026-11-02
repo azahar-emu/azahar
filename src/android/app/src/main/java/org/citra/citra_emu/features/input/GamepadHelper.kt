@@ -374,7 +374,8 @@ object GamepadHelper {
         InputMappingSetting.HOTKEY_PAUSE_OR_RESUME,
         InputMappingSetting.HOTKEY_QUICKSAVE,
         InputMappingSetting.HOTKEY_QUICKLOAD,
-        InputMappingSetting.HOTKEY_TURBO_LIMIT,
+        InputMappingSetting.HOTKEY_TURBO_TOGGLE,
+        InputMappingSetting.HOTKEY_TURBO_HOLD,
         InputMappingSetting.HOTKEY_COMBO_BUTTON
     )
     val hotkeyTitles = listOf(
@@ -385,7 +386,8 @@ object GamepadHelper {
         R.string.emulation_toggle_pause,
         R.string.emulation_quicksave,
         R.string.emulation_quickload,
-        R.string.turbo_limit_hotkey,
+        R.string.turbo_toggle_hotkey,
+        R.string.turbo_hold_hotkey,
         R.string.button_combo
     )
 
@@ -415,7 +417,7 @@ object GamepadHelper {
         "cstick_right" to "cstick_axis_horizontal",
         "cstick_down" to "cstick_axis_vertical",
         "cstick_left" to "cstick_axis_horizontal",
-        // check for dpad_axis_vertical and dpad_axis_horizontal manually
+        // will check for dpad_axis_vertical and dpad_axis_horizontal manually
         "hotkey_enable" to "hotkey_enable",
         "hotkey_swap" to "hotkey_screen_swap",
         "hotkey_cycle_layout" to "hotkey_toggle_layout",
@@ -424,8 +426,8 @@ object GamepadHelper {
         // this is not a typo, there was a typo in the old code
         "hotkey_quickload" to "hotkey_quickpause",
         "hotkey_quicksave" to "hotkey_quickload",
-        // TODO: make sure this is still right after rebasing with Turbo Hold
-        "hotkey_turbo_limit" to "hotkey_turbo_limit",
+        "hotkey_turbo_toggle" to "hotkey_turbo_limit",
+        "hotkey_turbo_hold" to "hotkey_turbo_hold",
         "hotkey_combo_button" to "hotkey_button_combo"
     )
 

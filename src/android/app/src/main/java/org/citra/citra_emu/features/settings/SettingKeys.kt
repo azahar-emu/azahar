@@ -182,7 +182,8 @@ object SettingKeys {
     external fun hotkey_swap(): String
     external fun hotkey_pause_resume(): String
     external fun hotkey_quicksave(): String
-    external fun hotkey_turbo_limit(): String
+    external fun hotkey_turbo_toggle(): String
+    external fun hotkey_turbo_hold(): String
     external fun hotkey_quickload(): String
     external fun hotkey_enable(): String
     external fun hotkey_combo_button(): String
