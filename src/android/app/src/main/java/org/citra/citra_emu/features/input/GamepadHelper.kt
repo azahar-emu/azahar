@@ -533,9 +533,6 @@ object GamepadHelper {
                     }
                 val newInput = Input(null, scancodeOrKeycode, direction, 0.5f)
                 CitraSettings.activeSettings.setBySettingsContext(inputMappingSetting, newInput)
-                Log.info(
-                    "[Migration] Successfully migrated ${inputMappingSetting.key} from shared prefs"
-                )
             }
         }
         preferences.edit {
