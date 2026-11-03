@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -10,12 +10,14 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
 #include <boost/serialization/optional.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/unordered_map.hpp>
@@ -941,6 +943,8 @@ private:
     [[nodiscard]] bool PerformStateChecks(Kernel::HLERequestContext& ctx, IPC::RequestParser rp,
                                           Context::Handle context_handle);
 
+    [[nodiscard]] bool EnsureContextExists(IPC::RequestParser rp, Context::Handle context_handle);
+
     void DecryptClCertA();
 
     std::shared_ptr<Kernel::SharedMemory> shared_memory = nullptr;
@@ -956,6 +960,10 @@ private:
 
     /// Global list of HTTP contexts currently opened.
     std::unordered_map<Context::Handle, std::shared_ptr<Context>> contexts;
+
+    /// Contexts that were open when a savestate was saved. They are not restored by a load, but
+    /// closing them still frees their slot in the session.
+    std::set<Context::Handle> lost_contexts;
 
     // Get context from its handle
     inline Context& GetContext(const Context::Handle& handle) {
@@ -987,6 +995,16 @@ private:
         ar & client_certs;
         // NOTE: `contexts` is not serialized because it contains non-serializable data. (i.e.
         // handles to ongoing HTTP requests.) Serializing across HTTP contexts will break.
+        std::set<Context::Handle> open_contexts = lost_contexts;
+        if (Archive::is_saving::value) {
+            for (const auto& [handle, context] : contexts) {
+                open_contexts.insert(handle);
+            }
+        }
+        ar & open_contexts;
+        if (Archive::is_loading::value) {
+            lost_contexts = std::move(open_contexts);
+        }
     }
     friend class boost::serialization::access;
 };

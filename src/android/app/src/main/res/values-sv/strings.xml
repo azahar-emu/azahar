@@ -153,7 +153,6 @@
     <string name="button_combo">Kombinationsknapp</string>
     <string name="input_message_analog_only">Den här kontrollen måste vara bunden till en gamepad-analog spak eller D-pad-axel! </string>
     <string name="input_message_button_only">Den här kontrollen måste vara bunden till en gamepad-knapp! </string>
-    <string name="turbo_limit_hotkey">Turbohastighet</string>
     <string name="turbo_enabled_toast">Turbohastighet aktiverad</string>
     <string name="turbo_disabled_toast">Turbohastighet inaktiverad</string>
     <string name="combo_button_settings">Konfigurera kombinationsknapp</string>
@@ -406,8 +405,6 @@
     <string name="off">Av</string>
     <string name="install">Installera</string>
     <string name="delete">Ta bort</string>
-    <string name="reset_all_settings">Återställ alla inställningar? </string>
-    <string name="reset_all_settings_description">Alla avancerade inställningar kommer att återställas till standardkonfigurationen. Detta kan inte ångras.</string>
     <string name="settings_reset">Nollställning av inställningar</string>
     <string name="select_rtc_date">Välj RTC-datum</string>
     <string name="select_rtc_time">Välj RTC-tid</string>
@@ -442,10 +439,10 @@
     <string name="preferences_debug">Felsök</string>
     <string name="preferences_theme">Tema och färg</string>
     <string name="preferences_layout">Layout</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Fel vid inläsning av program</string>
     <string name="loader_error_invalid_format">Ogiltigt programformat</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[Programmets filformat stöds inte.<br>Försäkra dig om att du använder en av de kompatibla filformaten:<ul><li>Cartridge-avbilder: <b>.cci/.zcci/.bcci/.3ds</b></li><li>Installerbara arkiv: <b>.cia/.zcia/.bcia</b></li><li>Homebrew-titlar: <b>.3dsx/.z3dsx</b></li><li>NCCH-containers: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>ELF-filer: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Ogiltigt systemläge</string>
     <string name="loader_error_invalid_system_mode_description">Program som är exklusiva för New 3DS kan inte läsas in utan att New 3DS-läget aktiveras.</string>
     <string name="loader_error_applying_patches">Fel vid tillämpning av patchar</string>
@@ -475,6 +472,7 @@
     <string name="core_error_savestate_build_mismatch">Versionerna av sparat tillstånd matchar inte</string>
     <string name="core_error_shutdown_requested">Avstängning begärd</string>
     <string name="core_error_unknown">Okänt fel</string>
+    <string name="core_error_shader_cache_crash">Krasch i shadercachen</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Tryck på Tillbaka för att komma till menyn.</string>
@@ -623,6 +621,8 @@
     <string name="unsupported_encrypted">Krypterad applikation som inte stöds</string>
     <string name="invalid_system_mode">Ogiltigt systemläge</string>
     <string name="invalid_system_mode_message">Nya 3DS-exklusiva applikationer kan inte läsas in utan att aktivera Ny 3DS-läget.</string>
+    <string name="shader_cache_crash">Krasch i shadercachen</string>
+    <string name="shader_cache_crash_message"><![CDATA[Azahar stängdes oväntat förra gången programmet byggde shadercachen för det aktuella spelet. Grafikdrivrutinen kan ha kraschat på ett av de cachade shaderprogrammen och om du fortsätter kan den krascha igen.<br/><br/>För att återställa shadercachen håller du ned programmet i programlistan, trycker på <b>Ta bort shadercache</b> och väljer <b>Vulkan</b>.]]></string>
     <string name="savestate_build_mismatch_message"><![CDATA[Det gick inte att läsa in det sparade tillståndet eftersom det skapades med en annan Azahar-version:<br/><b>Azahar %1$s</b>.<br/><br/>Läs vårt blogginlägg <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">om att förstå sparade tillstånd</a> för mer information.<br/><br/>För att återställa dina framsteg, nedgradera till <b>Azahar %1$s</b>, läs in detta sparade tillstånd och använd programmets inbyggda sparfunktion.]]></string>
 
     <!-- Disk Shader Cache -->
@@ -787,8 +787,6 @@
     <!-- Texture filters -->
     <string name="anime4k">Anime4K (endast OpenGL)</string>
     <string name="incompatible_texture_filter">Inkompatibelt texturfilter</string>
-    <string name="incompatible_texture_filter_description">Det valda texturfiltret (Anime4K) är inte kompatibelt med Vulkan-renderaren.\nTexturfiltret kommer att ställas in på Inget.\nFortsätt?</string>
-
     <!-- Texture Sampling names -->
     <string name="game_controlled">Spelkontrollerat</string>
     <string name="nearest_neighbor">Närmaste granne</string>

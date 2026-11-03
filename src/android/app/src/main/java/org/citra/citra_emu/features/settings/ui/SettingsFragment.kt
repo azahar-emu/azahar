@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui
 
@@ -13,9 +13,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlin.getValue
 import org.citra.citra_emu.databinding.FragmentSettingsBinding
-import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
 class SettingsFragment :
@@ -23,7 +25,11 @@ class SettingsFragment :
     SettingsFragmentView {
     override var activityView: SettingsActivityView? = null
 
-    private val fragmentPresenter = SettingsFragmentPresenter(this)
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
+
+    private val fragmentPresenter by lazy {
+        SettingsFragmentPresenter(this, settingsViewModel.editingSettings)
+    }
     private var settingsAdapter: SettingsAdapter? = null
 
     private var _binding: FragmentSettingsBinding? = null
@@ -38,7 +44,8 @@ class SettingsFragment :
         super.onCreate(savedInstanceState)
         val menuTag = requireArguments().getString(ARGUMENT_MENU_TAG)
         val gameId = requireArguments().getString(ARGUMENT_GAME_ID)
-        fragmentPresenter.onCreate(menuTag!!, gameId!!)
+        val gameTitle = requireArguments().getString(ARGUMENT_GAME_TITLE)
+        fragmentPresenter.onCreate(menuTag!!, gameId!!, gameTitle!!)
     }
 
     override fun onCreateView(
@@ -81,16 +88,13 @@ class SettingsFragment :
         activityView!!.showSettingsFragment(
             menuKey,
             true,
-            requireArguments().getString(ARGUMENT_GAME_ID)!!
+            requireArguments().getString(ARGUMENT_GAME_ID)!!,
+            requireArguments().getString(ARGUMENT_GAME_TITLE)!!
         )
     }
 
     override fun showToastMessage(message: String?, is_long: Boolean) {
         activityView!!.showToastMessage(message!!, is_long)
-    }
-
-    override fun putSetting(setting: AbstractSetting) {
-        fragmentPresenter.putSetting(setting)
     }
 
     override fun onSettingChanged() {
@@ -116,12 +120,14 @@ class SettingsFragment :
     companion object {
         private const val ARGUMENT_MENU_TAG = "menu_tag"
         private const val ARGUMENT_GAME_ID = "game_id"
+        private const val ARGUMENT_GAME_TITLE = "game_title"
 
-        fun newInstance(menuTag: String?, gameId: String?): Fragment {
+        fun newInstance(menuTag: String?, gameId: String?, gameTitle: String?): Fragment {
             val fragment = SettingsFragment()
             val arguments = Bundle()
             arguments.putString(ARGUMENT_MENU_TAG, menuTag)
             arguments.putString(ARGUMENT_GAME_ID, gameId)
+            arguments.putString(ARGUMENT_GAME_TITLE, gameTitle)
             fragment.arguments = arguments
             return fragment
         }

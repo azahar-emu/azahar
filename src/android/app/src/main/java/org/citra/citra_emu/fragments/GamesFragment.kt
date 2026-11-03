@@ -18,7 +18,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -37,9 +36,8 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
 import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
@@ -54,9 +52,6 @@ class GamesFragment : Fragment() {
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
     private lateinit var gameAdapter: GameAdapter
-
-    private val settingsViewModel: SettingsViewModel by viewModels()
-    private val settings get() = settingsViewModel.settings
 
     private val openImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -154,7 +149,6 @@ class GamesFragment : Fragment() {
         gameAdapter = GameAdapter(
             requireActivity() as AppCompatActivity,
             inflater,
-            settings,
             openImageLauncher,
             onRequestCompressOrDecompress = { inputPath, suggestedName, shouldCompress ->
                 pendingCompressInvocation = inputPath
@@ -262,12 +256,13 @@ class GamesFragment : Fragment() {
         @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
         if (!BuildConfig.DEBUG &&
             !BuildUtil.isGooglePlayBuild &&
-            BooleanSetting.CHECK_FOR_UPDATES.boolean &&
+            CitraSettings.activeSettings.get(BooleanSetting.CHECK_FOR_UPDATES) &&
             !homeViewModel.updatePromptShown
         ) {
             Thread({
                 val checkForPrereleaseUpdates =
-                    isPrereleaseBuild() || (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
+                    isPrereleaseBuild() ||
+                        (CitraSettings.activeSettings.get(IntSetting.UPDATE_CHECK_CHANNEL) == 1)
                 val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
 
                 if (!latestReleaseTag.isNullOrEmpty() &&
@@ -301,7 +296,7 @@ class GamesFragment : Fragment() {
 
     private fun setAdapter(games: List<Game>) {
         val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        if (preferences.getBoolean(Settings.PREF_SHOW_HOME_APPS, false)) {
+        if (preferences.getBoolean(CitraSettings.PREF_SHOW_HOME_APPS, false)) {
             (binding.gridGames.adapter as GameAdapter).submitList(games)
         } else {
             val filteredList = games.filter { !it.isSystemTitle }

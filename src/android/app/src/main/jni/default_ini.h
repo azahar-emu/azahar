@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -422,7 +422,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Whether or not to enable the audio-stretching post-processing effect
 # This effect adjusts audio speed to match emulation speed and helps prevent audio stutter,
 # at the cost of increasing audio latency.
-# 0: No, 1 (default): Yes
+# 0 (default): No, 1: Yes
 )") DECLARE_KEY(enable_audio_stretching) BOOST_HANA_STRING(R"(
 
 # Scales audio playback speed to account for drops in emulation framerate
@@ -510,6 +510,18 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Patches the region of installed applications to be region free, so that they always appear on the home menu.
 # 0: Disabled, 1 (default): Enabled
 )") DECLARE_KEY(apply_region_free_patch) BOOST_HANA_STRING(R"(
+
+# How the system's battery state is determined
+# 0: System (default), 1: Fixed (based on below settings)
+)") DECLARE_KEY(battery_state_source) BOOST_HANA_STRING(R"(
+
+# The charge level of the virtual 3DS Battery
+# 0: Critical (default), 1: 25%, 2: 50%, 3: 75%, 4: 100%
+)") DECLARE_KEY(battery_level) BOOST_HANA_STRING(R"(
+
+# The charging status of the virtual 3DS battery
+# 0: Not Charging, 1 (default): Charging
+)") DECLARE_KEY(battery_charging) BOOST_HANA_STRING(R"(
 
 [Camera]
 # Which camera engine to use for the right outer camera

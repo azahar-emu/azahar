@@ -25,6 +25,9 @@ foreach(KEY IN ITEMS
     "init_time_offset"
     "init_ticks_type"
     "init_ticks_override"
+    "battery_state_source"
+    "battery_charging"
+    "battery_level"
     "plugin_loader"
     "allow_plugin_loader"
     "steps_per_hour"
@@ -237,6 +240,7 @@ if (ENABLE_QT)
         "pauseWhenInBackground"
         "muteWhenInBackground"
         "hideInactiveMouse"
+        "useOnScreenSoftwareKeyboard"
         "inserted_cartridge"
         "enable_discord_presence"
         "iconSize"
@@ -253,6 +257,7 @@ if (ENABLE_QT)
         "screenshotPath"
         "calloutFlags"
         "showConsole"
+        "bypass_audio_effects"
     )
         set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
         set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")

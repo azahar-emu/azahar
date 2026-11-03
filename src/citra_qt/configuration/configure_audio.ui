@@ -83,6 +83,16 @@
         <item row="1" column="1">
          <widget class="QComboBox" name="output_device_combo_box"/>
         </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QCheckBox" name="bypass_audio_effects">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Asks Windows to skip the audio effects of the output device (equalizers, virtual surround, sound enhancements) as they can add tens of milliseconds of audio latency. Only available with the Cubeb output.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Bypass system audio effects (lowers latency)</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -255,6 +265,7 @@
   <tabstop>volume_slider</tabstop>
   <tabstop>output_type_combo_box</tabstop>
   <tabstop>output_device_combo_box</tabstop>
+  <tabstop>bypass_audio_effects</tabstop>
   <tabstop>input_type_combo_box</tabstop>
   <tabstop>input_device_combo_box</tabstop>
  </tabstops>

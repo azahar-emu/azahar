@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <cstring>
@@ -469,7 +469,9 @@ std::optional<std::reference_wrapper<SocketHolder>> SOC_U::GetSocketHolder(u32 c
 void SOC_U::CloseAndDeleteAllSockets(s32 process_id) {
     std::erase_if(created_sockets, [process_id](const auto& entry) {
         if (process_id == -1 || entry.second.ownerProcess == static_cast<u32>(process_id)) {
-            closesocket(entry.second.socket_fd);
+            if (!entry.second.IsLost()) {
+                closesocket(entry.second.socket_fd);
+            }
             return true;
         }
         return false;
@@ -584,16 +586,11 @@ struct CTRPollFD {
     Events revents; ///< Events received (output)
 
     /// Converts a platform-specific pollfd to a 3ds specific structure
-    static CTRPollFD FromPlatform(SOC::SOC_U& socu, pollfd const& fd, u8 has_libctru_bug) {
+    static CTRPollFD FromPlatform(u32 ctr_fd, pollfd const& fd, u8 has_libctru_bug) {
         CTRPollFD result;
+        result.fd = ctr_fd;
         result.events.hex = Events::TranslateTo3DS(fd.events, has_libctru_bug).hex;
         result.revents.hex = Events::TranslateTo3DS(fd.revents, has_libctru_bug).hex;
-        for (const auto& socket : socu.created_sockets) {
-            if (socket.second.socket_fd == fd.fd) {
-                result.fd = socket.first;
-                break;
-            }
-        }
         return result;
     }
 
@@ -1110,7 +1107,9 @@ void SOC_U::Close(Kernel::HLERequestContext& ctx) {
     SocketHolder& holder = socket_holder_optional->get();
 
     s32 ret = 0;
-    ret = closesocket(holder.socket_fd);
+    if (!holder.IsLost()) {
+        ret = closesocket(holder.socket_fd);
+    }
 
     if (ret != 0) {
         ret = TranslateError(GET_ERRNO);
@@ -1556,12 +1555,32 @@ void SOC_U::Poll(Kernel::HLERequestContext& ctx) {
     // so we have to copy the data in order
     async_data->platform_pollfd.resize(nfds);
     async_data->has_libctru_bug.resize(nfds, false);
+    s32 lost_sockets = 0;
     for (u32 i = 0; i < nfds; i++) {
-        if (!GetSocketHolder(async_data->ctr_fds[i].fd, pid, rp)) {
+        const auto holder = GetSocketHolder(async_data->ctr_fds[i].fd, pid, rp);
+        if (!holder) {
             return;
+        }
+        if (holder->get().IsLost()) {
+            lost_sockets++;
         }
         async_data->platform_pollfd[i] =
             CTRPollFD::ToPlatform(*this, async_data->ctr_fds[i], async_data->has_libctru_bug[i]);
+    }
+
+    if (lost_sockets != 0) {
+        for (auto& ctr_fd : async_data->ctr_fds) {
+            ctr_fd.revents.hex = 0;
+            ctr_fd.revents.pollnval.Assign(created_sockets.at(ctr_fd.fd).IsLost());
+        }
+        std::vector<u8> output_fds(nfds * sizeof(CTRPollFD));
+        std::memcpy(output_fds.data(), async_data->ctr_fds.data(), output_fds.size());
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+        rb.Push(ResultSuccess);
+        rb.Push(lost_sockets);
+        rb.PushStaticBuffer(std::move(output_fds), 0);
+        return;
     }
 
     ctx.RunAsync(
@@ -1573,11 +1592,12 @@ void SOC_U::Poll(Kernel::HLERequestContext& ctx) {
             }
             return 0;
         },
-        [this, async_data](Kernel::HLERequestContext& ctx) {
+        [async_data](Kernel::HLERequestContext& ctx) {
             // Now update the output 3ds_pollfd structure
             for (u32 i = 0; i < async_data->nfds; i++) {
-                async_data->ctr_fds[i] = CTRPollFD::FromPlatform(
-                    *this, async_data->platform_pollfd[i], async_data->has_libctru_bug[i]);
+                async_data->ctr_fds[i] = CTRPollFD::FromPlatform(async_data->ctr_fds[i].fd,
+                                                                 async_data->platform_pollfd[i],
+                                                                 async_data->has_libctru_bug[i]);
             }
 
             std::vector<u8> output_fds(async_data->nfds * sizeof(CTRPollFD));

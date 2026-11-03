@@ -1,6 +1,6 @@
-// Copyright 2023 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.fragments
 
@@ -14,10 +14,17 @@ import org.citra.citra_emu.features.settings.ui.SettingsActivity
 class ResetSettingsDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val settingsActivity = requireActivity() as SettingsActivity
+        var title = R.string.reset_all_settings
+        var description = R.string.reset_all_settings_description
 
+        // if this is a per-game Settings object, reset to global instead
+        if (settingsActivity.editingSettings.isPerApp()) {
+            title = R.string.reset_settings_to_global
+            description = R.string.reset_settings_to_global_description
+        }
         return MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.reset_all_settings)
-            .setMessage(R.string.reset_all_settings_description)
+            .setTitle(title)
+            .setMessage(description)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 settingsActivity.onSettingsReset()
             }

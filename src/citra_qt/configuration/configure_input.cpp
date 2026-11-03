@@ -1,6 +1,6 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <memory>
@@ -15,6 +15,7 @@
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_input.h"
 #include "citra_qt/configuration/configure_motion_touch.h"
+#include "citra_qt/uisettings.h"
 #include "common/param_package.h"
 #include "core/core.h"
 #include "ui_configure_input.h"
@@ -385,6 +386,7 @@ void ConfigureInput::SetBinding(InputBinding binding, const Common::ParamPackage
 void ConfigureInput::ApplyConfiguration() {
 
     Settings::values.use_artic_base_controller = ui->use_artic_controller->isChecked();
+    UISettings::values.use_on_screen_software_keyboard = ui->use_onscreen_keyboard->isChecked();
 
     Settings::values.current_input_profile.maptype =
         static_cast<Settings::InputMappingType>(ui->comboBoxMappingType->currentIndex());
@@ -565,6 +567,8 @@ void ConfigureInput::LoadConfiguration() {
     ui->comboBoxMappingType->setCurrentIndex(
         static_cast<int>(Settings::values.current_input_profile.maptype));
     ui->use_artic_controller->setEnabled(!system.IsPoweredOn());
+    ui->use_onscreen_keyboard->setChecked(
+        UISettings::values.use_on_screen_software_keyboard.GetValue());
 
     std::transform(Settings::values.current_input_profile.buttons.begin(),
                    Settings::values.current_input_profile.buttons.end(), buttons_param.begin(),

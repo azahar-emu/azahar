@@ -152,7 +152,6 @@
     <string name="button_combo">Botão de Combo</string>
     <string name="input_message_analog_only">Este controle deve ser mapeado para um analógico ou eixo do D-pad!</string>
     <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
-    <string name="turbo_limit_hotkey">Velocidade Turbo</string>
     <string name="turbo_enabled_toast">Velocidade Turbo Ativada</string>
     <string name="turbo_disabled_toast">Velocidade Turbo Desativada</string>
     <string name="combo_button_settings"> Configurar Botão de Combo</string>
@@ -403,8 +402,6 @@
     <string name="off">Desligado</string>
     <string name="install">Instalar</string>
     <string name="delete">Excluir</string>
-    <string name="reset_all_settings">Redefinir todas as configurações?</string>
-    <string name="reset_all_settings_description">Todas as configurações avançadas serão redefinidas para sua configuração padrão. Isso não pode ser desfeito.</string>
     <string name="settings_reset">Configurações redefinidas</string>
     <string name="select_rtc_date">Selecione a data RTC</string>
     <string name="select_rtc_time">Selecione o horário RTC</string>
@@ -439,7 +436,6 @@
     <string name="preferences_debug">Depuração</string>
     <string name="preferences_theme">Tema e Cor</string>
     <string name="preferences_layout">Disposição</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Erro ao carregar o aplicativo</string>
     <string name="loader_error_invalid_format">Formato de aplicativo inválido</string>
@@ -471,7 +467,6 @@
     <string name="core_error_savestate_build_mismatch">Versão do savestate incompatível</string>
     <string name="core_error_shutdown_requested">Desligamento solicitado</string>
     <string name="core_error_unknown">Erro desconhecido</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Pressione Voltar para acessar o menu.</string>
     <string name="emulation_save_state">Salvar estado</string>

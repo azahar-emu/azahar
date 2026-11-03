@@ -139,7 +139,6 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Ten kontroler musi być powiązany z drążkiem analogowym gamepada lub z krzyżakiem!</string>
     <string name="input_message_button_only">Ten kontroler musi być powiązany z przyciskiem gamepada!</string>
-    <string name="turbo_limit_hotkey">Prędkość Turbo</string>
     <string name="turbo_enabled_toast">Prędkość Turbo włączona</string>
     <string name="turbo_disabled_toast">Prędkość Turbo wyłączona</string>
     <!-- System files strings -->
@@ -375,8 +374,6 @@
     <string name="off">Wyłączone</string>
     <string name="install">Zainstaluj</string>
     <string name="delete">Usuń</string>
-    <string name="reset_all_settings">Przywrócić wszystkie ustawienia?</string>
-    <string name="reset_all_settings_description">Wszystkie ustawienia zaawansowane zostaną przywrócone do konfiguracji domyślnej. Nie będzie można tego cofnąć.</string>
     <string name="settings_reset">Przywracanie ustawień</string>
     <string name="select_rtc_date">Wybierz datę RTC</string>
     <string name="select_rtc_time">Wybierz czas RTC</string>
@@ -407,7 +404,6 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Motyw i kolor</string>
     <string name="preferences_layout">Układ</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Wystąpił błąd podczas ładowania aplikacji</string>
     <string name="loader_error_invalid_format">Nieprawidłowy format aplikacji</string>
@@ -438,7 +434,6 @@
     <string name="core_error_core_exception_raised">Wystąpił błąd rdzenia</string>
     <string name="core_error_shutdown_requested">Prośba o zamknięcie</string>
     <string name="core_error_unknown">Nieznany błąd</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Naciśnij przycisk Wstecz, aby przejść do menu.</string>
     <string name="emulation_save_state">Zapisz stan</string>

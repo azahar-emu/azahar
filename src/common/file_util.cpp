@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Copyright Dolphin Emulator Project
 // Licensed under GPLv2 or any later version
@@ -1041,6 +1041,10 @@ void SetCurrentRomPath(const std::string& path) {
     g_currentRomPath = path;
 }
 
+std::string GetCurrentRomPath() {
+    return g_currentRomPath;
+}
+
 bool StringReplace(std::string& haystack, const std::string& a, const std::string& b, bool swap) {
     const auto& needle = swap ? b : a;
     const auto& replacement = swap ? a : b;
@@ -1396,6 +1400,14 @@ bool IOFile::Open() {
     m_file = FOPEN(filename.c_str(), openmode.c_str());
     m_good = m_file != nullptr;
 #endif
+
+    // The initial read position of a stream opened with "a+" depends on the C library. glibc starts
+    // at the beginning of the file, bionic (Android) and the BSD libc (macOS) at its end. Start at
+    // the beginning on every OS.
+    if (m_good && openmode.find('a') != std::string::npos &&
+        openmode.find('+') != std::string::npos) {
+        Seek(0, SEEK_SET);
+    }
 
     return m_good;
 }

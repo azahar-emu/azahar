@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <atomic>
@@ -920,10 +920,15 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
 
     auto itr = contexts.find(context_handle);
     if (itr == contexts.end()) {
+        if (lost_contexts.erase(context_handle) != 0) {
+            // Lost in a savestate load, the slot it took in the session is freed as usual.
+            session_data->num_http_contexts--;
+        } else {
+            LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
+        }
         // The real HTTP module just silently fails in this case.
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultSuccess);
-        LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
         return;
     }
 
@@ -966,6 +971,10 @@ void HTTP_C::CancelConnection(Kernel::HLERequestContext& ctx) {
         return;
     }
 
+    if (!EnsureContextExists(rp, context_handle)) {
+        return;
+    }
+
     Context& http_context = GetContext(context_handle);
     http_context.Cancel();
 
@@ -979,6 +988,10 @@ void HTTP_C::GetRequestState(Kernel::HLERequestContext& ctx) {
 
     const auto* session_data = EnsureSessionInitialized(ctx, rp);
     if (!session_data) {
+        return;
+    }
+
+    if (!EnsureContextExists(rp, context_handle)) {
         return;
     }
 
@@ -1902,7 +1915,9 @@ void HTTP_C::GetSSLError(Kernel::HLERequestContext& ctx) {
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, context_handle={}", context_handle);
 
-    [[maybe_unused]] Context& http_context = GetContext(context_handle);
+    if (!EnsureContextExists(rp, context_handle)) {
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
@@ -2195,6 +2210,10 @@ void HTTP_C::GetDownloadSizeState(Kernel::HLERequestContext& ctx) {
         return;
     }
 
+    if (!EnsureContextExists(rp, context_handle)) {
+        return;
+    }
+
     Context& http_context = GetContext(context_handle);
 
     u32 content_length = 0;
@@ -2256,7 +2275,18 @@ bool HTTP_C::PerformStateChecks(Kernel::HLERequestContext& ctx, IPC::RequestPars
         return false;
     }
 
-    return true;
+    return EnsureContextExists(rp, context_handle);
+}
+
+bool HTTP_C::EnsureContextExists(IPC::RequestParser rp, Context::Handle context_handle) {
+    if (contexts.contains(context_handle)) {
+        return true;
+    }
+
+    LOG_ERROR(Service_HTTP, "Context {} not found", context_handle);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ErrorContextNotFound);
+    return false;
 }
 
 void HTTP_C::DecryptClCertA() {

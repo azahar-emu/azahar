@@ -9,6 +9,7 @@
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "common/assert.h"
+#include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/dumping/backend.h"
@@ -118,6 +119,28 @@ void DspInterface::PushSamples(std::span<const std::array<s16, 2>> samples) {
     }
 }
 
+void DspInterface::DrainFifoBacklog(std::size_t num_frames) {
+    // The emulation thread produces a video frame of audio at a time, so the FIFO only needs enough
+    // headroom to smooth those bursts. Audio that stays in the FIFO for a whole window without
+    // being needed remains queued during a stall or at stream start. That extra data delays all
+    // later audio by its length, for the entire session.
+    constexpr std::size_t window_frames = native_sample_rate;
+    constexpr std::size_t kept_frames = native_sample_rate / 100;
+
+    fifo_low_fill = std::min(fifo_low_fill, fifo.Size());
+    backlog_window_frames += num_frames;
+    if (backlog_window_frames < window_frames) {
+        return;
+    }
+    if (fifo_low_fill > 2 * kept_frames) {
+        const std::size_t excess = fifo_low_fill - kept_frames;
+        fifo.Pop(excess);
+        LOG_DEBUG(Audio, "Dropped {} frames of audio backlog", excess);
+    }
+    fifo_low_fill = std::numeric_limits<std::size_t>::max();
+    backlog_window_frames = 0;
+}
+
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
     // Determine if we should stretch based on the current emulation speed.
     // TODO: Only activate audio stretching when emulation speed goes below 95% threshold
@@ -144,6 +167,7 @@ void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
             time_stretcher.Clear();
         }
         frames_written += fifo.Pop(buffer, num_frames - frames_written);
+        DrainFifoBacklog(num_frames);
     }
 
     if (frames_written > 0) {

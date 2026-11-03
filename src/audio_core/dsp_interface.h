@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <span>
@@ -118,6 +119,7 @@ protected:
 private:
     void FlushResidualStretcherAudio();
     void OutputCallback(s16* buffer, std::size_t num_frames);
+    void DrainFifoBacklog(std::size_t num_frames);
     void MixCsnd(std::span<std::array<s16, 2>> samples);
     void PushSamples(std::span<const std::array<s16, 2>> samples);
 
@@ -128,6 +130,8 @@ private:
     std::atomic<bool> flushing_time_stretcher = false;
     Common::RingBuffer<s16, 0x2000, 2> fifo;
     std::array<s16, 2> last_frame{};
+    std::size_t fifo_low_fill = std::numeric_limits<std::size_t>::max();
+    std::size_t backlog_window_frames = 0;
     TimeStretcher time_stretcher;
     std::unique_ptr<Sink> sink;
 

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -63,6 +63,7 @@ public:
     /// Returns the OpenGL format tuple associated with the provided pixel format
     const FormatTuple& GetFormatTuple(VideoCore::PixelFormat pixel_format) const;
     const FormatTuple& GetFormatTuple(VideoCore::CustomPixelFormat pixel_format);
+    bool SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const;
 
     /// Attempts to reinterpret a rectangle of source to another rectangle of dest
     bool Reinterpret(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);

@@ -100,10 +100,14 @@
     <string name="internal_resolution_setting_16x">16x ネーティブ (6400x3840)</string>
     <string name="internal_resolution_setting_17x">17x ネーティブ (6800x4080)</string>
     <string name="internal_resolution_setting_18x">18x ネーティブ (7200x4320)</string>
+    <string name="use_shader_jit">シェーダーJIT</string>
     <!-- Audio settings strings -->
     <string name="audio_volume">音量</string>
     <string name="simulate_headphones_plugged">ヘッドホンの接続をシミュレートする</string>
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JITを有効化</string>
     <string name="instant_debug_log_description">デバッグログを即座にファイルに書き込みます。Azaharがクラッシュしてログが途切れるときに有効にしてください。</string>
+    <string name="shader_jit">シェーダーJITを有効化</string>
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">画面の向き</string>
     <string name="layout_screen_orientation_auto_sensor">自動回転</string>
@@ -133,7 +137,6 @@
     <string name="core_error_savestate">ステートセーブのエラー</string>
     <string name="core_error_savestate_build_mismatch">セーブステート・バージョンのミスマッチ</string>
     <string name="core_error_unknown">不明なエラー</string>
-
     <string name="emulation_save_state">ステートセーブする</string>
     <string name="emulation_load_state">ステートロードする</string>
     <string name="emulation_aspect_ratio">アスペクト比</string>

@@ -153,7 +153,6 @@
     <string name="button_combo">Combo Button</string>
     <string name="input_message_analog_only">This control must be bound to a gamepad analog stick or D-pad axis!</string>
     <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
-    <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed Enabled</string>
     <string name="turbo_disabled_toast">Turbo Speed Disabled</string>
     <string name="combo_button_settings">Configure Combo Button</string>
@@ -406,8 +405,6 @@
     <string name="off">Off</string>
     <string name="install">Install</string>
     <string name="delete">Delete</string>
-    <string name="reset_all_settings">Reset All Settings?</string>
-    <string name="reset_all_settings_description">All advanced settings will be reset to their default configuration. This can not be undone.</string>
     <string name="settings_reset">Settings reset</string>
     <string name="select_rtc_date">Select RTC date</string>
     <string name="select_rtc_time">Select RTC time</string>
@@ -442,7 +439,6 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Theme and Colour</string>
     <string name="preferences_layout">Layout</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error loading application</string>
     <string name="loader_error_invalid_format">Invalid application format</string>
@@ -475,7 +471,6 @@
     <string name="core_error_savestate_build_mismatch">Savestate version mismatch</string>
     <string name="core_error_shutdown_requested">Shutdown requested</string>
     <string name="core_error_unknown">Unknown error</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Press Back to access the menu.</string>
     <string name="emulation_save_state">Save State</string>
@@ -787,8 +782,6 @@
     <!-- Texture filters -->
     <string name="anime4k">Anime4K (OpenGL only)</string>
     <string name="incompatible_texture_filter">Incompatible texture filter</string>
-    <string name="incompatible_texture_filter_description">The selected texture filter (Anime4K) is not compatible with the Vulkan renderer.\nThe texture filter will be set to None.\nProceed?</string>
-
     <!-- Texture Sampling names -->
     <string name="game_controlled">Game Controlled</string>
     <string name="nearest_neighbor">Nearest Neighbor</string>

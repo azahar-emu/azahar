@@ -1,10 +1,10 @@
-// Copyright 2023 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings.ui
 
-import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.CitraSettings
 
 /**
  * Abstraction for the Activity that manages SettingsFragments.
@@ -16,7 +16,12 @@ interface SettingsActivityView {
      * @param menuTag    Identifier for the settings group that should be displayed.
      * @param addToStack Whether or not this fragment should replace a previous one.
      */
-    fun showSettingsFragment(menuTag: String, addToStack: Boolean, gameId: String)
+    fun showSettingsFragment(
+        menuTag: String,
+        addToStack: Boolean,
+        gameId: String,
+        gameTitle: String
+    )
 
     /**
      * Called by a contained Fragment to get access to the Setting HashMap
@@ -25,7 +30,7 @@ interface SettingsActivityView {
      *
      * @return A HashMap of Settings.
      */
-    val settings: Settings
+    val editingSettings: CitraSettings
 
     /**
      * Called when a load operation completes.

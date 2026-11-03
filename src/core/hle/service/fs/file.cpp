@@ -145,9 +145,12 @@ void File::Read(Kernel::HLERequestContext& ctx) {
 
             const auto read_delay = static_cast<s64>(backend->GetReadDelayNs(async_data->length));
             if (!async_data->cache_ready) {
-                const auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                           std::chrono::steady_clock::now() - async_data->pre_timer)
-                                           .count();
+                auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                     std::chrono::steady_clock::now() - async_data->pre_timer)
+                                     .count();
+                if (Settings::values.deterministic_async_operations) {
+                    time_took = std::chrono::nanoseconds(0).count();
+                }
                 /*
                 if (time_took > read_delay) {
                     LOG_DEBUG(Service_FS, "Took longer! length={}, time_took={}, read_delay={}",

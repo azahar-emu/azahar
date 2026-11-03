@@ -139,7 +139,6 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">¡Este control debe asignarse a una palanca analógica o a un eje de la Cruceta!</string>
     <string name="input_message_button_only">¡Este dispositivo debe asignarse a un botón del control!</string>
-    <string name="turbo_limit_hotkey">Velocidad turbo</string>
     <string name="turbo_enabled_toast">Velocidad turbo activada</string>
     <string name="turbo_disabled_toast">Velocidad turbo desactivada</string>
     <!-- System files strings -->

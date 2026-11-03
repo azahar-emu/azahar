@@ -1139,9 +1139,18 @@ void GSP_GPU::ApplyPerProgramSettings(const Kernel::Process& process) {
     gpu.PicaCore().gs_setup.SetRequiresShaderFixup(requires_shader_fixup);
 }
 
-void GSP_GPU::GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::Process& process) {
+bool GSP_GPU::GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::Process& process) {
     ApplyPerProgramSettings(process);
-    system.GPU().Renderer().Rasterizer()->SwitchDiskResources(process.codeset->program_id);
+
+    const u64 program_id = process.codeset->program_id;
+    auto* const rasterizer = system.GPU().Renderer().Rasterizer();
+    const bool load_crashed = rasterizer->DiskResourcesLoadCrashed(program_id);
+    if (load_crashed) {
+        system.SetStatus(Core::System::ResultStatus::ErrorShaderCacheCrash,
+                         fmt::format("{:016X}", program_id).c_str());
+    } else {
+        rasterizer->SwitchDiskResources(program_id);
+    }
 
     thread_id_with_rights = thread_id;
     active_client_thread_id = client_thread_id;
@@ -1149,11 +1158,24 @@ void GSP_GPU::GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::P
     for (u32 screen_id = 0; screen_id < 2; ++screen_id) {
         GetFrameBufferUpdate(thread_id_with_rights, screen_id)->is_dirty = 0;
     }
+    return !load_crashed;
+}
+
+void GSP_GPU::DeferDiskResourcesSwitch(u64 program_id, std::shared_ptr<Kernel::Event> event) {
+    deferred_switches.push_back({program_id, std::move(event)});
+    system.Kernel().timing.ScheduleEvent(0, DeferredSwitchEventType);
+}
+
+void GSP_GPU::ProcessDeferredSwitch() {
+    const auto deferred = std::move(deferred_switches.front());
+    deferred_switches.pop_front();
+    system.GPU().Renderer().Rasterizer()->SwitchDiskResources(deferred.program_id);
+    deferred.event->Signal();
 }
 
 Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
                                 const std::shared_ptr<Kernel::Process>& process, bool force,
-                                bool try_only) {
+                                bool try_only, bool& switch_deferred) {
     const auto session_data = GetSessionData(ctx.Session());
 
     LOG_DEBUG(Service_GSP, "called force={} try={} process={} thread_id={}", force, try_only,
@@ -1172,7 +1194,8 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
                         thread_id_with_rights);
         }
         force_mode = true;
-        GrantGpuRight(session_data->thread_id, ctx.ClientThread()->thread_id, *process);
+        switch_deferred =
+            !GrantGpuRight(session_data->thread_id, ctx.ClientThread()->thread_id, *process);
         return ResultSuccess;
     }
 
@@ -1186,7 +1209,8 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
         return ResultForceModeCanceled;
     }
 
-    GrantGpuRight(session_data->thread_id, ctx.ClientThread()->thread_id, *process);
+    switch_deferred =
+        !GrantGpuRight(session_data->thread_id, ctx.ClientThread()->thread_id, *process);
     return ResultSuccess;
 }
 
@@ -1205,7 +1229,17 @@ void GSP_GPU::TryAcquireRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto process = rp.PopObject<Kernel::Process>();
 
-    const auto result = AcquireGpuRight(ctx, process, false, true);
+    bool switch_deferred = false;
+    const auto result = AcquireGpuRight(ctx, process, false, true, switch_deferred);
+    if (switch_deferred) {
+        auto callback = std::make_shared<ThreadCallback>(system, "GSP_GPU::TryAcquireRight",
+                                                         ThreadCallback::Type::AcquireRight);
+        callback->SetResult(result);
+        DeferDiskResourcesSwitch(process->codeset->program_id,
+                                 ctx.SleepClientThread("GSP_GPU::TryAcquireRight",
+                                                       std::chrono::nanoseconds(-1), callback));
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(result);
@@ -1216,7 +1250,8 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     const bool force = rp.Pop<u8>() != 0;
     const auto process = rp.PopObject<Kernel::Process>();
 
-    const auto result = AcquireGpuRight(ctx, process, force, false);
+    bool switch_deferred = false;
+    const auto result = AcquireGpuRight(ctx, process, force, false, switch_deferred);
     if (result == ResultGpuRightBusy) {
         // The GSP module waits until the holder releases the right, then gives it to the thread.
         // Sleep the caller thread until the right is available.
@@ -1235,6 +1270,16 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     if (force && !gpu_core_reset_by_force) {
         gpu_core_reset_by_force = true;
         DoResetGpuCore();
+    }
+
+    if (switch_deferred) {
+        auto callback = std::make_shared<ThreadCallback>(system, "GSP_GPU::AcquireRight",
+                                                         ThreadCallback::Type::AcquireRight);
+        callback->SetResult(result);
+        DeferDiskResourcesSwitch(
+            process->codeset->program_id,
+            ctx.SleepClientThread("GSP_GPU::AcquireRight", std::chrono::nanoseconds(-1), callback));
+        return;
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1259,8 +1304,13 @@ void GSP_GPU::ReleaseRight(const SessionData* session_data) {
             wait_context.event->Signal();
             continue;
         }
-        GrantGpuRight(wait_context.thread_id, wait_context.client_thread_id, *wait_context.process);
-        wait_context.event->Signal();
+        if (GrantGpuRight(wait_context.thread_id, wait_context.client_thread_id,
+                          *wait_context.process)) {
+            wait_context.event->Signal();
+        } else {
+            DeferDiskResourcesSwitch(wait_context.process->codeset->program_id,
+                                     std::move(wait_context.event));
+        }
         break;
     }
 }
@@ -1338,6 +1388,7 @@ void GSP_GPU::serialize(Archive& ar, const unsigned int) {
     ar & force_buffer_swap;
     ar & vram_backup_handler;
     ar & right_waiters;
+    ar & deferred_switches;
     ar & force_mode;
     ar & gpu_core_reset_by_force;
 }
@@ -1392,6 +1443,8 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
         "GSPPendingInterrupt", [this](uintptr_t arg, s64 cycle_late) {
             ProcessPendingInterrupt(static_cast<size_t>(arg));
         });
+    DeferredSwitchEventType = system.Kernel().timing.RegisterEvent(
+        "GSPDeferredDiskResourcesSwitch", [this](uintptr_t, s64) { ProcessDeferredSwitch(); });
 
     first_initialization = true;
 };

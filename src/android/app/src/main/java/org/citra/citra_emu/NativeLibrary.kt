@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.OpenableColumns
 import android.text.Html
+import android.text.TextUtils
 import android.text.method.LinkMovementMethod
 import android.view.Surface
 import android.view.View
@@ -177,7 +178,6 @@ object NativeLibrary {
     // Surface Handling
     external fun surfaceChanged(surf: Surface)
     external fun surfaceDestroyed()
-    external fun doFrame()
 
     // Second window
     external fun secondarySurfaceChanged(secondary_surface: Surface)
@@ -263,6 +263,8 @@ object NativeLibrary {
     external fun deleteOpenGLShaderCache(titleId: Long)
     external fun deleteVulkanShaderCache(titleId: Long)
 
+    external fun addDefaultSetting(key: String, value: String)
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 
@@ -303,7 +305,10 @@ object NativeLibrary {
 
             CoreError.ErrorSavestate -> {
                 title = emulationActivity.getString(R.string.save_load_error)
-                message = details
+                message = emulationActivity.getString(
+                    R.string.savestate_error_message,
+                    TextUtils.htmlEncode(details)
+                )
                 canContinue = true
             }
 
@@ -329,6 +334,12 @@ object NativeLibrary {
                 title = emulationActivity.getString(R.string.core_error_savestate_build_mismatch)
                 message =
                     emulationActivity.getString(R.string.savestate_build_mismatch_message, details)
+                canContinue = true
+            }
+
+            CoreError.ErrorShaderCacheCrash -> {
+                title = emulationActivity.getString(R.string.shader_cache_crash)
+                message = emulationActivity.getString(R.string.shader_cache_crash_message)
                 canContinue = true
             }
 
@@ -967,7 +978,8 @@ object NativeLibrary {
         ErrorCoreExceptionRaised(14, R.string.core_error_core_exception_raised),
         ErrorSavestateBuildMismatch(15, R.string.core_error_savestate_build_mismatch),
         ShutdownRequested(16, R.string.core_error_shutdown_requested),
-        ErrorUnknown(17, R.string.core_error_unknown);
+        ErrorUnknown(17, R.string.core_error_unknown),
+        ErrorShaderCacheCrash(18, R.string.core_error_shader_cache_crash);
 
         companion object {
             fun fromInt(value: Int): CoreError = entries.find { it.value == value } ?: ErrorUnknown

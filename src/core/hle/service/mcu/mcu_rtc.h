@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -55,6 +55,8 @@ public:
 
     void UpdateInfoLEDHeader(const InfoLedPattern::Header& header);
 
+    void UpdateInfoLEDEmptyBatteryPattern(u32 value);
+
     bool GetInfoLEDStatusFinished();
 
     static std::shared_ptr<RTC> GetService(Core::System& system);
@@ -66,11 +68,12 @@ private:
 
     void GetInfoLEDStatus(Kernel::HLERequestContext& ctx);
 
+    void SetBatteryEmptyLEDPattern(Kernel::HLERequestContext& ctx);
+
     Core::System& system;
 
     std::unique_ptr<InfoLedHandler> info_led;
     Core::TimingEventType* info_led_tick_event{};
-    bool info_led_ticking{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

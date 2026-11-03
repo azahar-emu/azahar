@@ -36,6 +36,7 @@
 #include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/string_util.h"
+#include "common/thread.h"
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
@@ -122,6 +123,9 @@ std::condition_variable_any surface_cv;
 
 std::string inserted_cartridge;
 
+// OpenGL only: presents each frame as soon as the emulation thread has drawn it.
+std::jthread present_thread;
+
 // Android Multiplayer which can be initialized with parameters
 std::unique_ptr<AndroidMultiplayer> multiplayer{nullptr};
 std::shared_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
@@ -136,6 +140,7 @@ static jobject ToJavaCoreError(Core::System::ResultStatus result) {
         {Core::System::ResultStatus::ErrorN3DSApplication, "ErrorN3DSApplication"},
         {Core::System::ResultStatus::ErrorCoreExceptionRaised, "ErrorCoreExceptionRaised"},
         {Core::System::ResultStatus::ErrorSavestateBuildMismatch, "ErrorSavestateBuildMismatch"},
+        {Core::System::ResultStatus::ErrorShaderCacheCrash, "ErrorShaderCacheCrash"},
         {Core::System::ResultStatus::ErrorUnknown, "ErrorUnknown"},
     };
 
@@ -166,7 +171,33 @@ static void LoadDiskCacheProgress(VideoCore::LoadCallbackStage stage, int progre
 
 static Camera::NDK::Factory* g_ndk_factory{};
 
+static void PresentLoop(std::stop_token stop_token) {
+    Common::SetCurrentThreadName("GLPresent");
+    while (!stop_token.stop_requested()) {
+        if (!window->WaitForFrame(std::chrono::milliseconds(100))) {
+            continue;
+        }
+        std::scoped_lock lock(surface_mutex);
+        if (stop_run || pause_emulation) {
+            continue;
+        }
+        window->TryPresenting();
+        if (secondary_window) {
+            secondary_window->TryPresenting();
+        }
+    }
+    window->DonePresenting();
+    if (secondary_window) {
+        secondary_window->DonePresenting();
+    }
+}
+
 static void TryShutdown() {
+    if (present_thread.joinable()) {
+        present_thread.request_stop();
+        present_thread.join();
+    }
+
     std::scoped_lock surface_lock(surface_mutex);
 
     if (!window) {
@@ -255,12 +286,28 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         }
     });
 
-    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
-    switch (graphics_api) {
+
+    // Load game-specific settings overlay if available
+    u64 program_id{};
+    FileUtil::SetCurrentRomPath(filepath);
+    auto app_loader = Loader::GetLoader(filepath);
+    if (app_loader) {
+        app_loader->ReadProgramId(program_id);
+        system.RegisterAppLoaderEarly(app_loader);
+    }
+
+    // Forces a config reload on game boot, if the user changed settings in the UI
+    Config game_config(program_id);
+    system.ApplySettings();
+    Settings::LogSettings();
+
+    bool opengl_windows = false;
+    switch (Settings::GetWorkingGraphicsAPI()) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
+        opengl_windows = true;
         shared_context = window->GetEGLContext();
         secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface,
                                                                       true, shared_context);
@@ -276,9 +323,10 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     default:
         LOG_CRITICAL(Frontend,
                      "Unknown or unsupported graphics API {}, falling back to available default",
-                     graphics_api);
+                     Settings::GetWorkingGraphicsAPI());
 #ifdef ENABLE_OPENGL
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
+        opengl_windows = true;
         shared_context = window->GetEGLContext();
         secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface,
                                                                       true, shared_context);
@@ -293,19 +341,6 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 #endif
         break;
     }
-
-    // Forces a config reload on game boot, if the user changed settings in the UI
-    Config{};
-    // Replace with game-specific settings
-    u64 program_id{};
-    FileUtil::SetCurrentRomPath(filepath);
-    auto app_loader = Loader::GetLoader(filepath);
-    if (app_loader) {
-        app_loader->ReadProgramId(program_id);
-        system.RegisterAppLoaderEarly(app_loader);
-    }
-    system.ApplySettings();
-    Settings::LogSettings();
 
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImage::Factory>());
 
@@ -356,6 +391,10 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
 
     SCOPE_EXIT({ TryShutdown(); });
+
+    if (opengl_windows) {
+        present_thread = std::jthread(PresentLoop);
+    }
 
     system.RegisterCoreLoopThreadId();
 
@@ -521,19 +560,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] J
         if (window) {
             window->OnSurfaceChanged(s_surface);
         }
-    }
-}
-
-void Java_org_citra_citra_1emu_NativeLibrary_doFrame([[maybe_unused]] JNIEnv* env,
-                                                     [[maybe_unused]] jobject obj) {
-    if (stop_run || pause_emulation) {
-        return;
-    }
-    if (window) {
-        window->TryPresenting();
-    }
-    if (secondary_window) {
-        secondary_window->TryPresenting();
     }
 }
 
@@ -977,14 +1003,13 @@ void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
                                                             [[maybe_unused]] jobject obj) {
-    Config{};
     Core::System& system{Core::System::GetInstance()};
-
-    // Replace with game-specific settings
+    u64 program_id{};
     if (system.IsPoweredOn()) {
-        u64 program_id{};
         system.GetAppLoader().ReadProgramId(program_id);
     }
+    Config cfg(program_id);
+    // Load game-specific settings overlay (if a game is running)
 
     if (multiplayer) {
         multiplayer->UpdateCredentials();
@@ -1323,6 +1348,11 @@ void Java_org_citra_citra_1emu_NativeLibrary_deleteVulkanShaderCache(JNIEnv* env
             }
             return true;
         });
+}
+
+void JNICALL Java_org_citra_citra_1emu_NativeLibrary_addDefaultSetting(JNIEnv* env, jobject obj,
+                                                                       jstring key, jstring value) {
+    Config::AddDefaultSettingValue(GetJString(env, key), GetJString(env, value));
 }
 
 } // extern "C"

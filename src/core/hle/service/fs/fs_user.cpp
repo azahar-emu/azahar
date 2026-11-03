@@ -1,7 +1,9 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/unordered_map.hpp>
 #include <cryptopp/aes.h>
 #include <cryptopp/cmac.h>
 #include <cryptopp/modes.h>
@@ -106,8 +108,11 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
             async_data->file =
                 archives.OpenFileFromArchive(async_data->archive_handle, async_data->file_path,
                                              async_data->mode, async_data->attributes);
-            const auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - async_data->pre_timer);
+            if (Settings::values.deterministic_async_operations) {
+                time_took = std::chrono::nanoseconds(0);
+            }
             return static_cast<s64>(((async_data->file.second > time_took)
                                          ? (async_data->file.second - time_took)
                                          : std::chrono::nanoseconds())
@@ -219,8 +224,11 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
                 archives.OpenFileFromArchive(*async_data->archive_handle, async_data->file_path,
                                              async_data->mode, async_data->attributes);
             archives.CloseArchive(*async_data->archive_handle);
-            const auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            auto time_took = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - async_data->pre_timer);
+            if (Settings::values.deterministic_async_operations) {
+                time_took = std::chrono::nanoseconds(0);
+            }
             return static_cast<s64>(((async_data->file.second > time_took)
                                          ? (async_data->file.second - time_took)
                                          : std::chrono::nanoseconds())
@@ -1925,6 +1933,9 @@ void Service::FS::FS_USER::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar & priority;
     ar & secure_value_backend;
+    ar & program_info_map;
+    ar& FileUtil::Path::make(current_gamecard_path);
+    ar & product_info_map;
 }
 
 void InstallInterfaces(Core::System& system) {

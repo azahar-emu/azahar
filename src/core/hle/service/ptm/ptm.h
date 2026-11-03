@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -19,7 +19,7 @@ namespace Service::PTM {
 constexpr std::array<u8, 12> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
 
 /// Charge levels used by PTM functions
-enum class ChargeLevels : u32 {
+enum class ChargeLevels : u8 {
     CriticalBattery = 1,
     LowBattery = 2,
     HalfFull = 3,
@@ -52,6 +52,8 @@ public:
 
     static u16 GetPlayCoins();
     static void SetPlayCoins(u16 play_coins);
+
+    void UpdateSharedPage();
 
     class Interface : public ServiceFramework<Interface> {
     public:
@@ -145,6 +147,8 @@ public:
 
         void GetInfoLEDStatus(Kernel::HLERequestContext& ctx);
 
+        void SetBatteryEmptyLEDPattern(Kernel::HLERequestContext& ctx);
+
         /**
          * PTM::GetSystemTime service function
          *  Outputs:
@@ -161,8 +165,12 @@ private:
     Core::System& system;
 
     bool shell_open = true;
-    bool battery_is_charging = true;
+    bool battery_charger_connected = false;
+    bool battery_is_charging = false;
+    ChargeLevels charge_level = ChargeLevels::CompletelyFull;
     bool pedometer_is_counting = false;
+
+    Core::TimingEventType* update_shared_page_event{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

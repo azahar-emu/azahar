@@ -1,11 +1,12 @@
-// Copyright 2019-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2019-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <string>
+#include <utility>
 
 #include <android/native_window_jni.h>
 #include <glad/glad.h>
@@ -186,23 +187,40 @@ std::unique_ptr<Frontend::GraphicsContext> EmuWindow_Android_OpenGL::CreateShare
 }
 
 void EmuWindow_Android_OpenGL::PollEvents() {
-    if (!render_window) {
-        return;
+    ReportFrameWork();
+
+    if (render_window) {
+        host_window = render_window;
+        render_window = nullptr;
+
+        DestroyWindowSurface();
+        CreateWindowSurface();
+        OnFramebufferSizeChanged();
+        presenting_state = PresentingState::Initial;
     }
 
-    host_window = render_window;
-    render_window = nullptr;
+    {
+        std::scoped_lock lock{frame_mutex};
+        frame_ready = true;
+    }
+    frame_cv.notify_one();
+}
 
-    DestroyWindowSurface();
-    CreateWindowSurface();
-    OnFramebufferSizeChanged();
-    presenting_state = PresentingState::Initial;
+bool EmuWindow_Android_OpenGL::WaitForFrame(std::chrono::milliseconds timeout) {
+    std::unique_lock lock{frame_mutex};
+    frame_cv.wait_for(lock, timeout, [this] { return frame_ready; });
+    return std::exchange(frame_ready, false);
+}
+
+void EmuWindow_Android_OpenGL::DonePresenting() {
+    if (surface_current) {
+        eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        surface_current = false;
+    }
+    eglReleaseThread();
 }
 
 void EmuWindow_Android_OpenGL::StopPresenting() {
-    if (presenting_state == PresentingState::Running) {
-        eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    }
     presenting_state = PresentingState::Stopped;
 }
 
@@ -210,13 +228,19 @@ void EmuWindow_Android_OpenGL::TryPresenting() {
     if (!system.IsPoweredOn()) {
         return;
     }
-    if (presenting_state == PresentingState::Initial) [[unlikely]] {
-        presenting_state = PresentingState::Running;
+    auto state = PresentingState::Initial;
+    if (presenting_state.compare_exchange_strong(state, PresentingState::Running)) [[unlikely]] {
+        state = PresentingState::Running;
     }
-    if (presenting_state != PresentingState::Running) [[unlikely]] {
+    if (state != PresentingState::Running) [[unlikely]] {
+        if (surface_current) {
+            eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            surface_current = false;
+        }
         return;
     }
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    surface_current = true;
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     eglSwapInterval(egl_display, Settings::values.use_vsync ? 1 : 0);
     system.GPU().Renderer().TryPresent(0, is_secondary);

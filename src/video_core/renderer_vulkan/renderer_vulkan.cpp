@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -1177,10 +1177,18 @@ void RendererVulkan::SwapBuffers() {
     if (!screenRendered) {
         scheduler.Finish();
     }
+    LimitFramesAheadOfGpu();
 
     system.perf_stats->EndSwap();
     rasterizer.TickFrame();
     EndFrame();
+}
+
+void RendererVulkan::LimitFramesAheadOfGpu() {
+    if (previous_frame_tick != 0) {
+        scheduler.Wait(previous_frame_tick);
+    }
+    previous_frame_tick = scheduler.CurrentTick() - 1;
 }
 
 void RendererVulkan::RenderScreenshot() {

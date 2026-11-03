@@ -153,7 +153,6 @@
     <string name="button_combo">Bouton combo</string>
     <string name="input_message_analog_only">Cette commande doit être rattachée à un stick analogique de manette ou à un axe de la manette + !</string>
     <string name="input_message_button_only">Cette commande doit être rattachée à un bouton de la manette !</string>
-    <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed activé</string>
     <string name="turbo_disabled_toast">Turbo Speed désactivé</string>
     <string name="combo_button_settings">Configurer le bouton combo</string>
@@ -406,8 +405,6 @@
     <string name="off">Désactivé</string>
     <string name="install">Installer</string>
     <string name="delete">Supprimer</string>
-    <string name="reset_all_settings">Réinitialiser tous les paramètres ?</string>
-    <string name="reset_all_settings_description">Tous les paramètres avancés seront réinitialisés à leur configuration par défaut. Cela ne peut pas être annulé.</string>
     <string name="settings_reset">Paramètres réinitialisés</string>
     <string name="select_rtc_date">Sélectionner la date RTC</string>
     <string name="select_rtc_time">Sélectionner l\'heure RTC</string>
@@ -442,7 +439,6 @@
     <string name="preferences_debug">Débogage</string>
     <string name="preferences_theme">Thème et couleur</string>
     <string name="preferences_layout">Disposition</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Erreur lors du chargement de l\'application</string>
     <string name="loader_error_invalid_format">Format d\'application invalide</string>
@@ -476,6 +472,7 @@
     <string name="core_error_savestate_build_mismatch">Conflit de version du point de récupération</string>
     <string name="core_error_shutdown_requested">Arrêt demandé</string>
     <string name="core_error_unknown">Erreur inconnue</string>
+    <string name="core_error_shader_cache_crash">Crash du cache de shaders</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Appuyez sur Retour pour accéder au menu.</string>
@@ -619,11 +616,14 @@
     <string name="cia_file_not_found">Échec de l\'installation. Fichier CIA introuvable.</string>
     <string name="system_archive_general">Une archive système</string>
     <string name="save_load_error">Erreur de sauvegarde/chargement</string>
+    <string name="savestate_error_message"><![CDATA[Le point de récupération n\'a pas pu être créé ou restoré.<br/><br/>%1$s]]></string>
     <string name="fatal_error">Erreur fatale</string>
     <string name="fatal_error_message">Une erreur fatale s\'est produite. Veuillez consulter les logs pour plus de détails.\nPoursuivre l\'émulation peut entraîner des plantages et des bugs.</string>
     <string name="unsupported_encrypted">Application encryptée non supportée</string>
     <string name="invalid_system_mode">Mode système invalide</string>
     <string name="invalid_system_mode_message">Les applications exclusives à la New 3DS ne peuvent pas être chargées sans activer le mode New 3DS.</string>
+    <string name="shader_cache_crash">Crash du cache de shaders</string>
+    <string name="shader_cache_crash_message"><![CDATA[Azahar s\'est arrêté de manière inattendue la dernière fois qu\'il a construit le cache de shaders de l\'application actuelle. Le pilote graphique s\'est peut-être crashé sur un des shaders mis en cache, et continuer peut le faire crasher à nouveau.<br/><br/>Pour réinitialiser le cache de shaders, restez appuyé sur l\'application dans la liste des applications, pressez <b>Supprimer le cache de shaders</b> et sélectionnez <b>Vulkan</b>.]]></string>
     <string name="savestate_build_mismatch_message"><![CDATA[Le point de récupération n\'a pas pu être chargé car il a été créé sur une version différente d\'Azahar :<br/><b>Azahar %1$s</b>.<br/><br/>Veuillez lire notre post sur le blog <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">Comprendre les points de récupération</a> pour plus d\'informations.<br/><br/>Pour récupérer votre progrès, veuillez utiliser la version suivante : <b>Azahar %1$s</b>, puis chargez le point de récupération et utilisez la fonctionnalité de sauvegarde intégrée à l\'application.]]></string>
 
     <!-- Disk Shader Cache -->
@@ -789,8 +789,6 @@
     <!-- Texture filters -->
     <string name="anime4k">Anime4K (OpenGL uniquement)</string>
     <string name="incompatible_texture_filter">Filtre de texture incompatible</string>
-    <string name="incompatible_texture_filter_description">Le filtre de texture sélectionné (Anime4K) n\'est pas compatible avec le moteur de rendu Vulkan.\nLe filtre de texture va être réglé sur Aucun.\nContinuer ?</string>
-
     <!-- Texture Sampling names -->
     <string name="game_controlled">Contrôlé par le jeu</string>
     <string name="nearest_neighbor">Plus proche voisin</string>

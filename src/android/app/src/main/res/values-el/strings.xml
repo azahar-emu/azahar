@@ -99,7 +99,6 @@
     <string name="option_default">Προεπιλογή</string>
     <string name="install">Εγκατάσταση</string>
     <string name="delete">Διαγραφή</string>
-    <string name="reset_all_settings">Επαναφορά όλων των ρυθμίσεων;</string>
     <string name="auto_select">Αυτόματη επιλογή</string>
     <string name="cancelling">Ακύρωση…</string>
     <string name="visibility">Ορατότητα</string>
@@ -119,7 +118,6 @@
     <string name="preferences_debug">Έλεγχος σφαλμάτων</string>
     <string name="preferences_theme">Θέμα και χρώμα</string>
     <string name="preferences_layout">Διάταξη</string>
-
     <string name="emulation_save_state">Αποθήκευση κατάστασης</string>
     <string name="emulation_load_state">Φόρτωση κατάστασης</string>
     <string name="emulation_edit_layout">Επεξεργασία διάταξης</string>

@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <cmath>
 #include <mutex>
@@ -28,6 +28,10 @@ public:
     float touch_x = 0.0f;       ///< Touchpad X-position
     float touch_y = 0.0f;       ///< Touchpad Y-position
 
+    u64 press_count = 0;       ///< Number of touches that have started
+    float last_press_x = 0.0f; ///< X-position of the most recent touch before its release
+    float last_press_y = 0.0f; ///< Y-position of the most recent touch before its release
+
 private:
     class Device : public Input::TouchDevice {
     public:
@@ -35,6 +39,12 @@ private:
         std::tuple<float, float, bool> GetStatus() const override {
             if (auto state = touch_state.lock()) {
                 std::scoped_lock guard{state->mutex};
+                // Make sure touch events that are shorter than the read period are also seen.
+                if (!state->touch_pressed && seen_press_count != state->press_count) {
+                    seen_press_count = state->press_count;
+                    return std::make_tuple(state->last_press_x, state->last_press_y, true);
+                }
+                seen_press_count = state->press_count;
                 return std::make_tuple(state->touch_x, state->touch_y, state->touch_pressed);
             }
             return std::make_tuple(0.0f, 0.0f, false);
@@ -42,6 +52,7 @@ private:
 
     private:
         std::weak_ptr<TouchState> touch_state;
+        mutable u64 seen_press_count = 0;
     };
 };
 
@@ -148,12 +159,19 @@ bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
         touch_state->touch_x = 1.f - touch_state->touch_x;
     }
 
+    if (!touch_state->touch_pressed) {
+        touch_state->press_count++;
+    }
     touch_state->touch_pressed = true;
     return true;
 }
 
 void EmuWindow::TouchReleased() {
     std::scoped_lock guard{touch_state->mutex};
+    if (touch_state->touch_pressed) {
+        touch_state->last_press_x = touch_state->touch_x;
+        touch_state->last_press_y = touch_state->touch_y;
+    }
     touch_state->touch_pressed = false;
     touch_state->touch_x = 0;
     touch_state->touch_y = 0;

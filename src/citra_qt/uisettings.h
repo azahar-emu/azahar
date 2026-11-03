@@ -1,6 +1,6 @@
 // Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -92,6 +92,8 @@ struct Values {
     Settings::Setting<bool> pause_when_in_background{false, Settings::Keys::pauseWhenInBackground};
     Settings::Setting<bool> mute_when_in_background{false, Settings::Keys::muteWhenInBackground};
     Settings::Setting<bool> hide_mouse{false, Settings::Keys::hideInactiveMouse};
+    Settings::Setting<bool> use_on_screen_software_keyboard{
+        false, Settings::Keys::useOnScreenSoftwareKeyboard};
 #ifdef ENABLE_QT_UPDATE_CHECKER
     Settings::Setting<bool> check_for_update_on_start{true,
                                                       Settings::Keys::check_for_update_on_start};

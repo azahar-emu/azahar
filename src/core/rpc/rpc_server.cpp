@@ -13,9 +13,11 @@
 #include "core/core.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
 #include "core/rpc/packet.h"
 #include "core/rpc/rpc_server.h"
+#include "core/savestate.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 
@@ -273,6 +275,25 @@ void RPCServer::HandleReadScreenshot(Packet& packet, u32 offset, u32 data_size) 
     packet.SendReply();
 }
 
+void RPCServer::HandleSetInput(Packet& packet, const InputInfo& input) {
+    if (const auto hid = Service::HID::GetModule(system)) {
+        hid->SetInputOverride({
+            .buttons = input.buttons,
+            .home = (input.flags & InputFlags::Home) != 0,
+            .power = (input.flags & InputFlags::Power) != 0,
+            .touch_pressed = (input.flags & InputFlags::Touch) != 0,
+            .touch_x = input.touch_x,
+            .touch_y = input.touch_y,
+            .circle_pad_set = (input.flags & InputFlags::CirclePad) != 0,
+            .circle_pad_x = input.circle_pad_x,
+            .circle_pad_y = input.circle_pad_y,
+        });
+    }
+
+    packet.SetPacketDataSize(0);
+    packet.SendReply();
+}
+
 void RPCServer::HandleGetPerfStats(Packet& packet, PerfStatsMode mode) {
     u32 written_bytes = 0;
 
@@ -300,6 +321,31 @@ void RPCServer::HandleGetPerfStats(Packet& packet, PerfStatsMode mode) {
     packet.SendReply();
 }
 
+void RPCServer::HandleSaveLoadState(Packet& packet, bool load, u32 slot) {
+    u32 accepted = 0;
+    if (system.IsPoweredOn() && slot < Core::SaveStateSlotCount) {
+        const auto signal = load ? Core::System::Signal::Load : Core::System::Signal::Save;
+        accepted = system.SendSignal(signal, slot) ? 1 : 0;
+    }
+
+    std::memcpy(packet.GetPacketData().data(), &accepted, sizeof(accepted));
+    packet.SetPacketDataSize(sizeof(accepted));
+    packet.SendReply();
+}
+
+#ifdef ENABLE_FREECAM
+void RPCServer::HandleSetFreeCam(Packet& packet, u32 flags, std::span<const u8> matrix) {
+    if (system.IsPoweredOn()) {
+        std::array<f32, 16> values;
+        std::memcpy(values.data(), matrix.data(), sizeof(values));
+        system.GPU().SetFreeCam(values, (flags & FreeCamFlags::Skip2D) != 0);
+    }
+
+    packet.SetPacketDataSize(0);
+    packet.SendReply();
+}
+#endif
+
 bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
     if (packet_header.version == CURRENT_VERSION) {
         switch (packet_header.packet_type) {
@@ -310,10 +356,24 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
         case PacketType::TakeScreenshot:
         case PacketType::ReadScreenshot:
         case PacketType::GetPerfStats:
+        case PacketType::SaveState:
+        case PacketType::LoadState:
             if (packet_header.packet_size >= (sizeof(u32) * 2)) {
                 return true;
             }
             break;
+        case PacketType::SetInput:
+            if (packet_header.packet_size >= sizeof(InputInfo)) {
+                return true;
+            }
+            break;
+#ifdef ENABLE_FREECAM
+        case PacketType::SetFreeCam:
+            if (packet_header.packet_size >= FREECAM_PACKET_SIZE) {
+                return true;
+            }
+            break;
+#endif
         default:
             break;
         }
@@ -378,6 +438,26 @@ void RPCServer::DispatchRequest(std::unique_ptr<Packet> request_packet) {
         HandleGetPerfStats(*request_packet, (PerfStatsMode)arg1);
         success = true;
         break;
+    case PacketType::SaveState:
+    case PacketType::LoadState:
+        HandleSaveLoadState(*request_packet,
+                            request_packet->GetPacketType() == PacketType::LoadState, arg1);
+        success = true;
+        break;
+    case PacketType::SetInput: {
+        InputInfo input;
+        std::memcpy(&input, packet_data.data(), sizeof(input));
+        HandleSetInput(*request_packet, input);
+        success = true;
+        break;
+    }
+#ifdef ENABLE_FREECAM
+    case PacketType::SetFreeCam:
+        HandleSetFreeCam(*request_packet, arg1,
+                         packet_data.subspan(sizeof(u32) * 2, FREECAM_MATRIX_SIZE));
+        success = true;
+        break;
+#endif
     default:
         break;
     }

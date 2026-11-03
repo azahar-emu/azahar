@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/logging/log.h"
 #include "common/microprofile.h"
@@ -86,7 +86,11 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
     InitOpenGLObjects();
 }
 
-RendererOpenGL::~RendererOpenGL() = default;
+RendererOpenGL::~RendererOpenGL() {
+    if (previous_frame_fence) {
+        glDeleteSync(previous_frame_fence);
+    }
+}
 
 void RendererOpenGL::SwapBuffers() {
     system.perf_stats->StartSwap();
@@ -147,11 +151,22 @@ void RendererOpenGL::SwapBuffers() {
         }
     }
 #endif
+    LimitFramesAheadOfGpu();
 
     system.perf_stats->EndSwap();
     EndFrame();
     prev_state.Apply();
     rasterizer.TickFrame();
+}
+
+void RendererOpenGL::LimitFramesAheadOfGpu() {
+    const GLsync frame_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    glFlush();
+    if (previous_frame_fence) {
+        glClientWaitSync(previous_frame_fence, 0, GL_TIMEOUT_IGNORED);
+        glDeleteSync(previous_frame_fence);
+    }
+    previous_frame_fence = frame_fence;
 }
 
 void RendererOpenGL::RenderScreenshot() {

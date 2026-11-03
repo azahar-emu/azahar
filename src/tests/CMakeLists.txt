@@ -2,6 +2,7 @@ add_executable(tests
     common/bit_field.cpp
     common/file_util.cpp
     common/param_package.cpp
+    common/slot_vector.cpp
     core/core_timing.cpp
     core/file_sys/path_parser.cpp
     core/hle/kernel/hle_ipc.cpp

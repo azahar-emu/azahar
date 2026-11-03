@@ -60,7 +60,12 @@
     <item
         android:id="@+id/menu_settings"
         android:icon="@drawable/ic_settings"
-        android:title="@string/preferences_settings" />
+        android:title="@string/global_settings" />
+
+    <item
+        android:id="@+id/menu_application_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/application_settings" />
 
     <item
         android:id="@+id/menu_multiplayer"

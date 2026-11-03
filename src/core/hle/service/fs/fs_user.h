@@ -1,12 +1,13 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <optional>
 #include <unordered_map>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/binary_object.hpp>
 #include "common/common_types.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/secure_value_backend.h"
@@ -25,6 +26,13 @@ struct ProgramInfo {
     u64 program_id;
     MediaType media_type;
     INSERT_PADDING_BYTES(4);
+
+private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::make_binary_object(this, sizeof(ProgramInfo));
+    }
+    friend class boost::serialization::access;
 };
 static_assert(sizeof(ProgramInfo) == 0x10, "ProgramInfo struct has incorrect size");
 
@@ -63,6 +71,13 @@ public:
         std::array<u8, 0x10> product_code;
         u16_le maker_code;
         u16_le remaster_version;
+
+    private:
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar& boost::serialization::make_binary_object(this, sizeof(ProductInfo));
+        }
+        friend class boost::serialization::access;
     };
     static_assert(sizeof(ProductInfo) == 0x14);
 

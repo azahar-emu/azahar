@@ -1,6 +1,6 @@
-// Copyright 2015-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -42,7 +42,7 @@ union BatteryState {
     u8 raw;
     BitField<0, 1, u8> is_adapter_connected;
     BitField<1, 1, u8> is_charging;
-    BitField<2, 3, u8> charge_level;
+    BitField<2, 3, u8> charge_level; // Same as PTM::ChargeLevels
 };
 
 using MacAddress = std::array<u8, 6>;
@@ -106,6 +106,10 @@ public:
     void Set3DLed(u8);
 
     void Set3DSlider(float);
+
+    void SetBatteryState(const BatteryState& state);
+
+    const BatteryState& GetBatteryState();
 
     SharedPageDef& GetSharedPage();
 

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "video_core/renderer_vulkan/vk_texture_runtime.h"
 
@@ -236,7 +236,7 @@ void Handle::Create(u32 width, u32 height, u32 levels, TextureType type, vk::For
     };
     image_views[ViewType::Sample] = instance.GetDevice().createImageView(view_info);
     if (levels == 1) {
-        image_views[ViewType::Mip0] = image_views[ViewType::Mip0];
+        image_views[ViewType::Mip0] = image_views[ViewType::Sample];
     }
 
     if (!debug_name.empty() && instance.HasDebuggingToolAttached()) {

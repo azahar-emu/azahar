@@ -152,7 +152,6 @@
     <string name="button_combo">Botón Combo</string>
     <string name="input_message_analog_only">¡Este control debe asignarse a un stick analógico del mando o a un eje del Pad de Control!</string>
     <string name="input_message_button_only">¡Este control debe asignarse a un botón del mando!</string>
-    <string name="turbo_limit_hotkey">Velocidad Turbo</string>
     <string name="turbo_enabled_toast">Velocidad Turbo Activada</string>
     <string name="turbo_disabled_toast">Velocidad Turbo Desactivada</string>
     <string name="combo_button_settings">Configurar Botón Combo</string>
@@ -404,8 +403,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="off">Apagado</string>
     <string name="install">Instalar</string>
     <string name="delete">Eliminar</string>
-    <string name="reset_all_settings">¿Reiniciar toda la configuración?</string>
-    <string name="reset_all_settings_description">Toda la configuración avanzada será reiniciada a su valor de fábrica. No podrá deshacerse.</string>
     <string name="settings_reset">Configuración reiniciada</string>
     <string name="select_rtc_date">Seleccionar fecha RTC</string>
     <string name="select_rtc_time">Seleccionar hora RTC</string>
@@ -440,7 +437,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="preferences_debug">Depuración</string>
     <string name="preferences_theme">Tema y Color</string>
     <string name="preferences_layout">Estilo</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error cargando la aplicación</string>
     <string name="loader_error_invalid_format">Formato de aplicación inválido</string>
@@ -473,7 +469,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="core_error_savestate_build_mismatch">Incompatibilidad de versión del estado guardado</string>
     <string name="core_error_shutdown_requested">Se solicitó el cierre</string>
     <string name="core_error_unknown">Error desconocido</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Pulsa Atrás para acceder al menú.</string>
     <string name="emulation_save_state">Guardar Estado</string>

@@ -161,9 +161,15 @@ void RasterizerVulkan::LoadDefaultDiskResources(
         callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
 
-    pipeline_cache.SetProgramID(program_id);
     pipeline_cache.SetAccurateMul(accurate_mul);
-    pipeline_cache.LoadCache(stop_loading, callback);
+    if (pipeline_cache.LoadCacheCrashed(program_id)) {
+        LOG_WARNING(Render_Vulkan,
+                    "Last load of the shader cache of title_id={:016X} crashed, not loading it",
+                    program_id);
+    } else {
+        pipeline_cache.SetProgramID(program_id);
+        pipeline_cache.LoadCache(stop_loading, callback);
+    }
 
     if (callback) {
         callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
@@ -1062,6 +1068,10 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
     }
 
     uniform_buffer.Commit(used_bytes);
+}
+
+bool RasterizerVulkan::DiskResourcesLoadCrashed(u64 title_id) {
+    return pipeline_cache.LoadCacheCrashed(title_id);
 }
 
 void RasterizerVulkan::SwitchDiskResources(u64 title_id) {

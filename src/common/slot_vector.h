@@ -1,3 +1,7 @@
+// Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
+
 // Copyright 2020 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the misc/licenses/gplv2.txt file included.
@@ -41,6 +45,11 @@ public:
             index += 64;
         }
         delete[] values;
+    }
+
+    [[nodiscard]] bool contains(SlotId id) const noexcept {
+        return id && id.index / 64 < stored_bitset.size() &&
+               ((stored_bitset[id.index / 64] >> (id.index % 64)) & 1) != 0;
     }
 
     [[nodiscard]] T& operator[](SlotId id) noexcept {

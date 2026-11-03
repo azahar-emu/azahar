@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -32,6 +32,11 @@ enum class InitClock : u32 {
 
 enum class InitTicks : u32 {
     Random = 0,
+    Fixed = 1,
+};
+
+enum class BatteryLevelSource : u32 {
+    System = 0,
     Fixed = 1,
 };
 
@@ -506,6 +511,10 @@ struct Values {
     Setting<s64> init_time_offset{0, Keys::init_time_offset};
     Setting<InitTicks> init_ticks_type{InitTicks::Random, Keys::init_ticks_type};
     Setting<s64> init_ticks_override{0, Keys::init_ticks_override};
+    Setting<BatteryLevelSource> battery_state_source{BatteryLevelSource::System,
+                                                     Keys::battery_state_source};
+    Setting<bool> battery_charging{true, Keys::battery_charging};
+    SwitchableSetting<u8, true> battery_level{0, 0, 4, Keys::battery_level};
     Setting<bool> plugin_loader_enabled{false, Keys::plugin_loader};
     Setting<bool> allow_plugin_loader{true, Keys::allow_plugin_loader};
     Setting<u16> steps_per_hour{0, Keys::steps_per_hour};
@@ -637,11 +646,14 @@ struct Values {
     // Audio
     bool audio_muted;
     SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, Keys::audio_emulation};
-    SwitchableSetting<bool> enable_audio_stretching{true, Keys::enable_audio_stretching};
+    SwitchableSetting<bool> enable_audio_stretching{false, Keys::enable_audio_stretching};
     SwitchableSetting<bool> enable_realtime_audio{false, Keys::enable_realtime_audio};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, Keys::volume};
     Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, Keys::output_type};
     Setting<std::string> output_device{"Auto", Keys::output_device};
+#ifdef ENABLE_QT
+    Setting<bool> bypass_audio_effects{false, Keys::bypass_audio_effects};
+#endif
     Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, Keys::input_type};
     Setting<std::string> input_device{"Auto", Keys::input_device};
     SwitchableSetting<bool> simulate_headphones_plugged{false, Keys::simulate_headphones_plugged};

@@ -227,9 +227,19 @@ static QString PrettyProductName() {
 
 void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 #ifdef _WIN32
-    boost::replace_all(message, " ", "\u00a0"); // Non-breaking space
-    boost::replace_all(message, "-", "\u2011"); // Non-breaking hyphen
-    QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(message));
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    BOOL isSTDOutputHandled = h != nullptr && h != INVALID_HANDLE_VALUE;
+
+    if (isSTDOutputHandled) {
+        std::cout << message << std::endl;
+    } else {
+        boost::replace_all(message, " ", "\u00a0"); // Non-breaking space
+        boost::replace_all(message, "-", "\u2011"); // Non-breaking hyphen
+        QMessageBox::information(this, QString::fromStdString(title),
+                                 QString::fromStdString(message));
+    }
+
 #else
     std::cout << message << std::endl;
 #endif
@@ -554,6 +564,7 @@ GMainWindow::~GMainWindow() {
     if (!render_window->parent()) {
         delete render_window;
     }
+    filter->hotkey_registry = nullptr;
 
     Pica::g_debug_context.reset();
     Network::Shutdown();
@@ -961,6 +972,10 @@ void GMainWindow::InitializeHotkeys() {
     connect_shortcut(QStringLiteral("Toggle Turbo Mode"),
                      [&] { GMainWindow::SetTurboEnabled(!GMainWindow::IsTurboEnabled()); });
 
+    connect_shortcut(QStringLiteral("Enable Turbo"), [&] { GMainWindow::SetTurboEnabled(true); });
+
+    connect_shortcut(QStringLiteral("Disable Turbo"), [&] { GMainWindow::SetTurboEnabled(false); });
+
     connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] { AdjustSpeedLimit(true); });
     connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] { AdjustSpeedLimit(false); });
 
@@ -994,6 +1009,17 @@ void GMainWindow::InitializeHotkeys() {
             UpdateStatusBar();
         }
     });
+
+    // handle the Turbo Hold hotkey (use the same pattern for others!)
+    const QString turbo_hold = QStringLiteral("Turbo Mode (Hold)");
+    const QKeySequence turbo_seq = hotkey_registry.GetKeySequence(main_window, turbo_hold);
+    auto turbo_callback = [this](bool held) {
+        if (held && !emulation_running) {
+            return;
+        }
+        SetTurboEnabled(held);
+    };
+    hotkey_registry.SetHoldCallback(main_window, turbo_hold, turbo_callback);
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -1068,16 +1094,83 @@ void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
     }
 }
 
+// helper method to check if a keyevent matches a key sequence.
+bool matchesKeyEvent(const QKeyEvent* event, const QKeySequence& seq) {
+    if (seq.isEmpty())
+        return false;
+
+    int seqKey = seq[0];
+    int eventKey = (event->key() | event->modifiers());
+    return eventKey == seqKey;
+}
+
+// Returns true if releasing the key in `event` should count as releasing `seq`,
+// i.e. the event is the sequence's main key or one of the sequence's modifiers.
+static bool releaseBreaksSequence(const QKeyEvent* event, const QKeySequence& seq) {
+    if (seq.isEmpty())
+        return false;
+
+    const int main_key = seq[0].key();
+    const Qt::KeyboardModifiers mods = seq[0].keyboardModifiers();
+
+    switch (event->key()) {
+    case Qt::Key_Control:
+        return mods.testFlag(Qt::ControlModifier);
+    case Qt::Key_Shift:
+        return mods.testFlag(Qt::ShiftModifier);
+    case Qt::Key_Alt:
+        return mods.testFlag(Qt::AltModifier);
+    case Qt::Key_Meta:
+        return mods.testFlag(Qt::MetaModifier);
+    default:
+        return event->key() == main_key;
+    }
+}
+
 bool GApplicationEventFilter::eventFilter(QObject* object, QEvent* event) {
     if (event->type() == QEvent::FileOpen) {
         emit FileOpen(static_cast<QFileOpenEvent*>(event));
         return true;
     }
+
+    if (hotkey_registry != nullptr &&
+        (event->type() == QEvent::ShortcutOverride || event->type() == QEvent::KeyPress)) {
+
+        QKeyEvent* key = static_cast<QKeyEvent*>(event);
+        for (auto const hk : hotkey_registry->hold_hotkeys) {
+            auto& seq = hk->keyseq;
+            if (seq.isEmpty() || !hk->hold_callback)
+                continue;
+            if (matchesKeyEvent(key, seq)) {
+                if (hotkeys_currently_held.insert(hk).second) {
+                    hk->hold_callback(true);
+                }
+                return true;
+            }
+        }
+    } else if (event->type() == QEvent::KeyRelease) {
+        QKeyEvent* key = static_cast<QKeyEvent*>(event);
+        if (key->isAutoRepeat()) {
+            return false;
+        }
+        const auto pressed = hotkeys_currently_held;
+        bool handled = false;
+        for (auto hk : pressed) {
+            auto& seq = hk->keyseq;
+            if (releaseBreaksSequence(key, seq)) {
+                hotkeys_currently_held.erase(hk);
+                if (hk->hold_callback)
+                    hk->hold_callback(false);
+                handled = true;
+            }
+        }
+        return handled;
+    }
     return false;
 }
 
 void GMainWindow::ConnectAppEvents() {
-    const auto filter = new GApplicationEventFilter();
+    filter->hotkey_registry = &hotkey_registry;
     QGuiApplication::instance()->installEventFilter(filter);
 
     connect(filter, &GApplicationEventFilter::FileOpen, this, &GMainWindow::OnFileOpen);
@@ -1988,7 +2081,7 @@ bool GMainWindow::CreateShortcutLink(const std::filesystem::path& shortcut_path,
                                      const std::string& categories, const std::string& keywords,
                                      const std::string& name, const bool& skip_tryexec) try {
 #if defined(__linux__) || defined(__FreeBSD__) // Linux and FreeBSD
-    std::filesystem::path shortcut_path_full = shortcut_path / (name + ".desktop");
+    std::filesystem::path shortcut_path_full = shortcut_path / PathFromUTF8(name + ".desktop");
     std::ofstream shortcut_stream(shortcut_path_full, std::ios::binary | std::ios::trunc);
     if (!shortcut_stream.is_open()) {
         LOG_ERROR(Frontend, "Failed to create shortcut");
@@ -2003,7 +2096,7 @@ bool GMainWindow::CreateShortcutLink(const std::filesystem::path& shortcut_path,
         fmt::print(shortcut_stream, "Comment={}\n", comment);
     }
     if (std::filesystem::is_regular_file(icon_path)) {
-        fmt::print(shortcut_stream, "Icon={}\n", icon_path.string());
+        fmt::print(shortcut_stream, "Icon={}\n", PathToUTF8(icon_path));
     }
     if (!skip_tryexec) {
         fmt::print(shortcut_stream, "TryExec={}\n", command);
@@ -2123,25 +2216,27 @@ bool GMainWindow::MakeShortcutIcoPath(const u64 program_id, const std::string_vi
     // Get path to Citra icons directory & icon extension
     std::string ico_extension = "png";
 #if defined(_WIN32)
-    out_icon_path = FileUtil::GetUserPath(FileUtil::UserPath::IconsDir);
+    out_icon_path = PathFromUTF8(FileUtil::GetUserPath(FileUtil::UserPath::IconsDir));
     ico_extension = "ico";
 #elif defined(__linux__) || defined(__FreeBSD__)
-    out_icon_path = FileUtil::GetUserDirectory("XDG_DATA_HOME") + "/icons/hicolor/256x256/";
+    out_icon_path =
+        PathFromUTF8(FileUtil::GetUserDirectory("XDG_DATA_HOME") + "/icons/hicolor/256x256/");
 #endif
     // Create icons directory if it doesn't exist
-    if (!FileUtil::CreateFullPath(out_icon_path.string())) {
+    if (!FileUtil::CreateFullPath(PathToUTF8(out_icon_path))) {
         QMessageBox::critical(
             this, tr("Create Icon"),
             tr("Cannot create icon file. Path \"%1\" does not exist and cannot be created.")
-                .arg(QString::fromStdString(out_icon_path.string())),
+                .arg(QString::fromStdString(PathToUTF8(out_icon_path))),
             QMessageBox::StandardButton::Ok);
         out_icon_path.clear();
         return false;
     }
 
     // Create icon file path
-    out_icon_path /= (program_id == 0 ? fmt::format("citra-{}.{}", game_file_name, ico_extension)
-                                      : fmt::format("citra-{:016X}.{}", program_id, ico_extension));
+    out_icon_path /=
+        PathFromUTF8(program_id == 0 ? fmt::format("citra-{}.{}", game_file_name, ico_extension)
+                                     : fmt::format("citra-{:016X}.{}", program_id, ico_extension));
     return true;
 }
 
@@ -2166,10 +2261,10 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
     // Shortcut path
     std::filesystem::path shortcut_path{};
     if (target == GameListShortcutTarget::Desktop) {
-        shortcut_path =
-            QStandardPaths::writableLocation(QStandardPaths::DesktopLocation).toStdString();
+        shortcut_path = PathFromUTF8(
+            QStandardPaths::writableLocation(QStandardPaths::DesktopLocation).toStdString());
     } else if (target == GameListShortcutTarget::Applications) {
-        shortcut_path = GetApplicationsDirectory();
+        shortcut_path = PathFromUTF8(GetApplicationsDirectory());
     }
 
     // Icon path and title
@@ -4067,7 +4162,8 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
         error_severity_icon = QMessageBox::Icon::Critical;
     } else if (result == Core::System::ResultStatus::ErrorSavestate) {
         title = tr("Save/load Error");
-        message = QString::fromStdString(details);
+        message = tr("The savestate could not be created or restored.<br/><br/>%1")
+                      .arg(QString::fromStdString(details).toHtmlEscaped());
         error_severity_icon = QMessageBox::Icon::Warning;
     } else if (result == Core::System::ResultStatus::ErrorArticDisconnected) {
         title = tr("Artic Server");
@@ -4076,6 +4172,16 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
                    .c_str());
         error_severity_icon = QMessageBox::Icon::Critical;
         can_continue = false;
+    } else if (result == Core::System::ResultStatus::ErrorShaderCacheCrash) {
+        title = tr("Shader Cache Crash");
+        message =
+            tr("Azahar closed unexpectedly the last time it built the Vulkan shader cache of the "
+               "current title. The graphics driver may have crashed on one of the cached shaders, "
+               "and continuing may crash it again.<br/><br/>To reset the shader cache, "
+               "right-click the application in the game list and select "
+               "<b>Disk Shader Cache &gt; Delete Vulkan Shader Cache</b>.");
+        status_message = tr("Shader cache crash");
+        error_severity_icon = QMessageBox::Icon::Critical;
     } else if (result == Core::System::ResultStatus::ErrorSavestateBuildMismatch) {
         title = tr("Savestate version mismatch");
         message = tr("Could not load savestate because it was created on a different Azahar "

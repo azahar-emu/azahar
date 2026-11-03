@@ -520,7 +520,11 @@ private:
 
     Result AcquireGpuRight(const Kernel::HLERequestContext& ctx,
                            const std::shared_ptr<Kernel::Process>& process, bool force,
-                           bool try_only);
+                           bool try_only, bool& switch_deferred);
+
+    void DeferDiskResourcesSwitch(u64 program_id, std::shared_ptr<Kernel::Event> event);
+
+    void ProcessDeferredSwitch();
 
     /// Set by forced AcquireRight, from then onwards AcquireRight without the force flag does
     /// not give the right (until the system restarts).
@@ -529,8 +533,9 @@ private:
 
     void ApplyPerProgramSettings(const Kernel::Process& process);
 
-    /// Gives the GPU right to a GSP thread.
-    void GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::Process& process);
+    /// Gives the GPU right to a GSP thread. Returns false when the disk resources of the process
+    /// were not switched because loading them crashed the emulator last time.
+    bool GrantGpuRight(u32 thread_id, u32 client_thread_id, const Kernel::Process& process);
 
     struct RightWaitContext {
         u32 thread_id;
@@ -553,6 +558,19 @@ private:
 
     /// Threads waiting for the GPU right in request order.
     std::deque<RightWaitContext> right_waiters;
+
+    struct DeferredSwitch {
+        u64 program_id;
+        std::shared_ptr<Kernel::Event> event;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & program_id;
+            ar & event;
+        }
+    };
+
+    std::deque<DeferredSwitch> deferred_switches;
 
     Core::System& system;
 
@@ -684,6 +702,7 @@ private:
     PerformanceRecorder perf_recorder;
 
     Core::TimingEventType* SignalInterruptEventType = nullptr;
+    Core::TimingEventType* DeferredSwitchEventType = nullptr;
 
     std::array<FrameBufferInfo, 2> cached_framebuffer_infos;
     std::array<bool, 2> force_buffer_swap{};

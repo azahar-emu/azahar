@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/common_paths.h"
 #include "common/file_util.h"
@@ -267,6 +267,13 @@ GraphicsPipeline* ShaderDiskCache::GetPipeline(const PipelineInfo& info) {
     }
 
     return it.value().get();
+}
+
+void ShaderDiskCache::WaitLoadCachedPipelines() {
+    for (GraphicsPipeline* const pipeline : loaded_cached_pipelines) {
+        pipeline->WaitDone();
+    }
+    loaded_cached_pipelines.clear();
 }
 
 ShaderDiskCache::SourceFileCacheVersionHash ShaderDiskCache::GetSourceFileCacheVersionHash() {
@@ -1327,7 +1334,10 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
 bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
                                   const VideoCore::DiskResourceLoadCallback& callback) {
 
-    auto cleanup_on_error = [&]() { graphics_pipelines.clear(); };
+    auto cleanup_on_error = [&]() {
+        graphics_pipelines.clear();
+        loaded_cached_pipelines.clear();
+    };
 
     LOG_INFO(Render_Vulkan, "Loading PL disk shader cache for title {:016X}", title_id);
 
@@ -1456,7 +1466,10 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
                 parent.instance, parent.renderpass_cache, info, *parent.driver_pipeline_cache,
                 *parent.pipeline_layout, shaders, &parent.pipeline_workers);
 
-            it_pl.value()->TryBuild(false);
+            // The cached shaders are compiled above, so a pipeline that is not built yet was queued
+            if (!it_pl.value()->TryBuild(false)) {
+                loaded_cached_pipelines.push_back(it_pl.value().get());
+            }
 
             LOG_DEBUG(Render_Vulkan, "    built.");
 

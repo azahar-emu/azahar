@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.features.settings
 
@@ -25,6 +25,9 @@ object SettingKeys {
     external fun init_time(): String
     external fun init_ticks_type(): String
     external fun init_ticks_override(): String
+    external fun battery_state_source(): String
+    external fun battery_charging(): String
+    external fun battery_level(): String
     external fun plugin_loader(): String
     external fun allow_plugin_loader(): String
     external fun steps_per_hour(): String

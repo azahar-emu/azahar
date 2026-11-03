@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include "common/archives.h"
@@ -8,6 +8,7 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/mcu/mcu.h"
 #include "core/hle/service/mcu/mcu_rtc.h"
 
@@ -34,10 +35,14 @@ public:
         pattern_changed = true;
     }
 
+    void SetEmptyBatteryPattern(u32 value) {
+        empty_battery_pattern = value;
+    }
+
     // The MCU led code is updated with a frequency of 512Hz on real hardware. However
     // it is not a very relevant feature for emulation, so to prevent slicing the core
     // timing too much let's update it every frame instead (60Hz) and adjust for it.
-    void Tick(s64 cycles_late) {
+    void Tick(s64 cycles_late, bool battery_critical) {
 
         const s64 late_ns = cyclesToNs(cycles_late);
 
@@ -49,27 +54,12 @@ public:
         // Sync the MCU state up to the current ARM time
         while (arm_time_ns >= MCU_TICK_PERIOD_NS) {
             arm_time_ns -= MCU_TICK_PERIOD_NS;
-            TickMCULed();
+            TickMCULed(battery_critical);
         }
     }
 
     Common::Vec3<u8> Color() const {
         return result_color;
-    }
-
-    // To save CPU time, do not tick if all smooth state has finished
-    // and the pattern is all zero.
-    bool NeedsTicking() {
-        auto patAllZero = [this]() -> bool {
-            u32* data = reinterpret_cast<u32*>(&current_pattern);
-            for (size_t i = 0; i < sizeof(InfoLedPattern) / sizeof(u32); i++) {
-                if (data[i])
-                    return false;
-            }
-            return true;
-        };
-
-        return !patAllZero() || !state_r.Finished() || !state_g.Finished() || !state_b.Finished();
     }
 
     bool Status() const {
@@ -121,7 +111,7 @@ private:
 
     // Decompilation of MCU function at address 0x2f6b
     // This function is called every 1/512 seconds
-    void TickMCULed() {
+    void TickMCULed(bool battery_critical) {
 
         // Here, a few things happen.
         // If a global variable is set to 2 (0xff904), the led state is cleared.
@@ -130,6 +120,27 @@ private:
         //  runs function 0x2f1d instead of setSmoothState() to set the LED smooth status.
         //  This function seems to setup smooth to fade to off state.
         // TODO(PabloMK7): Figure out what those mean. Maybe power on/off related
+
+        if (battery_critical) {
+            empty_battery = true;
+
+            constexpr u8 update_empty_pattern_ticks = (512 / 8);
+            if (++empty_battery_counter >= update_empty_pattern_ticks) {
+                empty_battery_index = (empty_battery_index + 1) % 32;
+                empty_battery_counter = 0;
+            }
+
+            bool red = (empty_battery_pattern & (1 << empty_battery_index)) != 0;
+            result_color.r() = red ? 255 : 0;
+            result_color.g() = result_color.b() = 0;
+            return;
+        } else {
+            if (empty_battery) {
+                empty_battery = false;
+                empty_battery_index = 0;
+                empty_battery_counter = 0;
+            }
+        }
 
         if (pattern_changed) {
             pattern_changed = false;
@@ -174,10 +185,15 @@ private:
 
     bool pattern_changed = false;
     bool status_finished = false;
+    bool empty_battery = false;
 
     u8 ticks_to_next_index = 0;
     u8 index = 0;
     u8 last_index_repeat_times = 0;
+
+    u8 empty_battery_index = 0;
+    u8 empty_battery_counter = 0;
+    u32 empty_battery_pattern = 0;
 
     LedSmoothState state_r{};
     LedSmoothState state_g{};
@@ -193,9 +209,13 @@ private:
         ar & current_pattern;
         ar & pattern_changed;
         ar & status_finished;
+        ar & empty_battery;
         ar & ticks_to_next_index;
         ar & index;
         ar & last_index_repeat_times;
+        ar & empty_battery_index;
+        ar & empty_battery_counter;
+        ar & empty_battery_pattern;
         ar & state_r;
         ar & state_g;
         ar & state_b;
@@ -210,40 +230,39 @@ RTC::RTC(Core::System& _system) : ServiceFramework("mcu::RTC", 1), system(_syste
         {0x003B, &RTC::SetInfoLEDPattern, "SetInfoLEDPattern"},
         {0x003C, &RTC::SetInfoLEDPatternHeader, "SetInfoLEDPattern"},
         {0x003D, &RTC::GetInfoLEDStatus, "SetInfoLEDPattern"},
+        {0x0042, &RTC::SetBatteryEmptyLEDPattern, "SetBatteryEmptyLEDPattern"},
         // clang-format on
     };
     RegisterHandlers(functions);
 
+    constexpr u32 default_empty_battery_pattern = 0x55555555;
+
     info_led = std::make_unique<InfoLedHandler>();
+    info_led->SetEmptyBatteryPattern(default_empty_battery_pattern);
     info_led_tick_event =
         system.Kernel().timing.RegisterEvent("MCUTickInfoLED", [this](u64, s64 cycles_late) {
-            info_led->Tick(cycles_late);
+            bool battery_critical =
+                system.Kernel().GetSharedPageHandler().GetBatteryState().charge_level.Value() <= 1;
+            info_led->Tick(cycles_late, battery_critical);
             system.SetInfoLEDColor(info_led->Color());
-            if (info_led->NeedsTicking()) {
-                system.Kernel().timing.ScheduleEvent(nsToCycles(InfoLedHandler::CALLBACK_PERIOD_NS),
-                                                     info_led_tick_event, 0, 1);
-            } else {
-                info_led_ticking = false;
-            }
+            system.Kernel().timing.ScheduleEvent(nsToCycles(InfoLedHandler::CALLBACK_PERIOD_NS),
+                                                 info_led_tick_event, 0, 1);
         });
+    system.Kernel().timing.ScheduleEvent(0, info_led_tick_event, 0, 1);
 }
 
 RTC::~RTC() {}
 
 void RTC::UpdateInfoLEDPattern(const InfoLedPattern& pat) {
     info_led->SetPattern(pat);
-    if (!info_led_ticking) {
-        system.Kernel().timing.ScheduleEvent(0, info_led_tick_event, 0, 1);
-        info_led_ticking = true;
-    }
 }
 
 void RTC::UpdateInfoLEDHeader(const InfoLedPattern::Header& header) {
     info_led->SetHeader(header);
-    if (!info_led_ticking) {
-        system.Kernel().timing.ScheduleEvent(0, info_led_tick_event, 0, 1);
-        info_led_ticking = true;
-    }
+}
+
+void RTC::UpdateInfoLEDEmptyBatteryPattern(u32 value) {
+    info_led->SetEmptyBatteryPattern(value);
 }
 
 bool RTC::GetInfoLEDStatusFinished() {
@@ -282,12 +301,21 @@ void RTC::GetInfoLEDStatus(Kernel::HLERequestContext& ctx) {
     rb.Push(static_cast<u8>(GetInfoLEDStatusFinished()));
 }
 
+void RTC::SetBatteryEmptyLEDPattern(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    u32 pattern = rp.Pop<u32>();
+
+    UpdateInfoLEDEmptyBatteryPattern(pattern);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
 template <class Archive>
 void RTC::serialize(Archive& ar, const unsigned int) {
     DEBUG_SERIALIZATION_POINT;
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar & info_led;
-    ar & info_led_ticking;
 }
 
 } // namespace Service::MCU
