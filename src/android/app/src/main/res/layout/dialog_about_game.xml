@@ -14,15 +14,15 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="vertical"
-        android:scrollbarStyle="outsideOverlay"
-        android:scrollbarFadeDuration="0"
-        android:scrollbarDefaultDelayBeforeFade="0"
         android:fadeScrollbars="false"
-        android:scrollbarSize="4dp"
-        android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+        android:fadingEdgeLength="32dp"
         android:requiresFadingEdge="vertical"
-        android:fadingEdgeLength="32dp">
+        android:scrollbarDefaultDelayBeforeFade="0"
+        android:scrollbarFadeDuration="0"
+        android:scrollbarSize="4dp"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
+        android:scrollbars="vertical">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -173,64 +173,63 @@
 
             </LinearLayout>
 
-    <androidx.constraintlayout.helper.widget.Flow
-        android:id="@+id/horizontal_flow_2"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:constraint_referenced_ids="cheats,application_settings,insert_cartridge_button,compress_decompress,delete_cache"
-        app:flow_horizontalAlign="start"
-        app:flow_horizontalBias="0"
-        app:flow_horizontalGap="8dp"
-        app:flow_horizontalStyle="packed"
-        app:flow_verticalGap="8dp"
-        app:flow_wrapMode="chain"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/horizontal_layout" />
+            <androidx.constraintlayout.helper.widget.Flow
+                android:id="@+id/horizontal_flow_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:constraint_referenced_ids="application_settings,cheats,insert_cartridge_button,compress_decompress,delete_cache"
+                app:flow_horizontalAlign="start"
+                app:flow_horizontalBias="0"
+                app:flow_horizontalGap="8dp"
+                app:flow_horizontalStyle="packed"
+                app:flow_verticalGap="8dp"
+                app:flow_wrapMode="chain"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/horizontal_layout" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/cheats"
-                    style="@style/Widget.Material3.Button.TonalButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/cheats"
-                    android:text="@string/cheats" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/application_settings"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/application_settings"
+                android:text="@string/application_settings" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/application_settings"
-                    style="@style/Widget.Material3.Button.TonalButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:contentDescription="@string/application_settings"
-                    android:text="@string/application_settings" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cheats"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/cheats"
+                android:text="@string/cheats" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/insert_cartridge_button"
-                    style="@style/Widget.Material3.Button.TonalButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/insert_cartridge_button"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/compress_decompress"
-                    style="@style/Widget.Material3.Button.TonalButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:contentDescription="@string/compress"
-                    android:text="@string/compress" />
-
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/compress_decompress"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/compress"
+                android:text="@string/compress" />
 
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/delete_cache"
-                    style="@style/Widget.Material3.Button.TonalButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/delete_shader_cache"
-                    android:text="@string/delete_shader_cache" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/delete_cache"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/delete_shader_cache"
+                android:text="@string/delete_shader_cache" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
