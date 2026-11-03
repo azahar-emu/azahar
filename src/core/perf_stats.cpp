@@ -112,6 +112,7 @@ void PerfStats::EndGameFrame() {
     std::scoped_lock lock{object_mutex};
 
     game_frames += 1;
+    total_game_frames += 1;
     PerfStats::game_frames_updated = true;
 }
 
@@ -130,6 +131,11 @@ double PerfStats::GetMeanFrametime() const {
 PerfStats::Clock::duration PerfStats::GetLastSystemFrameTime() const {
     std::scoped_lock lock{object_mutex};
     return last_system_frame_time;
+}
+
+u64 PerfStats::GetGameFrameCount() const {
+    std::scoped_lock lock{object_mutex};
+    return total_game_frames;
 }
 
 PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_us) {

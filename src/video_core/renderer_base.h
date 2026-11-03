@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -105,6 +105,10 @@ public:
                            const Layout::FramebufferLayout& layout);
 
 protected:
+    /// Waits until the GPU is at most one game frame behind the emulation.
+    /// Called on VBlanks where the guest application submits a frame.
+    virtual void LimitFramesAheadOfGpu() {}
+
     Core::System& system;
     RendererSettings settings;
     Frontend::EmuWindow& render_window;    /// Reference to the render window handle.
@@ -113,6 +117,9 @@ protected:
 protected:
     f32 current_fps = 0.0f; /// Current framerate, should be set by the renderer
     u64 current_frame = 0;  /// Current frame, should be set by the renderer
+
+private:
+    u64 limited_game_frames = 0; /// Guest frame count at the last LimitFramesAheadOfGpu call
 };
 
 } // namespace VideoCore

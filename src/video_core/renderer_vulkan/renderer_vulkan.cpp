@@ -1177,7 +1177,6 @@ void RendererVulkan::SwapBuffers() {
     if (!screenRendered) {
         scheduler.Finish();
     }
-    LimitFramesAheadOfGpu();
 
     system.perf_stats->EndSwap();
     rasterizer.TickFrame();
@@ -1185,10 +1184,10 @@ void RendererVulkan::SwapBuffers() {
 }
 
 void RendererVulkan::LimitFramesAheadOfGpu() {
-    if (previous_frame_tick != 0) {
-        scheduler.Wait(previous_frame_tick);
+    if (previous_game_frame_tick != 0) {
+        scheduler.Wait(previous_game_frame_tick);
     }
-    previous_frame_tick = scheduler.CurrentTick() - 1;
+    previous_game_frame_tick = scheduler.CurrentTick() - 1;
 }
 
 void RendererVulkan::RenderScreenshot() {
