@@ -100,6 +100,9 @@ public:
     /// Gets the host time spent on the last system frame, without the frame limiter wait.
     Clock::duration GetLastSystemFrameTime() const;
 
+    /// Gets the number of game frames since the emulation started.
+    u64 GetGameFrameCount() const;
+
     /**
      * Gets the ratio between walltime and the emulated time of the previous system frame. This is
      * useful for scaling inputs or outputs moving between the two time domains.
@@ -149,6 +152,8 @@ private:
     u32 system_frames = 0;
     /// Cumulative number of game frames (GSP frame submissions) since last reset
     u32 game_frames = 0;
+    /// Number of game frames since the emulation started, without resets.
+    u64 total_game_frames = 0;
     /// Cumulative number of transmitted artic base traffic
     std::atomic<u32> artic_transmitted = 0;
     // System events that affect performance

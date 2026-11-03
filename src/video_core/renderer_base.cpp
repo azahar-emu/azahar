@@ -48,6 +48,15 @@ void RendererBase::EndFrame() {
 
     render_window.PollEvents();
 
+    // Wait for the GPU to finish and to be at most one game frame behind.
+    // Below 60 FPS a guest frame spans several VBlanks, and its GPU work may still run while the
+    // next one is emulated.
+    const u64 game_frames = system.perf_stats->GetGameFrameCount();
+    if (game_frames != limited_game_frames) {
+        limited_game_frames = game_frames;
+        LimitFramesAheadOfGpu();
+    }
+
     system.frame_limiter.DoFrameLimiting(system.CoreTiming().GetGlobalTimeUs());
 
     // On fast enough devices, the time limiter sleep spans most of the 16ms period

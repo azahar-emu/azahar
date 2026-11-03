@@ -87,8 +87,8 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 }
 
 RendererOpenGL::~RendererOpenGL() {
-    if (previous_frame_fence) {
-        glDeleteSync(previous_frame_fence);
+    if (previous_game_frame_fence) {
+        glDeleteSync(previous_game_frame_fence);
     }
 }
 
@@ -151,7 +151,6 @@ void RendererOpenGL::SwapBuffers() {
         }
     }
 #endif
-    LimitFramesAheadOfGpu();
 
     system.perf_stats->EndSwap();
     EndFrame();
@@ -160,13 +159,13 @@ void RendererOpenGL::SwapBuffers() {
 }
 
 void RendererOpenGL::LimitFramesAheadOfGpu() {
-    const GLsync frame_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    const GLsync game_frame_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     glFlush();
-    if (previous_frame_fence) {
-        glClientWaitSync(previous_frame_fence, 0, GL_TIMEOUT_IGNORED);
-        glDeleteSync(previous_frame_fence);
+    if (previous_game_frame_fence) {
+        glClientWaitSync(previous_game_frame_fence, 0, GL_TIMEOUT_IGNORED);
+        glDeleteSync(previous_game_frame_fence);
     }
-    previous_frame_fence = frame_fence;
+    previous_game_frame_fence = game_frame_fence;
 }
 
 void RendererOpenGL::RenderScreenshot() {
