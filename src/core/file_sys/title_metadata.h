@@ -104,6 +104,24 @@ public:
     bool GetContentOptional(std::size_t index) const;
     std::array<u8, 16> GetContentCTRByIndex(std::size_t index) const;
     bool HasEncryptedContent(const CIAHeader* header = nullptr) const;
+    std::array<u8, 0x20> GetContentHashByIndex(std::size_t index) const;
+
+    u32 GetSignatureType() const {
+        return signature_type;
+    }
+    const std::vector<u8>& GetSignature() const {
+        return tmd_signature;
+    }
+    u8 GetFormatVersion() const {
+        return tmd_body.version;
+    }
+    std::string GetIssuer() const;
+
+    std::span<const u8> GetSignedData() const;
+
+    /// Checks the hash of the content info records and the hashes of the content chunk records
+    /// covered by them.
+    bool VerifyContentInfoHashes() const;
 
     void SetTitleID(u64 title_id);
     void SetTitleType(u32 type);

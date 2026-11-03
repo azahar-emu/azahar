@@ -219,6 +219,8 @@ add_library(citra_core STATIC EXCLUDE_FROM_ALL
     hle/service/am/am_sys.h
     hle/service/am/am_u.cpp
     hle/service/am/am_u.h
+    hle/service/am/trust_chain.cpp
+    hle/service/am/trust_chain.h
     hle/service/apt/applet_manager.cpp
     hle/service/apt/applet_manager.h
     hle/service/apt/apt.cpp

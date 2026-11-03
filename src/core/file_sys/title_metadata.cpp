@@ -2,6 +2,7 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
+#include <algorithm>
 #include <cryptopp/sha.h>
 #include "common/alignment.h"
 #include "common/file_util.h"
@@ -188,6 +189,53 @@ u32 TitleMetadata::GetContentIDByIndex(std::size_t index) const {
 
 u16 TitleMetadata::GetContentTypeByIndex(std::size_t index) const {
     return tmd_chunks[index].type;
+}
+
+std::array<u8, 0x20> TitleMetadata::GetContentHashByIndex(std::size_t index) const {
+    if (index >= tmd_chunks.size()) {
+        return {};
+    }
+    return tmd_chunks[index].hash;
+}
+
+std::string TitleMetadata::GetIssuer() const {
+    const auto end = std::find(tmd_body.issuer.begin(), tmd_body.issuer.end(), u8{0});
+    return std::string(tmd_body.issuer.begin(), end);
+}
+
+std::span<const u8> TitleMetadata::GetSignedData() const {
+    const auto* body = reinterpret_cast<const u8*>(&tmd_body);
+    return {body, offsetof(Body, contentinfo)};
+}
+
+bool TitleMetadata::VerifyContentInfoHashes() const {
+    std::array<u8, CryptoPP::SHA256::DIGESTSIZE> digest;
+    CryptoPP::SHA256().CalculateDigest(digest.data(),
+                                       reinterpret_cast<const u8*>(tmd_body.contentinfo.data()),
+                                       sizeof(tmd_body.contentinfo));
+    if (digest != tmd_body.contentinfo_hash) {
+        return false;
+    }
+
+    std::size_t covered = 0;
+    for (const auto& info : tmd_body.contentinfo) {
+        const std::size_t count = static_cast<u16>(info.command_count);
+        if (count == 0) {
+            break;
+        }
+        const std::size_t first = static_cast<u16>(info.index);
+        if (first != covered || count > tmd_chunks.size() - first) {
+            return false;
+        }
+        CryptoPP::SHA256().CalculateDigest(digest.data(),
+                                           reinterpret_cast<const u8*>(tmd_chunks.data() + first),
+                                           count * sizeof(ContentChunk));
+        if (digest != info.hash) {
+            return false;
+        }
+        covered += count;
+    }
+    return covered == tmd_chunks.size();
 }
 
 u64 TitleMetadata::GetContentSizeByIndex(std::size_t index) const {

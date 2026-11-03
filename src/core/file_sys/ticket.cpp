@@ -189,6 +189,19 @@ std::optional<std::array<u8, 16>> Ticket::GetTitleKey() const {
     return title_key;
 }
 
+std::string Ticket::GetIssuer() const {
+    const auto end = std::find(ticket_body.issuer.begin(), ticket_body.issuer.end(), u8{0});
+    return std::string(ticket_body.issuer.begin(), end);
+}
+
+std::vector<u8> Ticket::GetSignedData() const {
+    const auto* body = reinterpret_cast<const u8*>(&ticket_body);
+    std::vector<u8> data(body, body + sizeof(ticket_body));
+    const auto& index = content_index.GetRaw();
+    data.insert(data.end(), index.begin(), index.end());
+    return data;
+}
+
 bool Ticket::IsPersonal() const {
     if (ticket_body.console_id == 0u) {
         // Common ticket
