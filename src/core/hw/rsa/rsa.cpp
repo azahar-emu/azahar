@@ -1,6 +1,6 @@
-// Copyright 2020-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2020-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <sstream>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -27,6 +27,9 @@ std::array<RsaSlot, SlotSize> rsa_slots;
 RsaSlot ticket_wrap_slot;
 RsaSlot secure_info_slot;
 RsaSlot local_friend_code_seed_slot;
+RsaSlot es_root_slot;
+RsaSlot access_desc_slot;
+RsaSlot ncch_cfa_slot;
 
 std::vector<u8> RsaSlot::ModularExponentiation(std::span<const u8> message,
                                                int out_size_bytes) const {
@@ -67,8 +70,13 @@ bool RsaSlot::Verify(std::span<const u8> message, std::span<const u8> signature)
 
     CryptoPP::RSASS<CryptoPP::PKCS1v15, CryptoPP::SHA256>::Verifier verifier(public_key);
 
-    return verifier.VerifyMessage(message.data(), message.size(), signature.data(),
-                                  signature.size());
+    try {
+        return verifier.VerifyMessage(message.data(), message.size(), signature.data(),
+                                      signature.size());
+    } catch (const CryptoPP::Exception& e) {
+        LOG_ERROR(HW_RSA, "RSA verification failed: {}", e.what());
+        return false;
+    }
 }
 
 std::vector<u8> HexToVector(const std::string& hex) {
@@ -166,6 +174,36 @@ void InitSlots() {
             continue;
         }
 
+        if (name == "esRootExp") {
+            es_root_slot.SetExponent(key);
+            continue;
+        }
+
+        if (name == "esRootMod") {
+            es_root_slot.SetModulus(key);
+            continue;
+        }
+
+        if (name == "accessDescExp") {
+            access_desc_slot.SetExponent(key);
+            continue;
+        }
+
+        if (name == "accessDescMod") {
+            access_desc_slot.SetModulus(key);
+            continue;
+        }
+
+        if (name == "ncchCfaExp") {
+            ncch_cfa_slot.SetExponent(key);
+            continue;
+        }
+
+        if (name == "ncchCfaMod") {
+            ncch_cfa_slot.SetModulus(key);
+            continue;
+        }
+
         const auto key_slot = ParseKeySlotName(name);
         if (!key_slot) {
             LOG_ERROR(HW_RSA, "Invalid key name '{}'", name);
@@ -211,6 +249,18 @@ const RsaSlot& GetSecureInfoSlot() {
 
 const RsaSlot& GetLocalFriendCodeSeedSlot() {
     return local_friend_code_seed_slot;
+}
+
+const RsaSlot& GetEsRootSlot() {
+    return es_root_slot;
+}
+
+const RsaSlot& GetAccessDescSlot() {
+    return access_desc_slot;
+}
+
+const RsaSlot& GetNcchCfaSlot() {
+    return ncch_cfa_slot;
 }
 
 } // namespace HW::RSA
