@@ -5,7 +5,10 @@
 package org.citra.citra_emu.features.input
 
 import android.content.Context
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.widget.Toast
+import kotlin.math.abs
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
@@ -22,42 +25,49 @@ class GamepadEventHandler(
     private val hotkeyButtons = Hotkey.entries.map { it.button }
     private var hotkeyIsEnabled = false
     var hotkeyIsPressed = false
+        private set
     private val currentlyPressedButtons = mutableSetOf<Int>()
 
-    /** Store which axis directions are currently pressed as (axis, direction) pairs. */
-    private val pressedAxisDirections = HashSet<Pair<Int, Int>>() // (outAxis, outDir)
+    /** Store which axes (outAxis, outDir) are being activated by key binds */
+    private val heldKeyAxes = HashSet<Pair<Int, Int>>()
 
-    fun handleKeyPress(key: Int, descriptor: String): Boolean {
+    /** Buttons that are currently being pressed by axes. This stores the (inAxis, inDir) pair. */
+    private val heldAxisButtons = HashSet<Pair<Int, Int>>()
+
+    /** Handles the press of an input key */
+    fun handleKeyPress(event: KeyEvent): Boolean {
+        val key = if (event.keyCode == 0) event.keyCode else event.scanCode
+        val descriptor = event.device.descriptor
+        val axes = InputMappingManager.getOutAxesForKey(key)
+        val buttons = InputMappingManager.getOutButtonsForKey(key)
+        var handled = handleOutButtonsPress(buttons, descriptor)
+        updateAxisStateForKeyPress(axes, true)
+        handled = sendAxisState(descriptor, axes) || handled
+        return handled
+    }
+
+    /** Given a list of 3DS buttons or hotkeys, this handles their press event */
+    fun handleOutButtonsPress(buttons: List<Int>, descriptor: String): Boolean {
         var handled = false
-        val buttonSet = InputMappingManager.getOutButtonsForKey(key)
-        val axisSet = InputMappingManager.getOutAxesForKey(key)
         val enableButtonMapping = InputMappingManager
             .getMappingForButton(Hotkey.ENABLE.button)
 
         val enableButtonMapped = enableButtonMapping != null && !enableButtonMapping.empty
-        val thisKeyIsEnableButton = buttonSet.contains(Hotkey.ENABLE.button)
+        val thisKeyIsEnableButton = buttons.contains(Hotkey.ENABLE.button)
         val thisKeyIsHotkey =
-            !thisKeyIsEnableButton && Hotkey.entries.any { buttonSet.contains(it.button) }
+            !thisKeyIsEnableButton && Hotkey.entries.any { buttons.contains(it.button) }
         hotkeyIsEnabled = hotkeyIsEnabled || !enableButtonMapped || thisKeyIsEnableButton
 
-        // Now process all internal buttons associated with this keypress
-        for (button in buttonSet) {
+        for (button in buttons) {
             Log.debug("Button pressed: " + button)
             currentlyPressedButtons.add(button)
-            // option 1 - this is the enable command, which was already handled
             if (button == Hotkey.ENABLE.button) {
                 handled = true
-            }
-            // option 2 - this is a different hotkey command
-            else if (hotkeyButtons.contains(button)) {
+            } else if (hotkeyButtons.contains(button)) {
                 if (hotkeyIsEnabled) {
                     handled = handleHotkey(button) || handled
                 }
-            }
-            // option 3 - this is a normal key
-            else {
-                // if this key press is ALSO associated with a hotkey that will process, skip
-                // the normal key event.
+            } else {
                 if (!thisKeyIsHotkey || !hotkeyIsEnabled) {
                     handled = NativeLibrary.onGamePadEvent(
                         descriptor,
@@ -67,20 +77,28 @@ class GamepadEventHandler(
                 }
             }
         }
-        // Handle axes in helper functions
-        updateAxisStateForKey(axisSet, true)
-        handled = sendAxisState(descriptor, axisSet) || handled
         return handled
     }
 
-    fun handleKeyRelease(key: Int, descriptor: String): Boolean {
+    /** Handles the release of an input key */
+    fun handleKeyRelease(event: KeyEvent): Boolean {
+        val key = if (event.keyCode == 0) event.keyCode else event.scanCode
+        val descriptor = event.device.descriptor
+        val buttons = InputMappingManager.getOutButtonsForKey(key)
+        val axes = InputMappingManager.getOutAxesForKey(key)
+        var handled = handleOutButtonsRelease(buttons, descriptor)
+        updateAxisStateForKeyPress(axes, false)
+        handled = sendAxisState(descriptor, axes) || handled
+        return handled
+    }
+
+    /** Given a list of 3DS buttons or hotkeys this handles their release events */
+    fun handleOutButtonsRelease(buttons: List<Int>, descriptor: String): Boolean {
         var handled = false
-        val buttonSet = InputMappingManager.getOutButtonsForKey(key)
-        val axisSet = InputMappingManager.getOutAxesForKey(key)
-        val thisKeyIsEnableButton = buttonSet.contains(Hotkey.ENABLE.button)
-        val thisKeyIsComboButton = buttonSet.contains(Hotkey.COMBO_BUTTON.button)
+        val thisKeyIsEnableButton = buttons.contains(Hotkey.ENABLE.button)
+        val thisKeyIsComboButton = buttons.contains(Hotkey.COMBO_BUTTON.button)
         val thisKeyIsHotkey =
-            !thisKeyIsEnableButton && Hotkey.entries.any { buttonSet.contains(it.button) }
+            !thisKeyIsEnableButton && Hotkey.entries.any { buttons.contains(it.button) }
         if (thisKeyIsEnableButton) {
             handled = true
             hotkeyIsEnabled = false
@@ -90,7 +108,7 @@ class GamepadEventHandler(
             handled = true
         }
 
-        for (button in buttonSet) {
+        for (button in buttons) {
             Log.debug("Button released: " + button)
             // this is a hotkey button
             if (hotkeyButtons.contains(button)) {
@@ -118,8 +136,6 @@ class GamepadEventHandler(
                 }
             }
         }
-        updateAxisStateForKey(axisSet, false)
-        handled = sendAxisState(descriptor, axisSet) || handled
         return handled
     }
 
@@ -179,29 +195,49 @@ class GamepadEventHandler(
         return true
     }
 
-    private fun updateAxisStateForKey(axisSet: List<Pair<Int, Int>>, pressed: Boolean) {
-        axisSet.forEach { (outAxis, outDir) ->
-            if (pressed) {
-                pressedAxisDirections.add(Pair(outAxis, outDir))
-            } else {
-                pressedAxisDirections.remove(Pair(outAxis, outDir))
-            }
+    /** takes a list of OUTPUT axes (outaxis, outdir) that are associated with an input key and tracks them */
+    private fun updateAxisStateForKeyPress(axisSet: List<Pair<Int, Int>>, pressed: Boolean) {
+        if (pressed) {
+            heldKeyAxes.addAll(axisSet)
+        } else {
+            heldKeyAxes.removeAll(axisSet)
+        }
+    }
+
+    /** Takes an INPUT axis (inAxis, inDir) and magnitude and adjusts the state of any associated output buttons */
+    private fun updateButtonsForAxisMovement(
+        axisPair: Pair<Int, Int>,
+        magnitude: Float,
+        descriptor: String
+    ) {
+        val buttons = InputMappingManager.getOutButtonsForAxis(axisPair)
+        if (buttons.isEmpty()) return
+        // for now, assume all buttons mapped to the same axis have the same threshold.
+        val threshold = InputMappingManager.getMappingForButton(buttons[0])?.threshold ?: 0.5f
+        if (magnitude > threshold && heldAxisButtons.add(axisPair)) {
+            handleOutButtonsPress(buttons, descriptor)
+        } else if (magnitude <= threshold && heldAxisButtons.remove(axisPair)) {
+            handleOutButtonsRelease(buttons, descriptor)
         }
     }
 
     /**
-     * Update axis state based on currently pressed buttons
+     * Update axis state on the 3DS based on currently pressed inputs
      */
     private fun sendAxisState(descriptor: String, affectedAxes: List<Pair<Int, Int>>): Boolean {
         val stickAccumulator = HashMap<Int, Pair<Float, Float>>()
         // to make sure that when both directions are released, we still get a return to 0, but only for
         // axes that have been touched by buttons
-        affectedAxes.forEach { (outAxis, outDir) ->
+
+        // note that if one side of an axis is analog and the other is a button, this will cause issues
+        // that is a weird edge case not worth handling I think
+
+        affectedAxes.forEach { (outAxis, _) ->
             val component = GamepadHelper.getJoystickComponent(outAxis) ?: return@forEach
             stickAccumulator.putIfAbsent(component.joystickType, Pair(0f, 0f))
         }
 
-        pressedAxisDirections.forEach { (outAxis, outDir) ->
+        heldKeyAxes.forEach { (outAxis, outDir) ->
             val component = GamepadHelper.getJoystickComponent(outAxis) ?: return@forEach
             val current =
                 stickAccumulator.getOrDefault(component.joystickType, Pair(0f, 0f))
@@ -224,5 +260,68 @@ class GamepadEventHandler(
                 handled
         }
         return handled
+    }
+
+    fun handleMotionEvent(event: MotionEvent): Boolean {
+        // Don't attempt to do anything if we are disconnecting a device.
+        if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
+            return true
+        }
+        val device = event.device ?: return false
+        val descriptor = device.descriptor
+        val stickAccumulator = HashMap<Int, Pair<Float, Float>>()
+
+        for (range in device.motionRanges) {
+            val axis = range.axis
+            val origValue = event.getAxisValue(axis)
+            var value = GamepadHelper.scaleAxis(device, axis, origValue)
+            val activeDirection = when {
+                value > 0.1f -> 1
+                value < -0.1f -> -1
+                else -> 0
+            }
+
+            for (dir in intArrayOf(1, -1)) {
+                // treat this movement as TWO movements: one that is the actual movement and
+                // one that is a movement to position 0 in the opposite direction. This ensures
+                // axis->button combos get correctly released.
+                val axisPair = Pair(axis, dir)
+                val magnitude = if (dir == activeDirection) abs(value) else 0f
+
+                // Axis to Axis mappings
+                InputMappingManager.getOutAxesForAxis(axisPair).forEach { (outAxis, outDir) ->
+                    val component = GamepadHelper.getJoystickComponent(outAxis) ?: return@forEach
+                    val current =
+                        stickAccumulator.getOrDefault(component.joystickType, Pair(0f, 0f))
+                    val contribution = magnitude * outDir
+                    stickAccumulator[component.joystickType] = if (component.isVertical) {
+                        Pair(current.first, contribution + current.second)
+                    } else {
+                        Pair(contribution + current.first, current.second)
+                    }
+                }
+
+                updateButtonsForAxisMovement(axisPair, magnitude, descriptor)
+            }
+        }
+        stickAccumulator.forEach { (outAxis, value) ->
+            NativeLibrary.onGamePadMoveEvent(
+                device.descriptor,
+                outAxis,
+                value.first,
+                value.second
+            )
+        }
+
+        return true
+    }
+
+    // resets the axis->button and button->axis state
+    fun reset() {
+        heldAxisButtons.forEach {
+            handleOutButtonsRelease(InputMappingManager.getOutButtonsForAxis(it), "")
+        }
+        heldAxisButtons.clear()
+        heldKeyAxes.clear()
     }
 }

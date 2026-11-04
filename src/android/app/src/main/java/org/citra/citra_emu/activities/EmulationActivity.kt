@@ -28,9 +28,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlin.math.abs
 import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.NativeLibrary.ButtonState
 import org.citra.citra_emu.R
 import org.citra.citra_emu.camera.StillImageCameraHelper.onFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
@@ -40,7 +38,6 @@ import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
 import org.citra.citra_emu.features.input.GamepadEventHandler
 import org.citra.citra_emu.features.input.GamepadHelper
-import org.citra.citra_emu.features.input.InputMappingManager
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.GraphicsAPI
@@ -294,6 +291,11 @@ class EmulationActivity : AppCompatActivity() {
         super.onStop()
     }
 
+    override fun onPause() {
+        gamepadEventHandler.reset()
+        super.onPause()
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         enableFullscreenImmersive()
         super.onWindowFocusChanged(hasFocus)
@@ -448,29 +450,11 @@ class EmulationActivity : AppCompatActivity() {
                         return true
                     }
                 }
-                return gamepadEventHandler.handleKeyPress(
-                    if (event.keyCode ==
-                        0
-                    ) {
-                        event.scanCode
-                    } else {
-                        event.keyCode
-                    },
-                    event.device.descriptor
-                )
+                return gamepadEventHandler.handleKeyPress(event)
             }
 
             KeyEvent.ACTION_UP -> {
-                return gamepadEventHandler.handleKeyRelease(
-                    if (event.keyCode ==
-                        0
-                    ) {
-                        event.scanCode
-                    } else {
-                        event.keyCode
-                    },
-                    event.device.descriptor
-                )
+                return gamepadEventHandler.handleKeyRelease(event)
             }
 
             else -> {
@@ -499,80 +483,7 @@ class EmulationActivity : AppCompatActivity() {
             return super.dispatchGenericMotionEvent(event)
         }
 
-        // Don't attempt to do anything if we are disconnecting a device.
-        if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
-            return true
-        }
-        val device = event.device
-
-        val stickAccumulator = HashMap<Int, Pair<Float, Float>>()
-
-        for (range in device.motionRanges) {
-            val axis = range.axis
-            val origValue = event.getAxisValue(axis)
-            var value = GamepadHelper.scaleAxis(device, axis, origValue)
-            if (value > -0.1f && value < 0.1f) value = 0f
-
-            val axisPair = Pair(axis, if (value >= 0f) 1 else -1)
-
-            // special case where the axis value is 0 - we need to send releases to both directions
-            if (value == 0f) {
-                listOf(Pair(axis, 1), Pair(axis, -1)).forEach { zeroPair ->
-                    InputMappingManager.getOutAxesForAxis(zeroPair).forEach { (outAxis, outDir) ->
-                        val component =
-                            GamepadHelper.getJoystickComponent(outAxis) ?: return@forEach
-                        val current =
-                            stickAccumulator.getOrDefault(component.joystickType, Pair(0f, 0f))
-                        stickAccumulator[component.joystickType] = if (component.isVertical) {
-                            Pair(current.first, 0f)
-                        } else {
-                            Pair(0f, current.second)
-                        }
-                    }
-                    InputMappingManager.getOutButtonsForAxis(zeroPair).forEach { outButton ->
-                        NativeLibrary.onGamePadEvent(
-                            device.descriptor,
-                            outButton,
-                            ButtonState.RELEASED
-                        )
-                    }
-                }
-                continue
-            }
-            // Axis to Axis mappings
-            InputMappingManager.getOutAxesForAxis(axisPair).forEach { (outAxis, outDir) ->
-                val component = GamepadHelper.getJoystickComponent(outAxis) ?: return@forEach
-                val current =
-                    stickAccumulator.getOrDefault(component.joystickType, Pair(0f, 0f))
-                val contribution = abs(value) * outDir
-                stickAccumulator[component.joystickType] = if (component.isVertical) {
-                    Pair(current.first, contribution)
-                } else {
-                    Pair(contribution, current.second)
-                }
-            }
-
-            // Axis to Button mappings
-            InputMappingManager.getOutButtonsForAxis(axisPair).forEach { button ->
-                val mapping = InputMappingManager.getMappingForButton(button)
-                if (abs(value) > (mapping?.threshold ?: 0.5f)) {
-                    gamepadEventHandler.handleKeyPress(button, device.descriptor)
-                    NativeLibrary.onGamePadEvent(device.descriptor, button, ButtonState.PRESSED)
-                } else {
-                    NativeLibrary.onGamePadEvent(
-                        device.descriptor,
-                        button,
-                        ButtonState.RELEASED
-                    )
-                }
-            }
-        }
-
-        stickAccumulator.forEach { (outAxis, value) ->
-            NativeLibrary.onGamePadMoveEvent(device.descriptor, outAxis, value.first, value.second)
-        }
-
-        return true
+        return gamepadEventHandler.handleMotionEvent(event)
     }
 
     fun showAnime4kDialog() {
