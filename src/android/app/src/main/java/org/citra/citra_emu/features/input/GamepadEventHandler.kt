@@ -263,8 +263,8 @@ class GamepadEventHandler(
     }
 
     fun handleMotionEvent(event: MotionEvent): Boolean {
-        // Don't attempt to do anything if we are disconnecting a device.
         if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
+            reset()
             return true
         }
         val device = event.device ?: return false
@@ -321,7 +321,12 @@ class GamepadEventHandler(
         heldAxisButtons.forEach {
             handleOutButtonsRelease(InputMappingManager.getOutButtonsForAxis(it), "")
         }
+        handleOutButtonsRelease(currentlyPressedButtons.toList(), "")
+        currentlyPressedButtons.clear()
         heldAxisButtons.clear()
+        if (heldKeyAxes.isNotEmpty()) {
+            sendAxisState("", heldKeyAxes.toList())
+        }
         heldKeyAxes.clear()
     }
 }
