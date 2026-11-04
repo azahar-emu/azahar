@@ -349,7 +349,11 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const Pica::DisplayTransferCo
         .src_rect = src_rect,
         .dst_rect = dst_rect,
     };
-    runtime.BlitTextures(src_surface, dst_surface, texture_blit);
+    if (!runtime.BlitTextures(src_surface, dst_surface, texture_blit)) {
+        // The GPU blit was skipped (e.g. null backing image); fall back to the
+        // software blitter instead of marking unwritten data as valid.
+        return false;
+    }
 
     InvalidateRegion(dst_params.addr, dst_params.size, dst_surface_id);
     return true;
@@ -1232,7 +1236,11 @@ void RasterizerCache<T>::DownloadSurface(Surface& surface, SurfaceInterval inter
         .texture_rect = surface.GetSubRect(flush_info),
         .texture_level = surface.LevelOf(flush_start),
     };
-    surface.Download(download, staging);
+    if (!surface.Download(download, staging)) {
+        // The backing image is gone; staging was never written so there is nothing
+        // to encode back to guest memory.
+        return;
+    }
 
     MemoryRef dest_ptr = memory.GetPhysicalRef(flush_start);
     if (!dest_ptr) [[unlikely]] {

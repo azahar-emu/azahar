@@ -256,8 +256,9 @@ public:
     /// Uploads the custom material to the surface allocation.
     void UploadCustom(const VideoCore::Material* material, u32 level);
 
-    /// Downloads pixel data to staging from a rectangle region of the surface texture
-    void Download(const VideoCore::BufferTextureCopy& download,
+    /// Downloads pixel data to staging from a rectangle region of the surface texture.
+    /// Returns false when the backing image is gone and nothing was downloaded.
+    bool Download(const VideoCore::BufferTextureCopy& download,
                   const VideoCore::StagingData& staging);
 
     /// Scales up the surface to match the new resolution scale.

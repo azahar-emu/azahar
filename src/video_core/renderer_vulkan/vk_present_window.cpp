@@ -371,6 +371,38 @@ void PresentWindow::NotifySurfaceChanged() {
 }
 
 void PresentWindow::CopyToSwapchain(Frame* frame) {
+    if (!frame->image || !frame->image_view) {
+        LOG_WARNING(Render_Vulkan, "Skipping present of frame with null image ({}x{})",
+                    frame->width, frame->height);
+        // GetRenderFrame reset present_done and scheduler.Flush signaled render_ready, so an
+        // empty submit is still required to consume the semaphore and signal the fence.
+        // Returning without submitting would hang the next GetRenderFrame on this frame.
+        const vk::CommandBufferBeginInfo begin_info = {
+            .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+        };
+        const vk::CommandBuffer cmdbuf = frame->cmdbuf;
+        cmdbuf.begin(begin_info);
+        cmdbuf.end();
+
+        static constexpr vk::PipelineStageFlags wait_stage =
+            vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        vk::SubmitInfo submit_info = {
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = &frame->render_ready,
+            .pWaitDstStageMask = &wait_stage,
+            .commandBufferCount = 1u,
+            .pCommandBuffers = &cmdbuf,
+        };
+
+        std::scoped_lock submit_lock{scheduler.submit_mutex, recreate_surface_mutex};
+        try {
+            graphics_queue.submit(submit_info, frame->present_done);
+        } catch (vk::DeviceLostError& err) {
+            LOG_CRITICAL(Render_Vulkan, "Device lost during present submit: {}", err.what());
+            UNREACHABLE();
+        }
+        return;
+    }
     const auto recreate_swapchain = [&] {
 #ifdef ANDROID
         {
