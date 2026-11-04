@@ -14,6 +14,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.InputMappingSetting
+import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.Log
 
 /**
@@ -453,7 +454,7 @@ object GamepadHelper {
             "InputMapping_ReverseMapping_dpad_axis_vertical_1",
             ""
         )
-        if (dpadVerticalMapping != null) {
+        if (!dpadVerticalMapping.isNullOrEmpty()) {
             try {
                 val scancodeOrKeycode = dpadVerticalMapping.substringAfterLast("_").toInt()
                 // Read if we are inverted
@@ -476,33 +477,36 @@ object GamepadHelper {
             "InputMapping_ReverseMapping_dpad_axis_horizontal_0",
             ""
         )
-        if (dpadHorizontalMapping != null) {
+        if (!dpadHorizontalMapping.isNullOrEmpty()) {
             try {
                 val scancodeOrKeycode = dpadHorizontalMapping.substringAfterLast("_").toInt()
                 // Read if we are inverted
                 val inverted = preferences.getBoolean("${dpadHorizontalMapping}_Inverted", false)
-                val newUpInput = Input(null, scancodeOrKeycode, if (inverted) -1 else 1, 0.5f)
-                val newDownInput = Input(null, scancodeOrKeycode, if (inverted) 1 else -1, 0.5f)
+                val newRightInput = Input(null, scancodeOrKeycode, if (inverted) -1 else 1, 0.5f)
+                val newLeftInput = Input(null, scancodeOrKeycode, if (inverted) 1 else -1, 0.5f)
                 CitraSettings.activeSettings.setBySettingsContext(
                     InputMappingSetting.DPAD_RIGHT,
-                    newUpInput
+                    newRightInput
                 )
                 CitraSettings.activeSettings.setBySettingsContext(
                     InputMappingSetting.DPAD_LEFT,
-                    newDownInput
+                    newLeftInput
                 )
             } catch (e: NumberFormatException) {
-                Log.debug("[GamepadHelper] Could not get numeric keycode from $dpadVerticalMapping")
+                Log.debug(
+                    "[GamepadHelper] Could not get numeric keycode from $dpadHorizontalMapping"
+                )
             }
         }
 
         for (inputMappingSetting in InputMappingSetting.entries) {
             val lookupkey = new_to_old_keycode_pairs[inputMappingSetting.key] ?: continue
-            val isAxisInPrefs = lookupkey.contains("axis")
+            val nonTriggerAxis = lookupkey.contains("axis")
             val axisTag = if (lookupkey.contains("vertical")) "_1" else "_0"
             val reverseMappingKey =
-                "InputMapping_ReverseMapping_$lookupkey" + if (isAxisInPrefs) axisTag else ""
+                "InputMapping_ReverseMapping_$lookupkey" + if (nonTriggerAxis) axisTag else ""
             val reverseMapping = preferences.getString(reverseMappingKey, "")
+            val isAxisOrTrigger = preferences.contains("${reverseMapping}_GuestButton")
             val nameMapping = preferences.getString(lookupkey, "")
             if (reverseMapping == null || reverseMapping == "" ||
                 nameMapping == null || nameMapping == ""
@@ -515,26 +519,27 @@ object GamepadHelper {
                 Log.debug("[GamepadHelper] Could not get numeric keycode from $reverseMapping")
                 continue
             }
-            if (!isAxisInPrefs) {
-                // if the _Inverted key was not in preferences but the others were, this is a BUTTON.
+            if (!isAxisOrTrigger) {
                 val newInput = Input(scancodeOrKeycode)
                 // make sure to do this while CitraSettings.activeSettings is still in global state
                 CitraSettings.activeSettings.setBySettingsContext(inputMappingSetting, newInput)
             } else {
                 // Read if we are inverted
                 val inverted = preferences.getBoolean("${reverseMapping}_Inverted", false)
-                val direction =
-                    if (inputMappingSetting.key.contains("up") ||
-                        inputMappingSetting.key.contains("left")
-                    ) {
-                        if (inverted) 1 else -1
-                    } else {
-                        if (inverted) -1 else 1
-                    }
+                val direction = if (nonTriggerAxis) {
+                    val inverted = preferences.getBoolean("${reverseMapping}_Inverted", false)
+                    val negativeSide = inputMappingSetting.key.endsWith("_up") ||
+                        inputMappingSetting.key.endsWith("_left")
+                    if (negativeSide != inverted) -1 else 1
+                } else {
+                    // triggers: no orientation, take the sign from the saved display string
+                    if (nameMapping.endsWith("-")) -1 else 1
+                }
                 val newInput = Input(null, scancodeOrKeycode, direction, 0.5f)
                 CitraSettings.activeSettings.setBySettingsContext(inputMappingSetting, newInput)
             }
         }
+        SettingsFile.saveGlobalFile(CitraSettings.activeSettings)
         preferences.edit {
             putBoolean("InputMapping_Migrated", true)
         }
