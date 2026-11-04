@@ -140,7 +140,6 @@ enum class BooleanSetting(
         CitraSettings.SECTION_SYSTEM,
         true
     ),
-    USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), CitraSettings.SECTION_RENDERER, false),
     ENABLE_SECONDARY_DISPLAY(
         SettingKeys.enable_secondary_display(),
         CitraSettings.SECTION_LAYOUT,
