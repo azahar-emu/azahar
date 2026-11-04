@@ -263,7 +263,7 @@ object SettingsFile {
         if (splitLine.size != 2) return null
         val key = splitLine[0].trim()
         val value = splitLine[1].trim()
-        if (value.isEmpty()) return null
+        if (findSettingByKey(key) !is InputMappingSetting && value.isEmpty()) return null
         return Pair(key, value)
     }
 
