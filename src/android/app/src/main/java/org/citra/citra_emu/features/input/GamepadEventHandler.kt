@@ -36,7 +36,7 @@ class GamepadEventHandler(
 
     /** Handles the press of an input key */
     fun handleKeyPress(event: KeyEvent): Boolean {
-        val key = if (event.keyCode == 0) event.keyCode else event.scanCode
+        val key = if (event.keyCode == 0) event.scanCode else event.keyCode
         val descriptor = event.device.descriptor
         val axes = InputMappingManager.getOutAxesForKey(key)
         val buttons = InputMappingManager.getOutButtonsForKey(key)
@@ -82,7 +82,7 @@ class GamepadEventHandler(
 
     /** Handles the release of an input key */
     fun handleKeyRelease(event: KeyEvent): Boolean {
-        val key = if (event.keyCode == 0) event.keyCode else event.scanCode
+        val key = if (event.keyCode == 0) event.scanCode else event.keyCode
         val descriptor = event.device.descriptor
         val buttons = InputMappingManager.getOutButtonsForKey(key)
         val axes = InputMappingManager.getOutAxesForKey(key)
