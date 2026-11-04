@@ -70,6 +70,9 @@
 #ifdef ENABLE_FFMPEG
 #include "citra_qt/dumping/dumping_dialog.h"
 #endif
+#ifdef ENABLE_NETWORK_STREAMING
+#include "citra_qt/network_streaming/network_streamer.h"
+#endif
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/loading_screen.h"
@@ -1309,6 +1312,11 @@ void GMainWindow::ConnectMenuEvents() {
 #ifdef ENABLE_FFMPEG
     connect_menu(ui->action_Dump_Video, &GMainWindow::OnDumpVideo);
 #endif
+#ifdef ENABLE_NETWORK_STREAMING
+    connect_menu(ui->action_Network_Streaming, &GMainWindow::OnNetworkStreaming);
+#else
+    ui->action_Network_Streaming->setVisible(false);
+#endif
 
     // Tools debug
     connect_menu(ui->action_Debug_Pause, [this] {
@@ -1763,6 +1771,11 @@ void GMainWindow::ShutdownGame() {
         HideFullscreen();
     }
 
+#ifdef ENABLE_NETWORK_STREAMING
+    if (ui->action_Network_Streaming->isChecked()) {
+        StopNetworkStreaming();
+    }
+#endif
 #ifdef ENABLE_FFMPEG
     auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {
@@ -3809,6 +3822,61 @@ void GMainWindow::OnStopVideoDumping() {
 }
 #endif
 
+#ifdef ENABLE_NETWORK_STREAMING
+void GMainWindow::OnNetworkStreaming() {
+    if (ui->action_Network_Streaming->isChecked()) {
+        StartNetworkStreaming();
+    } else {
+        StopNetworkStreaming();
+    }
+}
+
+void GMainWindow::StartNetworkStreaming() {
+    if (!emulation_running) {
+        QMessageBox::warning(this, tr("Azahar"),
+                             tr("Start a game before streaming the bottom screen."));
+        ui->action_Network_Streaming->setChecked(false);
+        return;
+    }
+
+    // Video dumping (which network streaming is built on) only has a capture path implemented
+    // for the OpenGL renderer - Vulkan has no equivalent, so this would otherwise silently
+    // connect and never produce a single video frame.
+    if (Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::OpenGL) {
+        QMessageBox::warning(this, tr("Azahar"),
+                             tr("Network streaming currently requires the OpenGL renderer. "
+                                "Switch Graphics API to OpenGL in Emulation Settings and "
+                                "restart the game to use this feature."));
+        ui->action_Network_Streaming->setChecked(false);
+        return;
+    }
+
+    auto& renderer = system.GPU().Renderer();
+    const auto layout = Layout::SingleFrameLayout(NetworkStreaming::NetworkStreamer::Width,
+                                                   NetworkStreaming::NetworkStreamer::Height,
+                                                   /*is_swapped=*/true, /*upright=*/false);
+
+    auto streamer =
+        std::make_shared<NetworkStreaming::NetworkStreamer>(renderer, *render_window);
+    if (streamer->StartDumping({}, layout)) {
+        system.RegisterVideoDumper(streamer);
+    } else {
+        QMessageBox::critical(this, tr("Azahar"),
+                              tr("Could not start network streaming.<br>Refer to the log for "
+                                 "details."));
+        ui->action_Network_Streaming->setChecked(false);
+    }
+}
+
+void GMainWindow::StopNetworkStreaming() {
+    ui->action_Network_Streaming->setChecked(false);
+    auto dumper = system.GetVideoDumper();
+    if (dumper && dumper->IsDumping()) {
+        dumper->StopDumping();
+    }
+}
+#endif
+
 void GMainWindow::UpdateStatusBar() {
     if (!emu_thread) [[unlikely]] {
         status_bar_update_timer.stop();
@@ -4805,6 +4873,20 @@ int LaunchQtFrontend(int argc, char* argv[]) {
 #ifdef ENABLE_OPENGL
     QCoreApplication::setAttribute(Qt::AA_DontCheckOpenGLContextThreadAffinity);
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+#endif
+
+#if !defined(_WIN32) && !defined(__APPLE__)
+    // Video dumping (and the bottom-screen network streaming feature) shares this app's GL
+    // context with a second thread for GPU->CPU frame readback. On native Wayland, EGL's
+    // handling of that cross-thread context sharing has been observed to crash under at least
+    // Mesa/Intel (segfault in FrameDumperOpenGL::PresentLoop). XWayland's GLX-based sharing does
+    // not have this problem, so prefer it under Wayland unless the user already picked a
+    // platform plugin themselves. Requires Xwayland, which every mainstream Wayland desktop
+    // (GNOME, KDE, etc.) ships by default.
+    if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM") &&
+        !qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY")) {
+        qputenv("QT_QPA_PLATFORM", "xcb");
+    }
 #endif
 
     QApplication app(argc, argv);
