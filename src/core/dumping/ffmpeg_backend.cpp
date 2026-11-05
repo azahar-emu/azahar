@@ -813,6 +813,11 @@ void FFmpegBackend::AddVideoFrame(VideoFrame frame) {
 }
 
 void FFmpegBackend::AddAudioFrame(AudioCore::StereoFrame16 frame) {
+    std::scoped_lock lock{audio_push_mutex};
+    if (!IsDumping()) {
+        return;
+    }
+
     std::array<VariableAudioFrame, 2> refactored_frame;
     for (auto& channel : refactored_frame) {
         channel.resize(frame.size());
@@ -827,19 +832,33 @@ void FFmpegBackend::AddAudioFrame(AudioCore::StereoFrame16 frame) {
 }
 
 void FFmpegBackend::AddAudioSample(const std::array<s16, 2>& sample) {
+    std::scoped_lock lock{audio_push_mutex};
+    if (!IsDumping()) {
+        return;
+    }
+
     audio_frame_queues[0].Push(VariableAudioFrame{sample[0]});
     audio_frame_queues[1].Push(VariableAudioFrame{sample[1]});
 }
 
 void FFmpegBackend::StopDumping() {
-    is_dumping = false;
+    {
+        // Lock on stop to wait any in progress push and to prevent further pushes from doing
+        // anything.
+        std::scoped_lock lock{audio_push_mutex};
+        is_dumping = false;
+    }
+
     renderer.CleanupVideoDumping();
 
     // Flush the video processing queue
     AddVideoFrame(VideoFrame());
-    for (auto i : {0, 1}) {
-        // Flush the audio processing queue
-        audio_frame_queues[i].Push(VariableAudioFrame());
+    {
+        std::scoped_lock lock{audio_push_mutex};
+        for (auto i : {0, 1}) {
+            // Flush the audio processing queue
+            audio_frame_queues[i].Push(VariableAudioFrame());
+        }
     }
     // Wait until processing ends
     processing_ended.Wait();

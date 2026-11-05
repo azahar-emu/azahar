@@ -97,52 +97,51 @@ void RendererOpenGL::SwapBuffers() {
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
-#ifdef ANDROID
-    if (secondary_window) {
-        secondaryWindowEnabled = true;
-    } else {
-        secondaryWindowEnabled = false;
-    }
-#else
-    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
-        ASSERT(secondary_window);
-        secondaryWindowEnabled = true;
-    } else {
-        secondaryWindowEnabled = false;
-    }
-#endif
 
     render_window.SetupFramebuffer();
 
     PrepareRendertarget();
     RenderScreenshot();
-    isSecondaryWindow = false;
 #ifdef HAVE_LIBRETRO
     DrawScreens(render_window.GetFramebufferLayout(), false);
     render_window.SwapBuffers();
 #else
-    const auto& main_layout = render_window.GetFramebufferLayout();
-    RenderToMailbox(main_layout, render_window.mailbox, false);
+
+    const bool present_to_screen = !Settings::values.use_skip_duplicate_frames.GetValue() ||
+                                   Core::PerfStats::game_frames_updated;
+
+    if (present_to_screen) {
+        const auto& main_layout = render_window.GetFramebufferLayout();
+        RenderToMailbox(main_layout, render_window.mailbox, false);
+    }
 
 #ifdef ANDROID
     // On Android, if secondary_window is defined at all,
     // it means we have a second display
     if (secondary_window) {
-        const auto& secondary_layout = secondary_window->GetFramebufferLayout();
-        isSecondaryWindow = true;
-        RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
+        if (present_to_screen) {
+            const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+            RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
+        }
         secondary_window->PollEvents();
     }
 #else
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
-        const auto& secondary_layout = secondary_window->GetFramebufferLayout();
-        isSecondaryWindow = true;
-        RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
+        if (present_to_screen) {
+            const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+            RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
+        }
         secondary_window->PollEvents();
     }
 #endif
 
+    if (present_to_screen) {
+        Core::PerfStats::game_frames_updated = false;
+    }
+
+    // The video dumper must receive exactly one frame per swap regardless of the "Skip Presenting
+    // Duplicate Frames" setting.
     if (frame_dumper.IsDumping()) {
         try {
             RenderToMailbox(frame_dumper.GetLayout(), frame_dumper.mailbox, true);
@@ -227,56 +226,49 @@ void RendererOpenGL::PrepareRendertarget() {
 void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
                                      std::unique_ptr<Frontend::TextureMailbox>& mailbox,
                                      bool flipped) {
-    if (!Settings::values.use_skip_duplicate_frames.GetValue() ||
-        Core::PerfStats::game_frames_updated) {
-        Frontend::Frame* frame;
-        {
-            MICROPROFILE_SCOPE(OpenGL_WaitPresent);
+    Frontend::Frame* frame;
+    {
+        MICROPROFILE_SCOPE(OpenGL_WaitPresent);
 
-            frame = mailbox->GetRenderFrame();
+        frame = mailbox->GetRenderFrame();
 
-            // Clean up sync objects before drawing
+        // Clean up sync objects before drawing
 
-            // INTEL driver workaround. We can't delete the previous render sync object until we are
-            // sure that the presentation is done
-            if (frame->present_fence) {
-                glClientWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
-            }
-
-            // delete the draw fence if the frame wasn't presented
-            if (frame->render_fence) {
-                glDeleteSync(frame->render_fence);
-                frame->render_fence = nullptr;
-            }
-
-            // wait for the presentation to be done
-            if (frame->present_fence) {
-                glWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
-                glDeleteSync(frame->present_fence);
-                frame->present_fence = nullptr;
-            }
+        // INTEL driver workaround. We can't delete the previous render sync object until we are
+        // sure that the presentation is done
+        if (frame->present_fence) {
+            glClientWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
         }
 
-        {
-            MICROPROFILE_SCOPE(OpenGL_RenderFrame);
-            // Recreate the frame if the size of the window has changed
-            if (layout.width != frame->width || layout.height != frame->height) {
-                LOG_DEBUG(Render_OpenGL, "Reloading render frame");
-                mailbox->ReloadRenderFrame(frame, layout.width, layout.height);
-            }
-
-            state.draw.draw_framebuffer = frame->render.handle;
-            state.Apply();
-            DrawScreens(layout, flipped);
-            // Create a fence for the frontend to wait on and swap this frame to OffTex
-            frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-            glFlush();
-            mailbox->ReleaseRenderFrame(frame);
+        // delete the draw fence if the frame wasn't presented
+        if (frame->render_fence) {
+            glDeleteSync(frame->render_fence);
+            frame->render_fence = nullptr;
         }
 
-        if ((secondaryWindowEnabled && isSecondaryWindow) || (!secondaryWindowEnabled)) {
-            Core::PerfStats::game_frames_updated = false;
+        // wait for the presentation to be done
+        if (frame->present_fence) {
+            glWaitSync(frame->present_fence, 0, GL_TIMEOUT_IGNORED);
+            glDeleteSync(frame->present_fence);
+            frame->present_fence = nullptr;
         }
+    }
+
+    {
+        MICROPROFILE_SCOPE(OpenGL_RenderFrame);
+        // Recreate the frame if the size of the window has changed
+        if (layout.width != frame->width || layout.height != frame->height) {
+            LOG_DEBUG(Render_OpenGL, "Reloading render frame");
+            mailbox->ReloadRenderFrame(frame, layout.width, layout.height);
+        }
+
+        state.draw.draw_framebuffer = frame->render.handle;
+        state.Apply();
+        DrawScreens(layout, flipped);
+        // Create a fence for the frontend to wait on and swap this frame to OffTex
+        frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        glFlush();
+        mailbox->ReleaseRenderFrame(frame);
     }
 }
 

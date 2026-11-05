@@ -217,6 +217,8 @@ private:
     std::thread video_processing_thread;
 
     std::array<Common::SPSCQueue<VariableAudioFrame>, 2> audio_frame_queues;
+
+    std::mutex audio_push_mutex;
     std::thread audio_processing_thread;
 
     Common::Event processing_ended;
