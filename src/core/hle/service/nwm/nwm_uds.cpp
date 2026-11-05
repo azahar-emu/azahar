@@ -1,6 +1,6 @@
 // Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <cstring>
@@ -1261,26 +1261,28 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     auto ret = PullPacketHLE(bind_node_id, max_out_buff_size, max_out_buff_size_aligned,
                              output_buffer, &secure_data);
 
-    switch (ret.error()) {
-    case ResultStatus::RecvError_NotConnected: {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                       ErrorSummary::InvalidState, ErrorLevel::Status));
-        return;
-    }
-    case ResultStatus::RecvError_BadNode: {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                       ErrorSummary::InvalidState, ErrorLevel::Status));
-        return;
-    }
-    case ResultStatus::RecvError_PacketSizeTooLarge: {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrorDescription::TooLarge, ErrorModule::UDS, ErrorSummary::WrongArgument,
-                       ErrorLevel::Usage));
-        return;
-    }
-    default:;
+    if (!ret.has_value()) {
+        switch (ret.error()) {
+        case ResultStatus::RecvError_NotConnected: {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+            return;
+        }
+        case ResultStatus::RecvError_BadNode: {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+            return;
+        }
+        case ResultStatus::RecvError_PacketSizeTooLarge: {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(Result(ErrorDescription::TooLarge, ErrorModule::UDS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Usage));
+            return;
+        }
+        default:;
+        }
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
