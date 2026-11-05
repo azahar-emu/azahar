@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -21,6 +21,7 @@ enum class MediaType : u32;
 class GameListWorker;
 class GameListDir;
 class GameListSearchField;
+class GameListTreeView;
 class GMainWindow;
 class QFileSystemWatcher;
 class QHBoxLayout;
@@ -140,7 +141,7 @@ private:
     GameListSearchField* search_field;
     GMainWindow* main_window = nullptr;
     QVBoxLayout* layout = nullptr;
-    QTreeView* tree_view = nullptr;
+    GameListTreeView* tree_view = nullptr;
     QStandardItemModel* item_model = nullptr;
     GameListWorker* current_worker = nullptr;
     QFileSystemWatcher* watcher = nullptr;

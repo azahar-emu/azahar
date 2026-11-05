@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 #pragma once
 
 #include <algorithm>
@@ -16,6 +16,7 @@
 #include <QRunnable>
 #include <QStandardItem>
 #include <QString>
+#include <QTreeView>
 #include <QWidget>
 #include "citra_qt/uisettings.h"
 #include "citra_qt/util/util.h"
@@ -528,4 +529,10 @@ private:
     QLineEdit* edit_filter = nullptr;
     QLabel* label_filter_result = nullptr;
     QToolButton* button_filter_close = nullptr;
+};
+
+class GameListTreeView : public QTreeView {
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+    void focusInEvent(QFocusEvent* event) override;
 };
