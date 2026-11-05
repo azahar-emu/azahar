@@ -26,6 +26,8 @@
     <string name="driver_already_installed">Driver already installed</string>
     <string name="custom_driver_not_supported">Custom drivers not supported</string>
     <string name="custom_driver_not_supported_description">Custom driver loading isn\'t currently supported for this device.\nCheck this option again in the future to see if support was added!</string>
+    <string name="custom_driver_non_adreno_warning">Non Adreno GPU detected</string>
+    <string name="custom_driver_non_adreno_warning_description">Most custom drivers are built for Qualcomm Adreno GPUs, only install a driver made for your GPU. If a driver fails to load, Azahar will fall back to the system driver. If applications crash, select \"System GPU driver\".</string>
     <string name="share_log_not_found">No log file found</string>
     <string name="select_games_folder">Select Applications Folder</string>
     <string name="select_games_folder_description">Allows Azahar to populate the application list</string>
