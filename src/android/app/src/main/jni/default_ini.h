@@ -184,6 +184,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # factor for the 3DS resolution
 )") DECLARE_KEY(resolution_factor) BOOST_HANA_STRING(R"(
 
+# Antialiasing mode
+# 0 (default): None, 1: MSAAx2, 2: MSAAx4, 3: MSAAx8, 4: MSAAx16
+)") DECLARE_KEY(antialiasing) BOOST_HANA_STRING(R"(
+
 # Use Integer Scaling when the layout allows
 # 0: Off (default), 1: On
 )") DECLARE_KEY(use_integer_scaling) BOOST_HANA_STRING(R"(
