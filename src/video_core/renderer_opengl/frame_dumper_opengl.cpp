@@ -39,6 +39,9 @@ void FrameDumperOpenGL::StartDumping() {
 
 void FrameDumperOpenGL::StopDumping() {
     present_thread.request_stop();
+    if (present_thread.joinable()) {
+        present_thread.join();
+    }
 }
 
 void FrameDumperOpenGL::PresentLoop(std::stop_token stop_token) {
