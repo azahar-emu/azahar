@@ -29,7 +29,7 @@ import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.features.hotkeys.Hotkey
+import org.citra.citra_emu.features.input.Hotkey
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.utils.ComboHelper
@@ -207,7 +207,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                         continue
                     }
                     anyOverlayStateChanged = true
-
+                    // TODO - switch these to using standard hotkey buttons instead of nativelibrary buttons
                     if (button.id == NativeLibrary.ButtonType.BUTTON_SWAP &&
                         button.status == NativeLibrary.ButtonState.PRESSED
                     ) {

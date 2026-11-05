@@ -152,4 +152,39 @@ object SettingKeys {
     external fun performance_overlay_position(): String
     external fun enable_secondary_display(): String
     external fun combo_button_buttons(): String
+
+    // Inputs
+    external fun button_a(): String
+    external fun button_b(): String
+    external fun button_x(): String
+    external fun button_y(): String
+    external fun button_home(): String
+    external fun circlepad_up(): String
+    external fun circlepad_down(): String
+    external fun circlepad_left(): String
+    external fun circlepad_right(): String
+    external fun button_r(): String
+    external fun button_l(): String
+    external fun button_zr(): String
+    external fun button_zl(): String
+    external fun button_start(): String
+    external fun button_select(): String
+    external fun dpad_up(): String
+    external fun dpad_down(): String
+    external fun dpad_left(): String
+    external fun dpad_right(): String
+    external fun cstick_up(): String
+    external fun cstick_down(): String
+    external fun cstick_left(): String
+    external fun cstick_right(): String
+    external fun hotkey_cycle_layout(): String
+    external fun hotkey_close(): String
+    external fun hotkey_swap(): String
+    external fun hotkey_pause_resume(): String
+    external fun hotkey_quicksave(): String
+    external fun hotkey_turbo_toggle(): String
+    external fun hotkey_turbo_hold(): String
+    external fun hotkey_quickload(): String
+    external fun hotkey_enable(): String
+    external fun hotkey_combo_button(): String
 }

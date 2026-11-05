@@ -81,6 +81,41 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # List of buttons which will be triggered by the combo button. (Default [] or empty)
 )") DECLARE_KEY(combo_button_buttons) BOOST_HANA_STRING(R"(
 
+# Configuration strings for 3ds buttons and axes. On Android, all such strings use "engine:gamepad" once bound. Default unbound.
+)") DECLARE_KEY(button_a) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_b) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_x) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_y) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_l) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_r) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_zl) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_zr) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_start) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_select) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(button_home) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(dpad_up) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(dpad_down) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(dpad_left) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(dpad_right) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(circlepad_up) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(circlepad_down) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(circlepad_left) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(circlepad_right) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(cstick_up) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(cstick_down) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(cstick_left) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(cstick_right) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_close) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_cycle_layout) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_enable) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_pause_resume) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_quickload) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_quicksave) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_swap) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_turbo_toggle) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_turbo_hold) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(hotkey_combo_button) BOOST_HANA_STRING(R"(
+
 [Core]
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)

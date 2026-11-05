@@ -18,6 +18,7 @@ import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.FloatSetting
+import org.citra.citra_emu.features.settings.model.InputMappingSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.StringSetting
@@ -39,7 +40,8 @@ object SettingsFile {
             IntSetting.values().toList() +
             FloatSetting.values().toList() +
             StringSetting.values().toList() +
-            IntListSetting.values().toList()
+            IntListSetting.values().toList() +
+            InputMappingSetting.values().toList()
     }
 
     private fun findSettingByKey(key: String): AbstractSetting<*>? =
@@ -97,16 +99,20 @@ object SettingsFile {
     /**
      * Load global settings from the config file into the settings instance
      */
-    fun loadSettings(settings: CitraSettings, view: SettingsActivityView? = null) {
+    fun loadGlobalSettings(settings: CitraSettings, view: SettingsActivityView? = null) {
         readFile(getSettingsFile(FILE_NAME_CONFIG), settings, false, view)
     }
 
     /**
-     * Load global settings AND custom settings into the settings instance, sets gameId
+     * Load custom settings into the settings instance, sets gameId. Does not
+     * touch the global settings, so load them first if you need to.
      */
-    fun loadSettings(settings: CitraSettings, gameId: String, view: SettingsActivityView? = null) {
+    fun loadCustomSettings(
+        settings: CitraSettings,
+        gameId: String,
+        view: SettingsActivityView? = null
+    ) {
         settings.gameId = gameId
-        loadSettings(settings, view)
         val file = findPerAppSettingsFile(gameId) ?: return
         readFile(file, settings, true, view)
     }
@@ -257,7 +263,7 @@ object SettingsFile {
         if (splitLine.size != 2) return null
         val key = splitLine[0].trim()
         val value = splitLine[1].trim()
-        if (value.isEmpty()) return null
+        if (findSettingByKey(key) !is InputMappingSetting && value.isEmpty()) return null
         return Pair(key, value)
     }
 
