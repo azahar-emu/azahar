@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <SDL.h>
 #include "sdl_joystick.h"
@@ -159,6 +159,12 @@ SDL_GameController* SDLJoystick::GetSDLGameController() const {
 void SDLJoystick::SetSDLJoystick(SDL_Joystick* joystick, SDL_GameController* controller) {
     sdl_joystick.reset(joystick);
     sdl_controller.reset(controller);
+    has_accel = false;
+    has_gyro = false;
+    // A reconnected device needs the same setup as the constructor does.
+    CreateControllerButtonMap();
+    CalibrateJoystickAxes();
+    EnableMotion();
 }
 
 void SDLJoystick::CreateControllerButtonMap() {
