@@ -35,14 +35,18 @@ public:
 
     void BeginTilt(int x, int y) {
         mouse_origin = Common::MakeVec(x, y);
+        std::lock_guard guard{tilt_mutex};
         look_direction = Common::MakeVec(0.0f, 0.0f);
-        is_tilting = true;
+        look_mode = false;
         is_looking = false;
+        is_tilting = true;
     }
 
     void BeginLook(int x, int y) {
-        mouse_origin = Common::MakeVec(x, y);
+        look_origin = Common::MakeVec(x, y);
+        std::lock_guard guard{tilt_mutex};
         previous_look_direction = look_direction;
+        look_mode = true;
         is_looking = true;
     }
 
@@ -61,13 +65,10 @@ public:
     }
 
     void Look(int x, int y) {
-        auto mouse_move =
-            Common::MakeVec(x, y) - mouse_origin + previous_look_direction.Cast<int>();
         if (is_looking) {
+            const auto mouse_move = (Common::MakeVec(x, y) - look_origin).Cast<float>();
             std::lock_guard guard{tilt_mutex};
-            if (!(mouse_move.x == 0 && mouse_move.y == 0)) {
-                look_direction = mouse_move.Cast<float>();
-            }
+            look_direction = previous_look_direction + mouse_move;
         }
     }
 
@@ -78,6 +79,7 @@ public:
     }
 
     void EndLook() {
+        std::lock_guard guard{tilt_mutex};
         is_looking = false;
     }
 
@@ -92,16 +94,18 @@ private:
     const float sensitivity;
 
     Common::Vec2<int> mouse_origin;
+    Common::Vec2<int> look_origin;
 
     std::mutex tilt_mutex;
     Common::Vec2<float> tilt_direction;
-    Common::Vec2<float> look_direction;
+    Common::Vec2<float> look_direction = Common::MakeVec(0.0f, 0.0f);
     Common::Vec2<float> previous_look_direction = Common::MakeVec(0.0f, 0.0f);
     float tilt_angle = 0;
     float tilt_clamp = 90;
 
     bool is_tilting = false;
     bool is_looking = false;
+    bool look_mode = false;
 
     Common::Event shutdown_event;
 
@@ -124,7 +128,7 @@ private:
             {
                 std::lock_guard guard{tilt_mutex};
 
-                if (is_tilting) {
+                if (!look_mode) {
                     // Find the quaternion describing current 3DS tilting
                     q = Common::MakeQuaternion(
                         Common::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x), tilt_angle);
