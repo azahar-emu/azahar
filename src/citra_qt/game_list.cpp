@@ -20,6 +20,7 @@
 #include <QMessageBox>
 #include <QModelIndex>
 #include <QPainter>
+#include <QScreen>
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include <QStyledItemDelegate>
@@ -521,6 +522,16 @@ void GameList::DonePopulating(const QStringList& watch_list) {
     emit PopulatingCompleted();
 }
 
+// Creating a pop-up on a secondary screen that has a different DPI causes the pop-up to appear
+// in the wrong position. So first set the screen the menu should appear in before creatig it, so
+// that it uses the correct DPI.
+static void ExecContextMenu(QMenu& menu, const QPoint& global_pos) {
+    if (QScreen* screen = QGuiApplication::screenAt(global_pos)) {
+        menu.setScreen(screen);
+    }
+    menu.exec(global_pos);
+}
+
 void GameList::PopupContextMenu(const QPoint& menu_location) {
     QModelIndex item = tree_view->indexAt(menu_location);
     if (!item.isValid())
@@ -553,7 +564,7 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
         break;
     }
 
-    context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
+    ExecContextMenu(context_menu, tree_view->viewport()->mapToGlobal(menu_location));
 }
 
 void GameList::PopupHeaderContextMenu(const QPoint& menu_location) {
@@ -582,7 +593,7 @@ void GameList::PopupHeaderContextMenu(const QPoint& menu_location) {
         });
     }
 
-    context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
+    ExecContextMenu(context_menu, tree_view->viewport()->mapToGlobal(menu_location));
 }
 
 void GameList::UpdateColumnVisibility() {
