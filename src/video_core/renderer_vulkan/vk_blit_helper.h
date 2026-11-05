@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -38,6 +38,8 @@ public:
 
     bool DepthToBuffer(Surface& source, vk::Buffer buffer,
                        const VideoCore::BufferTextureCopy& copy);
+
+    void ResolveTexture(Surface& surface);
 
 private:
     vk::Pipeline MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout);
@@ -83,6 +85,7 @@ private:
 
     vk::ShaderModule full_screen_vert;
     vk::ShaderModule d24s8_to_rgba8_comp;
+    vk::ShaderModule d24s8_to_rgba8_ms_comp;
     vk::ShaderModule depth_to_buffer_comp;
     vk::ShaderModule blit_depth_stencil_frag;
     vk::ShaderModule bicubic_frag;
@@ -92,6 +95,7 @@ private:
     vk::ShaderModule refine_frag;
 
     vk::Pipeline d24s8_to_rgba8_pipeline;
+    vk::Pipeline d24s8_to_rgba8_ms_pipeline;
     vk::Pipeline depth_to_buffer_pipeline;
     vk::Pipeline depth_blit_pipeline;
     vk::Sampler linear_sampler;

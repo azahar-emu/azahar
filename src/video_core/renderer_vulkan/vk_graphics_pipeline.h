@@ -217,6 +217,7 @@ static_assert(std::is_trivial_v<VertexLayout>);
 struct AttachmentInfo {
     VideoCore::PixelFormat color;
     VideoCore::PixelFormat depth;
+    u8 sample_count;
 
     static consteval u64 StructHash() {
         constexpr u64 STRUCT_VERSION = 0;
@@ -228,7 +229,7 @@ struct AttachmentInfo {
                                    LAYOUT_HASH,
 
                                    // fields
-                                   FIELD_HASH(color), FIELD_HASH(depth));
+                                   FIELD_HASH(color), FIELD_HASH(depth), FIELD_HASH(sample_count));
     }
 };
 static_assert(std::is_trivial_v<AttachmentInfo>);

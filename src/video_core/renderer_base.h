@@ -67,6 +67,9 @@ public:
     /// Returns the resolution scale factor relative to the native 3DS screen resolution
     u32 GetResolutionScaleFactor();
 
+    /// Returns the MSAA sample count
+    u8 GetSampleCount() const;
+
     /// Updates the framebuffer layout of the contained render window handle.
     void UpdateCurrentFramebufferLayout(bool is_portrait_mode = {});
 
