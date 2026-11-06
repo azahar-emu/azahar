@@ -19,6 +19,7 @@ import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.InputMappingSetting
+import org.citra.citra_emu.features.settings.model.InputOverlaySetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.StringSetting
@@ -41,7 +42,8 @@ object SettingsFile {
             FloatSetting.values().toList() +
             StringSetting.values().toList() +
             IntListSetting.values().toList() +
-            InputMappingSetting.values().toList()
+            InputMappingSetting.values().toList() +
+            InputOverlaySetting.values().toList()
     }
 
     private fun findSettingByKey(key: String): AbstractSetting<*>? =
