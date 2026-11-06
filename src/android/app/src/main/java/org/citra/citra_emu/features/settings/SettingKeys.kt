@@ -153,6 +153,34 @@ object SettingKeys {
     external fun enable_secondary_display(): String
     external fun combo_button_buttons(): String
 
+    // Input Overlay Elements
+
+    external fun overlay_button_a(): String
+    external fun overlay_button_b(): String
+    external fun overlay_button_x(): String
+    external fun overlay_button_y(): String
+    external fun overlay_button_home(): String
+    external fun overlay_circlepad(): String
+    external fun overlay_button_r(): String
+    external fun overlay_button_l(): String
+    external fun overlay_button_zr(): String
+    external fun overlay_button_zl(): String
+    external fun overlay_button_start(): String
+    external fun overlay_button_select(): String
+    external fun overlay_dpad(): String
+    external fun overlay_cstick(): String
+    external fun overlay_hotkey_swap(): String
+    external fun overlay_hotkey_turbo_toggle(): String
+    external fun overlay_hotkey_combo_button(): String
+
+    // TODO: Add some or all of these hotkeys to the input overlay
+//    external fun overlay_hotkey_cycle_layout(): String
+//    external fun overlay_hotkey_close(): String
+//    external fun overlay_hotkey_pause_resume(): String
+//    external fun overlay_hotkey_quicksave(): String
+//    external fun overlay_hotkey_turbo_hold(): String
+//    external fun overlay_hotkey_quickload(): String
+
     // Inputs
     external fun button_a(): String
     external fun button_b(): String

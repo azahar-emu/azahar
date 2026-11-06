@@ -128,6 +128,7 @@ class CitraSettings {
         const val SECTION_SYSTEM = "System"
         const val SECTION_CAMERA = "Camera"
         const val SECTION_CONTROLS = "Controls"
+        const val SECTION_OVERLAY = "Input Overlay"
         const val SECTION_RENDERER = "Renderer"
         const val SECTION_LAYOUT = "Layout"
         const val SECTION_UTILITY = "Utility"

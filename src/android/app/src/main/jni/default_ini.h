@@ -116,6 +116,31 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_turbo_hold) BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_combo_button) BOOST_HANA_STRING(R"(
 
+# Configuration strings for input overlay elements, with five parameters measured
+# of of 1000, where 1000 represents full width for x-values, full height for y-values,
+# and the smaller dimension (portrait width) for the size value. Defaults are set
+# to reasonable values internally.
+
+# Example: "portraitX:810,portraitY:850,landscapeX:930,landscapeY:620,size:110"
+
+)") DECLARE_KEY(overlay_button_a) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_b) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_x) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_y) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_home) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_circlepad) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_r) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_l) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_zr) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_zl) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_start) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_select) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_dpad) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_cstick) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_hotkey_swap) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_hotkey_turbo_toggle) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_hotkey_combo_button) BOOST_HANA_STRING(R"(
+
 [Core]
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
