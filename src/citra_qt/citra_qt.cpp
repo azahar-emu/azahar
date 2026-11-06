@@ -101,6 +101,7 @@
 #endif
 #include "common/settings.h"
 #include "common/string_util.h"
+#include "common/tar_file.h"
 #include "common/zstd_compression.h"
 #include "core/arm/exception_handler.h"
 #include "core/core.h"
@@ -3695,10 +3696,10 @@ void GMainWindow::OnCreateBundle() {
         return;
     }
 
-    QStringList depends = QFileDialog::getOpenFileNames(
-        this, tr("Load CIA File Dependencies"), UISettings::values.roms_path,
-        tr("3DS ROM Files") + QStringLiteral(" (*.cia *.zcia);;") + tr("All Files") +
-            QStringLiteral(" (*.*)"));
+    QStringList depends =
+        QFileDialog::getOpenFileNames(this, tr("Load CIA File Dependencies"), QString(),
+                                      tr("3DS CIA Files") + QStringLiteral(" (*.cia *.zcia);;") +
+                                          tr("All Files") + QStringLiteral(" (*.*)"));
 
     if (depends.isEmpty()) {
         return;
@@ -3740,10 +3741,47 @@ void GMainWindow::OnCreateBundle() {
 }
 
 void GMainWindow::OnExtractBundle() {
-    // TODO(PabloMK7): Implement before 2127 release, do not translate temporary strings.
-    QMessageBox::warning(
-        this, tr("Bundle File"),
-        QStringLiteral("Bundle extraction is not implemented yet, please use a TAR file browser."));
+    QString filepath = QFileDialog::getOpenFileName(
+        this, tr("Select 3DS Bundle File"), UISettings::values.roms_path,
+        tr("3DS Bundle Files") + QStringLiteral(" (*.bcci *.bcxi *.bcia);;") + tr("All Files") +
+            QStringLiteral(" (*.*)"));
+
+    if (filepath.isEmpty()) {
+        return;
+    }
+
+    auto file_info = Loader::GetLoaderFileInfo(filepath.toStdString());
+    if (!file_info.is_valid || !file_info.is_bundle_supported) {
+        LOG_ERROR(Frontend,
+                  "Error extracting file {}, the selected file is not a compatible 3DS ROM "
+                  "format.",
+                  filepath.toStdString());
+        emit BundleFinished(false, false);
+        return;
+    }
+    if (!file_info.is_bundled) {
+        LOG_ERROR(Frontend, "Error extracting file {}, the selected file is not bundled.",
+                  filepath.toStdString());
+        emit BundleFinished(false, false);
+        return;
+    }
+
+    QString outputFolder = QFileDialog::getExistingDirectory(this, tr("Select output folder"));
+    if (outputFolder.isEmpty()) {
+        return;
+    }
+
+    emit UpdateProgress(0, 0);
+
+    (void)QtConcurrent::run([this, outputFolder, filepath] {
+        const auto progress = [&](std::size_t written, std::size_t total) {
+            emit UpdateProgress(written, total);
+        };
+
+        emit BundleFinished(false,
+                            FileUtil::TarArchive::ExtractTarFile(outputFolder.toStdString(),
+                                                                 filepath.toStdString(), progress));
+    });
 }
 
 #ifdef ENABLE_FFMPEG
