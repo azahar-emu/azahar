@@ -194,16 +194,15 @@ bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
 
     ASSERT_MSG(src_format != dst_format, "Reinterpretation with the same format is invalid");
     if (src_format == PixelFormat::D24S8 && dst_format == PixelFormat::RGBA8) {
-        blit_helper.ConvertDS24S8ToRGBA8(source, dest, copy);
+        return blit_helper.ConvertDS24S8ToRGBA8(source, dest, copy);
     } else if (src_format == PixelFormat::RGBA4 && dst_format == PixelFormat::RGB5A1) {
-        blit_helper.ConvertRGBA4ToRGB5A1(source, dest, copy);
-    } else {
-        LOG_WARNING(Render_OpenGL, "Unimplemented reinterpretation {}({:#x}) -> {}({:#x})",
-                    VideoCore::PixelFormatAsString(src_format), source.Tuple().internal_format,
-                    VideoCore::PixelFormatAsString(dst_format), dest.Tuple().internal_format);
-        return false;
+        return blit_helper.ConvertRGBA4ToRGB5A1(source, dest, copy);
     }
-    return true;
+
+    LOG_WARNING(Render_OpenGL, "Unimplemented reinterpretation {}({:#x}) -> {}({:#x})",
+                VideoCore::PixelFormatAsString(src_format), source.Tuple().internal_format,
+                VideoCore::PixelFormatAsString(dst_format), dest.Tuple().internal_format);
+    return false;
 }
 
 bool TextureRuntime::ClearTextureWithoutFbo(Surface& surface,

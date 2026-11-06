@@ -339,14 +339,13 @@ bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
     }
 
     if (src_format == PixelFormat::D24S8 && dst_format == PixelFormat::RGBA8) {
-        blit_helper.ConvertDS24S8ToRGBA8(source, dest, copy);
-    } else {
-        LOG_WARNING(Render_Vulkan, "Unimplemented reinterpretation {}({}) -> {}({})",
-                    VideoCore::PixelFormatAsString(src_format), vk::to_string(source.traits.native),
-                    VideoCore::PixelFormatAsString(dst_format), vk::to_string(dest.traits.native));
-        return false;
+        return blit_helper.ConvertDS24S8ToRGBA8(source, dest, copy);
     }
-    return true;
+
+    LOG_WARNING(Render_Vulkan, "Unimplemented reinterpretation {}({}) -> {}({})",
+                VideoCore::PixelFormatAsString(src_format), vk::to_string(source.traits.native),
+                VideoCore::PixelFormatAsString(dst_format), vk::to_string(dest.traits.native));
+    return false;
 }
 
 bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClear& clear) {
