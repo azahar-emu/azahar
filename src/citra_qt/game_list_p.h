@@ -532,7 +532,9 @@ private:
 };
 
 class GameListTreeView : public QTreeView {
+public:
+    void setFocusFromKeyboard();
+
 protected:
     void keyPressEvent(QKeyEvent* event) override;
-    void focusInEvent(QFocusEvent* event) override;
 };
