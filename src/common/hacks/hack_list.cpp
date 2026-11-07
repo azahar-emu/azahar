@@ -214,5 +214,15 @@ HackManager hack_manager = {
                  },
              // clang-format on
          }},
+        {HackType::COLLAPSE_SUBPIXEL_HUD_QUAD,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             .affected_title_ids =
+                 {
+                     0x0004000000032800, // Ridge Racer 3D (JPN)
+                     0x0004000000033B00, // Ridge Racer 3D (EUR)
+                     0x0004000000035800, // Ridge Racer 3D (USA)
+                 },
+         }},
     }};
 }
