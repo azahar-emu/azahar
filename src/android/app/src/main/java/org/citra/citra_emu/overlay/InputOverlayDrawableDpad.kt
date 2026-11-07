@@ -12,6 +12,8 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.features.settings.model.InputOverlaySetting
 import org.citra.citra_emu.utils.EmulationMenuSettings
 
 /**
@@ -33,11 +35,7 @@ class InputOverlayDrawableDpad(
     defaultStateBitmap: Bitmap,
     pressedOneDirectionStateBitmap: Bitmap,
     pressedTwoDirectionsStateBitmap: Bitmap,
-    val upId: Int,
-    val downId: Int,
-    val leftId: Int,
-    val rightId: Int,
-    val opacity: Int
+    val setting: InputOverlaySetting
 ) {
     var trackId: Int
     private var previousTouchX = 0
@@ -151,6 +149,8 @@ class InputOverlayDrawableDpad(
         val px = controlPositionX + width / 2
         val py = controlPositionY + height / 2
 
+        val settingValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        val opacity = (settingValue.opacity / 100f * 255).toInt()
         // Pressed up
         if (upButtonState && !leftButtonState && !rightButtonState) {
             pressedOneDirectionStateBitmap.alpha = opacity

@@ -12,6 +12,9 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.features.input.InputOverlaySpec
+import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.features.settings.model.InputOverlaySetting
 import org.citra.citra_emu.utils.EmulationMenuSettings
 
 enum class ButtonSlidingMode(val int: Int) {
@@ -34,15 +37,15 @@ enum class ButtonSlidingMode(val int: Int) {
  * @param res                [Resources] instance.
  * @param defaultStateBitmap [Bitmap] to use with the default state Drawable.
  * @param pressedStateBitmap [Bitmap] to use with the pressed state Drawable.
- * @param id                 Identifier for this type of button.
+ * @param setting            [InputOverlaySetting] The setting associated with this button.
  */
 class InputOverlayDrawableButton(
     res: Resources,
     defaultStateBitmap: Bitmap,
     pressedStateBitmap: Bitmap,
-    val id: Int,
-    val opacity: Int
+    val setting: InputOverlaySetting
 ) {
+    val spec = setting.spec as InputOverlaySpec.Button
     var trackId: Int
 
     private var isMotionFirstButton = false
@@ -182,6 +185,8 @@ class InputOverlayDrawableButton(
 
     fun draw(canvas: Canvas) {
         val bitmapDrawable: BitmapDrawable = currentStateBitmapDrawable
+        val settingValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        val opacity = (settingValue.opacity / 100f * 255).toInt()
         bitmapDrawable.alpha = opacity
         bitmapDrawable.draw(canvas)
     }
