@@ -1,6 +1,6 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <QMenu>
 #include <QMessageBox>
@@ -63,6 +63,9 @@ QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureHotkeys::GetUsedKeyLis
 
 void ConfigureHotkeys::Populate(const HotkeyRegistry& registry) {
     for (const auto& group : registry.hotkey_groups) {
+        // skip the controller navigation group in the keyboard hotkey config window
+        if (group.first == QStringLiteral("Navigation"))
+            continue;
         QStandardItem* parent_item = new QStandardItem(group.first);
         parent_item->setEditable(false);
         for (const auto& hotkey : group.second) {

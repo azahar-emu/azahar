@@ -48,7 +48,7 @@
 
 // On Mac OS X, the Return key does not trigger the activation signal for some reason. Fix it.
 void GameListTreeView::keyPressEvent(QKeyEvent* event) {
-    if (event->key() == Qt::Key_Return) {
+    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
         const QModelIndex idx = currentIndex();
         if (idx.isValid()) {
             emit activated(idx);

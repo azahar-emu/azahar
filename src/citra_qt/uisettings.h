@@ -21,7 +21,7 @@ namespace UISettings {
 struct ContextualShortcut {
     QString keyseq;
     QString controller_keyseq;
-    int context;
+    int context = Qt::ApplicationShortcut;
 };
 
 struct Shortcut {
