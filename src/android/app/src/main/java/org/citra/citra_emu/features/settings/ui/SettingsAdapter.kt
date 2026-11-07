@@ -577,7 +577,9 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Conte
 
     fun <T> resetSettingToDefault(setting: AbstractSetting<T>, position: Int) {
         val settings = fragmentView.activityView?.editingSettings ?: return
-        settings.setBySettingsContext(setting, setting.defaultValue)
+        // clearing the global file resets to default and ensures it sill get
+        // written as empty in the file
+        settings.clearGlobal(setting)
         notifyItemChanged(position)
         fragmentView.onSettingChanged()
         fragmentView.loadSettingsList()

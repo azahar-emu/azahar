@@ -86,7 +86,14 @@ class CitraSettings {
     fun <T> clearOverride(setting: AbstractSetting<T>) {
         perAppOverrides.remove(setting.key)
         if (this == activeSettings && setting is InputMappingSetting) {
-            InputMappingManager.rebind(setting, getGlobal(setting) as Input?)
+            InputMappingManager.rebind(setting, get(setting) as Input?)
+        }
+    }
+
+    fun <T> clearGlobal(setting: AbstractSetting<T>) {
+        globalValues.remove(setting.key)
+        if (this == activeSettings && setting is InputMappingSetting) {
+            InputMappingManager.rebind(setting, get(setting) as Input?)
         }
     }
 
