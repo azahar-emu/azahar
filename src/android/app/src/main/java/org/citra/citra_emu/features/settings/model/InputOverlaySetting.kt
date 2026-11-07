@@ -4,6 +4,7 @@
 
 package org.citra.citra_emu.features.settings.model
 
+import androidx.annotation.StringRes
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.input.Hotkey
@@ -14,14 +15,17 @@ import org.citra.citra_emu.features.settings.SettingKeys
 enum class InputOverlaySetting(
     override val key: String,
     override val section: String,
+    @StringRes val nameId: Int,
     /** This defines what the element *does* and its appearance, which is not user-editable */
     val spec: InputOverlaySpec,
     /** Defines the defaults for the user-editable parts of the control.*/
     override val defaultValue: InputOverlayElement
+
 ) : AbstractSetting<InputOverlayElement?> {
     OVERLAY_BUTTON_A(
         SettingKeys.overlay_button_a(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_a,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_A,
             buttonResId = R.drawable.button_a,
@@ -39,6 +43,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_B(
         SettingKeys.overlay_button_b(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_b,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_B,
             buttonResId = R.drawable.button_b,
@@ -56,6 +61,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_X(
         SettingKeys.overlay_button_x(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_x,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_X,
             buttonResId = R.drawable.button_x,
@@ -73,6 +79,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_Y(
         SettingKeys.overlay_button_y(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_y,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_Y,
             buttonResId = R.drawable.button_y,
@@ -90,6 +97,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_L(
         SettingKeys.overlay_button_l(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_l,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.TRIGGER_L,
             buttonResId = R.drawable.button_l,
@@ -107,6 +115,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_R(
         SettingKeys.overlay_button_r(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_r,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.TRIGGER_R,
             buttonResId = R.drawable.button_r,
@@ -124,6 +133,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_ZL(
         SettingKeys.overlay_button_zl(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_zl,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_ZL,
             buttonResId = R.drawable.button_zl,
@@ -141,6 +151,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_ZR(
         SettingKeys.overlay_button_zr(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_zr,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_ZR,
             buttonResId = R.drawable.button_zr,
@@ -158,6 +169,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_START(
         SettingKeys.overlay_button_start(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_start,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_START,
             buttonResId = R.drawable.button_start,
@@ -175,6 +187,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_SELECT(
         SettingKeys.overlay_button_select(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_select,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_SELECT,
             buttonResId = R.drawable.button_select,
@@ -192,6 +205,7 @@ enum class InputOverlaySetting(
     OVERLAY_DPAD(
         SettingKeys.overlay_dpad(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.controller_dpad,
         InputOverlaySpec.Dpad(
             up = NativeLibrary.ButtonType.DPAD_UP,
             down = NativeLibrary.ButtonType.DPAD_DOWN,
@@ -213,6 +227,7 @@ enum class InputOverlaySetting(
     OVERLAY_CIRCLEPAD(
         SettingKeys.overlay_circlepad(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.controller_circlepad,
         InputOverlaySpec.Joystick(
             joystick = NativeLibrary.ButtonType.STICK_LEFT,
             outerResId = R.drawable.stick_main_range,
@@ -231,6 +246,7 @@ enum class InputOverlaySetting(
     OVERLAY_STICK_C(
         SettingKeys.overlay_cstick(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.controller_c,
         InputOverlaySpec.Joystick(
             joystick = NativeLibrary.ButtonType.STICK_C,
             outerResId = R.drawable.stick_c_range,
@@ -249,6 +265,7 @@ enum class InputOverlaySetting(
     OVERLAY_BUTTON_HOME(
         SettingKeys.overlay_button_home(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_home,
         InputOverlaySpec.Button(
             button = NativeLibrary.ButtonType.BUTTON_HOME,
             buttonResId = R.drawable.button_home,
@@ -268,6 +285,7 @@ enum class InputOverlaySetting(
     OVERLAY_HOTKEY_SWAP(
         SettingKeys.overlay_hotkey_swap(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_swap,
         InputOverlaySpec.Button(
             button = Hotkey.SWAP_SCREEN.button,
             buttonResId = R.drawable.button_swap,
@@ -285,6 +303,7 @@ enum class InputOverlaySetting(
     OVERLAY_HOTKEY_TURBO(
         SettingKeys.overlay_hotkey_turbo_toggle(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_turbo,
         InputOverlaySpec.Button(
             button = Hotkey.TURBO_TOGGLE.button,
             buttonResId = R.drawable.button_turbo,
@@ -302,6 +321,7 @@ enum class InputOverlaySetting(
     OVERLAY_HOTKEY_COMBO_BUTTON(
         SettingKeys.overlay_hotkey_combo_button(),
         CitraSettings.SECTION_OVERLAY,
+        R.string.button_combo,
         InputOverlaySpec.Button(
             button = Hotkey.COMBO_BUTTON.button,
             buttonResId = R.drawable.button_combo,
