@@ -151,8 +151,8 @@ object SettingsFile {
             inputStream!!.close()
 
             for (setting in allSettings) {
-                val value = settings.getGlobal(setting) ?: continue
-                writeSettingToWini(writer, setting, value)
+                val value = settings.getGlobal(setting)
+                writeSettingToWini(writer, setting, value, true)
             }
 
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
@@ -197,6 +197,10 @@ object SettingsFile {
         if (!settings.isPerApp()) {
             return
         }
+        if (settings.getAllOverrides().isEmpty()) {
+            deletePerAppFile(settings.gameId)
+            return
+        }
         val ini = getOrCreatePerAppSettingsFile(settings.gameId!!)
         try {
             val context: Context = CitraApplication.appContext
@@ -228,21 +232,22 @@ object SettingsFile {
         } else {
             // Currently global, save to global file
             val ini = getSettingsFile(FILE_NAME_CONFIG)
-            writeSingleSettingToFile(ini, setting, settings.getGlobal(setting))
+            writeSingleSettingToFile(ini, setting, settings.getGlobal(setting), true)
         }
     }
 
     private fun <T> writeSingleSettingToFile(
         ini: DocumentFile,
         setting: AbstractSetting<T>,
-        value: T
+        value: T,
+        ignoreDefault: Boolean = false
     ) {
         try {
             val context = CitraApplication.appContext
             val inputStream = context.contentResolver.openInputStream(ini.uri)
             val writer = if (inputStream != null) Wini(inputStream) else Wini()
             inputStream?.close()
-            writeSettingToWini(writer, setting, value as Any)
+            writeSettingToWini(writer, setting, value as Any, ignoreDefault)
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
             writer.store(outputStream)
             outputStream!!.flush()
@@ -252,10 +257,24 @@ object SettingsFile {
         }
     }
 
-    private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any) {
-        @Suppress("UNCHECKED_CAST")
-        val typedValue = value as T
-        writer.put(descriptor.section, descriptor.key, descriptor.valueToString(typedValue))
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> writeSettingToWini(
+        writer: Wini,
+        descriptor: AbstractSetting<T>,
+        value: Any?,
+        ignoreDefault: Boolean = false
+    ) {
+        val printValue = if (value == null || (
+                ignoreDefault &&
+                    descriptor.valueToString(value as T) ==
+                    descriptor.valueToString(descriptor.defaultValue)
+                )
+        ) {
+            ""
+        } else {
+            descriptor.valueToString(value as T)
+        }
+        writer.put(descriptor.section, descriptor.key, printValue)
     }
 
     private fun parseLineToKeyValuePair(line: String): Pair<String, String>? {
