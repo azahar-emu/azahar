@@ -333,6 +333,11 @@ if (ANDROID)
         "overlay_hotkey_swap"
         "overlay_hotkey_turbo_toggle"
         "overlay_hotkey_combo_button"
+        "show_controller_overlay"
+        "overlay_relative_stick_center"
+        "overlay_dpad_sliding"
+        "overlay_haptic_feedback"
+        "overlay_button_sliding"
 
 #    TODO: Add some or all of these hotkeys to the input overlay
 #        "overlay_hotkey_cycle_layout"

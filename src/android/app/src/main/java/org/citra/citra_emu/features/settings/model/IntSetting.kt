@@ -7,6 +7,7 @@ package org.citra.citra_emu.features.settings.model
 import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.features.settings.SettingKeys
+import org.citra.citra_emu.overlay.ButtonSlidingMode
 
 enum class IntSetting(
     override val key: String,
@@ -94,7 +95,13 @@ enum class IntSetting(
         0
     ),
     ASPECT_RATIO(SettingKeys.aspect_ratio(), CitraSettings.SECTION_LAYOUT, 0),
-    UPDATE_CHECK_CHANNEL(SettingKeys.update_check_channel(), CitraSettings.SECTION_MISC, 0);
+    UPDATE_CHECK_CHANNEL(SettingKeys.update_check_channel(), CitraSettings.SECTION_MISC, 0),
+
+    OVERLAY_BUTTON_SLIDING(
+        SettingKeys.overlay_button_sliding(),
+        CitraSettings.SECTION_OVERLAY,
+        ButtonSlidingMode.Disabled.int
+    );
 
     override fun valueFromString(string: String): Int? {
         var value = string.toIntOrNull()

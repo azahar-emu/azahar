@@ -350,6 +350,7 @@ class EmulationFragment :
                         DrawerLayout.LOCK_MODE_UNLOCKED -> {
                             EmulationMenuSettings.drawerLockMode =
                                 DrawerLayout.LOCK_MODE_LOCKED_CLOSED
+                            saveOnDrawerClose = true
                             it.title = resources.getString(R.string.unlock_drawer)
                             it.icon = ResourcesCompat.getDrawable(
                                 resources,
@@ -360,6 +361,7 @@ class EmulationFragment :
 
                         DrawerLayout.LOCK_MODE_LOCKED_CLOSED -> {
                             EmulationMenuSettings.drawerLockMode = DrawerLayout.LOCK_MODE_UNLOCKED
+                            saveOnDrawerClose = true
                             it.title = resources.getString(R.string.lock_drawer)
                             it.icon = ResourcesCompat.getDrawable(
                                 resources,
@@ -760,6 +762,7 @@ class EmulationFragment :
             when (it.itemId) {
                 R.id.menu_show_overlay -> {
                     EmulationMenuSettings.showOverlay = !EmulationMenuSettings.showOverlay
+                    saveOnDrawerClose = true
                     binding.surfaceInputOverlay.refreshControls()
                     true
                 }
@@ -776,6 +779,7 @@ class EmulationFragment :
 
                 R.id.menu_haptic_feedback -> {
                     EmulationMenuSettings.hapticFeedback = !EmulationMenuSettings.hapticFeedback
+                    saveOnDrawerClose = true
                     true
                 }
 
@@ -893,6 +897,7 @@ class EmulationFragment :
                 R.id.menu_emulation_joystick_rel_center -> {
                     EmulationMenuSettings.joystickRelCenter =
                         !EmulationMenuSettings.joystickRelCenter
+                    saveOnDrawerClose = true
                     true
                 }
 
@@ -903,6 +908,7 @@ class EmulationFragment :
 
                 R.id.menu_emulation_dpad_slide_enable -> {
                     EmulationMenuSettings.dpadSlide = !EmulationMenuSettings.dpadSlide
+                    saveOnDrawerClose = true
                     true
                 }
 
@@ -960,6 +966,7 @@ class EmulationFragment :
                 EmulationMenuSettings.buttonSlide
             ) { _: DialogInterface?, which: Int ->
                 EmulationMenuSettings.buttonSlide = which
+                saveOnDrawerClose = true
             }
             .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
                 editor.apply()
@@ -1264,7 +1271,6 @@ class EmulationFragment :
     }
 
     private fun showToggleControlsDialog() {
-        val editor = preferences.edit()
         val entries = InputOverlaySetting.entries
         val buttonNames = entries.map { getString(it.nameId) }.toTypedArray()
         val enabledButtons = BooleanArray(entries.size) {
@@ -1302,7 +1308,9 @@ class EmulationFragment :
     }
 
     /**
-     * Pass null to scale ALL controls
+     * Scales a control
+     * Pass null to scale ALL controls, which will actually
+     * be a permanent resize with no scale value persisted
      */
     private fun showAdjustScaleDialog(setting: InputOverlaySetting?) {
         val sliderBinding = DialogSliderBinding.inflate(layoutInflater)
@@ -1523,9 +1531,19 @@ class EmulationFragment :
 
     private fun resetInputOverlay() {
         InputOverlaySetting.entries.forEach {
-            CitraSettings.activeSettings.clearOverride(it)
             CitraSettings.activeSettings.clearGlobal(it)
         }
+        val otherOverlaySettings = listOf(
+            IntSetting.OVERLAY_BUTTON_SLIDING,
+            BooleanSetting.OVERLAY_DPAD_SLIDING,
+            BooleanSetting.OVERLAY_HAPTIC_FEEDBACK,
+            BooleanSetting.OVERLAY_RELATIVE_STICK_CENTER,
+            BooleanSetting.SHOW_CONTROLLER_OVERLAY
+        )
+        otherOverlaySettings.forEach {
+            CitraSettings.activeSettings.clearGlobal(it)
+        }
+
         saveOnDrawerClose = true
         binding.surfaceInputOverlay.resetButtonPlacement()
     }

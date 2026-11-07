@@ -116,31 +116,6 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_turbo_hold) BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(hotkey_combo_button) BOOST_HANA_STRING(R"(
 
-# Configuration strings for input overlay elements, with five parameters measured
-# of of 1000, where 1000 represents full width for x-values, full height for y-values,
-# and the smaller dimension (portrait width) for the size value. Defaults are set
-# to reasonable values internally.
-
-# Example: "portraitX:810,portraitY:850,landscapeX:930,landscapeY:620,size:110"
-
-)") DECLARE_KEY(overlay_button_a) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_b) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_x) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_y) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_home) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_circlepad) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_r) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_l) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_zr) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_zl) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_start) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_button_select) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_dpad) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_cstick) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_hotkey_swap) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_hotkey_turbo_toggle) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(overlay_hotkey_combo_button) BOOST_HANA_STRING(R"(
-
 [Core]
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
@@ -319,33 +294,6 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 4: 16:10
 # 5: Stretch
 )") DECLARE_KEY(aspect_ratio) BOOST_HANA_STRING(R"(
-
-# Whether or not the performance overlay should be displayed
-# 0 (default): Hidden, 1: Shown
-)") DECLARE_KEY(performance_overlay_enable) BOOST_HANA_STRING(R"(
-
-# Whether or not the emulation framerate should be displayed in the performance overlay
-# 0: Hidden, 1 (default): Shown
-)") DECLARE_KEY(performance_overlay_show_fps) BOOST_HANA_STRING(R"(
-
-# Whether or not the emulation frame time should be displayed in the performance overlay
-# 0 (default): Hidden, 1: Shown
-)") DECLARE_KEY(performance_overlay_show_frame_time) BOOST_HANA_STRING(R"(
-
-# Whether or not the emulation speed should be displayed as a percentage in the performance overlay
-)") DECLARE_KEY(performance_overlay_show_speed) BOOST_HANA_STRING(R"(
-
-# Whether or not Azahar's RAM usage should be displayed in the performance overlay
-)") DECLARE_KEY(performance_overlay_show_app_ram_usage) BOOST_HANA_STRING(R"(
-
-# Whether or not the amount of available RAM should be displayed in the performance overlay
-)") DECLARE_KEY(performance_overlay_show_available_ram) BOOST_HANA_STRING(R"(
-
-# Whether or not the battery's current temperature should be displayed in the performance overlay
-)") DECLARE_KEY(performance_overlay_show_battery_temp) BOOST_HANA_STRING(R"(
-
-# Whether or not the performance overlay should have a transparent background to aid visibility
-)") DECLARE_KEY(performance_overlay_background) BOOST_HANA_STRING(R"(
 
 [Storage]
 # Whether to compress the installed CIA contents
@@ -586,6 +534,86 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # The charging status of the virtual 3DS battery
 # 0: Not Charging, 1 (default): Charging
 )") DECLARE_KEY(battery_charging) BOOST_HANA_STRING(R"(
+
+[Controller Overlay]
+
+# Whether the controller overlay should be shown
+# 0: Hidden, 1 (default): Shown
+)") DECLARE_KEY(show_controller_overlay) BOOST_HANA_STRING(R"(
+
+# Whether the center of the overlay stick should adjust based on your initial tap
+# 0: Do not adjust, 1 (default): Adjust
+)") DECLARE_KEY(overlay_relative_stick_center) BOOST_HANA_STRING(R"(
+
+# Whether the overlay D-Pad should allow sliding from one button to another
+# 0: Disable sliding, 1 (default): Allow sliding
+)") DECLARE_KEY(overlay_dpad_sliding) BOOST_HANA_STRING(R"(
+
+# Whether the overlay buttons shoudl allow sliding from one button to another
+# Enabled means any button can be activated by sliding in and out of their area
+# Alternative means the first button is kept activated until released, further buttons
+# can be slid into to activate. So if you press A then slide into B, A+B is activated until
+# releasing your finger
+0: Disabled (default), 1: Enabled, 2: Alternative
+)") DECLARE_KEY(overlay_button_sliding) BOOST_HANA_STRING(R"(
+
+# Whether the controller overlay controls should give haptic feedback on presses
+# 0: Disable feedback, 1 (default): Enable feedback
+)") DECLARE_KEY(overlay_haptic_feedback) BOOST_HANA_STRING(R"(
+
+# Configuration strings for controller overlay elements, with five parameters measured
+# of of 1000, where 1000 represents full width for x-values, full height for y-values,
+# and the smaller dimension (portrait width) for the size value. Defaults are set
+# to reasonable values internally. Opacity is measured from 0-100 where 100 is fully opaque.
+
+# Example: "portraitX:810,portraitY:850,landscapeX:930,landscapeY:620,size:110,opacity:50"
+
+)") DECLARE_KEY(overlay_button_a) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_b) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_x) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_y) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_home) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_circlepad) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_r) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_l) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_zr) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_zl) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_start) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_button_select) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_dpad) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_cstick) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_hotkey_swap) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_hotkey_turbo_toggle) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(overlay_hotkey_combo_button) BOOST_HANA_STRING(R"(
+
+[Performance Overlay]
+
+# Whether or not the performance overlay should be displayed
+# 0 (default): Hidden, 1: Shown
+)") DECLARE_KEY(performance_overlay_enable) BOOST_HANA_STRING(R"(
+
+# Whether or not the emulation framerate should be displayed in the performance overlay
+# 0: Hidden, 1 (default): Shown
+)") DECLARE_KEY(performance_overlay_show_fps) BOOST_HANA_STRING(R"(
+
+# Whether or not the emulation frame time should be displayed in the performance overlay
+# 0 (default): Hidden, 1: Shown
+)") DECLARE_KEY(performance_overlay_show_frame_time) BOOST_HANA_STRING(R"(
+
+# Whether or not the emulation speed should be displayed as a percentage in the performance overlay
+)") DECLARE_KEY(performance_overlay_show_speed) BOOST_HANA_STRING(R"(
+
+# Whether or not Azahar's RAM usage should be displayed in the performance overlay
+)") DECLARE_KEY(performance_overlay_show_app_ram_usage) BOOST_HANA_STRING(R"(
+
+# Whether or not the amount of available RAM should be displayed in the performance overlay
+)") DECLARE_KEY(performance_overlay_show_available_ram) BOOST_HANA_STRING(R"(
+
+# Whether or not the battery's current temperature should be displayed in the performance overlay
+)") DECLARE_KEY(performance_overlay_show_battery_temp) BOOST_HANA_STRING(R"(
+
+# Whether or not the performance overlay should have a transparent background to aid visibility
+)") DECLARE_KEY(performance_overlay_background) BOOST_HANA_STRING(R"(
 
 [Camera]
 # Which camera engine to use for the right outer camera

@@ -173,6 +173,12 @@ object SettingKeys {
     external fun overlay_hotkey_turbo_toggle(): String
     external fun overlay_hotkey_combo_button(): String
 
+    external fun show_controller_overlay(): String
+    external fun overlay_relative_stick_center(): String
+    external fun overlay_dpad_sliding(): String
+    external fun overlay_haptic_feedback(): String
+    external fun overlay_button_sliding(): String
+
     // TODO: Add some or all of these hotkeys to the input overlay
 //    external fun overlay_hotkey_cycle_layout(): String
 //    external fun overlay_hotkey_close(): String
