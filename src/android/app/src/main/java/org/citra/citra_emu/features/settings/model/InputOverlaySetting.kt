@@ -367,8 +367,7 @@ enum class InputOverlaySetting(
 
     /** Create a configuration string from an input overlay element */
     override fun valueToString(value: InputOverlayElement?): String {
-        value ?: return ""
-        if (defaultValue == value) return ""
+        value ?: return valueToString(defaultValue)
         return "visible:${value.visible}" +
             ",portraitX:${value.portraitX}" +
             ",portraitY:${value.portraitY}" +

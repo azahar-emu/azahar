@@ -97,6 +97,20 @@ class CitraSettings {
         }
     }
 
+    fun copyGlobalToOverride(setting: AbstractSetting<*>) {
+        if (globalValues.containsKey(setting.key) && globalValues.get(setting.key) != null) {
+            perAppOverrides[setting.key] = globalValues.get(setting.key)!!
+        } else {
+            perAppOverrides[setting.key] = setting.defaultValue as Any
+        }
+    }
+
+    fun copyOverrideToGlobal(setting: AbstractSetting<*>) {
+        if (perAppOverrides.containsKey(setting.key) && perAppOverrides.get(setting.key) != null) {
+            globalValues[setting.key] = perAppOverrides.get(setting.key)!!
+        }
+    }
+
     fun hasOverride(setting: AbstractSetting<*>): Boolean = perAppOverrides.containsKey(setting.key)
 
     fun getAllOverrides(): Map<String, Any> = perAppOverrides.toMap()

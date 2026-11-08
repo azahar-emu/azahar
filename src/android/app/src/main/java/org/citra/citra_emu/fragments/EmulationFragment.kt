@@ -65,6 +65,7 @@ import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.SecondaryDisplayLayout
+import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.InputOverlaySetting
@@ -111,6 +112,15 @@ class EmulationFragment :
 
     // Only used if a game is passed through intent on google play variant
     private var gameFd: Int? = null
+    private var perAppOverlay = false
+
+    private val otherOverlaySettings = listOf<AbstractSetting<*>>(
+        IntSetting.OVERLAY_BUTTON_SLIDING,
+        BooleanSetting.OVERLAY_DPAD_SLIDING,
+        BooleanSetting.OVERLAY_HAPTIC_FEEDBACK,
+        BooleanSetting.OVERLAY_RELATIVE_STICK_CENTER,
+        BooleanSetting.SHOW_CONTROLLER_OVERLAY
+    )
 
     private var saveOnDrawerClose = false
 
@@ -169,6 +179,14 @@ class EmulationFragment :
             )
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
+        // if any of the input overlay elements are per-app, we will treat *all* changes as per-app
+        perAppOverlay = (InputOverlaySetting.entries + otherOverlaySettings).any {
+            CitraSettings.activeSettings.hasOverride(it)
+        }
+        if (perAppOverlay) {
+            ensurePerAppOrCopyToPerApp()
+            SettingsFile.saveCustomFile(CitraSettings.activeSettings)
+        }
     }
 
     private fun abortLaunch() {
@@ -749,6 +767,11 @@ class EmulationFragment :
 
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
+            findItem(R.id.menu_enable_per_app_controller_overlay).apply {
+                isChecked = perAppOverlay
+                isVisible = CitraSettings.activeSettings.isPerApp()
+                isEnabled = CitraSettings.activeSettings.isPerApp()
+            }
             findItem(R.id.menu_performance_overlay_show).isChecked =
                 activeSettings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
@@ -774,6 +797,51 @@ class EmulationFragment :
                     )
                     saveOnDrawerClose = true
                     updateShowPerformanceOverlay()
+                    true
+                }
+
+                R.id.menu_enable_per_app_controller_overlay -> {
+                    perAppOverlay = !perAppOverlay
+                    if (perAppOverlay) {
+                        ensurePerAppOrCopyToPerApp()
+                        saveOnDrawerClose = true
+                    } else {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.emulation_remove_per_app_overlay_dialog_title)
+                            .setMessage(
+                                R.string.emulation_remove_per_app_overlay_dialog_description
+                            )
+                            .setPositiveButton(
+                                R.string.emulation_remove_per_app_overlay_revert_option
+                            ) {
+                                    _: DialogInterface?,
+                                    _: Int
+                                ->
+                                (InputOverlaySetting.entries + otherOverlaySettings).forEach {
+                                    CitraSettings.activeSettings.clearOverride(it)
+                                }
+                                binding.surfaceInputOverlay.refreshControls()
+                                saveOnDrawerClose = true
+                            }
+                            .setNeutralButton(
+                                R.string.emulation_remove_per_app_overlay_preserve_option
+                            ) {
+                                    _: DialogInterface?,
+                                    _: Int
+                                ->
+                                copyPerAppOverridesToGlobal()
+                                binding.surfaceInputOverlay.refreshControls()
+                                saveOnDrawerClose = true
+                            }
+                            .setNegativeButton(android.R.string.cancel) {
+                                    _: DialogInterface?,
+                                    _: Int
+                                ->
+                                it.isChecked = true
+                                perAppOverlay = true
+                            }
+                            .show()
+                    }
                     true
                 }
 
@@ -1530,22 +1598,35 @@ class EmulationFragment :
     }
 
     private fun resetInputOverlay() {
-        InputOverlaySetting.entries.forEach {
-            CitraSettings.activeSettings.clearGlobal(it)
-        }
-        val otherOverlaySettings = listOf(
-            IntSetting.OVERLAY_BUTTON_SLIDING,
-            BooleanSetting.OVERLAY_DPAD_SLIDING,
-            BooleanSetting.OVERLAY_HAPTIC_FEEDBACK,
-            BooleanSetting.OVERLAY_RELATIVE_STICK_CENTER,
-            BooleanSetting.SHOW_CONTROLLER_OVERLAY
-        )
-        otherOverlaySettings.forEach {
+        val settingsToClear = InputOverlaySetting.entries + otherOverlaySettings
+        settingsToClear.forEach {
             CitraSettings.activeSettings.clearGlobal(it)
         }
 
         saveOnDrawerClose = true
         binding.surfaceInputOverlay.resetButtonPlacement()
+    }
+
+    /** Ensures all overlay settings are in the per-app settings */
+    fun ensurePerAppOrCopyToPerApp() {
+        if (!CitraSettings.activeSettings.isPerApp()) return
+        val allOverlaySettings = InputOverlaySetting.entries + otherOverlaySettings
+        allOverlaySettings.forEach {
+            if (!CitraSettings.activeSettings.hasOverride(it)) {
+                CitraSettings.activeSettings.copyGlobalToOverride(it)
+            }
+        }
+    }
+
+    fun copyPerAppOverridesToGlobal() {
+        if (!CitraSettings.activeSettings.isPerApp()) return
+        val allOverlaySettings = InputOverlaySetting.entries + otherOverlaySettings
+        allOverlaySettings.forEach {
+            if (CitraSettings.activeSettings.hasOverride(it)) {
+                CitraSettings.activeSettings.copyOverrideToGlobal(it)
+                CitraSettings.activeSettings.clearOverride(it)
+            }
+        }
     }
 
     fun updateShowPerformanceOverlay() {
