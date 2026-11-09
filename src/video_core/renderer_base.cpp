@@ -59,10 +59,7 @@ void RendererBase::EndFrame() {
     if (game_frames != limited_game_frames) {
         limited_game_frames = game_frames;
         if (Settings::values.use_limit_frames_ahead_of_gpu.GetValue()) {
-            LOG_INFO(Render, "Limiting Frames Ahead of GPU");
             LimitFramesAheadOfGpu();
-        } else {
-            LOG_INFO(Render, "Not Limiting Frames Ahead of GPU");
         }
     }
 
