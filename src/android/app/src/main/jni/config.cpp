@@ -209,6 +209,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.antialiasing);
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync);
+    ReadSetting("Renderer",Settings::values.use_limit_frames_ahead_of_gpu);
     ReadSetting("Renderer", Settings::values.use_skip_duplicate_frames);
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);
