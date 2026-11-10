@@ -144,6 +144,8 @@ void ConfigureGraphics::SetConfiguration() {
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul.GetValue());
     ui->toggle_disk_shader_cache->setChecked(Settings::values.use_disk_shader_cache.GetValue());
     ui->toggle_vsync->setChecked(Settings::values.use_vsync.GetValue());
+    ui->toggle_limit_frames_ahead_of_gpu->setChecked(
+        Settings::values.use_limit_frames_ahead_of_gpu.GetValue());
     ui->toggle_skip_duplicate_frames->setChecked(
         Settings::values.use_skip_duplicate_frames.GetValue());
     ui->spirv_shader_gen->setChecked(Settings::values.spirv_shader_gen.GetValue());
@@ -185,6 +187,9 @@ void ConfigureGraphics::ApplyConfiguration() {
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_skip_duplicate_frames,
                                              ui->toggle_skip_duplicate_frames,
                                              use_skip_duplicate_frames);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_limit_frames_ahead_of_gpu,
+                                             ui->toggle_limit_frames_ahead_of_gpu,
+                                             use_limit_frames_ahead_of_gpu);
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.delay_game_render_thread_us, ui->delay_render_combo,
         [this](s32) { return ui->delay_render_slider->value(); });
@@ -216,6 +221,9 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->toggle_skip_duplicate_frames->setEnabled(
             ui->toggle_skip_duplicate_frames->isEnabled() &&
             Settings::values.use_skip_duplicate_frames.UsingGlobal());
+        ui->toggle_limit_frames_ahead_of_gpu->setEnabled(
+            ui->toggle_limit_frames_ahead_of_gpu->isEnabled() &&
+            Settings::values.use_limit_frames_ahead_of_gpu.UsingGlobal());
         ui->toggle_async_shaders->setEnabled(
             Settings::values.async_shader_compilation.UsingGlobal());
         ui->widget_texture_sampling->setEnabled(Settings::values.texture_sampling.UsingGlobal());
@@ -261,6 +269,9 @@ void ConfigureGraphics::SetupPerGameUI() {
     ConfigurationShared::SetColoredTristate(ui->toggle_skip_duplicate_frames,
                                             Settings::values.use_skip_duplicate_frames,
                                             use_skip_duplicate_frames);
+    ConfigurationShared::SetColoredTristate(ui->toggle_limit_frames_ahead_of_gpu,
+                                            Settings::values.use_limit_frames_ahead_of_gpu,
+                                            use_limit_frames_ahead_of_gpu);
     ConfigurationShared::SetColoredTristate(ui->toggle_async_shaders,
                                             Settings::values.async_shader_compilation,
                                             async_shader_compilation);

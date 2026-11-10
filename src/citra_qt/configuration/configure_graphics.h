@@ -40,6 +40,7 @@ private:
     ConfigurationShared::CheckState use_disk_shader_cache;
     ConfigurationShared::CheckState use_vsync;
     ConfigurationShared::CheckState use_skip_duplicate_frames;
+    ConfigurationShared::CheckState use_limit_frames_ahead_of_gpu;
     ConfigurationShared::CheckState use_display_refresh_rate_detection;
     ConfigurationShared::CheckState async_shader_compilation;
     ConfigurationShared::CheckState async_presentation;
