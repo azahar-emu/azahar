@@ -65,6 +65,12 @@ endif()
 set_target_properties(citra_libretro PROPERTIES PREFIX "")
 target_compile_definitions(citra_libretro PRIVATE HAVE_LIBRETRO)
 
+# Where a frontend that builds its cores, such as Kodi's game add-ons, looks for
+# them
+install(TARGETS citra_libretro
+  LIBRARY DESTINATION lib/libretro
+  RUNTIME DESTINATION lib/libretro)
+
 if(ANDROID)
   target_compile_definitions(citra_common PRIVATE HAVE_LIBRETRO_VFS)
   target_compile_definitions(citra_core PRIVATE HAVE_LIBRETRO_VFS)
