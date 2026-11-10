@@ -110,6 +110,11 @@ enum class BooleanSetting(
     HW_SHADER(SettingKeys.use_hw_shader(), CitraSettings.SECTION_RENDERER, true),
     SHADER_JIT(SettingKeys.use_shader_jit(), CitraSettings.SECTION_RENDERER, true),
     VSYNC(SettingKeys.use_vsync(), CitraSettings.SECTION_RENDERER, false),
+    USE_LIMIT_FRAMES_AHEAD_OF_GPU(
+        SettingKeys.use_limit_frames_ahead_of_gpu(),
+        CitraSettings.SECTION_RENDERER,
+        true
+    ),
     USE_SKIP_DUPLICATE_FRAMES(
         SettingKeys.use_skip_duplicate_frames(),
         CitraSettings.SECTION_RENDERER,
