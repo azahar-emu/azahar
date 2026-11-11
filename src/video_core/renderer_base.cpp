@@ -58,7 +58,9 @@ void RendererBase::EndFrame() {
     const u64 game_frames = system.perf_stats->GetGameFrameCount();
     if (game_frames != limited_game_frames) {
         limited_game_frames = game_frames;
-        LimitFramesAheadOfGpu();
+        if (Settings::values.use_limit_frames_ahead_of_gpu.GetValue()) {
+            LimitFramesAheadOfGpu();
+        }
     }
 
     system.frame_limiter.DoFrameLimiting(system.CoreTiming().GetGlobalTimeUs());
