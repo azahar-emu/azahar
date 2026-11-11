@@ -57,8 +57,12 @@ int ParseCompressionCommand(int argc, char* argv[]) {
     std::optional<std::string> decompress_path; // The path of a compressed file to be decompressed
     std::optional<std::string> output_dir_path; // The directory which will contain processed file
 
+    // Skip frontend options, as CheckForOptions() in src/citra_cli/citra_cli.cpp does
+    static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
+
     int option;
-    while ((option = getopt(argc, argv, compression_ops_optstring)) != -1) {
+    while ((option = getopt_long_only(argc, argv, compression_ops_optstring, no_long_opts,
+                                      nullptr)) != -1) {
         switch (option) {
         case 'c':
             compress_path = optarg;

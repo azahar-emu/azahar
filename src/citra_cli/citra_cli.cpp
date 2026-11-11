@@ -19,12 +19,15 @@ bool CheckForOptions(const char* optstring, int argc, char* argv[]) {
     std::vector<char*> args(argv, argv + argc);
     args.push_back(nullptr);
 
+    // getopt_long_only keeps "--fullscreen" and "-platform" from being split into short options
+    static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
+
     const int original_opterr = opterr;
     opterr = 0; // Temporarily suppress invalid option messages
 
     bool return_value = false;
     int option;
-    while ((option = getopt(argc, args.data(), optstring)) != -1) {
+    while ((option = getopt_long_only(argc, args.data(), optstring, no_long_opts, nullptr)) != -1) {
         for (size_t i = 0; optstring[i] != '\0'; ++i) {
             if (optstring[i] == ':') {
                 continue;
