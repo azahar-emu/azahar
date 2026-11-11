@@ -327,10 +327,10 @@
       <item>
        <widget class="QCheckBox" name="toggle_limit_frames_ahead_of_gpu">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When enabled, this setting detects when the refresh rate of the screen is below that of the 3DS, and when it is, disables VSync automatically to avoid emulation speed being forced below 100%.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Limits how many frames ahead of the GPU the emulation thread can be. Enabling can decrease input latency, but may reduce performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Limit frames ahead of the gpu</string>
+         <string>Limit frames ahead of GPU</string>
         </property>
        </widget>
       </item>
