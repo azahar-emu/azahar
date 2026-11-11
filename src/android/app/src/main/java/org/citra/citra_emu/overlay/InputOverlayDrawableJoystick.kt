@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.overlay
 
@@ -15,7 +15,8 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.features.settings.model.InputOverlaySetting
 import org.citra.citra_emu.utils.EmulationMenuSettings
 
 /**
@@ -28,8 +29,7 @@ import org.citra.citra_emu.utils.EmulationMenuSettings
  * @param bitmapInnerPressed [Bitmap] which represents the pressed inner movable part of the joystick.
  * @param rectOuter          [Rect] which represents the outer joystick bounds.
  * @param rectInner          [Rect] which represents the inner joystick bounds.
- * @param joystickId         Identifier for which joystick this is.
- * @param opacity            0-255 alpha value
+ * @param setting            [InputOverlaySetting] the setting associated with this joystick
  */
 class InputOverlayDrawableJoystick(
     res: Resources,
@@ -38,8 +38,7 @@ class InputOverlayDrawableJoystick(
     bitmapInnerPressed: Bitmap,
     rectOuter: Rect,
     rectInner: Rect,
-    val joystickId: Int,
-    val opacity: Int
+    val setting: InputOverlaySetting
 ) {
     var trackId = -1
     var xAxis = 0f
@@ -81,12 +80,16 @@ class InputOverlayDrawableJoystick(
         boundsBoxBitmap.alpha = 0
         boundsBoxBitmap.bounds = virtBounds
         setInnerBounds()
+        val settingValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        val opacity = (settingValue.opacity / 100f * 255).toInt()
         defaultStateInnerBitmap.alpha = opacity
         pressedStateInnerBitmap.alpha = opacity
         outerBitmap.alpha = opacity
     }
 
     fun draw(canvas: Canvas?) {
+        val settingValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        val opacity = (settingValue.opacity / 100f * 255).toInt()
         outerBitmap.draw(canvas!!)
         boundsBoxBitmap.draw(canvas)
         currentStateBitmapDrawable.alpha = opacity
@@ -99,6 +102,8 @@ class InputOverlayDrawableJoystick(
         hasActiveButtons: Boolean,
         overlay: InputOverlay
     ): Boolean {
+        val settingValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        val opacity = (settingValue.opacity / 100f * 255).toInt()
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
         val pointerId = event.getPointerId(pointerIndex)
@@ -196,11 +201,7 @@ class InputOverlayDrawableJoystick(
         val pointerIndex = event.actionIndex
         val fingerPositionX = event.getX(pointerIndex).toInt()
         val fingerPositionY = event.getY(pointerIndex).toInt()
-        var scale = 1
-        if (joystickId == NativeLibrary.ButtonType.STICK_C) {
-            // C-stick is scaled down to be half the size of the circle pad
-            scale = 2
-        }
+
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 previousTouchX = fingerPositionX
@@ -215,14 +216,14 @@ class InputOverlayDrawableJoystick(
                 bounds = Rect(
                     controlPositionX,
                     controlPositionY,
-                    outerBitmap.intrinsicWidth / scale + controlPositionX,
-                    outerBitmap.intrinsicHeight / scale + controlPositionY
+                    outerBitmap.intrinsicWidth + controlPositionX,
+                    outerBitmap.intrinsicHeight + controlPositionY
                 )
                 virtBounds = Rect(
                     controlPositionX,
                     controlPositionY,
-                    outerBitmap.intrinsicWidth / scale + controlPositionX,
-                    outerBitmap.intrinsicHeight / scale + controlPositionY
+                    outerBitmap.intrinsicWidth + controlPositionX,
+                    outerBitmap.intrinsicHeight + controlPositionY
                 )
                 setInnerBounds()
                 setOrigBounds(
@@ -230,8 +231,8 @@ class InputOverlayDrawableJoystick(
                         Rect(
                             controlPositionX,
                             controlPositionY,
-                            outerBitmap.intrinsicWidth / scale + controlPositionX,
-                            outerBitmap.intrinsicHeight / scale + controlPositionY
+                            outerBitmap.intrinsicWidth + controlPositionX,
+                            outerBitmap.intrinsicHeight + controlPositionY
                         )
                     )
                 )

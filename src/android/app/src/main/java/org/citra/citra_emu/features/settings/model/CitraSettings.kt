@@ -86,7 +86,28 @@ class CitraSettings {
     fun <T> clearOverride(setting: AbstractSetting<T>) {
         perAppOverrides.remove(setting.key)
         if (this == activeSettings && setting is InputMappingSetting) {
-            InputMappingManager.rebind(setting, getGlobal(setting) as Input?)
+            InputMappingManager.rebind(setting, get(setting) as Input?)
+        }
+    }
+
+    fun <T> clearGlobal(setting: AbstractSetting<T>) {
+        globalValues.remove(setting.key)
+        if (this == activeSettings && setting is InputMappingSetting) {
+            InputMappingManager.rebind(setting, get(setting) as Input?)
+        }
+    }
+
+    fun copyGlobalToOverride(setting: AbstractSetting<*>) {
+        if (globalValues.containsKey(setting.key) && globalValues.get(setting.key) != null) {
+            perAppOverrides[setting.key] = globalValues.get(setting.key)!!
+        } else {
+            perAppOverrides[setting.key] = setting.defaultValue as Any
+        }
+    }
+
+    fun copyOverrideToGlobal(setting: AbstractSetting<*>) {
+        if (perAppOverrides.containsKey(setting.key) && perAppOverrides.get(setting.key) != null) {
+            globalValues[setting.key] = perAppOverrides.get(setting.key)!!
         }
     }
 
@@ -121,6 +142,7 @@ class CitraSettings {
         const val SECTION_SYSTEM = "System"
         const val SECTION_CAMERA = "Camera"
         const val SECTION_CONTROLS = "Controls"
+        const val SECTION_OVERLAY = "Input Overlay"
         const val SECTION_RENDERER = "Renderer"
         const val SECTION_LAYOUT = "Layout"
         const val SECTION_UTILITY = "Utility"

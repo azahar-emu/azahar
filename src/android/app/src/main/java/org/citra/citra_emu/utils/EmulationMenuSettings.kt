@@ -1,64 +1,53 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 package org.citra.citra_emu.utils
 
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
-import org.citra.citra_emu.overlay.ButtonSlidingMode
+import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.features.settings.model.IntSetting
 
 object EmulationMenuSettings {
     private val preferences =
         PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-
+    private val activeSettings = CitraSettings.activeSettings
     var joystickRelCenter: Boolean
-        get() = preferences.getBoolean("EmulationMenuSettings_JoystickRelCenter", true)
+        get() = activeSettings.get(BooleanSetting.OVERLAY_RELATIVE_STICK_CENTER)
         set(value) {
-            preferences.edit()
-                .putBoolean("EmulationMenuSettings_JoystickRelCenter", value)
-                .apply()
+            activeSettings.setByCurrentState(BooleanSetting.OVERLAY_RELATIVE_STICK_CENTER, value)
         }
     var dpadSlide: Boolean
-        get() = preferences.getBoolean("EmulationMenuSettings_DpadSlideEnable", true)
+        get() = activeSettings.get(BooleanSetting.OVERLAY_DPAD_SLIDING)
         set(value) {
-            preferences.edit()
-                .putBoolean("EmulationMenuSettings_DpadSlideEnable", value)
-                .apply()
+            activeSettings.setByCurrentState(BooleanSetting.OVERLAY_DPAD_SLIDING, value)
         }
     var buttonSlide: Int
-        get() = preferences.getInt(
-            "EmulationMenuSettings_ButtonSlideMode",
-            ButtonSlidingMode.Disabled.int
-        )
+        get() = activeSettings.get(IntSetting.OVERLAY_BUTTON_SLIDING)
         set(value) {
-            preferences.edit()
-                .putInt("EmulationMenuSettings_ButtonSlideMode", value)
-                .apply()
+            activeSettings.setByCurrentState(IntSetting.OVERLAY_BUTTON_SLIDING, value)
         }
 
     var hapticFeedback: Boolean
-        get() = preferences.getBoolean("EmulationMenuSettings_HapticFeedback", true)
+        get() = activeSettings.get(BooleanSetting.OVERLAY_HAPTIC_FEEDBACK)
         set(value) {
-            preferences.edit()
-                .putBoolean("EmulationMenuSettings_HapticFeedback", value)
-                .apply()
+            activeSettings.setByCurrentState(BooleanSetting.OVERLAY_HAPTIC_FEEDBACK, value)
         }
     var swapScreens: Boolean
-        get() = preferences.getBoolean("EmulationMenuSettings_SwapScreens", false)
+        get() = activeSettings.get(BooleanSetting.SWAP_SCREEN)
         set(value) {
-            preferences.edit()
-                .putBoolean("EmulationMenuSettings_SwapScreens", value)
-                .apply()
+            activeSettings.setByCurrentState(BooleanSetting.SWAP_SCREEN, value)
         }
     var showOverlay: Boolean
-        get() = preferences.getBoolean("EmulationMenuSettings_ShowOverlay", true)
+        get() = activeSettings.get(BooleanSetting.SHOW_CONTROLLER_OVERLAY)
         set(value) {
-            preferences.edit()
-                .putBoolean("EmulationMenuSettings_ShowOverlay", value)
-                .apply()
+            activeSettings.setByCurrentState(BooleanSetting.SHOW_CONTROLLER_OVERLAY, value)
         }
+
+    // TODO: Move this to a regular IntSetting?
     var drawerLockMode: Int
         get() = preferences.getInt(
             "EmulationMenuSettings_DrawerLockMode",

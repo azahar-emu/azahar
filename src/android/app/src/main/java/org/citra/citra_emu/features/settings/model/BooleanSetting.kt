@@ -32,42 +32,42 @@ enum class BooleanSetting(
     SWAP_EYES_3D(SettingKeys.swap_eyes_3d(), CitraSettings.SECTION_RENDERER, false),
     PERF_OVERLAY_ENABLE(
         SettingKeys.performance_overlay_enable(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         false
     ),
     PERF_OVERLAY_SHOW_FPS(
         SettingKeys.performance_overlay_show_fps(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         true
     ),
     PERF_OVERLAY_SHOW_FRAMETIME(
         SettingKeys.performance_overlay_show_frame_time(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         false
     ),
     PERF_OVERLAY_SHOW_SPEED(
         SettingKeys.performance_overlay_show_speed(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         false
     ),
     PERF_OVERLAY_SHOW_APP_RAM_USAGE(
         SettingKeys.performance_overlay_show_app_ram_usage(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         false
     ),
     PERF_OVERLAY_SHOW_AVAILABLE_RAM(
         SettingKeys.performance_overlay_show_available_ram(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         false
     ),
     PERF_OVERLAY_SHOW_BATTERY_TEMP(
         SettingKeys.performance_overlay_show_battery_temp(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         false
     ),
     PERF_OVERLAY_BACKGROUND(
         SettingKeys.performance_overlay_background(),
-        CitraSettings.SECTION_LAYOUT,
+        CitraSettings.SECTION_PERFORMANCE_OVERLAY,
         false
     ),
     DELAY_START_LLE_MODULES(
@@ -156,7 +156,32 @@ enum class BooleanSetting(
         CitraSettings.SECTION_RENDERER,
         false
     ),
-    CHECK_FOR_UPDATES(SettingKeys.check_for_update_on_start(), CitraSettings.SECTION_MISC, true);
+    CHECK_FOR_UPDATES(
+        SettingKeys.check_for_update_on_start(),
+        CitraSettings.SECTION_MISC,
+        true
+    ),
+    OVERLAY_DPAD_SLIDING(
+        SettingKeys.overlay_dpad_sliding(),
+        CitraSettings.SECTION_OVERLAY,
+        true
+    ),
+    OVERLAY_RELATIVE_STICK_CENTER(
+        SettingKeys.overlay_relative_stick_center(),
+        CitraSettings.SECTION_OVERLAY,
+        true
+    ),
+    SHOW_CONTROLLER_OVERLAY(
+        SettingKeys.show_controller_overlay(),
+        CitraSettings.SECTION_OVERLAY,
+        true
+    ),
+    OVERLAY_HAPTIC_FEEDBACK(
+        SettingKeys.overlay_haptic_feedback(),
+        CitraSettings.SECTION_OVERLAY,
+        true
+    )
+    ;
 
     override fun valueFromString(string: String): Boolean? = when (string.trim().lowercase()) {
         "1", "true" -> true

@@ -65,9 +65,10 @@ import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.SecondaryDisplayLayout
-import org.citra.citra_emu.features.input.Hotkey
+import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
+import org.citra.citra_emu.features.settings.model.InputOverlaySetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
@@ -111,6 +112,17 @@ class EmulationFragment :
 
     // Only used if a game is passed through intent on google play variant
     private var gameFd: Int? = null
+    private var perAppOverlay = false
+
+    private val otherOverlaySettings = listOf<AbstractSetting<*>>(
+        IntSetting.OVERLAY_BUTTON_SLIDING,
+        BooleanSetting.OVERLAY_DPAD_SLIDING,
+        BooleanSetting.OVERLAY_HAPTIC_FEEDBACK,
+        BooleanSetting.OVERLAY_RELATIVE_STICK_CENTER,
+        BooleanSetting.SHOW_CONTROLLER_OVERLAY
+    )
+
+    private var saveOnDrawerClose = false
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -167,6 +179,14 @@ class EmulationFragment :
             )
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
+        // if any of the input overlay elements are per-app, we will treat *all* changes as per-app
+        perAppOverlay = (InputOverlaySetting.entries + otherOverlaySettings).any {
+            CitraSettings.activeSettings.hasOverride(it)
+        }
+        if (perAppOverlay) {
+            ensurePerAppOrCopyToPerApp()
+            SettingsFile.saveCustomFile(CitraSettings.activeSettings)
+        }
     }
 
     private fun abortLaunch() {
@@ -238,6 +258,11 @@ class EmulationFragment :
                 binding.surfaceInputOverlay.isFocusable = true
                 binding.surfaceInputOverlay.isFocusableInTouchMode = true
                 binding.surfaceInputOverlay.requestFocus()
+                if (saveOnDrawerClose) {
+                    SettingsFile.saveGlobalFile(activeSettings)
+                    SettingsFile.saveCustomFile(activeSettings)
+                    saveOnDrawerClose = false
+                }
             }
 
             override fun onDrawerStateChanged(newState: Int) {
@@ -343,6 +368,7 @@ class EmulationFragment :
                         DrawerLayout.LOCK_MODE_UNLOCKED -> {
                             EmulationMenuSettings.drawerLockMode =
                                 DrawerLayout.LOCK_MODE_LOCKED_CLOSED
+                            saveOnDrawerClose = true
                             it.title = resources.getString(R.string.unlock_drawer)
                             it.icon = ResourcesCompat.getDrawable(
                                 resources,
@@ -353,6 +379,7 @@ class EmulationFragment :
 
                         DrawerLayout.LOCK_MODE_LOCKED_CLOSED -> {
                             EmulationMenuSettings.drawerLockMode = DrawerLayout.LOCK_MODE_UNLOCKED
+                            saveOnDrawerClose = true
                             it.title = resources.getString(R.string.lock_drawer)
                             it.icon = ResourcesCompat.getDrawable(
                                 resources,
@@ -549,6 +576,11 @@ class EmulationFragment :
         if (NativeLibrary.isRunning()) {
             emulationState.pause()
         }
+        if (saveOnDrawerClose) {
+            SettingsFile.saveCustomFile(activeSettings)
+            SettingsFile.saveGlobalFile(activeSettings)
+            saveOnDrawerClose = false
+        }
         super.onPause()
     }
 
@@ -735,6 +767,11 @@ class EmulationFragment :
 
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
+            findItem(R.id.menu_enable_per_app_controller_overlay).apply {
+                isChecked = perAppOverlay
+                isVisible = CitraSettings.activeSettings.isPerApp()
+                isEnabled = CitraSettings.activeSettings.isPerApp()
+            }
             findItem(R.id.menu_performance_overlay_show).isChecked =
                 activeSettings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
@@ -748,6 +785,7 @@ class EmulationFragment :
             when (it.itemId) {
                 R.id.menu_show_overlay -> {
                     EmulationMenuSettings.showOverlay = !EmulationMenuSettings.showOverlay
+                    saveOnDrawerClose = true
                     binding.surfaceInputOverlay.refreshControls()
                     true
                 }
@@ -757,13 +795,59 @@ class EmulationFragment :
                         BooleanSetting.PERF_OVERLAY_ENABLE,
                         !activeSettings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
                     )
-                    SettingsFile.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, activeSettings)
+                    saveOnDrawerClose = true
                     updateShowPerformanceOverlay()
+                    true
+                }
+
+                R.id.menu_enable_per_app_controller_overlay -> {
+                    perAppOverlay = !perAppOverlay
+                    if (perAppOverlay) {
+                        ensurePerAppOrCopyToPerApp()
+                        saveOnDrawerClose = true
+                    } else {
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.emulation_remove_per_app_overlay_dialog_title)
+                            .setMessage(
+                                R.string.emulation_remove_per_app_overlay_dialog_description
+                            )
+                            .setPositiveButton(
+                                R.string.emulation_remove_per_app_overlay_revert_option
+                            ) {
+                                    _: DialogInterface?,
+                                    _: Int
+                                ->
+                                (InputOverlaySetting.entries + otherOverlaySettings).forEach {
+                                    CitraSettings.activeSettings.clearOverride(it)
+                                }
+                                binding.surfaceInputOverlay.refreshControls()
+                                saveOnDrawerClose = true
+                            }
+                            .setNeutralButton(
+                                R.string.emulation_remove_per_app_overlay_preserve_option
+                            ) {
+                                    _: DialogInterface?,
+                                    _: Int
+                                ->
+                                copyPerAppOverridesToGlobal()
+                                binding.surfaceInputOverlay.refreshControls()
+                                saveOnDrawerClose = true
+                            }
+                            .setNegativeButton(android.R.string.cancel) {
+                                    _: DialogInterface?,
+                                    _: Int
+                                ->
+                                it.isChecked = true
+                                perAppOverlay = true
+                            }
+                            .show()
+                    }
                     true
                 }
 
                 R.id.menu_haptic_feedback -> {
                     EmulationMenuSettings.hapticFeedback = !EmulationMenuSettings.hapticFeedback
+                    saveOnDrawerClose = true
                     true
                 }
 
@@ -784,92 +868,92 @@ class EmulationFragment :
                 }
 
                 R.id.menu_emulation_adjust_scale -> {
-                    showAdjustScaleDialog("controlScale")
+                    showAdjustScaleDialog(null)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_a -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_A)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_A)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_b -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_B)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_B)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_x -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_X)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_X)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_y -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_Y)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_Y)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_l -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.TRIGGER_L)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_L)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_r -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.TRIGGER_R)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_R)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_zl -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_ZL)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_ZL)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_zr -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_ZR)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_ZR)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_start -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_START)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_START)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_select -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_SELECT)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_SELECT)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_controller_dpad -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.DPAD)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_DPAD)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_controller_circlepad -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.STICK_LEFT)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_CIRCLEPAD)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_controller_c -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.STICK_C)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_STICK_C)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_home -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_HOME)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_BUTTON_HOME)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_swap -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_SWAP)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_HOTKEY_SWAP)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_turbo -> {
-                    showAdjustScaleDialog("controlScale-" + NativeLibrary.ButtonType.BUTTON_TURBO)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_HOTKEY_TURBO)
                     true
                 }
 
                 R.id.menu_emulation_adjust_scale_button_combo -> {
-                    showAdjustScaleDialog("controlScale-" + Hotkey.COMBO_BUTTON.button)
+                    showAdjustScaleDialog(InputOverlaySetting.OVERLAY_HOTKEY_COMBO_BUTTON)
                     true
                 }
 
@@ -881,6 +965,7 @@ class EmulationFragment :
                 R.id.menu_emulation_joystick_rel_center -> {
                     EmulationMenuSettings.joystickRelCenter =
                         !EmulationMenuSettings.joystickRelCenter
+                    saveOnDrawerClose = true
                     true
                 }
 
@@ -891,6 +976,7 @@ class EmulationFragment :
 
                 R.id.menu_emulation_dpad_slide_enable -> {
                     EmulationMenuSettings.dpadSlide = !EmulationMenuSettings.dpadSlide
+                    saveOnDrawerClose = true
                     true
                 }
 
@@ -948,6 +1034,7 @@ class EmulationFragment :
                 EmulationMenuSettings.buttonSlide
             ) { _: DialogInterface?, which: Int ->
                 EmulationMenuSettings.buttonSlide = which
+                saveOnDrawerClose = true
             }
             .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
                 editor.apply()
@@ -1104,6 +1191,7 @@ class EmulationFragment :
             !activeSettings.get(BooleanSetting.ENABLE_SECONDARY_DISPLAY)
         ) {
             activeSettings.setByCurrentState(BooleanSetting.ENABLE_SECONDARY_DISPLAY, false)
+            saveOnDrawerClose = true
             enableSecondaryCheckbox.isChecked = false
             chooserMenu.isVisible = false
             popupMenu.menu.setGroupEnabled(R.id.menu_secondary_layout_group, false)
@@ -1251,30 +1339,28 @@ class EmulationFragment :
     }
 
     private fun showToggleControlsDialog() {
-        val editor = preferences.edit()
-        val enabledButtons = BooleanArray(17)
-        enabledButtons.forEachIndexed { i: Int, _: Boolean ->
-            // Buttons that are disabled by default
-            var defaultValue = true
-            when (i) {
-                // TODO: Remove these magic numbers
-                6, 7, 12, 13, 14, 15, 16 -> defaultValue = false
-            }
-            enabledButtons[i] = preferences.getBoolean("buttonToggle$i", defaultValue)
+        val entries = InputOverlaySetting.entries
+        val buttonNames = entries.map { getString(it.nameId) }.toTypedArray()
+        val enabledButtons = BooleanArray(entries.size) {
+            (CitraSettings.activeSettings.get(entries[it]) ?: entries[it].defaultValue).visible
         }
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.emulation_toggle_controls)
             .setMultiChoiceItems(
-                R.array.n3dsButtons,
+                buttonNames,
                 enabledButtons
             ) { _: DialogInterface?, indexSelected: Int, isChecked: Boolean ->
-                editor.putBoolean("buttonToggle$indexSelected", isChecked)
-            }
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
-                editor.apply()
+                val setting = entries[indexSelected]
+                val current = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+                CitraSettings.activeSettings.setByCurrentState(
+                    setting,
+                    current.copy(visible = isChecked)
+                )
+                saveOnDrawerClose = true
                 binding.surfaceInputOverlay.refreshControls()
             }
+            .setPositiveButton(android.R.string.ok, null)
             .show()
 
         // Band-aid fix for strange dialog flickering issue
@@ -1289,24 +1375,35 @@ class EmulationFragment :
         }
     }
 
-    private fun showAdjustScaleDialog(target: String) {
+    /**
+     * Scales a control
+     * Pass null to scale ALL controls, which will actually
+     * be a permanent resize with no scale value persisted
+     */
+    private fun showAdjustScaleDialog(setting: InputOverlaySetting?) {
         val sliderBinding = DialogSliderBinding.inflate(layoutInflater)
+        var currentSliderValue = 100f
+        if (setting != null) {
+            val settingValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+            currentSliderValue = settingValue.size.toFloat() / setting.defaultValue.size * 100f
+        } else {
+            captureScaleBaseline()
+        }
 
         sliderBinding.apply {
-            val sliderStart = 50
-            val sliderMin = 0
-            val sliderMax = 150
+            val sliderMin = 50
+            val sliderMax = 200
             slider.valueFrom = sliderMin.toFloat()
             slider.valueTo = sliderMax.toFloat()
-            slider.value = preferences.getInt(target, sliderStart)
+            slider.value = currentSliderValue
                 .toFloat()
                 .coerceIn(slider.valueFrom..slider.valueTo)
             @SuppressLint("SetTextI18n")
-            textValue.setText((slider.value + sliderStart).toInt().toString())
+            textValue.setText((slider.value).toInt().toString())
             textValue.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
                     val value = s.toString().toIntOrNull()
-                    val realValue = value?.minus(sliderStart)
+                    val realValue = value
                     if (realValue == null || realValue < sliderMin || realValue > sliderMax) {
                         textInput.error = "Inappropriate Value"
                     } else {
@@ -1325,11 +1422,11 @@ class EmulationFragment :
                         _: Boolean
                     ->
                     if (textValue.text.toString() !=
-                        (slider.value + sliderStart).toInt().toString()
+                        (slider.value).toInt().toString()
                     ) {
-                        textValue.setText((slider.value + sliderStart).toInt().toString())
+                        textValue.setText((slider.value).toInt().toString())
                         textValue.setSelection(textValue.length())
-                        setControlScale(slider.value.toInt(), target)
+                        setControlScale(slider.value.toInt(), setting)
                     }
                 }
             )
@@ -1340,25 +1437,28 @@ class EmulationFragment :
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.emulation_control_scale)
             .setView(sliderBinding.root)
+            .setView(sliderBinding.root)
             .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
-                setControlScale(previousProgress, target)
+                setControlScale(previousProgress, setting)
             }
             .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
-                setControlScale(sliderBinding.slider.value.toInt(), target)
+                setControlScale(sliderBinding.slider.value.toInt(), setting)
             }
             .setNeutralButton(R.string.slider_default) { _: DialogInterface?, _: Int ->
-                setControlScale(50, target)
+                setControlScale(100, setting)
             }
             .show()
     }
 
     private fun showAdjustOpacityDialog() {
         val sliderBinding = DialogSliderBinding.inflate(layoutInflater)
-
+        // for now, only adjust opacity for all controls, so just pull opacity from A button
+        val currentOpacity =
+            CitraSettings.activeSettings.get(InputOverlaySetting.OVERLAY_BUTTON_A)?.opacity ?: 50
         sliderBinding.apply {
             slider.valueFrom = 0f
             slider.valueTo = 100f
-            slider.value = preferences.getInt("controlOpacity", 50).toFloat()
+            slider.value = currentOpacity.toFloat()
             textValue.setText(slider.value.toInt().toString())
 
             textValue.addTextChangedListener(object : TextWatcher {
@@ -1381,7 +1481,7 @@ class EmulationFragment :
                 if (textValue.text.toString() != slider.value.toInt().toString()) {
                     textValue.setText(slider.value.toInt().toString())
                     textValue.setSelection(textValue.length())
-                    setControlOpacity(slider.value.toInt())
+                    setAllOpacity(slider.value.toInt())
                 }
             }
 
@@ -1393,57 +1493,97 @@ class EmulationFragment :
             .setTitle(R.string.emulation_control_opacity)
             .setView(sliderBinding.root)
             .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
-                setControlOpacity(previousProgress)
+                setAllOpacity(previousProgress)
             }
             .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
-                setControlOpacity(sliderBinding.slider.value.toInt())
+                setAllOpacity(sliderBinding.slider.value.toInt())
             }
             .setNeutralButton(R.string.slider_default) { _: DialogInterface?, _: Int ->
-                setControlOpacity(50)
+                setAllOpacity(50)
             }
             .show()
     }
 
-    private fun setControlScale(scale: Int, target: String) {
-        preferences.edit()
-            .putInt(target, scale)
-            .apply()
+    private var scaleAllBaseline: Map<InputOverlaySetting, Int> = emptyMap()
+
+    private fun captureScaleBaseline() {
+        scaleAllBaseline = InputOverlaySetting.entries.associateWith {
+            (CitraSettings.activeSettings.get(it) ?: it.defaultValue).size
+        }
+    }
+
+    /** Pass null to set all controls scale
+     * Scale is from 50 to 200
+     * */
+    private fun setControlScale(scale: Int, setting: InputOverlaySetting?) {
+        val factor = scale.coerceIn(50, 300) / 100f
+        val targets = setting?.let { listOf(it) } ?: InputOverlaySetting.entries
+        targets.forEach {
+            val currentValue = CitraSettings.activeSettings.get(it) ?: it.defaultValue
+            val baseSize = if (setting == null) {
+                scaleAllBaseline[it] ?: it.defaultValue.size
+            } else {
+                it.defaultValue.size
+            }
+            val newSize = (baseSize * factor).toInt()
+            CitraSettings.activeSettings.setByCurrentState(
+                it,
+                currentValue.copy(size = newSize)
+            )
+            saveOnDrawerClose = true
+        }
+
         binding.surfaceInputOverlay.refreshControls()
     }
 
-    private fun resetScale(target: String) {
-        preferences.edit().putInt(
-            target,
-            50
-        ).apply()
+    private fun resetScale(setting: InputOverlaySetting, refresh: Boolean = true) {
+        val currentValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        CitraSettings.activeSettings.setByCurrentState(
+            setting,
+            currentValue.copy(size = setting.defaultValue.size)
+        )
+        saveOnDrawerClose = true
+        if (refresh) binding.surfaceInputOverlay.refreshControls()
     }
 
     private fun resetAllScales() {
-        resetScale("controlScale")
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_A)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_B)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_X)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_Y)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.TRIGGER_L)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.TRIGGER_R)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_ZL)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_ZR)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_START)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_SELECT)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.DPAD)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.STICK_LEFT)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.STICK_C)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_HOME)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_SWAP)
-        resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_TURBO)
-        resetScale("controlScale-" + Hotkey.COMBO_BUTTON.button)
+        InputOverlaySetting.entries.forEach { resetScale(it, false) }
         binding.surfaceInputOverlay.refreshControls()
     }
 
-    private fun setControlOpacity(opacity: Int) {
-        preferences.edit()
-            .putInt("controlOpacity", opacity)
-            .apply()
+    // TODO: create an interface to set a single control's opacity, for now this is unused
+    // except as part of setControlsOpacity
+    private fun setControlOpacity(
+        setting: InputOverlaySetting,
+        opacity: Int,
+        refresh: Boolean = true
+    ) {
+        val currentValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        CitraSettings.activeSettings.setByCurrentState(
+            setting,
+            currentValue.copy(opacity = opacity)
+        )
+        saveOnDrawerClose = true
+        if (refresh) binding.surfaceInputOverlay.refreshControls()
+    }
+
+    private fun setAllOpacity(opacity: Int) {
+        InputOverlaySetting.entries.forEach { setControlOpacity(it, opacity, false) }
+        binding.surfaceInputOverlay.refreshControls()
+    }
+
+    private fun resetOpacity(setting: InputOverlaySetting, refresh: Boolean = true) {
+        val currentValue = CitraSettings.activeSettings.get(setting) ?: setting.defaultValue
+        CitraSettings.activeSettings.setByCurrentState(
+            setting,
+            currentValue.copy(opacity = setting.defaultValue.opacity)
+        )
+        saveOnDrawerClose = true
+        if (refresh) binding.surfaceInputOverlay.refreshControls()
+    }
+
+    private fun resetAllOpacity() {
+        InputOverlaySetting.entries.forEach { resetOpacity(it, false) }
         binding.surfaceInputOverlay.refreshControls()
     }
 
@@ -1458,23 +1598,35 @@ class EmulationFragment :
     }
 
     private fun resetInputOverlay() {
-        resetAllScales()
-        preferences.edit()
-            .putInt("controlOpacity", 50)
-            .apply()
-
-        val editor = preferences.edit()
-        // TODO: This code sucks balls. We need to do this differently. -OS
-        for (i in 0 until 17) {
-            var defaultValue = true
-            when (i) {
-                6, 7, 12, 13, 14, 15, 16 -> defaultValue = false
-            }
-            editor.putBoolean("buttonToggle$i", defaultValue)
+        val settingsToClear = InputOverlaySetting.entries + otherOverlaySettings
+        settingsToClear.forEach {
+            CitraSettings.activeSettings.clearGlobal(it)
         }
-        editor.apply()
 
+        saveOnDrawerClose = true
         binding.surfaceInputOverlay.resetButtonPlacement()
+    }
+
+    /** Ensures all overlay settings are in the per-app settings */
+    fun ensurePerAppOrCopyToPerApp() {
+        if (!CitraSettings.activeSettings.isPerApp()) return
+        val allOverlaySettings = InputOverlaySetting.entries + otherOverlaySettings
+        allOverlaySettings.forEach {
+            if (!CitraSettings.activeSettings.hasOverride(it)) {
+                CitraSettings.activeSettings.copyGlobalToOverride(it)
+            }
+        }
+    }
+
+    fun copyPerAppOverridesToGlobal() {
+        if (!CitraSettings.activeSettings.isPerApp()) return
+        val allOverlaySettings = InputOverlaySetting.entries + otherOverlaySettings
+        allOverlaySettings.forEach {
+            if (CitraSettings.activeSettings.hasOverride(it)) {
+                CitraSettings.activeSettings.copyOverrideToGlobal(it)
+                CitraSettings.activeSettings.clearOverride(it)
+            }
+        }
     }
 
     fun updateShowPerformanceOverlay() {
