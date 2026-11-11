@@ -71,9 +71,9 @@ void GameListTreeView::setFocusFromKeyboard() {
 
     // ...unless it is not visible in which case we want to select the first fully visible game
     const QRect viewport_rect = viewport()->rect();
-    const bool current_visible =
+    const bool current_target_visible =
         target.isValid() && target.parent().isValid() && viewport_rect.contains(visualRect(target));
-    if (!current_visible) {
+    if (!current_target_visible) {
         target = indexAt(viewport_rect.topLeft());
         if (!viewport_rect.contains(visualRect(target)))
             target = indexBelow(target);
