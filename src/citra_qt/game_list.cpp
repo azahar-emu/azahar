@@ -58,8 +58,6 @@ void GameListTreeView::keyPressEvent(QKeyEvent* event) {
     QTreeView::keyPressEvent(event);
 }
 
-// if focus goes into the game list and nothing is already selected, select the first actual game
-
 void GameListTreeView::setFocusFromKeyboard() {
     setFocus(Qt::TabFocusReason);
     // if something is selected, we are good to go
