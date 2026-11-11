@@ -113,7 +113,7 @@ enum class BooleanSetting(
     USE_LIMIT_FRAMES_AHEAD_OF_GPU(
         SettingKeys.use_limit_frames_ahead_of_gpu(),
         CitraSettings.SECTION_RENDERER,
-        true
+        false
     ),
     USE_SKIP_DUPLICATE_FRAMES(
         SettingKeys.use_skip_duplicate_frames(),
