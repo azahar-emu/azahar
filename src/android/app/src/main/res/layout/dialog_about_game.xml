@@ -57,6 +57,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAlignment="viewStart"
+                    android:textIsSelectable="true"
                     android:textSize="15sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
@@ -68,6 +69,7 @@
                     style="?attr/textAppearanceBodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
                     app:layout_constraintStart_toStartOf="@id/about_game_filename"
                     app:layout_constraintTop_toBottomOf="@+id/about_game_title"
                     tools:text="Company" />
@@ -77,6 +79,7 @@
                     style="?attr/textAppearanceBodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
                     app:layout_constraintStart_toStartOf="@id/about_game_title"
                     app:layout_constraintTop_toBottomOf="@+id/about_game_company"
                     tools:text="Application Region" />
@@ -86,6 +89,7 @@
                     style="?attr/textAppearanceBodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
                     app:layout_constraintStart_toStartOf="@id/about_game_filename"
                     app:layout_constraintTop_toBottomOf="@+id/about_game_region"
                     tools:text="Game ID" />
@@ -95,6 +99,7 @@
                     style="?attr/textAppearanceBodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
                     app:layout_constraintStart_toStartOf="@id/about_game_title"
                     app:layout_constraintTop_toBottomOf="@+id/about_game_id"
                     tools:text="Application Filename" />
@@ -104,6 +109,7 @@
                     style="?attr/textAppearanceBodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
                     app:layout_constraintStart_toStartOf="@id/about_game_title"
                     app:layout_constraintTop_toBottomOf="@+id/about_game_filename"
                     tools:text="Game Filetype" />
@@ -113,6 +119,7 @@
                     style="?attr/textAppearanceBodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textIsSelectable="true"
                     app:layout_constraintStart_toStartOf="@id/about_game_title"
                     app:layout_constraintTop_toBottomOf="@+id/about_game_filetype"
                     tools:text="Game Playtime" />
