@@ -17,7 +17,7 @@ class InputBindingSetting(
 ) : SettingsItem(inputSetting, titleId, 0) {
     val value: String
         get() {
-            val mapping = settings.get(inputSetting) ?: return ""
+            val mapping = settings.get(inputSetting)
             return inputSetting.displayValue(mapping)
         }
 

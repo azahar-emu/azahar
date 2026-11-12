@@ -81,12 +81,11 @@
     <string name="done">Done</string>
     <string name="done_description">You\'re all set.\nEnjoy using the emulator!</string>
     <string name="text_continue">Continue</string>
-    <string name="notifications">Notifications</string>
-    <string name="notifications_description">Grant the notification permission with the button below.</string>
+    <string name="notifications_permission">Notifications</string>
+    <string name="notifications_permission_description">Grant the notification permission with the button below.</string>
     <string name="give_permission">Grant permission</string>
     <string name="notification_warning">Skip granting the notification permission?</string>
     <string name="notification_warning_description">Azahar won\'t be able to notify you of important information.</string>
-    <string name="filesystem_permission_warning">Missing Permissions</string>
     <string name="filesystem_permission_warning_description">Azahar requires permission to manage files on this device in order to store and manage its data.\n\nPlease grant the \"Filesystem\" permission before continuing.</string>
     <string name="camera_permission">Camera</string>
     <string name="camera_permission_description">Grant the camera permission below to emulate the 3DS camera.</string>
@@ -94,6 +93,9 @@
     <string name="microphone_permission_description">Grant the microphone permission below to emulate the 3DS microphone.</string>
     <string name="filesystem_permission">Filesystem</string>
     <string name="filesystem_permission_description">Grant the filesystem permission below to allow Azahar to store files.</string>
+    <string name="lan_permission">Local Network Access</string>
+    <string name="lan_permission_description">Grant access to the local network to connect to real 3DS systems for system setup and other functionality.</string>
+    <string name="lan_warning_description">Azahar requires permission to access the local network to connect to real 3DS systems for system setup and other functionality.</string>
     <string name="permission_denied">Permission denied</string>
     <string name="add_games_warning">Skip selecting applications folder?</string>
     <string name="add_games_warning_description">Software won\'t be displayed in the Applications list if a folder isn\'t selected.</string>
@@ -102,6 +104,7 @@
     <string name="select_emulator_data_folders">Data Folders</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Select data folders<br/>(User folder is required)]]></string>
     <string name="permissions_description">Grant optional permissions to use specific features of the emulator</string>
+    <string name="missing_permissions">Missing Permissions</string>
     <string name="warning_help">Help</string>
     <string name="warning_skip">Skip</string>
     <string name="warning_cancel">Cancel</string>
@@ -117,6 +120,8 @@
     <string name="invalid_selection">Invalid Selection</string>
     <string name="invalid_user_directory">The user directory selection was invalid.\nPlease re-select the user directory, ensuring that you navigate to it from the root of your device\'s storage.</string>
     <string name="filesystem_permission_lost">Azahar has lost permission to manage files on this device. This can happen after some app or Android updates. Please re-grant this permission on the next screen to continue using the app.</string>
+    <string name="lan_permission_lost">Azahar has lost permission to access the local network. This can happen after some app or Android updates. Please re-grant this permission on the next screen to continue using the app.</string>
+    <string name="lan_permission_manual">Please grant the \"Nearby devices\" permission.</string>
     <string name="cannot_skip_directory_help" translatable="false">https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage</string>
     <string name="set_up_theme_settings">Theme Settings</string>
     <string name="setup_theme_settings_description">Configure your theme preferences for Azahar.</string>
@@ -292,6 +297,8 @@
     <string name="texture_sampling_description">Overrides the sampling filter used by games. This can be useful in certain cases with poorly behaved games when upscaling. If unsure, set this to Game Controlled.</string>
     <string name="use_skip_duplicate_frames">Skip Presenting Duplicate Frames</string>
     <string name="use_skip_duplicate_frames_description">Skips the presentation of frames that are not unique. It also allows external frame generation tools to work correctly with 30fps games</string>
+    <string name="use_limit_frames_ahead_of_gpu">Limit frames ahead of GPU</string>
+    <string name="use_limit_frames_ahead_of_gpu_description">Limits how many frames ahead of the GPU the emulation thread can be. Enabling can decrease input latency, but may reduce performance.</string>
     <string name="shaders_accurate_mul">Accurate Multiplication</string>
     <string name="shaders_accurate_mul_description">Uses more accurate multiplication in hardware shaders, which may fix some graphical bugs. When enabled, performance will be reduced.</string>
     <string name="asynchronous_gpu">Enable Asynchronous GPU Emulation</string>
@@ -473,7 +480,7 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Theme and Color</string>
     <string name="preferences_layout">Layout</string>
-    <string name="preferences_title_with_application">%1$s — %2$s</string>
+    <string name="preferences_title_with_application" translatable="false">%1$s — %2$s</string>
 
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error loading application</string>

@@ -59,12 +59,9 @@
     <string name="done">Fertig</string>
     <string name="done_description">Sie sind fertig./nViel Spaß mit dem Emulator!</string>
     <string name="text_continue">Fortsetzen</string>
-    <string name="notifications">Benachrichtigungen</string>
-    <string name="notifications_description">Gewähre die Benachrichtigungsberechtigung mit dem unteren Knopf.</string>
     <string name="give_permission">Berechtigung erteilen</string>
     <string name="notification_warning">Möchtest du keine Benachrichtigungsberechtigung gewähren?</string>
     <string name="notification_warning_description">Azahar wird dich nicht über wichtige Informationen benachrichtigen.</string>
-    <string name="filesystem_permission_warning">Fehlende Berechtigungen</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">Teile unten die Kameraberechtigung, um die 3DS-Kamera zu emulieren</string>
     <string name="microphone_permission">Mikrofon</string>

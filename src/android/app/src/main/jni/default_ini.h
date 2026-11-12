@@ -171,6 +171,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(use_vsync) BOOST_HANA_STRING(R"(
 
+# Limits the frames ahead of the GPU. May decrease latency, but may also decrease performance for some systems.
+# 0 (default): Off, 1: On
+)") DECLARE_KEY(use_limit_frames_ahead_of_gpu) BOOST_HANA_STRING(R"(
+
 # Skips display of duplicated frames in 30 fps games
 # 0: Off, 1 (default): On
 )") DECLARE_KEY(use_skip_duplicate_frames) BOOST_HANA_STRING(R"(

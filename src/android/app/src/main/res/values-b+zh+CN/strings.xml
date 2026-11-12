@@ -59,8 +59,6 @@
     <string name="done">完成</string>
     <string name="done_description">一切就绪。\n尽情使用模拟器吧！</string>
     <string name="text_continue">继续</string>
-    <string name="notifications">通知</string>
-    <string name="notifications_description">点击下面的按钮授予通知权限。</string>
     <string name="give_permission">授予权限</string>
     <string name="notification_warning">跳过授予通知权限？</string>
     <string name="notification_warning_description">Azahar 将无法通知您重要信息。</string>
