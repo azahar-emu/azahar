@@ -102,8 +102,13 @@ public:
         accurate_mul = accurate_mul_;
     }
 
+    void SetSubpixelHudQuadCollapse(bool enabled) {
+        collapse_subpixel_hud_quad = enabled;
+    }
+
 protected:
     bool accurate_mul = false;
+    bool collapse_subpixel_hud_quad = false;
 
     // Rasterizer gets destroyed on reboot, so make the callback
     // static until a better solution is found.

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include "common/vector_math.h"
 #include "video_core/pica/regs_lighting.h"
 
@@ -72,6 +73,7 @@ static_assert(sizeof(FSUniformData) < 16384,
 struct VSUniformData {
     u32 enable_clip1;
     u32 flip_viewport;
+    u32 collapse_subpixel_hud_quad;
     alignas(16) Common::Vec4f clip_coef;
 #ifdef ENABLE_FREECAM
     alignas(16) std::array<Common::Vec4f, 4> freecam_matrix{
@@ -83,6 +85,8 @@ struct VSUniformData {
     u32 freecam_skip_2d{1};
 #endif
 };
+static_assert(offsetof(VSUniformData, collapse_subpixel_hud_quad) == 8);
+static_assert(offsetof(VSUniformData, clip_coef) == 16);
 #ifdef ENABLE_FREECAM
 static_assert(sizeof(VSUniformData) == 112,
               "The size of the VSUniformData does not match the structure in the shader");
