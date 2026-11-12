@@ -70,12 +70,9 @@
     <string name="done">Fatto</string>
     <string name="done_description">Adesso sei pronto.\nDivertiti usando l\'emulatore!</string>
     <string name="text_continue">Continua</string>
-    <string name="notifications">Notifiche</string>
-    <string name="notifications_description">Concedi il permesso di notifica usando il pulsante qui sotto.</string>
     <string name="give_permission">Concedi il permesso</string>
     <string name="notification_warning">Vuoi saltare l\'autorizzazione per le notifiche?</string>
     <string name="notification_warning_description">Azahar non avrà il permesso di notificarti con informazioni importanti.</string>
-    <string name="filesystem_permission_warning">Permessi mancanti</string>
     <string name="filesystem_permission_warning_description">Azahar richiede l\'autorizzazione per gestire i file su questo dispositivo per archiviare e gestire i propri dati.\n\nDare il permesso \"Filesystem\" prima di continuare.</string>
     <string name="camera_permission">Fotocamera</string>
     <string name="camera_permission_description">Concedi il permesso alla fotocamera qui sotto per emulare la fotocamera del 3DS.</string>
@@ -446,8 +443,6 @@
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Tema e colori</string>
     <string name="preferences_layout">Layout</string>
-    <string name="preferences_title_with_application">%1$s — %2$s</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Errore nel caricamento dell\'applicazione</string>
     <string name="loader_error_invalid_format">Formato applicazione non valido</string>

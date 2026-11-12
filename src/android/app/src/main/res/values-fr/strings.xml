@@ -22,6 +22,8 @@
     <string name="driver_already_installed">Pilote déjà installé</string>
     <string name="custom_driver_not_supported">Pilotes personnalisés non supporté</string>
     <string name="custom_driver_not_supported_description">Le chargement des pilotes personnalisés ne sont pas actuellement pris en charge pour ce périphérique. Vérifiez à nouveau jetez un œil cette option à l\'avenir pour voir si la prise en charge a été ajoutée !</string>
+    <string name="custom_driver_non_adreno_warning">GPU non Adreno détecté</string>
+    <string name="custom_driver_non_adreno_warning_description">La plupart des pilotes graphiques personnalisés sont prévus pour des GPU Qualcomm Adreno, n\'installez que des pilotes faits pour votre GPU. Si un pilote ne se charge pas, Azahar utilisera le pilote système à la place. Si les applications crashent, sélectionnez \"Pilote GPU du système\".</string>
     <string name="share_log_not_found">Aucun fichier logs trouvé</string>
     <string name="select_games_folder">Sélectionner le dossier Applications</string>
     <string name="select_games_folder_description">Permet à Azahar d\'alimenter la liste des applications</string>
@@ -70,12 +72,9 @@
     <string name="done">Terminé</string>
     <string name="done_description">Vous êtes prêt.\nProfitez de l\'émulateur !</string>
     <string name="text_continue">Continuer</string>
-    <string name="notifications">Notifications</string>
-    <string name="notifications_description">Autorisez les notifications avec le bouton ci-dessous.</string>
     <string name="give_permission">Accorder l\'autorisation</string>
     <string name="notification_warning">Ne pas autoriser les notifications ?</string>
     <string name="notification_warning_description">Azahar ne pourra pas vous avertir des informations importantes.</string>
-    <string name="filesystem_permission_warning">Autorisations manquantes</string>
     <string name="filesystem_permission_warning_description">Azahar a besoin de l\'autorisation de gérer les fichiers de cet appareil afin de stocker et gérer ses données.\n\nVeuillez accorder l\'autorisation \"Accès à tous les fichiers\" pour continuer.</string>
     <string name="camera_permission">Caméra</string>
     <string name="camera_permission_description">Accorder l\'autorisation de la caméra ci-dessous pour émuler la caméra 3DS.</string>
@@ -123,6 +122,8 @@
     <string name="auto_map_image_description">Les quatre boutons situés à droite de la 3DS avec le bouton A surligné</string>
     <string name="controller_clear_all">Réinitialiser toutes les assignations de touche</string>
     <string name="controller_clear_all_confirm">Cela effacera toutes les assignations de touche de manette actuelles.</string>
+    <string name="controller_reset_all">Réinitialiser toutes les assignations à leur valeur globale</string>
+    <string name="controller_reset_all_confirm">Cela va réinitialiser toutes les assignations de manettes aux assignations globales.</string>
     <string name="controller_circlepad">Pad circulaire</string>
     <string name="controller_c">Stick C</string>
     <string name="controller_hotkeys">Raccourcis</string>
@@ -153,6 +154,7 @@
     <string name="button_combo">Bouton combo</string>
     <string name="input_message_analog_only">Cette commande doit être rattachée à un stick analogique de manette ou à un axe de la manette + !</string>
     <string name="input_message_button_only">Cette commande doit être rattachée à un bouton de la manette !</string>
+    <string name="turbo_toggle_hotkey">Turbo (activer/désactiver)</string>
     <string name="turbo_hold_hotkey">Turbo (maintenir)</string>
     <string name="turbo_enabled_toast">Turbo Speed activé</string>
     <string name="turbo_disabled_toast">Turbo Speed désactivé</string>
@@ -447,8 +449,6 @@
     <string name="preferences_debug">Débogage</string>
     <string name="preferences_theme">Thème et couleur</string>
     <string name="preferences_layout">Disposition</string>
-    <string name="preferences_title_with_application">%1$s — %2$s</string>
-
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Erreur lors du chargement de l\'application</string>
     <string name="loader_error_invalid_format">Format d\'application invalide</string>

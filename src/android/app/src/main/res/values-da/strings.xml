@@ -59,12 +59,9 @@
     <string name="done">Færdig</string>
     <string name="done_description">Du er klar.\nGod fornøjelse med emulatoren!</string>
     <string name="text_continue">Fortsætte</string>
-    <string name="notifications">Meddelelser</string>
-    <string name="notifications_description">Giv tilladelse til meddelelser med knappen nedenfor.</string>
     <string name="give_permission">Giv tilladelse</string>
     <string name="notification_warning">Vil du droppe at give tilladelse til meddelelser?</string>
     <string name="notification_warning_description">Azahar vil ikke være i stand til at give dig meddelelse om vigtige oplysninger.</string>
-    <string name="filesystem_permission_warning">Manglende tilladelser</string>
     <string name="filesystem_permission_warning_description">Azahar kræver tilladelse til at administrere filer på denne enhed for at kunne gemme og administrere dens data.\n\nGiv venligst tilladelsen \"Filsystem\", før du fortsætter.</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">Giv kameraet tilladelse nedenfor til at efterligne 3DS-kameraet.</string>
