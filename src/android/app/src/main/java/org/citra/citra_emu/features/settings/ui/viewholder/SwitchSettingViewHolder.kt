@@ -39,7 +39,7 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
         binding.textSettingName.alpha = textAlpha
         binding.textSettingDescription.alpha = textAlpha
 
-        showGlobalMessageIfNeeded(binding.messageUseGlobal)
+        showChangedMessageIfNeeded(binding.settingMessage)
     }
 
     override fun onClick(clicked: View) {

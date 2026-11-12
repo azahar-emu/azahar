@@ -47,28 +47,36 @@ abstract class SettingViewHolder<out T : SettingsItem>(
 
     abstract override fun onLongClick(clicked: View): Boolean
 
-    fun showGlobalMessageIfNeeded(globalMessage: MaterialTextView) {
-        globalMessage.visibility = View.GONE
-        setting ?: return
-        setting?.setting ?: return
+    fun showChangedMessageIfNeeded(messageView: MaterialTextView) {
+        messageView.visibility = View.GONE
+        val theSetting = setting?.setting ?: return
 
         val settings = adapter.fragmentView.activityView?.editingSettings
         val showGlobal = settings?.isPerApp() == true &&
-            setting?.setting != null &&
-            settings.hasOverride(setting!!.setting!!)
+            settings.hasOverride(theSetting)
 
         if (showGlobal) {
-            globalMessage.visibility = View.VISIBLE
-            globalMessage.setText(R.string.use_global)
+            messageView.visibility = View.VISIBLE
+            messageView.setText(R.string.using_customized_reset_to_global)
             return
         }
         val showMessage =
             settings?.isPerApp() == false && CitraSettings.activeSettings.isPerApp() &&
-                CitraSettings.activeSettings.hasOverride(setting!!.setting!!)
+                CitraSettings.activeSettings.hasOverride(theSetting)
 
         if (showMessage) {
-            globalMessage.visibility = View.VISIBLE
-            globalMessage.setText(R.string.editing_global_when_customized)
+            messageView.visibility = View.VISIBLE
+            messageView.setText(R.string.editing_global_when_customized)
+            return
+        }
+
+        val showCustomGlobal =
+            settings?.isPerApp() == false &&
+                settings.getGlobalOrNull(theSetting) != null
+
+        if (showCustomGlobal) {
+            messageView.visibility = View.VISIBLE
+            messageView.setText(R.string.using_customized_reset_to_default)
         }
     }
 }

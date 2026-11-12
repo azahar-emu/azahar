@@ -36,7 +36,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
             binding.textSettingValue.alpha = 0.5f
         }
 
-        showGlobalMessageIfNeeded(binding.messageUseGlobal)
+        showChangedMessageIfNeeded(binding.settingMessage)
     }
 
     override fun onClick(clicked: View) {
