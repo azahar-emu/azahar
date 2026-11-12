@@ -445,7 +445,7 @@ void QtSoftwareKeyboardDialog::UpdateKeyLabels() {
     }
 
     shift_button->setEnabled(!symbols);
-    symbols_button->setText(symbols ? (symbol_page == 0 ? tr("More") : tr("ABC")) : tr("Symbols"));
+    symbols_button->setText(symbols ? (symbol_page == 0 ? tr("More") : QStringLiteral("ABC")) : tr("Symbols"));
 }
 
 bool QtSoftwareKeyboardDialog::IsNumberPad() const {
@@ -454,7 +454,7 @@ bool QtSoftwareKeyboardDialog::IsNumberPad() const {
 
 void QtSoftwareKeyboardDialog::UpdateLengthLabel() {
     length_label->setText(
-        tr("%1 / %2").arg(line_edit->text().size()).arg(keyboard->config.max_text_length));
+        QStringLiteral("%1 / %2").arg(line_edit->text().size()).arg(keyboard->config.max_text_length));
 }
 
 void QtSoftwareKeyboardDialog::Submit() {

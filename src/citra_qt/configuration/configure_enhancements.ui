@@ -178,22 +178,22 @@
            </item>
            <item>
             <property name="text">
-             <string>MSAAx2</string>
+             <string notr="true">MSAAx2</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>MSAAx4</string>
+             <string notr="true">MSAAx4</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>MSAAx8</string>
+             <string notr="true">MSAAx8</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>MSAAx16</string>
+             <string notr="true">MSAAx16</string>
             </property>
            </item>
           </widget>
