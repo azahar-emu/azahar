@@ -16,6 +16,9 @@ class CitraSettings {
 
     fun isPerApp(): Boolean = (gameId != null && gameId != "")
 
+    /**
+     * Returns the value of a setting. It prioritizes the override, then the global setting, the the default.
+     */
     fun <T> get(setting: AbstractSetting<T>): T {
         @Suppress("UNCHECKED_CAST")
         return (
@@ -25,20 +28,36 @@ class CitraSettings {
             ) as T
     }
 
-    fun <T> getGlobal(setting: AbstractSetting<T>): T {
+    /** Returns the global value, or the default value if it does not exist. */
+    fun <T> getGlobalOrDefault(setting: AbstractSetting<T>): T {
         @Suppress("UNCHECKED_CAST")
         return (globalValues[setting.key] ?: setting.defaultValue) as T
     }
 
-    fun <T> setGlobal(setting: AbstractSetting<T>, value: T) {
-        globalValues[setting.key] = value as Any
+    /** Returns the global value or null if the setting does not exist. */
+    fun <T> getGlobalOrNull(setting: AbstractSetting<T>): T? {
+        @Suppress("UNCHECKED_CAST")
+        return (globalValues[setting.key]) as T?
+    }
+
+    fun <T> setGlobal(setting: AbstractSetting<T>, value: T?) {
+        if (value == null) {
+            globalValues.remove(setting.key)
+        } else {
+            globalValues[setting.key] = value as Any
+        }
         if (this == activeSettings && !hasOverride(setting) && setting is InputMappingSetting) {
             InputMappingManager.rebind(setting, value as Input?)
         }
     }
 
-    fun <T> setOverride(setting: AbstractSetting<T>, value: T) {
-        perAppOverrides[setting.key] = value as Any
+    fun <T> setOverride(setting: AbstractSetting<T>, value: T?) {
+        if (value == null) {
+            // interpret as clear
+            perAppOverrides.remove(setting.key)
+        } else {
+            perAppOverrides[setting.key] = value as Any
+        }
         if (this == activeSettings && setting is InputMappingSetting) {
             InputMappingManager.rebind(setting, value as Input?)
         }
@@ -65,8 +84,13 @@ class CitraSettings {
         if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
     }
 
-    /** Merge the globals from other into the current settings. Merge per-game if game id is the same. */
+    /**
+     * Replace the global values in the current settings with those from the argument.
+     * Do the same for per-app settings if they are the same gameID.
+     */
     fun mergeSettings(other: CitraSettings) {
+        // clear the globals, the incoming one should replace, including cleared values
+        globalValues.clear()
         other.globalValues.forEach { (key, value) ->
             globalValues[key] = value
         }
@@ -170,6 +194,7 @@ class CitraSettings {
             }
             defaultsSynced = true
         }
+
         var defaultsSynced: Boolean = false
     }
 }

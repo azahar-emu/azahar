@@ -76,6 +76,8 @@ object SettingsFile {
                     val pair = parseLineToKeyValuePair(line) ?: continue
                     val (key, rawValue) = pair
                     val descriptor = findSettingByKey(key) ?: continue
+                    // ignore empty strings, do not load them at all
+                    if (rawValue.isEmpty()) continue
                     loadSettingInto(settings, descriptor, rawValue, isCustomGame)
                 }
             }
@@ -126,6 +128,8 @@ object SettingsFile {
         rawValue: String,
         isCustomGame: Boolean
     ) {
+        // empty strings should be left null regardless of setting interpretation
+        if (rawValue.isEmpty()) return
         val value = setting.valueFromString(rawValue) ?: return
         if (isCustomGame) {
             settings.setOverride(setting, value)
@@ -151,8 +155,8 @@ object SettingsFile {
             inputStream!!.close()
 
             for (setting in allSettings) {
-                val value = settings.getGlobal(setting)
-                writeSettingToWini(writer, setting, value, true)
+                val value = settings.getGlobalOrNull(setting)
+                writeSettingToWini(writer, setting, value)
             }
 
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
@@ -232,22 +236,21 @@ object SettingsFile {
         } else {
             // Currently global, save to global file
             val ini = getSettingsFile(FILE_NAME_CONFIG)
-            writeSingleSettingToFile(ini, setting, settings.getGlobal(setting), true)
+            writeSingleSettingToFile(ini, setting, settings.getGlobalOrNull(setting))
         }
     }
 
     private fun <T> writeSingleSettingToFile(
         ini: DocumentFile,
         setting: AbstractSetting<T>,
-        value: T,
-        ignoreDefault: Boolean = false
+        value: T?
     ) {
         try {
             val context = CitraApplication.appContext
             val inputStream = context.contentResolver.openInputStream(ini.uri)
             val writer = if (inputStream != null) Wini(inputStream) else Wini()
             inputStream?.close()
-            writeSettingToWini(writer, setting, value as Any, ignoreDefault)
+            writeSettingToWini(writer, setting, value as Any?)
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
             writer.store(outputStream)
             outputStream!!.flush()
@@ -258,18 +261,8 @@ object SettingsFile {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> writeSettingToWini(
-        writer: Wini,
-        descriptor: AbstractSetting<T>,
-        value: Any?,
-        ignoreDefault: Boolean = false
-    ) {
-        val printValue = if (value == null || (
-                ignoreDefault &&
-                    descriptor.valueToString(value as T) ==
-                    descriptor.valueToString(descriptor.defaultValue)
-                )
-        ) {
+    private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any?) {
+        val printValue = if (value == null) {
             ""
         } else {
             descriptor.valueToString(value as T)
