@@ -7,10 +7,10 @@
 #include "audio_core/audio_types.h"
 #include "audio_core/libretro_sink.h"
 #include "common/scm_rev.h"
-#include "core/3ds.h"
 #include "core_settings.h"
 #include "emu_window/libretro_window.h"
 #include "environment.h"
+#include "video_views.h"
 
 #ifdef HAVE_LIBRETRO_VFS
 #include "streams/file_stream.h"
@@ -115,6 +115,15 @@ bool GetCoreOptionsVersion(unsigned* version) {
     return environ_cb(RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION, version);
 }
 
+bool SetCoreOptionsDisplay(const retro_core_option_display* display) {
+    return environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, (void*)display);
+}
+
+bool SetCoreOptionsUpdateDisplayCallback(retro_core_options_update_display_callback_t callback) {
+    retro_core_options_update_display_callback cb{callback};
+    return environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK, &cb);
+}
+
 bool SetMemoryMaps(const retro_memory_map* map) {
     return environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, (void*)map);
 }
@@ -150,6 +159,14 @@ bool SetFrameTimeCallback(retro_frame_time_callback* cb) {
 
 bool SetGeometry(retro_system_av_info* cb) {
     return environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, cb);
+}
+
+bool GetVideoViewsStatus(unsigned* flags) {
+    return environ_cb(RETRO_ENVIRONMENT_GET_VIDEO_VIEWS_STATUS, flags);
+}
+
+bool SetVideoViews(retro_video_views* views) {
+    return environ_cb(RETRO_ENVIRONMENT_SET_VIDEO_VIEWS, views);
 }
 
 bool SetInputDescriptors(const retro_input_descriptor desc[]) {
@@ -311,8 +328,10 @@ void retro_get_system_av_info(struct retro_system_av_info* info) {
     auto geom = ComputeLayoutGeometry();
     info->geometry.base_width = geom.width;
     info->geometry.base_height = geom.height;
-    // Max must cover the largest possible layout (SideScreen at 10x = 7200).
-    info->geometry.max_width = (Core::kScreenBottomWidth + Core::kScreenTopWidth) * 10;
-    info->geometry.max_height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * 10;
+    // Max must cover the largest layout at 10x: the stereo views packing, 8000x4800.
+    const auto [max_width, max_height] =
+        LibRetro::VideoViews::PackedSize({.active = true, .stereo = true}, false, 10);
+    info->geometry.max_width = max_width;
+    info->geometry.max_height = max_height;
     info->geometry.aspect_ratio = (float)geom.width / (float)geom.height;
 }
