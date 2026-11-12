@@ -36,7 +36,8 @@ public:
 
         Float<M, E> res;
 
-#ifdef __FLT16_MANT_DIG__
+// GCC defines __FLT16_MANT_DIG__ for C before its C++ front end accepts _Float16 (GCC 13)
+#if defined(__FLT16_MANT_DIG__) && (defined(__clang__) || !defined(__GNUC__) || __GNUC__ >= 13)
         if constexpr (M == 10 && E == 5) {
             res.value = std::bit_cast<_Float16>(static_cast<u16>(hex));
             return res;
