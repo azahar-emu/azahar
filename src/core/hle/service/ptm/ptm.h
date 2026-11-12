@@ -55,9 +55,21 @@ public:
 
     void UpdateSharedPage();
 
+    void RecordPlayedTitle(u64 title_id);
+
+    void GetPlayHistory(Kernel::HLERequestContext& ctx);
+
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session);
+
+        std::shared_ptr<Module> GetModule() const;
+
+        void GetPlayHistory(Kernel::HLERequestContext& ctx);
+
+        void GetPlayHistoryStart(Kernel::HLERequestContext& ctx);
+
+        void GetPlayHistoryLength(Kernel::HLERequestContext& ctx);
 
     protected:
         /**
@@ -170,6 +182,8 @@ private:
     ChargeLevels charge_level = ChargeLevels::CompletelyFull;
     bool pedometer_is_counting = false;
 
+    std::vector<std::pair<u64, u32>> play_history;
+
     Core::TimingEventType* update_shared_page_event{};
 
     template <class Archive>
@@ -178,6 +192,8 @@ private:
 };
 
 void InstallInterfaces(Core::System& system);
+
+std::shared_ptr<Module> GetModule(Core::System& system);
 
 } // namespace Service::PTM
 

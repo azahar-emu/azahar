@@ -49,6 +49,7 @@
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/mic/mic_u.h"
 #include "core/hle/service/plgldr/plgldr.h"
+#include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
 #include "core/hw/aes/key.h"
@@ -523,6 +524,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     if (app_loader->ReadProgramId(title_id) != Loader::ResultStatus::Success) {
         LOG_ERROR(Core, "Failed to find title id for ROM (Error {})",
                   static_cast<u32>(load_result));
+    }
+
+    if (auto ptm_module = Service::PTM::GetModule(*this)) {
+        ptm_module->RecordPlayedTitle(title_id);
     }
 
     cheat_engine.LoadCheatFile(title_id);

@@ -302,6 +302,7 @@ void Module::serialize(Archive& ar, const unsigned int) {
     ar & battery_is_charging;
     ar & charge_level;
     ar & pedometer_is_counting;
+    ar & play_history;
 }
 SERIALIZE_IMPL(Module)
 
@@ -315,6 +316,63 @@ void Module::SetPlayCoins(u16 play_coins) {
     // TODO: This may introduce potential race condition if the game is reading the
     // game coin data at the same time
     WriteGameCoinData(game_coin);
+}
+
+void Module::RecordPlayedTitle(u64 title_id) {
+    // records every launch to match real hardware
+    // play history entries are not deduplicated
+    const u32 minutes = static_cast<u32>(system.Kernel().GetSharedPageHandler().GetSystemTimeSince2000() / 60000);
+    play_history.push_back({title_id, minutes});
+}
+
+void Module::GetPlayHistory(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 offset = rp.Pop<u32>();
+    const u32 count = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+
+    constexpr u32 entry_size = 0xC;
+    const u32 total_entries = static_cast<u32>(play_history.size());
+    const u32 start = offset < total_entries ? offset : total_entries;
+    const u32 available = total_entries - start;
+    const u32 to_write = count < available ? count : available;
+    const u32 buffer_entries = static_cast<u32>(buffer.GetSize() / entry_size);
+    const u32 write_count = to_write < buffer_entries ? to_write : buffer_entries;
+
+    for (u32 i = 0; i < write_count; ++i) {
+        const u64 title_id = play_history[start + i].first;
+        const u32 minutes = play_history[start + i].second;
+        const u32 tid_high = static_cast<u32>(title_id >> 32);
+        const u32 tid_low = static_cast<u32>(title_id & 0xFFFFFFFFull);
+        const u32 entry_word = (minutes & 0xFFFFFFF) << 4;
+
+        buffer.Write(&tid_high, i * entry_size, 4);
+        buffer.Write(&tid_low, i * entry_size + 4, 4);
+        buffer.Write(&entry_word, i * entry_size + 8, 4);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(write_count);
+    rb.Push(0);
+}
+
+void Module::Interface::GetPlayHistoryStart(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(0);
+}
+
+void Module::Interface::GetPlayHistoryLength(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    const u32 length = static_cast<u32>(ptm->play_history.size());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(length);
 }
 
 void Module::UpdateSharedPage() {
@@ -355,6 +413,14 @@ void Module::UpdateSharedPage() {
 Module::Interface::Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), ptm(std::move(ptm)) {}
 
+std::shared_ptr<Module> Module::Interface::GetModule() const {
+    return ptm;
+}
+
+void Module::Interface::GetPlayHistory(Kernel::HLERequestContext& ctx) {
+    ptm->GetPlayHistory(ctx);
+}
+
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     auto ptm = std::make_shared<Module>(system);
@@ -364,6 +430,16 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<PTM_S>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_Sysm>(ptm)->InstallAsService(service_manager);
     std::make_shared<PTM_U>(ptm)->InstallAsService(service_manager);
+}
+
+std::shared_ptr<Module> GetModule(Core::System& system) {
+    if (system.IsPoweredOn()) {
+        auto ptm_interface = system.ServiceManager().GetService<Module::Interface>("ptm:u");
+        if (ptm_interface) {
+            return ptm_interface->GetModule();
+        }
+    }
+    return nullptr;
 }
 
 } // namespace Service::PTM
