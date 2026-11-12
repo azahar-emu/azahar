@@ -892,9 +892,10 @@ std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
 }
 
 MemorySystem::PhysMemRegionInfo MemorySystem::GetPhysMemRegionInfo(PAddr address) {
-    if (address >= phys_mem_region_info_cache.region_start &&
-        address < phys_mem_region_info_cache.region_end) {
-        return phys_mem_region_info_cache;
+    PhysMemRegionInfo region_info = phys_mem_region_info_cache.load(std::memory_order_relaxed);
+    if (address >= region_info.region_start &&
+        address < region_info.region_end) {
+        return region_info;
     }
 
     constexpr std::array memory_areas = {
@@ -913,28 +914,30 @@ MemorySystem::PhysMemRegionInfo MemorySystem::GetPhysMemRegionInfo(PAddr address
     if (area == memory_areas.end()) [[unlikely]] {
         LOG_ERROR(HW_Memory, "Unknown GetPhysMemRegionInfo @ {:#08X} at PC {:#08X}", address,
                   impl->GetPC());
-        phys_mem_region_info_cache = PhysMemRegionInfo();
-        return phys_mem_region_info_cache;
+        region_info = PhysMemRegionInfo();
+        phys_mem_region_info_cache.store(region_info, std::memory_order_relaxed);
+        return region_info;
     }
 
     switch (area->first) {
     case VRAM_PADDR:
-        phys_mem_region_info_cache = {&impl->vram_mem, area->first, area->second};
+        region_info = {&impl->vram_mem, area->first, area->second};
         break;
     case DSP_RAM_PADDR:
-        phys_mem_region_info_cache = {&impl->dsp_mem, area->first, area->second};
+        region_info = {&impl->dsp_mem, area->first, area->second};
         break;
     case FCRAM_PADDR:
-        phys_mem_region_info_cache = {&impl->fcram_mem, area->first, area->second};
+        region_info = {&impl->fcram_mem, area->first, area->second};
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        phys_mem_region_info_cache = {&impl->n3ds_extra_ram_mem, area->first, area->second};
+        region_info = {&impl->n3ds_extra_ram_mem, area->first, area->second};
         break;
     default:
         UNREACHABLE();
     }
 
-    return phys_mem_region_info_cache;
+    phys_mem_region_info_cache.store(region_info, std::memory_order_relaxed);
+    return region_info;
 }
 
 u8* MemorySystem::GetPhysicalPointer(PAddr address) {
