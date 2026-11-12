@@ -35,7 +35,7 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             binding.textSettingValue.alpha = 0.5f
         }
 
-        showChangedMessageIfNeeded(binding.settingMessage)
+        showGlobalMessageIfNeeded(binding.messageUseGlobal)
     }
 
     private fun getTextSetting(): String {

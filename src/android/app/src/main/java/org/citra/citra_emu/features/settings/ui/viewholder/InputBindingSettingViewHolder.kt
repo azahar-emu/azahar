@@ -38,7 +38,7 @@ class InputBindingSettingViewHolder(val binding: ListItemSettingBinding, adapter
             binding.textSettingValue.alpha = 0.5f
         }
 
-        showChangedMessageIfNeeded(binding.settingMessage)
+        showGlobalMessageIfNeeded(binding.messageUseGlobal)
     }
 
     override fun onClick(clicked: View) {
