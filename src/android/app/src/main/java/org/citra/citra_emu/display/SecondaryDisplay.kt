@@ -28,6 +28,11 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     var preferredDisplayId = -1
     var currentDisplayId = -1
 
+    // NetworkStreamer takes over the secondary window with its own Surface; the display
+    // listener below still fires periodically (e.g. on unrelated system display events) and
+    // would otherwise recreate the hidden-display presentation and steal the surface back.
+    var suppressUpdates = false
+
     val availableDisplays: List<Display>
         get() = getSecondaryDisplays()
 
@@ -46,6 +51,7 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     fun updateSurface() {
+        if (suppressUpdates) return
         val surface = pres?.getSurfaceHolder()?.surface
         if (surface != null && surface.isValid) {
             NativeLibrary.secondarySurfaceChanged(surface)
@@ -55,6 +61,11 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     fun destroySurface() {
+        // The old hidden-display Presentation's surfaceDestroyed callback can fire
+        // asynchronously well after releasePresentation() was called, since Android doesn't
+        // guarantee it's synchronous with dismiss(). If NetworkStreamer now owns the secondary
+        // window, this stale callback must not be allowed to null out its Surface.
+        if (suppressUpdates) return
         NativeLibrary.secondarySurfaceDestroyed()
     }
 
@@ -85,6 +96,8 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     fun updateDisplay() {
+        if (suppressUpdates) return
+
         // return early if the parent context is dead or dying
         if (context is android.app.Activity && (context.isFinishing || context.isDestroyed)) {
             return
