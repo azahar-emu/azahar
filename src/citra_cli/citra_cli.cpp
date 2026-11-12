@@ -1,7 +1,8 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
+#include <vector>
 #undef _UNICODE
 #include <getopt.h>
 #ifndef _MSC_VER
@@ -14,12 +15,19 @@
 namespace CitraCLI {
 
 bool CheckForOptions(const char* optstring, int argc, char* argv[]) {
+    // Scan a copy, since getopt can reorder argv and the frontend parses argv afterwards
+    std::vector<char*> args(argv, argv + argc);
+    args.push_back(nullptr);
+
+    // getopt_long_only keeps "--fullscreen" and "-platform" from being split into short options
+    static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
+
     const int original_opterr = opterr;
     opterr = 0; // Temporarily suppress invalid option messages
 
     bool return_value = false;
     int option;
-    while ((option = getopt(argc, argv, optstring)) != -1) {
+    while ((option = getopt_long_only(argc, args.data(), optstring, no_long_opts, nullptr)) != -1) {
         for (size_t i = 0; optstring[i] != '\0'; ++i) {
             if (optstring[i] == ':') {
                 continue;
@@ -40,6 +48,7 @@ int ParseCommand(int argc, char* argv[]) {
     if (CheckForOptions(compression_ops_optstring, argc, argv)) {
         return ParseCompressionCommand(argc, argv);
     }
+    return 1;
 }
 
 } // namespace CitraCLI
