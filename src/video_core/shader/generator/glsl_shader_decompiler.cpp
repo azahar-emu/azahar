@@ -265,11 +265,11 @@ constexpr auto GetSelectorSrc3 = GetSelectorSrc<&SwizzlePattern::GetSelectorSrc3
 class GLSLGenerator {
 public:
     GLSLGenerator(const std::set<Subroutine>& subroutines, const ProgramCode& program_code,
-                  const SwizzleData& swizzle_data, u32 main_offset,
+                  const SwizzleData& swizzle_data, u32 main_offset, u16 bool_uniforms,
                   const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
                   bool sanitize_mul)
         : subroutines(subroutines), program_code(program_code), swizzle_data(swizzle_data),
-          main_offset(main_offset), inputreg_getter(inputreg_getter),
+          main_offset(main_offset), bool_uniforms(bool_uniforms), inputreg_getter(inputreg_getter),
           outputreg_getter(outputreg_getter), sanitize_mul(sanitize_mul) {
 
         Generate();
@@ -357,9 +357,10 @@ private:
         }
     }
 
-    /// Generates code representing a bool uniform
+    /// Generates a bool uniform test, a constant since the shader is specialized on them
     std::string GetUniformBool(u32 index, bool invert_test = false) const {
-        return fmt::format("(uniforms.b & {}u) {} 0u", 1 << index, invert_test ? "==" : "!=");
+        const bool value = ((bool_uniforms >> index) & 1) != 0;
+        return value != invert_test ? "true" : "false";
     }
 
     /**
@@ -921,6 +922,7 @@ private:
     const ProgramCode& program_code;
     const SwizzleData& swizzle_data;
     const u32 main_offset;
+    const u16 bool_uniforms;
     const RegGetter& inputreg_getter;
     const RegGetter& outputreg_getter;
     const bool sanitize_mul;
@@ -929,12 +931,12 @@ private:
 };
 
 std::string DecompileProgram(const ProgramCode& program_code, const SwizzleData& swizzle_data,
-                             u32 main_offset, const RegGetter& inputreg_getter,
+                             u32 main_offset, u16 bool_uniforms, const RegGetter& inputreg_getter,
                              const RegGetter& outputreg_getter, bool sanitize_mul) {
 
     try {
         auto subroutines = ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines();
-        GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset,
+        GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset, bool_uniforms,
                                 inputreg_getter, outputreg_getter, sanitize_mul);
         return generator.MoveShaderCode();
     } catch (const DecompileFail& exception) {

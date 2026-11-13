@@ -103,6 +103,7 @@ struct PicaVSConfigState {
     u64 program_hash;
     u64 swizzle_hash;
     u32 main_offset;
+    u16 bool_uniforms;
 
     u32 num_outputs;
 
@@ -132,8 +133,8 @@ struct PicaVSConfigState {
                                    // fields
                                    FIELD_HASH(lighting_disable), FIELD_HASH(program_hash),
                                    FIELD_HASH(swizzle_hash), FIELD_HASH(main_offset),
-                                   FIELD_HASH(num_outputs), FIELD_HASH(output_map),
-                                   FIELD_HASH(used_input_vertex_attributes),
+                                   FIELD_HASH(bool_uniforms), FIELD_HASH(num_outputs),
+                                   FIELD_HASH(output_map), FIELD_HASH(used_input_vertex_attributes),
                                    FIELD_HASH(input_vertex_attributes), FIELD_HASH(gs_state),
 
                                    // nested layout
