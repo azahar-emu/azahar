@@ -249,6 +249,7 @@ struct EmulationView: View {
                                   haptics: settings.hapticFeedback,
                                   glass: ControlGlassStyle(enabled: settings.glassControls,
                                                            tint: settings.glassControlTint),
+                                  showHomeButton: settings.showHomeButton,
                                   isEditing: $editingLayout)
             }
 

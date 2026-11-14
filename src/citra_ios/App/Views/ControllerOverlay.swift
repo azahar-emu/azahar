@@ -89,6 +89,8 @@ struct ControllerOverlay: View {
     let haptics: Bool
     /// Liquid Glass controls and their tint (see ControlGlassStyle).
     var glass = ControlGlassStyle()
+    /// The Home button of the Select / Home / Start control.
+    var showHomeButton = true
     @Binding var isEditing: Bool
 
     @EnvironmentObject private var layout: ControllerLayoutStore
@@ -142,7 +144,8 @@ struct ControllerOverlay: View {
                             if placement.hidden { return nil }
                             return TouchRegion(id: id,
                                                frame: metrics.frame(of: id, placement: placement),
-                                               scale: CGFloat(placement.scale))
+                                               scale: CGFloat(placement.scale),
+                                               showHome: showHomeButton)
                         },
                         haptics: haptics,
                         state: touchState)
@@ -184,7 +187,7 @@ struct ControllerOverlay: View {
         case .cStick:
             CirclePad(size: unit * 1.2 * scale, knob: touchState.sticks[.cStick] ?? .zero)
         case .systemButtons:
-            SystemButtons(scale: scale, pressed: pressed)
+            SystemButtons(scale: scale, pressed: pressed, showHome: showHomeButton)
         case .menuButton:
             MenuButtonIcon(scale: scale)
         case .turboButton:
@@ -344,6 +347,9 @@ private struct TouchRegion {
     let id: ControlID
     let frame: CGRect
     let scale: CGFloat
+    /// Whether the Home button of the system buttons is there (without it Select and Start split
+    /// the control in two).
+    var showHome = true
 }
 
 /// Handles every touch on the on-screen controller in UIKit instead of with SwiftUI gestures.
@@ -513,8 +519,9 @@ final class ControllerTouchHandler {
         case .shoulderRight:
             return [local.y < 0 ? .zr : .r]
         case .systemButtons:
-            let third = frame.width / 3
             let x = point.x - frame.minX
+            if !region.showHome { return [x < frame.width / 2 ? .select : .start] }
+            let third = frame.width / 3
             return [x < third ? .select : (x < 2 * third ? .home : .start)]
         case .dpad:
             let deadzone = frame.width * 0.12
@@ -604,7 +611,8 @@ private final class ControllerRegionView: UIView {
             return
         }
         ControllerTouchHandler.shared.regions = regions.map {
-            TouchRegion(id: $0.id, frame: convert($0.frame, to: nil), scale: $0.scale)
+            TouchRegion(id: $0.id, frame: convert($0.frame, to: nil), scale: $0.scale,
+                        showHome: $0.showHome)
         }
     }
 }
@@ -734,13 +742,17 @@ private struct ShoulderPair: View {
 private struct SystemButtons: View {
     let scale: CGFloat
     let pressed: Set<ConsoleButton>
+    var showHome = true
 
     var body: some View {
         let width = 40 * scale, height = 26 * scale, gap = 16 * scale
-        let items: [(String, ConsoleButton)] = [("minus", .select), ("house.fill", .home),
-                                                ("plus", .start)]
+        // Without Home, Select and Start sit next to each other with the usual gap.
+        let items: [(String, ConsoleButton)] = showHome
+            ? [("minus", .select), ("house.fill", .home), ("plus", .start)]
+            : [("minus", .select), ("plus", .start)]
+        let columns = showHome ? 3 : 2
         ButtonCluster(
-            size: CGSize(width: width * 3 + gap * 2, height: height),
+            size: CGSize(width: width * CGFloat(columns) + gap * CGFloat(columns - 1), height: height),
             buttons: items.enumerated().map { index, item in
                 ButtonCluster.Button(rect: CGRect(x: CGFloat(index) * (width + gap), y: 0,
                                    width: width, height: height),

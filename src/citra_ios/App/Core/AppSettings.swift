@@ -214,6 +214,8 @@ final class AppSettings: ObservableObject {
     /// Fade out the menu and swap buttons after a few seconds without a touch while a physical
     /// controller is connected.
     @Published var autoHideMenuButtons: Bool { didSet { save(autoHideMenuButtons, "autoHideMenuButtons") } }
+    /// The Home button of the on-screen Select / Home / Start control.
+    @Published var showHomeButton: Bool { didSet { save(showHomeButton, "showHomeButton") } }
     @Published var hideControllerWithHardware: Bool { didSet { save(hideControllerWithHardware, "hideControllerWithHardware") } }
     @Published var showController: Bool { didSet { save(showController, "showController") } }
     @Published var showSwapButton: Bool { didSet { save(showSwapButton, "showSwapButton") } }
@@ -402,6 +404,7 @@ final class AppSettings: ObservableObject {
         libraryStyle = LibraryStyle(rawValue: value("libraryStyle", LibraryStyle.grid.rawValue)) ?? .grid
         showPerformanceOverlay = value("showPerformanceOverlay", true)
         hideControllerWithHardware = value("hideControllerWithHardware", true)
+        showHomeButton = value("showHomeButton", true)
         autoHideMenuButtons = value("autoHideMenuButtons", false)
         showController = value("showController", true)
         showSwapButton = value("showSwapButton", true)
