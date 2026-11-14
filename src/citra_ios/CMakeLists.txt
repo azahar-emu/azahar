@@ -120,8 +120,12 @@ set_source_files_properties(${AZAHAR_COMPAT_LIST} PROPERTIES MACOSX_PACKAGE_LOCA
 # The app icon (the Azahar flower), as plain PNGs named for CFBundleIcons.
 file(GLOB AZAHAR_ICON_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Resources/Icons/*.png")
 target_sources(azahar_ios PRIVATE ${AZAHAR_ICON_FILES})
-# No package location: the files are copied as plain bundle resources, which on iOS puts them at
-# the root of the app, where the system and LiveContainer look for them.
+set_source_files_properties(${AZAHAR_ICON_FILES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+
+# The same icon as an asset catalog (compiled to Assets.car, the way iOS 26 expects app icons).
+set(AZAHAR_ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/Resources/Assets.xcassets")
+target_sources(azahar_ios PRIVATE ${AZAHAR_ASSETS})
+set_source_files_properties(${AZAHAR_ASSETS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
 include(GenerateBuildInfo)
 set(SRC_DIR "${PROJECT_SOURCE_DIR}")
@@ -138,6 +142,7 @@ set_target_properties(azahar_ios PROPERTIES
     XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${AZAHAR_IOS_BUNDLE_ID}"
     XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${AZAHAR_IOS_DEPLOYMENT_TARGET}
     XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+    XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
     XCODE_ATTRIBUTE_SWIFT_VERSION "5.0"
     XCODE_ATTRIBUTE_SWIFT_INCLUDE_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/Bridge/include"
     XCODE_ATTRIBUTE_SWIFT_OPTIMIZATION_LEVEL "$<IF:$<CONFIG:Debug>,-Onone,-O>"

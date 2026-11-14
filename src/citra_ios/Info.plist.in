@@ -18,6 +18,8 @@
             <array>
                 <string>AppIcon60x60</string>
             </array>
+            <key>CFBundleIconName</key>
+            <string>AppIcon</string>
         </dict>
     </dict>
     <key>CFBundleIcons~ipad</key>
