@@ -303,6 +303,9 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
 /// Slots that hold a state, newest first. Empty when nothing is running.
 - (NSArray<AZSaveStateSlot*>*)saveStateSlots;
 /// Asks the emulation to save or load a slot. Returns false when that is not possible right now.
+/// Called after a save or load was requested: while the game is paused it is still carried out,
+/// with the game running (muted) just for as long as that takes.
+- (void)beginStateOperation;
 - (BOOL)saveStateToSlot:(NSInteger)slot;
 - (BOOL)loadStateFromSlot:(NSInteger)slot;
 /// Deletes the state (and its picture) in a slot of the running title.

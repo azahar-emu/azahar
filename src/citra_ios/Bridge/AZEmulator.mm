@@ -275,6 +275,8 @@ const char* ThermalStateName() {
     std::condition_variable _cv;
     std::atomic<bool> _stopRequested;
     std::atomic<bool> _pauseRequested;
+    /// A save or load state was requested: it is carried out even while paused (see runLoop).
+    std::atomic<bool> _stateOperation;
     std::atomic<AZEmulationState> _state;
     std::atomic<double> _speed;
     std::atomic<double> _fps;
@@ -383,6 +385,7 @@ const char* ThermalStateName() {
     if ((self = [super init])) {
         _stopRequested = false;
         _pauseRequested = false;
+        _stateOperation = false;
         _state = AZEmulationStateStopped;
         _speed = 0.0;
         _fps = 0.0;
@@ -1055,13 +1058,57 @@ const char* ThermalStateName() {
         }
         [self applyPendingSurfaceChanges];
 
+        if (_stateOperation && !system.IsSaveStateOperationPending()) {
+            _stateOperation = false;
+        }
         if (_pauseRequested) {
             _state = AZEmulationStatePaused;
             const float volume = Settings::values.volume.GetValue();
             Settings::values.volume = 0;
-            {
-                std::unique_lock lock{_mutex};
-                _cv.wait(lock, [self] { return !_pauseRequested || _stopRequested; });
+            for (;;) {
+                {
+                    std::unique_lock lock{_mutex};
+                    _cv.wait(lock, [self] {
+                        return !_pauseRequested || _stopRequested || _stateOperation;
+                    });
+                }
+                if (_stopRequested || !_pauseRequested) {
+                    break;
+                }
+                // A save or load state asked for while paused: the game runs (muted) just long
+                // enough for it to be carried out, then stays paused. Doing it while the game
+                // was already running again, with the menu closing and the screens changing at
+                // the same time, was seen to lock up.
+                const auto started = StatsClock::now();
+                while (!_stopRequested && system.IsSaveStateOperationPending() &&
+                       StatsClock::now() - started < std::chrono::seconds(8)) {
+                    const auto step = system.RunLoop();
+                    if (step == Core::System::ResultStatus::ShutdownRequested) {
+                        _stopRequested = true;
+                        break;
+                    }
+                    if (step == Core::System::ResultStatus::ErrorSavestate ||
+                        step == Core::System::ResultStatus::ErrorSavestateBuildMismatch) {
+                        NSString* message =
+                            step == Core::System::ResultStatus::ErrorSavestateBuildMismatch
+                                ? [NSString stringWithFormat:@"This state was saved by another "
+                                                             @"version of Azahar (%s) and can't "
+                                                             @"be loaded.",
+                                                             system.GetStatusDetails().c_str()]
+                                : [NSString stringWithFormat:@"The state operation failed: %s",
+                                                             system.GetStatusDetails().c_str()];
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                          if (self.onNotice) {
+                              self.onNotice(@"Save State", message);
+                          }
+                        });
+                        break;
+                    }
+                    if (step != Core::System::ResultStatus::Success) {
+                        break;
+                    }
+                }
+                _stateOperation = false;
             }
             Settings::values.volume = volume;
             if (_stopRequested) {
@@ -1176,6 +1223,14 @@ const char* ThermalStateName() {
           self.onStopped(error);
       }
     });
+}
+
+- (void)beginStateOperation {
+    {
+        std::scoped_lock lock{_mutex};
+        _stateOperation = true;
+    }
+    _cv.notify_all();
 }
 
 - (void)pause {

@@ -391,6 +391,14 @@ public:
         return save_state_status;
     }
 
+    /// Whether a save or load requested with SendSignal has not been carried out yet (it waits
+    /// for the game's pending asynchronous operations to finish first).
+    bool IsSaveStateOperationPending() {
+        std::scoped_lock lock{signal_mutex};
+        return save_state_request_status != SaveStateStatus::NONE ||
+               current_signal == Signal::Save || current_signal == Signal::Load;
+    }
+
     void SaveState(u32 slot) const;
 
     void LoadState(u32 slot);

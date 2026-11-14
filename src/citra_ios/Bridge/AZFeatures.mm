@@ -611,6 +611,7 @@ void SaveStateThumbnail(const std::string& path) {
     const bool requested = Core::System::GetInstance().SendSignal(Core::System::Signal::Save,
                                                                   static_cast<u32>(slot));
     if (requested) {
+        [self beginStateOperation];
         SaveStateThumbnail(StateThumbnailPath(
             RunningProgramId(), Core::System::GetInstance().Movie().GetCurrentMovieID(),
             static_cast<u32>(slot)));
@@ -622,8 +623,12 @@ void SaveStateThumbnail(const std::string& path) {
     if (RunningProgramId() == 0 || slot < 0 || slot >= Core::SaveStateSlotCount) {
         return NO;
     }
-    return Core::System::GetInstance().SendSignal(Core::System::Signal::Load,
-                                                  static_cast<u32>(slot));
+    const bool requested = Core::System::GetInstance().SendSignal(Core::System::Signal::Load,
+                                                                  static_cast<u32>(slot));
+    if (requested) {
+        [self beginStateOperation];
+    }
+    return requested;
 }
 
 - (BOOL)deleteSaveStateInSlot:(NSInteger)slot {
