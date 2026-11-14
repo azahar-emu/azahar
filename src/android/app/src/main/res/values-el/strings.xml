@@ -21,7 +21,6 @@
     <string name="games">Εφαρμογές</string>
     <string name="done">Τέλος</string>
     <string name="text_continue">Συνέχεια</string>
-    <string name="notifications">Ειδοποιήσεις</string>
     <string name="camera_permission">Κάμερα</string>
     <string name="microphone_permission">Μικρόφωνο</string>
     <string name="filesystem_permission">Σύστημα αρχείων</string>

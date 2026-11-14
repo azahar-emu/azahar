@@ -53,6 +53,7 @@ import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
+import org.citra.citra_emu.fragments.GrantMissingLanPermissionFragment
 import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
 import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
 import org.citra.citra_emu.utils.BuildUtil
@@ -288,6 +289,23 @@ class MainActivity :
                 if (NativeLibrary.getUserDirectory() == "") {
                     SelectUserDirectoryDialogFragment.newInstance(this)
                         .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+                }
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+            if (supportFragmentManager.findFragmentByTag(GrantMissingLanPermissionFragment.TAG) ==
+                null
+            ) {
+                fun requestMissingLanPermission() = GrantMissingLanPermissionFragment.newInstance()
+                    .show(supportFragmentManager, GrantMissingLanPermissionFragment.TAG)
+
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_LOCAL_NETWORK
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestMissingLanPermission()
                 }
             }
         }

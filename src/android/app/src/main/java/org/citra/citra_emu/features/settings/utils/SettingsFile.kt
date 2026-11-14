@@ -76,6 +76,8 @@ object SettingsFile {
                     val pair = parseLineToKeyValuePair(line) ?: continue
                     val (key, rawValue) = pair
                     val descriptor = findSettingByKey(key) ?: continue
+                    // ignore empty strings, do not load them at all
+                    if (rawValue.isEmpty()) continue
                     loadSettingInto(settings, descriptor, rawValue, isCustomGame)
                 }
             }
@@ -126,6 +128,8 @@ object SettingsFile {
         rawValue: String,
         isCustomGame: Boolean
     ) {
+        // empty strings should be left null regardless of setting interpretation
+        if (rawValue.isEmpty()) return
         val value = setting.valueFromString(rawValue) ?: return
         if (isCustomGame) {
             settings.setOverride(setting, value)
@@ -151,7 +155,7 @@ object SettingsFile {
             inputStream!!.close()
 
             for (setting in allSettings) {
-                val value = settings.getGlobal(setting) ?: continue
+                val value = settings.getGlobalOrNull(setting)
                 writeSettingToWini(writer, setting, value)
             }
 
@@ -197,6 +201,10 @@ object SettingsFile {
         if (!settings.isPerApp()) {
             return
         }
+        if (settings.getAllOverrides().isEmpty()) {
+            deletePerAppFile(settings.gameId)
+            return
+        }
         val ini = getOrCreatePerAppSettingsFile(settings.gameId!!)
         try {
             val context: Context = CitraApplication.appContext
@@ -228,21 +236,21 @@ object SettingsFile {
         } else {
             // Currently global, save to global file
             val ini = getSettingsFile(FILE_NAME_CONFIG)
-            writeSingleSettingToFile(ini, setting, settings.getGlobal(setting))
+            writeSingleSettingToFile(ini, setting, settings.getGlobalOrNull(setting))
         }
     }
 
     private fun <T> writeSingleSettingToFile(
         ini: DocumentFile,
         setting: AbstractSetting<T>,
-        value: T
+        value: T?
     ) {
         try {
             val context = CitraApplication.appContext
             val inputStream = context.contentResolver.openInputStream(ini.uri)
             val writer = if (inputStream != null) Wini(inputStream) else Wini()
             inputStream?.close()
-            writeSettingToWini(writer, setting, value as Any)
+            writeSettingToWini(writer, setting, value as Any?)
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
             writer.store(outputStream)
             outputStream!!.flush()
@@ -252,10 +260,14 @@ object SettingsFile {
         }
     }
 
-    private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any) {
-        @Suppress("UNCHECKED_CAST")
-        val typedValue = value as T
-        writer.put(descriptor.section, descriptor.key, descriptor.valueToString(typedValue))
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any?) {
+        val printValue = if (value == null) {
+            ""
+        } else {
+            descriptor.valueToString(value as T)
+        }
+        writer.put(descriptor.section, descriptor.key, printValue)
     }
 
     private fun parseLineToKeyValuePair(line: String): Pair<String, String>? {

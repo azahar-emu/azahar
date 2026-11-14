@@ -41,7 +41,7 @@ object InputMappingManager {
     fun rebuild() {
         clear()
         InputMappingSetting.entries.forEach { setting ->
-            val mapping = CitraSettings.activeSettings.get(setting) ?: return@forEach
+            val mapping = CitraSettings.activeSettings.get(setting)
             register(setting, mapping)
         }
     }
@@ -118,8 +118,8 @@ object InputMappingManager {
     /**
      * Add a single item to the maps based on the value of the InputMapping and the InputMappingSetting
      */
-    private fun register(setting: InputMappingSetting, mapping: Input) {
-        if (mapping.empty) {
+    private fun register(setting: InputMappingSetting, mapping: Input?) {
+        if (mapping == null || mapping.empty) {
             clearMapping(setting)
             return
         }

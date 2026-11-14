@@ -58,21 +58,44 @@ void GameListTreeView::keyPressEvent(QKeyEvent* event) {
     QTreeView::keyPressEvent(event);
 }
 
-// if focus goes into the game list and nothing is already selected, select the first actual game
-void GameListTreeView::focusInEvent(QFocusEvent* event) {
-    if (!currentIndex().isValid()) {
+void GameListTreeView::setFocusFromKeyboard() {
+    setFocus(Qt::TabFocusReason);
+    // if something is selected, we are good to go
+    if (selectionModel()->hasSelection())
+        return;
+
+    // if something is indexed but not selected, we want to select that
+    QModelIndex target = currentIndex();
+
+    // ...unless it is not visible in which case we want to select the first fully visible game
+    const QRect viewport_rect = viewport()->rect();
+    const bool current_target_visible =
+        target.isValid() && target.parent().isValid() && viewport_rect.contains(visualRect(target));
+    if (!current_target_visible) {
+        target = indexAt(viewport_rect.topLeft());
+        if (!viewport_rect.contains(visualRect(target)))
+            target = indexBelow(target);
+        while (target.isValid() && !target.parent().isValid()) {
+            target = indexBelow(target);
+        }
+    }
+    // ... unless there are no such games, in which case we just select the first game
+    if (!target.isValid()) {
         for (int i = 0; i < model()->rowCount(); i++) {
             const QModelIndex folder = model()->index(i, 0);
             if (model()->rowCount(folder) > 0) {
-                const QModelIndex first = model()->index(0, 0, folder);
-                setCurrentIndex(first);
-                selectionModel()->select(first,
-                                         QItemSelectionModel::Select | QItemSelectionModel::Rows);
+                target = model()->index(0, 0, folder);
                 break;
             }
         }
     }
-    QTreeView::focusInEvent(event);
+
+    if (target.isValid()) {
+        setCurrentIndex(target);
+        selectionModel()->select(target,
+                                 QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        scrollTo(target);
+    }
 }
 
 GameListSearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist, QObject* parent)
@@ -80,6 +103,17 @@ GameListSearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist, QObjec
 
 // EventFilter in order to process systemkeys while editing the searchfield
 bool GameListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
+    // Up/Down/Tab: hand focus to the tree view, selecting a game if need be
+    if (event->type() == QEvent::KeyPress) {
+        const auto* press = static_cast<QKeyEvent*>(event);
+        if (press->key() == Qt::Key_Up || press->key() == Qt::Key_Down ||
+            press->key() == Qt::Key_Tab) {
+            gamelist->tree_view->setFocusFromKeyboard();
+            return true; // consume so the line edit doesn't also handle it
+        }
+        return QObject::eventFilter(obj, event);
+    }
+
     // If it isn't a KeyRelease event then continue with standard event processing
     if (event->type() != QEvent::KeyRelease)
         return QObject::eventFilter(obj, event);
@@ -118,13 +152,6 @@ bool GameListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* eve
                 return QObject::eventFilter(obj, event);
             }
             break;
-        }
-        // up, down, tab
-        // If the up arrow, down arrow, or tab key is pressed, this should move focus to the
-        // treeview
-        case Qt::Key_Up:
-        case Qt::Key_Down: {
-            gamelist->tree_view->setFocus();
         }
         default:
             return QObject::eventFilter(obj, event);

@@ -189,8 +189,38 @@ class SetupFragment : Fragment() {
                                     },
                                     isUnskippable = true,
                                     hasWarning = true,
-                                    R.string.filesystem_permission_warning,
+                                    R.string.missing_permissions,
                                     R.string.filesystem_permission_warning_description
+                                )
+                            )
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+                            add(
+                                PageButton(
+                                    R.drawable.ic_network,
+                                    R.string.lan_permission,
+                                    R.string.lan_permission_description,
+                                    buttonAction = {
+                                        pageButtonCallback = it
+                                        permissionLauncher.launch(
+                                            Manifest.permission.ACCESS_LOCAL_NETWORK
+                                        )
+                                    },
+                                    buttonState = {
+                                        if (ContextCompat.checkSelfPermission(
+                                                requireContext(),
+                                                Manifest.permission.ACCESS_LOCAL_NETWORK
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                        ) {
+                                            ButtonState.BUTTON_ACTION_COMPLETE
+                                        } else {
+                                            ButtonState.BUTTON_ACTION_INCOMPLETE
+                                        }
+                                    },
+                                    isUnskippable = true,
+                                    hasWarning = true,
+                                    R.string.missing_permissions,
+                                    R.string.lan_warning_description
                                 )
                             )
                         }
@@ -198,8 +228,8 @@ class SetupFragment : Fragment() {
                             add(
                                 PageButton(
                                     R.drawable.ic_notification,
-                                    R.string.notifications,
-                                    R.string.notifications_description,
+                                    R.string.notifications_permission,
+                                    R.string.notifications_permission_description,
                                     buttonAction = {
                                         pageButtonCallback = it
                                         permissionLauncher.launch(

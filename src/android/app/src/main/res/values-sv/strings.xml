@@ -70,12 +70,9 @@
     <string name="done">Klar</string>
     <string name="done_description">Du är klar.\nNNjut av att använda emulatorn!</string>
     <string name="text_continue">Fortsätt</string>
-    <string name="notifications">Aviseringar</string>
-    <string name="notifications_description">Ge tillstånd för aviseringar med knappen nedan.</string>
     <string name="give_permission">Ge tillstånd</string>
     <string name="notification_warning">Hoppa över att ge tillstånd för avisering? </string>
     <string name="notification_warning_description">Azahar kommer inte att kunna meddela dig viktig information.</string>
-    <string name="filesystem_permission_warning">Saknar behörigheter</string>
     <string name="filesystem_permission_warning_description">Azahar behöver behörighet för att hantera filer på den här enheten för att kunna lagra och hantera sina data. \n\nGe behörighet för ”Filsystem” innan du fortsätter.</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">Ge kameratillståndet nedan för att emulera 3DS-kameran.</string>

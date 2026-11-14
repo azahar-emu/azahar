@@ -1202,6 +1202,16 @@ class SettingsFragmentPresenter(
                     BooleanSetting.USE_SKIP_DUPLICATE_FRAMES.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    editingSettings,
+                    BooleanSetting.USE_LIMIT_FRAMES_AHEAD_OF_GPU,
+                    R.string.use_limit_frames_ahead_of_gpu,
+                    R.string.use_limit_frames_ahead_of_gpu_description,
+                    BooleanSetting.USE_LIMIT_FRAMES_AHEAD_OF_GPU.key,
+                    BooleanSetting.USE_LIMIT_FRAMES_AHEAD_OF_GPU.defaultValue
+                )
+            )
 
             // Disabled until custom texture implementation gets rewrite, current one overloads RAM
             // and crashes Citra.
