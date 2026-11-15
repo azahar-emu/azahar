@@ -46,11 +46,14 @@ struct EmulationView: View {
             lastTouch = Date()
             buttonsFaded = false
         }
-        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
-            let idle = Date().timeIntervalSince(lastTouch) > Self.fadeDelay
-            let fade = settings.autoHideMenuButtons && session.hardwareControllerConnected
-                && !showingMenu && idle
-            if fade != buttonsFaded { buttonsFaded = fade }
+        // A loop of its own: a timer publisher made here would be made again with every redraw
+        // (the speed numbers redraw this view twice a second), and a one second timer that is
+        // restarted twice a second never fires.
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                updateButtonFade()
+            }
         }
         .onChange(of: settings.refreshRate) { RefreshRateController.shared.apply($0) }
         .statusBarHidden()
@@ -372,6 +375,15 @@ extension EmulationView {
     }
 
     /// Pauses the game while the menu is up and runs it again when it is gone.
+    /// Fades the menu and swap buttons out after a few seconds without a touch while a controller
+    /// is used, and back in when it is no longer true.
+    fileprivate func updateButtonFade() {
+        let idle = Date().timeIntervalSince(lastTouch) > Self.fadeDelay
+        let fade = settings.autoHideMenuButtons && session.hardwareControllerConnected
+            && !showingMenu && idle
+        if fade != buttonsFaded { buttonsFaded = fade }
+    }
+
     fileprivate func menuVisibilityChanged(_ visible: Bool) {
         resumeTask?.cancel()
         resumeTask = nil
