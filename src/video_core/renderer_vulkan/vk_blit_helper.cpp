@@ -626,7 +626,6 @@ bool BlitHelper::DepthToBuffer(Surface& source, vk::Buffer buffer,
 }
 
 void BlitHelper::ResolveTexture(Surface& surface) {
-
     scheduler.Record([width = surface.GetScaledWidth(), height = surface.GetScaledHeight(),
                       aspect = surface.Aspect(), access_flags = surface.AccessFlags(),
                       pipeline_state_flags = surface.PipelineStageFlags(),
@@ -716,6 +715,84 @@ void BlitHelper::ResolveTexture(Surface& surface) {
         cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, pipeline_state_flags,
                                vk::DependencyFlagBits::eByRegion, {}, {}, write_barriers);
     });
+}
+
+void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const vk::Pipeline pipeline = {};
+    const vk::PipelineLayout layout = single_texture_pipeline_layout;
+    const vk::DescriptorSet texture_descriptor_set = single_texture_provider.Commit();
+    update_queue.AddImageSampler(texture_descriptor_set, 0, 0, surface.ImageView(ViewType::Sample),
+                                 linear_sampler, vk::ImageLayout::eGeneral);
+    const vk::RenderPass renderpass = renderpass_cache.GetRenderpass(
+        surface.pixel_format, VideoCore::PixelFormat::Invalid, false, surface.sample_count);
+
+    // Blit into the MSAA texture using a render-pass
+    const RenderPass render_pass = {
+        .framebuffer = surface.Framebuffer(Type::MultiSampled),
+        .render_pass = renderpass,
+        .render_area =
+            {
+                .offset = {0, 0},
+                .extent = {surface.GetScaledWidth(), surface.GetScaledHeight()},
+            },
+    };
+
+    renderpass_cache.BeginRendering(render_pass);
+    const float src_scale = static_cast<float>(surface.GetResScale());
+    // Calculate normalized texture coordinates like OpenGL does
+    const auto src_extent = surface.RealExtent(false); // Get unscaled texture extent
+    const float tex_scale_x =
+        static_cast<float>(blit.src_rect.GetWidth()) / static_cast<float>(src_extent.width);
+    const float tex_scale_y =
+        static_cast<float>(blit.src_rect.GetHeight()) / static_cast<float>(src_extent.height);
+    const float tex_offset_x =
+        static_cast<float>(blit.src_rect.left) / static_cast<float>(src_extent.width);
+    const float tex_offset_y =
+        static_cast<float>(blit.src_rect.bottom) / static_cast<float>(src_extent.height);
+
+    scheduler.Record([pipeline, layout, texture_descriptor_set, blit, tex_scale_x, tex_scale_y,
+                      tex_offset_x, tex_offset_y, src_scale](vk::CommandBuffer cmdbuf) {
+        const FilterPushConstants push_constants{.tex_scale = {tex_scale_x, tex_scale_y},
+                                                 .tex_offset = {tex_offset_x, tex_offset_y},
+                                                 .res_scale = src_scale};
+
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+
+        // Bind single texture descriptor set
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
+                                  texture_descriptor_set, {});
+
+        cmdbuf.pushConstants(layout, FILTER_PUSH_CONSTANT_RANGE.stageFlags,
+                             FILTER_PUSH_CONSTANT_RANGE.offset, FILTER_PUSH_CONSTANT_RANGE.size,
+                             &push_constants);
+
+        // Set up viewport and scissor for filtering (don't use BindBlitState as it overwrites
+        // push constants)
+        const vk::Offset2D offset{
+            .x = std::min<s32>(blit.dst_rect.left, blit.dst_rect.right),
+            .y = std::min<s32>(blit.dst_rect.bottom, blit.dst_rect.top),
+        };
+        const vk::Extent2D extent{
+            .width = blit.dst_rect.GetWidth(),
+            .height = blit.dst_rect.GetHeight(),
+        };
+        const vk::Viewport viewport{
+            .x = static_cast<float>(offset.x),
+            .y = static_cast<float>(offset.y),
+            .width = static_cast<float>(extent.width),
+            .height = static_cast<float>(extent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+        const vk::Rect2D scissor{
+            .offset = offset,
+            .extent = extent,
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+        cmdbuf.draw(3, 1, 0, 0);
+    });
+    scheduler.MakeDirty(StateFlags::Pipeline);
 }
 
 vk::Pipeline BlitHelper::MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout) {

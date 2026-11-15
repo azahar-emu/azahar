@@ -39,7 +39,10 @@ public:
     bool DepthToBuffer(Surface& source, vk::Buffer buffer,
                        const VideoCore::BufferTextureCopy& copy);
 
+    // Resolve the MSAA texture into the non-msaa base/scaled texture
     void ResolveTexture(Surface& surface);
+    // Copy the non-MSAA based/scaled texture into the msaa texture
+    void BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit);
 
 private:
     vk::Pipeline MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout);
