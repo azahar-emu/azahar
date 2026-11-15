@@ -60,16 +60,18 @@ static const NSUInteger kMaxPairingBytes = 65536;
         return @"The file is not a property list.";
     }
     NSDictionary* dictionary = plist;
-    if (dictionary[@"HostCertificate"] || dictionary[@"DeviceCertificate"] ||
-        dictionary[@"HostPrivateKey"] || dictionary[@"SystemBUID"]) {
-        return @"This is an older kind of pairing file (lockdown). The helper needs a "
-               @"RemotePairing file, with public_key, private_key and identifier.";
-    }
+    // The RemotePairing keys decide. A file can hold both kinds (the ones SideStore writes on
+    // recent iOS versions have the old lockdown keys as well), which is fine.
     NSData* publicKey = dictionary[@"public_key"];
     NSData* privateKey = dictionary[@"private_key"];
     if (![publicKey isKindOfClass:NSData.class] || publicKey.length != 32 ||
         ![privateKey isKindOfClass:NSData.class] || privateKey.length != 32 ||
         ![dictionary[@"identifier"] isKindOfClass:NSString.class]) {
+        if (dictionary[@"HostCertificate"] || dictionary[@"DeviceCertificate"] ||
+            dictionary[@"HostPrivateKey"] || dictionary[@"SystemBUID"]) {
+            return @"This is an older kind of pairing file (lockdown) without the RemotePairing "
+                   @"keys. The helper needs one with public_key, private_key and identifier.";
+        }
         return @"This is not a RemotePairing file (public_key, private_key and identifier).";
     }
     return nil;
