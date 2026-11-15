@@ -143,12 +143,26 @@ struct PresentUniforms {
     s32 anaglyph_mode;
     s32 sharp_pixels;
     s32 sharpness;
+    s32 sharpen_method;
+    s32 scale_filter;
+    s32 grid_strength;
+    s32 saturation;
+    s32 contrast;
+    s32 brightness;
+    s32 pad0;
+    s32 pad1;
 };
-static_assert(sizeof(PresentUniforms) == 64);
+static_assert(sizeof(PresentUniforms) == 96);
 
 std::atomic<int> g_post_effect{0};
 std::atomic<int> g_sharp_pixels{0};
 std::atomic<int> g_sharpness{0};
+std::atomic<int> g_sharpen_method{0};
+std::atomic<int> g_scale_filter{0};
+std::atomic<int> g_grid_strength{0};
+std::atomic<int> g_saturation{0};
+std::atomic<int> g_contrast{0};
+std::atomic<int> g_brightness{0};
 std::atomic<int> g_anaglyph_mode{0};
 std::mutex g_custom_post_mutex;
 std::string g_custom_post_path;
@@ -733,6 +747,14 @@ void RendererMetal::DrawSingleScreen(id<MTLRenderCommandEncoder> encoder, u32 sc
         .anaglyph_mode = 0,
         .sharp_pixels = g_sharp_pixels.load(std::memory_order_relaxed),
         .sharpness = g_sharpness.load(std::memory_order_relaxed),
+        .sharpen_method = g_sharpen_method.load(std::memory_order_relaxed),
+        .scale_filter = g_scale_filter.load(std::memory_order_relaxed),
+        .grid_strength = g_grid_strength.load(std::memory_order_relaxed),
+        .saturation = g_saturation.load(std::memory_order_relaxed),
+        .contrast = g_contrast.load(std::memory_order_relaxed),
+        .brightness = g_brightness.load(std::memory_order_relaxed),
+        .pad0 = 0,
+        .pad1 = 0,
     };
     DrawQuad(encoder, vertices, screen_info.texture, uniforms);
 }
@@ -1019,6 +1041,14 @@ void RendererMetal::DrawUpscaled(id<MTLRenderCommandEncoder> encoder, const Upsc
         .anaglyph_mode = 0,
         .sharp_pixels = g_sharp_pixels.load(std::memory_order_relaxed),
         .sharpness = g_sharpness.load(std::memory_order_relaxed),
+        .sharpen_method = g_sharpen_method.load(std::memory_order_relaxed),
+        .scale_filter = g_scale_filter.load(std::memory_order_relaxed),
+        .grid_strength = g_grid_strength.load(std::memory_order_relaxed),
+        .saturation = g_saturation.load(std::memory_order_relaxed),
+        .contrast = g_contrast.load(std::memory_order_relaxed),
+        .brightness = g_brightness.load(std::memory_order_relaxed),
+        .pad0 = 0,
+        .pad1 = 0,
     };
     DrawQuad(encoder, vertices, upscale_slots[index].output, uniforms);
 }
@@ -2579,6 +2609,16 @@ FrameStats TakeFrameStats() {
 void SetPostProcessing(int effect, int anaglyph_mode) {
     g_post_effect.store(effect, std::memory_order_relaxed);
     g_anaglyph_mode.store(anaglyph_mode, std::memory_order_relaxed);
+}
+
+void SetScreenStyle(int sharpen_method, int scale_filter, int grid_strength, int saturation,
+                    int contrast, int brightness) {
+    g_sharpen_method.store(std::clamp(sharpen_method, 0, 1), std::memory_order_relaxed);
+    g_scale_filter.store(std::clamp(scale_filter, 0, 2), std::memory_order_relaxed);
+    g_grid_strength.store(std::clamp(grid_strength, 0, 100), std::memory_order_relaxed);
+    g_saturation.store(std::clamp(saturation, -100, 100), std::memory_order_relaxed);
+    g_contrast.store(std::clamp(contrast, -100, 100), std::memory_order_relaxed);
+    g_brightness.store(std::clamp(brightness, -100, 100), std::memory_order_relaxed);
 }
 
 void SetSharpness(bool sharp_pixels, int sharpness) {

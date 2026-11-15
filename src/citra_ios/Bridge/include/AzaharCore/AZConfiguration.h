@@ -47,6 +47,15 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) BOOL sharpPixels;
 /// Sharpening of the screens, 0 (off) to 100 percent.
 @property(nonatomic) NSInteger sharpness;
+/// Sharpening method (0 unsharp mask, 1 contrast adaptive), the filter when a screen is enlarged
+/// (0 bilinear, 1 bicubic, 2 Lanczos), LCD grid darkness (0 default, 1-100) and a color
+/// adjustment (-100 to 100 each).
+@property(nonatomic) NSInteger sharpenMethod;
+@property(nonatomic) NSInteger scaleFilter;
+@property(nonatomic) NSInteger gridStrength;
+@property(nonatomic) NSInteger saturation;
+@property(nonatomic) NSInteger contrast;
+@property(nonatomic) NSInteger brightness;
 @property(nonatomic) BOOL skipDuplicateFrames;
 @property(nonatomic) BOOL asyncShaderCompilation;
 /// Keep showing the previous frame while a draw waits for its shader (no flicker, a repeated frame).

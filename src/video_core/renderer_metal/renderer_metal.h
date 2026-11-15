@@ -57,6 +57,12 @@ void SetPostProcessing(int effect, int anaglyph_mode);
 /// next frame.
 void SetSharpness(bool sharp_pixels, int sharpness);
 
+/// How the screens look: the sharpening method (0 unsharp mask, 1 contrast adaptive), the filter
+/// used when a screen is enlarged (0 bilinear, 1 bicubic, 2 Lanczos), how dark the gaps of the LCD
+/// grid are (0 default, 1-100), and a color adjustment (-100 to 100 each, 0 for none).
+void SetScreenStyle(int sharpen_method, int scale_filter, int grid_strength, int saturation,
+                    int contrast, int brightness);
+
 /// A Metal file with a post_effect function that replaces the built-in effect, applied to games
 /// started afterwards. See the post-processing section of the iOS settings. Empty for none.
 void SetCustomPostShader(const std::string& path);

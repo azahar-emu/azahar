@@ -548,6 +548,41 @@ struct GraphicsSettingsView: View {
                         set: { settings.sharpness = Int(($0 / 5).rounded()) * 5 }),
                         in: 0...100, step: 5)
                 }
+                Picker("Sharpening Method", selection: $settings.sharpenMethod) {
+                    Text("Unsharp Mask").tag(0)
+                    Text("Contrast Adaptive").tag(1)
+                }
+                Picker("Scaling Filter", selection: $settings.scaleFilter) {
+                    Text("Bilinear").tag(0)
+                    Text("Bicubic").tag(1)
+                    Text("Lanczos").tag(2)
+                }
+                .disabled(settings.sharpPixels)
+                VStack(alignment: .leading) {
+                    Text("LCD Grid Darkness: " + (settings.gridStrength == 0 ? "Default" : "\(settings.gridStrength)%"))
+                    Slider(value: Binding(
+                        get: { Double(settings.gridStrength) },
+                        set: { settings.gridStrength = Int(($0 / 5).rounded()) * 5 }),
+                        in: 0...100, step: 5)
+                }
+                .disabled(settings.postEffect != 2)
+                VStack(alignment: .leading) {
+                    Text("Saturation: \(settings.saturation)%")
+                    Slider(value: Binding(
+                        get: { Double(settings.saturation) },
+                        set: { settings.saturation = Int(($0 / 5).rounded()) * 5 }),
+                        in: -100...100, step: 5)
+                    Text("Contrast: \(settings.contrast)%")
+                    Slider(value: Binding(
+                        get: { Double(settings.contrast) },
+                        set: { settings.contrast = Int(($0 / 5).rounded()) * 5 }),
+                        in: -100...100, step: 5)
+                    Text("Brightness: \(settings.brightness)%")
+                    Slider(value: Binding(
+                        get: { Double(settings.brightness) },
+                        set: { settings.brightness = Int(($0 / 5).rounded()) * 5 }),
+                        in: -100...100, step: 5)
+                }
                 Picker("Custom Shader", selection: $settings.postShader) {
                     Text("None").tag("")
                     ForEach(postShaders, id: \.self) { Text($0).tag($0) }
@@ -560,7 +595,13 @@ struct GraphicsSettingsView: View {
                 InfoHeader("Post-Processing") {
                     Text("Sharp Pixels keeps the pixels of a screen crisp when it is enlarged (only "
                          + "the edge of a pixel is smoothed). Sharpening adds contrast at edges, "
-                         + "after MetalFX, and can be combined with an effect. "
+                         + "after MetalFX, and can be combined with an effect. Contrast Adaptive "
+                         + "sharpening only sharpens where the picture is soft and keeps edges "
+                         + "free of halos. The Scaling Filter sets how a screen is enlarged "
+                         + "(Bicubic and Lanczos keep edges crisper than Bilinear; Sharp Pixels "
+                         + "takes its place). LCD Grid Darkness is how dark the gaps of the LCD "
+                         + "Grid effect are, Saturation, Contrast and Brightness adjust the "
+                         + "colors. "
                          + "An effect is applied to the finished screens. A custom shader replaces it: "
                          + "put a .metal file with a post_effect function in Files › Azahar › shaders "
                          + "› post (Example.metal shows how). A shader that does not compile is "

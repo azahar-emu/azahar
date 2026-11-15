@@ -55,6 +55,18 @@ struct GameSettingsView: View {
                 OverrideToggle("Sharp Pixels", value: $overrides.sharpPixels)
                 OverridePicker("Sharpening", value: $overrides.sharpness,
                                options: [0, 25, 50, 75, 100]) { $0 == 0 ? "Off" : "\($0)%" }
+                OverridePicker("Sharpening Method", value: $overrides.sharpenMethod,
+                               options: [0, 1]) { ["Unsharp Mask", "Contrast Adaptive"][$0] }
+                OverridePicker("Scaling Filter", value: $overrides.scaleFilter,
+                               options: [0, 1, 2]) { ["Bilinear", "Bicubic", "Lanczos"][$0] }
+                OverridePicker("LCD Grid Darkness", value: $overrides.gridStrength,
+                               options: [0, 25, 50, 75, 100]) { $0 == 0 ? "Default" : "\($0)%" }
+                OverridePicker("Saturation", value: $overrides.saturation,
+                               options: [-50, -25, 0, 25, 50]) { $0 == 0 ? "Normal" : "\($0)%" }
+                OverridePicker("Contrast", value: $overrides.contrast,
+                               options: [-50, -25, 0, 25, 50]) { $0 == 0 ? "Normal" : "\($0)%" }
+                OverridePicker("Brightness", value: $overrides.brightness,
+                               options: [-50, -25, 0, 25, 50]) { $0 == 0 ? "Normal" : "\($0)%" }
                 OverridePicker("Anisotropic Filtering", value: $overrides.anisotropy,
                                options: [1, 2, 4, 8, 16]) { $0 == 1 ? "Off" : "\($0)x" }
                 OverrideToggle("Fast Shader Math", value: $overrides.fastShaderMath)

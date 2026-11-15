@@ -129,6 +129,14 @@ struct PresentUniforms {
     int anaglyph_mode;    // 0 Dubois, 1 gray, 2 half color, 3 color
     int sharp_pixels;     // 1: the screen's pixels stay crisp when it is enlarged ("sharp bilinear")
     int sharpness;        // 0 off (effect 1 uses its own amount), 1-100: sharpening amount in percent
+    int sharpen_method;   // 0 unsharp mask, 1 contrast adaptive sharpening
+    int scale_filter;     // when a screen is enlarged: 0 bilinear, 1 bicubic (Catmull-Rom), 2 Lanczos
+    int grid_strength;    // LCD grid: 0 the default depth, 1-100 how dark the gaps are
+    int saturation;       // color adjustment, -100 to 100 (0 none)
+    int contrast;
+    int brightness;
+    int pad0;
+    int pad1;
 };
 
 struct PresentVertex {
@@ -153,6 +161,63 @@ vertex PresentVOut present_vs(uint vid [[vertex_id]],
     return o;
 }
 
+// Bicubic (Catmull-Rom) filtering in nine bilinear reads. Keeps edges crisper than bilinear when
+// a screen is enlarged. It can ring a little at hard edges, so the result is clamped.
+float3 present_catmull_rom(texture2d<float> tex, sampler s, float2 uv) {
+    float2 size = float2(tex.get_width(), tex.get_height());
+    float2 pos = uv * size;
+    float2 center = floor(pos - 0.5f) + 0.5f;
+    float2 f = pos - center;
+    float2 w0 = f * (-0.5f + f * (1.0f - 0.5f * f));
+    float2 w1 = 1.0f + f * f * (-2.5f + 1.5f * f);
+    float2 w2 = f * (0.5f + f * (2.0f - 1.5f * f));
+    float2 w3 = f * f * (-0.5f + 0.5f * f);
+    float2 w12 = w1 + w2;
+    float2 t0 = (center - 1.0f) / size;
+    float2 t12 = (center + w2 / w12) / size;
+    float2 t3 = (center + 2.0f) / size;
+    float3 result =
+        (tex.sample(s, float2(t0.x, t0.y)).rgb * w0.x + tex.sample(s, float2(t12.x, t0.y)).rgb * w12.x +
+         tex.sample(s, float2(t3.x, t0.y)).rgb * w3.x) * w0.y +
+        (tex.sample(s, float2(t0.x, t12.y)).rgb * w0.x + tex.sample(s, float2(t12.x, t12.y)).rgb * w12.x +
+         tex.sample(s, float2(t3.x, t12.y)).rgb * w3.x) * w12.y +
+        (tex.sample(s, float2(t0.x, t3.y)).rgb * w0.x + tex.sample(s, float2(t12.x, t3.y)).rgb * w12.x +
+         tex.sample(s, float2(t3.x, t3.y)).rgb * w3.x) * w3.y;
+    return clamp(result, 0.0f, 1.0f);
+}
+
+float present_lanczos_weight(float x) {
+    x = fabs(x);
+    if (x < 1e-4f) {
+        return 1.0f;
+    }
+    if (x >= 2.0f) {
+        return 0.0f;
+    }
+    const float px = 3.14159265f * x;
+    return sin(px) * sin(px * 0.5f) / (px * px * 0.5f);
+}
+
+// Lanczos (two lobes) over the 4x4 nearest texels: sharper than bicubic, a little more ringing.
+float3 present_lanczos(texture2d<float> tex, float2 uv) {
+    constexpr sampler nearest_sampler(filter::nearest, address::clamp_to_edge);
+    float2 size = float2(tex.get_width(), tex.get_height());
+    float2 pos = uv * size;
+    float2 base = floor(pos - 0.5f);
+    float3 sum = float3(0.0f);
+    float total = 0.0f;
+    for (int j = -1; j <= 2; j++) {
+        for (int i = -1; i <= 2; i++) {
+            float2 texel = base + float2(i, j);
+            float w = present_lanczos_weight(pos.x - (texel.x + 0.5f)) *
+                      present_lanczos_weight(pos.y - (texel.y + 0.5f));
+            sum += tex.sample(nearest_sampler, (texel + 0.5f) / size).rgb * w;
+            total += w;
+        }
+    }
+    return clamp(sum / max(total, 1e-4f), 0.0f, 1.0f);
+}
+
 fragment float4 present_fs(PresentVOut in [[stage_in]], texture2d<float> screen [[texture(0)]],
                            sampler s [[sampler(0)]], constant PresentUniforms& u [[buffer(1)]]) {
     if (u.use_fill != 0) {
@@ -170,29 +235,59 @@ fragment float4 present_fs(PresentVOut in [[stage_in]], texture2d<float> screen 
         float2 blend = clamp((p - base - 0.5f) * scale + 0.5f, 0.0f, 1.0f);
         uv = (base + blend) / size;
     }
-    float3 color = screen.sample(s, uv).rgb;
-    // Sharpening: add the difference to the average of the four neighbours. The effect "Sharpen"
-    // has a fixed amount, the sharpness setting an adjustable one (and works with the other
-    // effects and MetalFX).
+    float3 color;
+    if (u.sharp_pixels == 0 && u.scale_filter == 1) {
+        color = present_catmull_rom(screen, s, uv);
+    } else if (u.sharp_pixels == 0 && u.scale_filter == 2) {
+        color = present_lanczos(screen, uv);
+    } else {
+        color = screen.sample(s, uv).rgb;
+    }
+    // Sharpening. The effect "Sharpen" has a fixed amount, the sharpness setting an adjustable
+    // one (and works with the other effects and MetalFX).
     const float amount = u.sharpness > 0 ? float(u.sharpness) * 0.015f
                                          : (u.effect == 1 ? 0.8f : 0.0f);
     if (amount > 0.0f) {
         float2 texel = 1.0f / float2(screen.get_width(), screen.get_height());
-        float3 around = screen.sample(s, uv + float2(texel.x, 0.0f)).rgb +
-                        screen.sample(s, uv - float2(texel.x, 0.0f)).rgb +
-                        screen.sample(s, uv + float2(0.0f, texel.y)).rgb +
-                        screen.sample(s, uv - float2(0.0f, texel.y)).rgb;
-        color = clamp(color + (color - around * 0.25f) * amount, 0.0f, 1.0f);
+        float3 right = screen.sample(s, uv + float2(texel.x, 0.0f)).rgb;
+        float3 left = screen.sample(s, uv - float2(texel.x, 0.0f)).rgb;
+        float3 down = screen.sample(s, uv + float2(0.0f, texel.y)).rgb;
+        float3 up = screen.sample(s, uv - float2(0.0f, texel.y)).rgb;
+        if (u.sharpen_method == 1) {
+            // Contrast adaptive sharpening (AMD FidelityFX CAS, MIT): sharpens where the picture
+            // is soft and leaves strong edges alone, so there are fewer halos than with the
+            // unsharp mask. The amount (0.015 per percent) maps to its strength 0 to 1.
+            float3 mn = min(min(min(left, right), min(up, down)), color);
+            float3 mx = max(max(max(left, right), max(up, down)), color);
+            float3 amp = sqrt(clamp(min(mn, 2.0f - mx) / max(mx, 1e-4f), 0.0f, 1.0f));
+            float strength = clamp(amount / 1.2f, 0.0f, 1.0f);
+            float peak = -1.0f / mix(8.0f, 5.0f, strength);
+            float3 w = amp * peak;
+            color = clamp((color + (left + right + up + down) * w) / (1.0f + 4.0f * w), 0.0f, 1.0f);
+        } else {
+            // Unsharp mask: add the difference to the average of the four neighbours.
+            float3 around = right + left + down + up;
+            color = clamp(color + (color - around * 0.25f) * amount, 0.0f, 1.0f);
+        }
     }
     if (u.effect == 2) {
         // LCD grid: darken the gaps between the pixels of the console's screen.
         float2 cell = fract(in.tex_coord * float2(screen.get_width(), screen.get_height()));
         float2 edge = smoothstep(0.0f, 0.18f, cell) * smoothstep(0.0f, 0.18f, 1.0f - cell);
-        color *= mix(0.55f, 1.0f, edge.x * edge.y);
+        const float depth = u.grid_strength > 0 ? float(u.grid_strength) * 0.008f : 0.45f;
+        color *= mix(1.0f - depth, 1.0f, edge.x * edge.y);
     } else if (u.effect == 3) {
         // Scanlines: every other row of the console's screen is a little darker.
         float row = fract(in.tex_coord.y * float(screen.get_height()));
         color *= mix(0.6f, 1.0f, smoothstep(0.0f, 0.5f, row) * smoothstep(0.0f, 0.5f, 1.0f - row));
+    }
+    // Color adjustment.
+    if (u.saturation != 0 || u.contrast != 0 || u.brightness != 0) {
+        const float luma = dot(color, float3(0.2126f, 0.7152f, 0.0722f));
+        color = mix(float3(luma), color, 1.0f + float(u.saturation) * 0.01f);
+        color = (color - 0.5f) * (1.0f + float(u.contrast) * 0.01f) + 0.5f;
+        color += float(u.brightness) * 0.005f;
+        color = clamp(color, 0.0f, 1.0f);
     }
     return float4(color, 1.0f);
 }

@@ -308,6 +308,16 @@ final class AppSettings: ObservableObject {
     @Published var sharpPixels: Bool { didSet { save(sharpPixels, "sharpPixels") } }
     /// Sharpening of the screens in percent, 0 is off.
     @Published var sharpness: Int { didSet { save(sharpness, "sharpness") } }
+    /// 0 unsharp mask, 1 contrast adaptive sharpening.
+    @Published var sharpenMethod: Int { didSet { save(sharpenMethod, "sharpenMethod") } }
+    /// How a screen is enlarged: 0 bilinear, 1 bicubic, 2 Lanczos.
+    @Published var scaleFilter: Int { didSet { save(scaleFilter, "scaleFilter") } }
+    /// Darkness of the LCD grid gaps in percent, 0 is the default depth.
+    @Published var gridStrength: Int { didSet { save(gridStrength, "gridStrength") } }
+    /// Color adjustment of the screens, -100 to 100, 0 for none.
+    @Published var saturation: Int { didSet { save(saturation, "saturation") } }
+    @Published var contrast: Int { didSet { save(contrast, "contrast") } }
+    @Published var brightness: Int { didSet { save(brightness, "brightness") } }
 
     // Layout
     @Published var layout: ScreenLayout { didSet { save(layout.rawValue, "layout") } }
@@ -480,6 +490,12 @@ final class AppSettings: ObservableObject {
         upscaleFactorTenths = value("upscaleFactorTenths", 0)
         sharpPixels = value("sharpPixels", false)
         sharpness = value("sharpness", 0)
+        sharpenMethod = value("sharpenMethod", 0)
+        scaleFilter = value("scaleFilter", 0)
+        gridStrength = value("gridStrength", 0)
+        saturation = value("saturation", 0)
+        contrast = value("contrast", 0)
+        brightness = value("brightness", 0)
 
         layout = ScreenLayout(rawValue: value("layout", ScreenLayout.standard.rawValue)) ?? .standard
         portraitLayout = PortraitScreenLayout(rawValue: value("portraitLayout", 0)) ?? .topFullWidth
@@ -624,6 +640,12 @@ final class AppSettings: ObservableObject {
         config.upscaleFactorTenths = upscaleFactorTenths
         config.sharpPixels = sharpPixels
         config.sharpness = sharpness
+        config.sharpenMethod = sharpenMethod
+        config.scaleFilter = scaleFilter
+        config.gridStrength = gridStrength
+        config.saturation = saturation
+        config.contrast = contrast
+        config.brightness = brightness
         config.layoutOption = AZLayoutOption(rawValue: layout.rawValue) ?? .default
         config.portraitLayoutOption =
             AZPortraitLayoutOption(rawValue: portraitLayout.rawValue) ?? .topFullWidth

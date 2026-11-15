@@ -627,6 +627,12 @@ const char* ThermalStateName() {
                                                         : Metal::UpscalerMode::Off);
     Metal::SetUpscaleFactor(static_cast<float>(configuration.upscaleFactorTenths) / 10.0f);
     Metal::SetSharpness(configuration.sharpPixels, static_cast<int>(configuration.sharpness));
+    Metal::SetScreenStyle(static_cast<int>(configuration.sharpenMethod),
+                          static_cast<int>(configuration.scaleFilter),
+                          static_cast<int>(configuration.gridStrength),
+                          static_cast<int>(configuration.saturation),
+                          static_cast<int>(configuration.contrast),
+                          static_cast<int>(configuration.brightness));
 
     _externalDisplayEnabled = configuration.useExternalDisplay;
     _userLayoutOption = static_cast<Settings::LayoutOption>(configuration.layoutOption);

@@ -20,6 +20,12 @@
     config.upscaleFactorTenths = 0;
     config.sharpPixels = NO;
     config.sharpness = 0;
+    config.sharpenMethod = 0;
+    config.scaleFilter = 0;
+    config.gridStrength = 0;
+    config.saturation = 0;
+    config.contrast = 0;
+    config.brightness = 0;
     config.skipDuplicateFrames = NO;
     config.asyncShaderCompilation = YES;
     config.framePacing = YES;
