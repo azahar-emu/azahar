@@ -38,6 +38,7 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: session.isActive)
         .overlay(alignment: .top) { JITBanner() }
+        .overlay { JITWaitingOverlay() }
         .onAppear { ControllerNavigator.shared.start(session: session, settings: settings) }
         .onChange(of: scenePhase) { phase in
             if phase == .active, !session.isActive {
@@ -78,8 +79,7 @@ struct JITBanner: View {
             case .preparing:
                 banner {
                     ProgressView()
-                    Text(status.waitingGame.map { "Preparing JIT… \($0) starts when it is ready" }
-                         ?? "Preparing JIT…")
+                    Text("Preparing JIT…")
                 }
             case .enabled:
                 banner {
@@ -108,5 +108,35 @@ struct JITBanner: View {
             .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
             .padding(.top, 6)
             .transition(.move(edge: .top).combined(with: .opacity))
+    }
+}
+
+/// Shown when a game was started while JIT is still being prepared: the game starts by itself as
+/// soon as JIT is acquired.
+struct JITWaitingOverlay: View {
+    @ObservedObject private var status = JITStatus.shared
+
+    var body: some View {
+        if let game = status.waitingGame {
+            ZStack {
+                Color.black.opacity(0.35).ignoresSafeArea()
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .controlSize(.large)
+                    Text("Waiting for JIT Acquisition")
+                        .font(.headline)
+                    Text("\(game) starts as soon as JIT is ready.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Cancel", role: .cancel) { status.cancelWaiting() }
+                        .buttonStyle(.bordered)
+                }
+                .padding(24)
+                .frame(maxWidth: 300)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+            }
+            .transition(.opacity)
+        }
     }
 }

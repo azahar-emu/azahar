@@ -76,6 +76,12 @@ final class JITStatus: ObservableObject {
         }
     }
 
+    /// Forgets the game that was waiting for JIT (the person cancelled).
+    func cancelWaiting() {
+        waiting = []
+        waitingGame = nil
+    }
+
     func dismiss() {
         if case .failed = state { state = .idle }
     }

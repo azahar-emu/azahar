@@ -202,9 +202,9 @@ static NSDictionary* AttachAndPrepare(DebugProxyHandle* proxy, int pid, NSArray<
     }
 
     // One byte (0x69) per 16 KiB page, through the debugger (writing it from the app itself
-    // would kill the process). 512 packets are sent, then their answers are read (fewer round trips than one by one).
+    // would kill the process). 1024 packets are sent in one go, then their answers are read.
     const uint64_t page = 16384;
-    const NSUInteger batchSize = 512;
+    const NSUInteger batchSize = 1024;
     uint64_t pages = 0, written = 0;
     for (NSUInteger r = 0; r + 1 < ranges.count; r += 2) {
         const uint64_t base = ranges[r].unsignedLongLongValue;
@@ -216,15 +216,17 @@ static NSDictionary* AttachAndPrepare(DebugProxyHandle* proxy, int pid, NSArray<
         uint64_t offset = 0;
         while (offset < size) {
             NSUInteger inBatch = 0;
+            // The packets of a batch go out in one send.
+            NSMutableData* batch = [NSMutableData data];
             for (; inBatch < batchSize && offset < size; inBatch++, offset += page) {
-                NSData* packet = Packet([NSString stringWithFormat:@"M%llx,1:69", base + offset]);
-                IdeviceFfiError* error = debug_proxy_send_raw(proxy, packet.bytes, packet.length);
-                if (error != NULL) {
-                    detail = ErrorText(error);
-                    Exchange(proxy, @"D", &answer, &detail);
-                    return @{@"status" : @"prepare-failed", @"detail" : detail, @"pages" : @(pages), @"written" : @(written)};
-                }
+                [batch appendData:Packet([NSString stringWithFormat:@"M%llx,1:69", base + offset])];
                 pages++;
+            }
+            IdeviceFfiError* sendError = debug_proxy_send_raw(proxy, batch.bytes, batch.length);
+            if (sendError != NULL) {
+                detail = ErrorText(sendError);
+                Exchange(proxy, @"D", &answer, &detail);
+                return @{@"status" : @"prepare-failed", @"detail" : detail, @"pages" : @(pages), @"written" : @(written)};
             }
             for (NSUInteger i = 0; i < inBatch; i++) {
                 char* response = NULL;
