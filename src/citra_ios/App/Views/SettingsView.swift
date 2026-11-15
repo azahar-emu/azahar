@@ -4,6 +4,7 @@
 
 import AzaharCore
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 /// Settings, grouped in categories.
