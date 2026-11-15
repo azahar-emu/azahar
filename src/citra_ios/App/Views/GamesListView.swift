@@ -77,7 +77,6 @@ struct GamesListView: View {
                     listView
                 }
             }
-            .safeAreaInset(edge: .top) { JITBanner() }
             .navigationTitle("Games")
             .searchable(text: $searchText, prompt: "Search games")
             .refreshable { library.refresh() }
@@ -433,50 +432,5 @@ struct GameInfoView: View {
                 }
             }
         }
-    }
-}
-
-
-/// The status of the built-in JIT helper above the game list: preparing, enabled for a moment,
-/// or what went wrong.
-private struct JITBanner: View {
-    @ObservedObject private var status = JITStatus.shared
-
-    var body: some View {
-        Group {
-            switch status.state {
-            case .idle:
-                EmptyView()
-            case .preparing:
-                banner {
-                    ProgressView()
-                    Text(status.waitingGame.map { "Preparing JIT… \($0) starts when it is ready" }
-                         ?? "Preparing JIT…")
-                }
-            case .enabled:
-                banner {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                    Text("JIT is enabled")
-                }
-            case .failed(let report):
-                banner {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                    Text("JIT could not be enabled. Check Settings › General › CPU.")
-                    Button("OK") { status.dismiss() }
-                }
-                .accessibilityHint(report)
-            }
-        }
-        .animation(.easeInOut(duration: 0.25), value: status.state)
-    }
-
-    private func banner<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        HStack(spacing: 8) { content() }
-            .font(.footnote.weight(.medium))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(.ultraThinMaterial, in: Capsule())
-            .padding(.top, 4)
-            .transition(.opacity)
     }
 }

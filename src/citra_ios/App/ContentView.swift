@@ -37,6 +37,7 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: session.isActive)
+        .overlay(alignment: .top) { JITBanner() }
         .onAppear { ControllerNavigator.shared.start(session: session, settings: settings) }
         .onChange(of: scenePhase) { phase in
             if phase == .active, !session.isActive {
@@ -60,5 +61,52 @@ struct ContentView: View {
         } message: {
             Text(session.errorMessage ?? "Unknown error")
         }
+    }
+}
+
+/// The status of the built-in JIT helper as a toast over the app: preparing, enabled for a
+/// moment, or what went wrong. It floats over whatever is showing and does not move or block it
+/// (touches go through it, except on its OK button).
+struct JITBanner: View {
+    @ObservedObject private var status = JITStatus.shared
+
+    var body: some View {
+        Group {
+            switch status.state {
+            case .idle:
+                EmptyView()
+            case .preparing:
+                banner {
+                    ProgressView()
+                    Text(status.waitingGame.map { "Preparing JIT… \($0) starts when it is ready" }
+                         ?? "Preparing JIT…")
+                }
+            case .enabled:
+                banner {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    Text("JIT is enabled")
+                }
+            case .failed(let report):
+                banner {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    Text("JIT could not be enabled. Check Settings › General › CPU.")
+                    Button("OK") { status.dismiss() }
+                }
+                .accessibilityHint(report)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: status.state)
+        .allowsHitTesting({ if case .failed = status.state { return true } else { return false } }())
+    }
+
+    private func banner<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        HStack(spacing: 8) { content() }
+            .font(.footnote.weight(.medium))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial, in: Capsule())
+            .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
+            .padding(.top, 6)
+            .transition(.move(edge: .top).combined(with: .opacity))
     }
 }
