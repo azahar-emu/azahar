@@ -46,8 +46,9 @@ constexpr std::uint32_t CS_DEBUGGED = 0x10000000;
 constexpr std::size_t ArenaSize = 512 * 1024 * 1024;
 
 /// Size of the arena of the JIT helper route. The helper writes one byte per 16 KiB page of it,
-/// so a smaller arena is ready sooner.
-constexpr std::size_t HelperArenaSize = 256 * 1024 * 1024;
+/// so a smaller arena is ready sooner (256 MiB took about 2.5 s; it ran out for a game that
+/// asks for several 32 MiB blocks, so it is the size of the debugger route now).
+constexpr std::size_t HelperArenaSize = 512 * 1024 * 1024;
 
 bool IsDebugged() {
     std::uint32_t flags = 0;
