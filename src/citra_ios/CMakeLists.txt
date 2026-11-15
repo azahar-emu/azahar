@@ -207,6 +207,7 @@ if (AZAHAR_IOS_JIT_HELPER)
         message(STATUS "JIT helper: linking ${AZAHAR_IDEVICE_DIR}/lib/libidevice_ffi.a")
         target_link_libraries(azahar_jit_helper PRIVATE
             "-Wl,-force_load,${AZAHAR_IDEVICE_DIR}/lib/libidevice_ffi.a")
+        target_include_directories(azahar_jit_helper PRIVATE "${AZAHAR_IDEVICE_DIR}/include")
         target_compile_definitions(azahar_jit_helper PRIVATE AZ_HAVE_IDEVICE=1)
         set_property(TARGET azahar_jit_helper APPEND PROPERTY COMPILE_DEFINITIONS AZ_HAVE_IDEVICE=1)
     else()

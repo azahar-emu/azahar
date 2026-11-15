@@ -4,6 +4,7 @@
 
 import AzaharCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Settings, grouped in categories.
 struct SettingsView: View {
@@ -66,6 +67,8 @@ struct GeneralSettingsView: View {
     @EnvironmentObject private var compressor: GameCompressor
     @State private var helperReport: String?
     @State private var testingHelper = false
+    @State private var importingPairing = false
+    @State private var pairingStatus = AZJITHelper.pairingStatus()
 
     var body: some View {
         Form {
@@ -88,6 +91,23 @@ struct GeneralSettingsView: View {
                     testingHelper = true
                     helperReport = nil
                     AZJITHelper.test { report in
+                        helperReport = report
+                        testingHelper = false
+                    }
+                }
+                .disabled(testingHelper)
+                LabeledContent("Pairing File", value: pairingStatus)
+                Button("Import Pairing File…") { importingPairing = true }
+                if pairingStatus == "Imported" {
+                    Button("Remove Pairing File", role: .destructive) {
+                        AZJITHelper.removePairingFile()
+                        pairingStatus = AZJITHelper.pairingStatus()
+                    }
+                }
+                Button("Check the Connection to the Debug Service") {
+                    testingHelper = true
+                    helperReport = nil
+                    AZJITHelper.checkConnection { report in
                         helperReport = report
                         testingHelper = false
                     }
@@ -204,6 +224,16 @@ struct GeneralSettingsView: View {
             }
 
             .listRowBackground(LGRowBackground())
+        }
+        .fileImporter(isPresented: $importingPairing,
+                      allowedContentTypes: [.propertyList, .data, .item]) { result in
+            guard case .success(let url) = result else { return }
+            if let problem = AZJITHelper.importPairingFile(at: url) {
+                helperReport = problem
+            } else {
+                helperReport = "Pairing file imported."
+            }
+            pairingStatus = AZJITHelper.pairingStatus()
         }
         .navigationTitle("General")
         .lgSettingsStyle()
