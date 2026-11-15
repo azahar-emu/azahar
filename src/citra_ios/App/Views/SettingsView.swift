@@ -64,6 +64,8 @@ struct GeneralSettingsView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var library: GameLibrary
     @EnvironmentObject private var compressor: GameCompressor
+    @State private var helperReport: String?
+    @State private var testingHelper = false
 
     var body: some View {
         Form {
@@ -81,6 +83,20 @@ struct GeneralSettingsView: View {
                             .keyboardType(.URL)
                     }
                     Button("Open Debugger Now") { JITLauncher.open(settings: settings) }
+                }
+                Button(testingHelper ? "Testing the JIT Helper…" : "Test the JIT Helper (Experimental)") {
+                    testingHelper = true
+                    helperReport = nil
+                    AZJITHelper.test { report in
+                        helperReport = report
+                        testingHelper = false
+                    }
+                }
+                .disabled(testingHelper)
+                if let helperReport {
+                    Text(helperReport)
+                        .font(.footnote.monospaced())
+                        .textSelection(.enabled)
                 }
                 Toggle("CPU JIT", isOn: $settings.cpuJIT)
                     .disabled(!AZEmulator.isJITAvailable)

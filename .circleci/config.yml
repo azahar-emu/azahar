@@ -170,6 +170,12 @@ jobs:
     steps:
       - checkout-submodules
       - show-toolchain
+      # The library of the JIT helper. A failure is reported but does not stop the build: the app
+      # is then built with a helper that says the library is missing.
+      - run:
+          name: Build the idevice library (JIT helper)
+          no_output_timeout: 30m
+          command: ./.ci/build-idevice.sh build/idevice-out || echo "idevice library not built, continuing without it"
       - run:
           name: Configure
           no_output_timeout: 30m

@@ -21,6 +21,7 @@ set(BRIDGE_OBJCXX_SOURCES
     Bridge/AZEmulator.mm
     Bridge/AZFeatures.mm
     Bridge/AZGameInfo.mm
+    Bridge/AZJITHelper.mm
     Bridge/AZMultiplayer.mm
     Bridge/camera_ios.mm
     Bridge/mic_ios.mm
@@ -38,6 +39,7 @@ add_library(azahar_ios_bridge STATIC
     Bridge/include/AzaharCore/AZConfiguration.h
     Bridge/include/AzaharCore/AZEmulator.h
     Bridge/include/AzaharCore/AZGameInfo.h
+    Bridge/include/AzaharCore/AZJITHelper.h
     Bridge/include/AzaharCore/AZMultiplayer.h
     Bridge/include/AzaharCore/AZFrameGenerator.h
     Bridge/include/AzaharCore/module.modulemap
@@ -164,5 +166,54 @@ set_property(TARGET azahar_ios PROPERTY COMPILE_DEFINITIONS "")
 # src/ is a global include directory. On the case-insensitive macOS file system its
 # network/network.h shadows the SDK's <Network/Network.h>, which breaks importing AVFoundation.
 set_property(TARGET azahar_ios PROPERTY INCLUDE_DIRECTORIES "")
+
+# ---------------------------------------------------------------------------------------------
+# JIT helper: an app extension that enables JIT for the app from outside (an app cannot attach a
+# debugger to itself). Its debugging part is the idevice library, built by .ci/build-idevice.sh
+# into build/idevice-out; without it the extension is still built and says so.
+# ---------------------------------------------------------------------------------------------
+option(AZAHAR_IOS_JIT_HELPER "Embed the JIT helper app extension" ON)
+set(AZAHAR_IDEVICE_DIR "${PROJECT_SOURCE_DIR}/build/idevice-out" CACHE PATH
+    "Where .ci/build-idevice.sh put the idevice library")
+
+if (AZAHAR_IOS_JIT_HELPER)
+    add_executable(azahar_jit_helper MACOSX_BUNDLE JITHelper/main.m)
+    set_target_properties(azahar_jit_helper PROPERTIES
+        OUTPUT_NAME "AzaharJITHelper"
+        XCODE_PRODUCT_TYPE "com.apple.product-type.app-extension"
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/JITHelper/Info.plist.in"
+        MACOSX_BUNDLE_BUNDLE_NAME "Azahar JIT Helper"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "${AZAHAR_IOS_BUNDLE_ID}.jit-helper"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${AZAHAR_IOS_BUNDLE_ID}.jit-helper"
+        XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${AZAHAR_IOS_DEPLOYMENT_TARGET}
+        XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+        XCODE_ATTRIBUTE_SKIP_INSTALL YES
+        XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS
+            "${CMAKE_CURRENT_SOURCE_DIR}/JITHelper/JITHelper.entitlements"
+        XCODE_ATTRIBUTE_APPLICATION_EXTENSION_API_ONLY YES
+        XCODE_ATTRIBUTE_ENABLE_BITCODE NO
+    )
+    # Keep the core's C++ flags and include paths away from it (see azahar_ios below).
+    set_property(TARGET azahar_jit_helper PROPERTY COMPILE_OPTIONS "")
+    set_property(TARGET azahar_jit_helper PROPERTY COMPILE_DEFINITIONS "")
+    set_property(TARGET azahar_jit_helper PROPERTY INCLUDE_DIRECTORIES "")
+    # An extension starts at NSExtensionMain, not main.
+    target_link_options(azahar_jit_helper PRIVATE -e _NSExtensionMain -fapplication-extension)
+    target_link_libraries(azahar_jit_helper PRIVATE "-framework Foundation")
+
+    if (EXISTS "${AZAHAR_IDEVICE_DIR}/lib/libidevice_ffi.a")
+        message(STATUS "JIT helper: linking ${AZAHAR_IDEVICE_DIR}/lib/libidevice_ffi.a")
+        target_link_libraries(azahar_jit_helper PRIVATE
+            "-Wl,-force_load,${AZAHAR_IDEVICE_DIR}/lib/libidevice_ffi.a")
+    else()
+        message(STATUS "JIT helper: no idevice library in ${AZAHAR_IDEVICE_DIR}, built without it")
+    endif()
+
+    # Embedded in the app's PlugIns folder.
+    set_property(TARGET azahar_ios PROPERTY XCODE_EMBED_APP_EXTENSIONS azahar_jit_helper)
+    add_dependencies(azahar_ios azahar_jit_helper)
+endif()
 
 target_link_libraries(azahar_ios PRIVATE azahar_ios_bridge "-lc++")
