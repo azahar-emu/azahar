@@ -464,6 +464,11 @@ private:
     std::array<id<MTLTexture>, 2> fx_scaled{};
     id<MTLTexture> fx_depth = nil;
     id<MTLTexture> fx_motion = nil;
+    /// The interpolation runs on a queue of its own, after the real picture (an event), so the
+    /// next frames of the game do not wait behind it on the GPU.
+    id<MTLCommandQueue> fx_queue = nil;
+    id<MTLEvent> fx_event = nil;
+    u64 fx_event_value{};
     u32 fx_width{}, fx_height{};             ///< Size the interpolator works at
     u32 fx_layout_width{}, fx_layout_height{}; ///< Screen size it was made for
     f32 fx_scale{1.0f};
@@ -1886,9 +1891,18 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
         constexpr std::array<f32, 5> fx_scales{1.0f, 0.5f, 0.375f, 0.25f, 0.75f};
         const f32 scale = fx_scales[std::clamp(GetQualityOptions().frame_generation_size, 0, 4)];
         if (PrepareMetalFX(layout.width, layout.height, scale)) {
+            if (fx_queue == nil) {
+                fx_queue = [instance.GetDevice() newCommandQueue];
+                fx_event = [instance.GetDevice() newEvent];
+            }
+            // The real picture is done before the interpolation starts (a signal at the end of
+            // its buffer, a wait at the start of the interpolation's).
+            fx_event_value++;
+            [scheduler.CommandBuffer() encodeSignalEvent:fx_event value:fx_event_value];
             scheduler.Flush();
-            fx_buffer = [instance.GetCommandQueue() commandBuffer];
+            fx_buffer = [fx_queue commandBuffer];
             fx_buffer.label = @"MetalFX frame interpolation";
+            [fx_buffer encodeWaitForEvent:fx_event value:fx_event_value];
             id<MTLTexture> made = fg_made[(fg_made_index + 1) % FG_MADE];
             id<MTLTexture> in_current = current;
             id<MTLTexture> in_previous = fg_color[fg_prev_color];
