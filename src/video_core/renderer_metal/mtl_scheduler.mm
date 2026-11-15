@@ -542,8 +542,8 @@ void RecordPresentedTime(double now) {
     }
 }
 
-void Scheduler::PresentDrawable(id<CAMetalDrawable> drawable, bool measure) {
-    pending_drawables.push_back({drawable, measure});
+void Scheduler::PresentDrawable(id<CAMetalDrawable> drawable, bool measure, u32 swaps) {
+    pending_drawables.push_back({drawable, measure, std::max(swaps, 1u)});
 }
 
 void Scheduler::PushDebugGroup(std::string_view label) {
@@ -584,10 +584,20 @@ void Scheduler::Flush() {
     const bool pace = g_frame_pacing.load(std::memory_order_relaxed) && period > 0.0;
     for (const PendingDrawable& pending : pending_drawables) {
         if (pace && pending.measure) {
-            // Slightly less than a frame so a display refreshing at a multiple of 60 Hz shows the
-            // frame for a whole number of refreshes rather than waiting for one more. Without
-            // this a frame of 16.71 ms on a 120 Hz display would always miss its second refresh.
-            [buffer presentDrawable:pending.drawable afterMinimumDuration:period * 0.96];
+            // A timeline: every frame is due one frame of the game after the one before it
+            // (a whole number of the game's refreshes, 2 for a 30 FPS game), whatever the exact
+            // moment the emulation thread finished it at. A frame that was handed over a little
+            // early waits for its time, one that is late is shown at once and the timeline
+            // starts again from it. Without this each frame was shown at the first display
+            // refresh after it was ready, which jitters by a whole refresh (8 ms at 120 Hz).
+            const double now = CACurrentMediaTime();
+            const double step = period * pending.swaps;
+            double target = pace_last_target > 0.0 ? pace_last_target + step : now;
+            if (target < now - period * 0.5 || target > now + period) {
+                target = now;
+            }
+            pace_last_target = target;
+            [buffer presentDrawable:pending.drawable atTime:target];
         } else {
             [buffer presentDrawable:pending.drawable];
         }

@@ -187,7 +187,7 @@ public:
     /// frame pacing on, it is held on screen for the time of an emulated frame, which keeps the
     /// frames evenly spaced on displays that refresh faster than the game runs. `measure` adds the
     /// presentation to the frame interval statistics (the main display only).
-    void PresentDrawable(id<CAMetalDrawable> drawable, bool measure = true);
+    void PresentDrawable(id<CAMetalDrawable> drawable, bool measure = true, u32 swaps = 1);
 
     /// Commits the current command buffer to the GPU.
     void Flush();
@@ -269,7 +269,11 @@ private:
     struct PendingDrawable {
         id<CAMetalDrawable> drawable;
         bool measure;
+        u32 swaps; ///< Refreshes of the game (1/60 s) this frame lasts: 2 for a 30 FPS game
     };
+    /// When the last paced frame was due on the display (CACurrentMediaTime), the next one is due
+    /// a whole number of the game's refreshes later (see Flush).
+    double pace_last_target{0.0};
     std::vector<PendingDrawable> pending_drawables;
     u32 debug_group_depth{};
 

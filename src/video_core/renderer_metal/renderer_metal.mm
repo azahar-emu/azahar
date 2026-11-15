@@ -458,6 +458,7 @@ private:
     std::atomic<double> fg_last_real_time{0.0};
     u32 fg_swaps{};      ///< SwapBuffers calls (60 per second of emulation)
     u32 fg_last_swaps{}; ///< fg_swaps at the previous new frame
+    u32 plain_last_swaps{}; ///< fg_swaps at the previous frame shown without frame generation
     f32 fg_cadence{1.0f}; ///< Swaps per new frame of the game, smoothed: 2 for a 30 FPS game
     std::chrono::steady_clock::time_point fg_last_frame{};
     double fg_interval{};
@@ -1273,8 +1274,13 @@ void RendererMetal::RenderToLayer(CAMetalLayer* target, const Layout::Framebuffe
     id<MTLRenderCommandEncoder> encoder = scheduler.BeginRendering(desc);
     DrawScreens(encoder, layout);
     scheduler.EndEncoding();
-    // The second display is not paced or measured, it only follows the first.
-    scheduler.PresentDrawable(drawable, allow_upscale);
+    // The second display is not paced or measured, it only follows the first. A frame lasts as
+    // many of the game's refreshes as swaps went by since the last one that was shown.
+    const u32 swaps_since = fg_swaps - plain_last_swaps;
+    if (allow_upscale) {
+        plain_last_swaps = fg_swaps;
+    }
+    scheduler.PresentDrawable(drawable, allow_upscale, std::clamp(swaps_since, 1u, 4u));
 #if AZAHAR_HAS_METALFX
     upscale_pass = UpscalePass::Off;
 #endif
