@@ -11,9 +11,12 @@
 // https://github.com/OatmealDome/dolphin-ios pull request 277); the library for the device
 // protocols is idevice (MIT, https://github.com/jkcoxson/idevice).
 //
-// A request carries "op": "ping" (answers), or "check" with the bytes of a pairing file
-// ("pairing"): opens the tunnel and asks whether the debug service is there. The reply holds a
-// "status" word and, when something failed, a "detail" text.
+// A request carries "op": "ping" (answers), "check" with the bytes of a pairing file
+// ("pairing"): opens the tunnel and asks whether the debug service is there, or "prepare": the
+// same, then attaches to the app ("pid") as a debugger, writes one byte to every 16 KiB page of
+// the given ranges ("ranges": base, size, base, size, ...; none on a device without TXM, where
+// attaching alone is enough) and detaches. TXM lets a page run code only after a debugger wrote
+// it. The reply holds a "status" word and, when something failed, a "detail" text.
 
 #import <Foundation/Foundation.h>
 #include <arpa/inet.h>
@@ -77,8 +80,10 @@ static BOOL ProbeTCP(const char* address, uint16_t port, int timeoutMs) {
     return ok;
 }
 
-/// Opens the tunnel with the pairing file and asks whether the debug proxy service is there.
-static NSDictionary* CheckConnection(NSData* pairing) {
+/// Opens the tunnel with the pairing file, checks that the debug proxy service is offered and
+/// calls the block with the tunnel (nil block: only the check).
+static NSDictionary* ConnectAndRun(NSData* pairing,
+                                   NSDictionary* (^run)(AdapterHandle*, RsdHandshakeHandle*)) {
     if (pairing.length == 0 || pairing.length > 65536) {
         return @{@"status" : @"no-pairing"};
     }
@@ -121,6 +126,8 @@ static NSDictionary* CheckConnection(NSData* pairing) {
         } else if (!available) {
             // The developer disk image is not mounted: the debug service is not offered.
             result = @{@"status" : @"ddi-not-mounted"};
+        } else if (run != nil) {
+            result = run(adapter, handshake);
         } else {
             result = @{@"status" : @"ready"};
         }
@@ -133,6 +140,148 @@ static NSDictionary* CheckConnection(NSData* pairing) {
     }
     rp_pairing_file_free(file);
     return result;
+}
+
+static NSDictionary* CheckConnection(NSData* pairing) {
+    return ConnectAndRun(pairing, nil);
+}
+
+// MARK: Debug protocol
+
+/// A debugserver packet: $body#checksum.
+static NSData* Packet(NSString* body) {
+    NSData* bytes = [body dataUsingEncoding:NSASCIIStringEncoding];
+    uint8_t sum = 0;
+    const uint8_t* p = bytes.bytes;
+    for (NSUInteger i = 0; i < bytes.length; i++) {
+        sum += p[i];
+    }
+    return [[NSString stringWithFormat:@"$%@#%02x", body, sum] dataUsingEncoding:NSASCIIStringEncoding];
+}
+
+/// Sends a packet and reads the answer (an empty string when the proxy gave none). NO when the
+/// sending or reading failed.
+static BOOL Exchange(DebugProxyHandle* proxy, NSString* body, NSString** answer,
+                     NSString** detail) {
+    NSData* packet = Packet(body);
+    IdeviceFfiError* error = debug_proxy_send_raw(proxy, packet.bytes, packet.length);
+    if (error != NULL) {
+        *detail = ErrorText(error);
+        return NO;
+    }
+    char* response = NULL;
+    error = debug_proxy_read_response(proxy, &response);
+    if (error != NULL) {
+        *detail = ErrorText(error);
+        return NO;
+    }
+    *answer = response ? [NSString stringWithUTF8String:response] : @"";
+    if (response != NULL) {
+        idevice_string_free(response);
+    }
+    return YES;
+}
+
+/// Attaches to the process, writes one byte to every page of the ranges, detaches.
+static NSDictionary* AttachAndPrepare(DebugProxyHandle* proxy, int pid, NSArray<NSNumber*>* ranges) {
+    NSString* answer = nil;
+    NSString* detail = nil;
+
+    // Acks are switched off first, the way debuggers do it.
+    debug_proxy_send_ack(proxy);
+    if (!Exchange(proxy, @"QStartNoAckMode", &answer, &detail)) {
+        return @{@"status" : @"attach-failed", @"detail" : [@"QStartNoAckMode: " stringByAppendingString:detail]};
+    }
+    debug_proxy_set_ack_mode(proxy, 0);
+
+    if (!Exchange(proxy, [NSString stringWithFormat:@"vAttach;%x", pid], &answer, &detail)) {
+        return @{@"status" : @"attach-failed", @"detail" : detail};
+    }
+    if (answer.length == 0 || [answer hasPrefix:@"E"]) {
+        return @{@"status" : @"attach-failed", @"detail" : [@"vAttach answered: " stringByAppendingString:answer]};
+    }
+
+    // One byte (0x69) per 16 KiB page, through the debugger (writing it from the app itself
+    // would kill the process). 128 packets are sent, then their answers are read.
+    const uint64_t page = 16384;
+    const NSUInteger batchSize = 128;
+    uint64_t pages = 0, written = 0;
+    for (NSUInteger r = 0; r + 1 < ranges.count; r += 2) {
+        const uint64_t base = ranges[r].unsignedLongLongValue;
+        const uint64_t size = ranges[r + 1].unsignedLongLongValue;
+        if (base == 0 || base % page != 0 || size == 0 || size % page != 0) {
+            Exchange(proxy, @"D", &answer, &detail);
+            return @{@"status" : @"invalid-range"};
+        }
+        uint64_t offset = 0;
+        while (offset < size) {
+            NSUInteger inBatch = 0;
+            for (; inBatch < batchSize && offset < size; inBatch++, offset += page) {
+                NSData* packet = Packet([NSString stringWithFormat:@"M%llx,1:69", base + offset]);
+                IdeviceFfiError* error = debug_proxy_send_raw(proxy, packet.bytes, packet.length);
+                if (error != NULL) {
+                    detail = ErrorText(error);
+                    Exchange(proxy, @"D", &answer, &detail);
+                    return @{@"status" : @"prepare-failed", @"detail" : detail, @"pages" : @(pages), @"written" : @(written)};
+                }
+                pages++;
+            }
+            for (NSUInteger i = 0; i < inBatch; i++) {
+                char* response = NULL;
+                IdeviceFfiError* error = debug_proxy_read_response(proxy, &response);
+                if (error != NULL) {
+                    detail = ErrorText(error);
+                    return @{@"status" : @"prepare-failed", @"detail" : detail, @"pages" : @(pages), @"written" : @(written)};
+                }
+                if (response != NULL) {
+                    if (strstr(response, "OK") != NULL) {
+                        written++;
+                    }
+                    idevice_string_free(response);
+                }
+            }
+        }
+    }
+
+    BOOL detached = Exchange(proxy, @"D", &answer, &detail);
+    if (written != pages) {
+        return @{@"status" : @"prepare-incomplete", @"pages" : @(pages), @"written" : @(written)};
+    }
+    if (!detached) {
+        return @{@"status" : @"detach-failed", @"detail" : detail ?: @"", @"pages" : @(pages)};
+    }
+    return @{@"status" : @"prepared", @"pages" : @(pages), @"written" : @(written)};
+}
+
+/// The whole job of a "prepare" request: the tunnel, then the debugger side.
+static NSDictionary* Prepare(NSData* pairing, int pid, NSArray<NSNumber*>* ranges) {
+    if (pid <= 0) {
+        return @{@"status" : @"invalid-request"};
+    }
+    // CheckConnection with the debug side attached to its tunnel.
+    return ConnectAndRun(pairing, ^NSDictionary*(AdapterHandle* adapter, RsdHandshakeHandle* handshake) {
+      // The remote server service is opened first, like the other helpers do; when it
+      // refuses, the debug proxy may still work.
+      RemoteServerHandle* server = NULL;
+      NSString* serverDetail = @"";
+      IdeviceFfiError* error = remote_server_connect_rsd(adapter, handshake, &server);
+      if (error != NULL) {
+          serverDetail = ErrorText(error);
+      }
+      DebugProxyHandle* proxy = NULL;
+      error = debug_proxy_connect_rsd(adapter, handshake, &proxy);
+      NSDictionary* result;
+      if (error != NULL) {
+          result = @{@"status" : @"debug-proxy-failed", @"detail" : ErrorText(error), @"serverDetail" : serverDetail};
+      } else {
+          result = AttachAndPrepare(proxy, pid, ranges);
+          debug_proxy_free(proxy);
+      }
+      if (server != NULL) {
+          remote_server_free(server);
+      }
+      return result;
+    });
 }
 
 #endif // AZ_HAVE_IDEVICE
@@ -165,6 +314,9 @@ static NSDictionary* CheckConnection(NSData* pairing) {
 #if AZ_HAVE_IDEVICE
     if ([operation isEqualToString:@"check"]) {
         [answer addEntriesFromDictionary:CheckConnection(info[@"pairing"])];
+    } else if ([operation isEqualToString:@"prepare"]) {
+        [answer addEntriesFromDictionary:Prepare(info[@"pairing"], [info[@"targetPid"] intValue],
+                                                 info[@"ranges"] ?: @[])];
     }
 #endif
 

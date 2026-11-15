@@ -41,6 +41,18 @@ enum class Mode {
  */
 Mode Initialize(bool has_txm);
 
+/**
+ * The route through the JIT helper (an app extension that acts as the debugger, see
+ * src/citra_ios/JITHelper): the app reserves an arena, the helper attaches and writes one byte
+ * to every page of it, which is what makes a TXM device accept the pages as executable, and
+ * detaches. Initialize then uses the arena in dual mapping mode.
+ *
+ * ReserveHelperArena returns the executable address of the arena (and its size), nullptr when it
+ * could not be reserved. MarkHelperArenaPrepared tells that the helper is done.
+ */
+void* ReserveHelperArena(std::size_t* size);
+void MarkHelperArenaPrepared();
+
 /// Returns the mode chosen by the last Initialize call.
 Mode GetMode();
 

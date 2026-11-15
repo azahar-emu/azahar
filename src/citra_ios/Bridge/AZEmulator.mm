@@ -362,6 +362,14 @@ const char* ThermalStateName() {
     return supported;
 }
 
++ (BOOL)deviceNeedsPreparedMemory {
+#if TARGET_OS_SIMULATOR
+    return NO;
+#else
+    return DeviceHasTXM();
+#endif
+}
+
 + (BOOL)isJITAvailable {
 #if TARGET_OS_SIMULATOR
     return YES;

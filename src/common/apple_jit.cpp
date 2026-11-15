@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the misc/licenses/gplv2.txt file included.
 
+#include <cerrno>
 #include <cstdint>
 #include <iterator>
 #include <map>
@@ -43,6 +44,10 @@ constexpr std::uint32_t CS_DEBUGGED = 0x10000000;
 /// Size of the executable arena requested from the debugger. Every dynarmic instance (one per
 /// emulated core and process) takes its code cache from here, as do the shader JIT programs.
 constexpr std::size_t ArenaSize = 512 * 1024 * 1024;
+
+/// Size of the arena of the JIT helper route. The helper writes one byte per 16 KiB page of it,
+/// so a smaller arena is ready sooner.
+constexpr std::size_t HelperArenaSize = 256 * 1024 * 1024;
 
 bool IsDebugged() {
     std::uint32_t flags = 0;
@@ -88,6 +93,19 @@ public:
             return mode;
         }
 
+        if (helper_rx != nullptr && helper_prepared) {
+            // The JIT helper (an app extension acting as the debugger) prepared an arena that
+            // was reserved with ReserveHelperArena, and detached again.
+            arena_size = HelperArenaSize;
+            rx_base = static_cast<std::uint8_t*>(helper_rx);
+            rw_base = static_cast<std::uint8_t*>(helper_rw);
+            free_blocks.emplace(0, arena_size);
+            mode = Mode::DualMapping;
+            LOG_INFO(Common, "JIT: executable arena prepared by the helper at {}, writable alias "
+                             "at {}", fmt::ptr(rx_base), fmt::ptr(rw_base));
+            return mode;
+        }
+
         if (!IsTraced()) {
             if (!reported_not_traced) {
                 reported_not_traced = true;
@@ -104,6 +122,7 @@ public:
 
         LOG_INFO(Common, "JIT: requesting a {} MiB executable region from the debugger",
                  ArenaSize / (1024 * 1024));
+        arena_size = ArenaSize;
         void* const rx = JIT26PrepareRegion(nullptr, ArenaSize);
         if (rx == nullptr) {
             LOG_ERROR(Common, "JIT: the debugger did not provide executable memory, make sure "
@@ -149,6 +168,53 @@ public:
         return mode;
     }
 
+    /// Reserves the arena of the helper route: executable memory (it never becomes executable
+    /// by itself on TXM devices, the debugger has to write every page) and the writable alias of
+    /// the same memory. Returns the executable address, nullptr when it could not be reserved.
+    void* ReserveHelperArena(std::size_t* size) {
+        std::scoped_lock lock{mutex};
+        *size = HelperArenaSize;
+        if (helper_rx != nullptr) {
+            return helper_rx;
+        }
+        // Created with execute: a block without it could never get execute added later.
+        void* const rx = mmap(nullptr, HelperArenaSize, PROT_READ | PROT_EXEC,
+                              MAP_ANON | MAP_PRIVATE | MAP_NORESERVE, -1, 0);
+        if (rx == MAP_FAILED) {
+            LOG_ERROR(Common, "JIT: reserving executable memory failed (errno {})", errno);
+            return nullptr;
+        }
+        vm_address_t rw = 0;
+        vm_prot_t cur_prot = VM_PROT_NONE;
+        vm_prot_t max_prot = VM_PROT_NONE;
+        kern_return_t kr = vm_remap(mach_task_self(), &rw, HelperArenaSize, 0, VM_FLAGS_ANYWHERE,
+                                    mach_task_self(), reinterpret_cast<vm_address_t>(rx), FALSE,
+                                    &cur_prot, &max_prot, VM_INHERIT_NONE);
+        if (kr != KERN_SUCCESS) {
+            LOG_ERROR(Common, "JIT: vm_remap of the reserved memory failed ({})", kr);
+            munmap(rx, HelperArenaSize);
+            return nullptr;
+        }
+        kr = vm_protect(mach_task_self(), rw, HelperArenaSize, FALSE,
+                        VM_PROT_READ | VM_PROT_WRITE);
+        if (kr != KERN_SUCCESS) {
+            LOG_ERROR(Common, "JIT: making the writable alias writable failed ({})", kr);
+            vm_deallocate(mach_task_self(), rw, HelperArenaSize);
+            munmap(rx, HelperArenaSize);
+            return nullptr;
+        }
+        helper_rx = rx;
+        helper_rw = reinterpret_cast<void*>(rw);
+        LOG_INFO(Common, "JIT: reserved a {} MiB arena for the helper at {}, alias at {}",
+                 HelperArenaSize / (1024 * 1024), fmt::ptr(helper_rx), fmt::ptr(helper_rw));
+        return helper_rx;
+    }
+
+    void MarkHelperArenaPrepared() {
+        std::scoped_lock lock{mutex};
+        helper_prepared = helper_rx != nullptr;
+    }
+
     bool Allocate(std::size_t size, void** wmem, void** xmem) {
         std::scoped_lock lock{mutex};
         if (mode == Mode::Unavailable) {
@@ -190,7 +256,7 @@ public:
     void Free(void* wmem, void* xmem, std::size_t size) {
         std::scoped_lock lock{mutex};
         auto* const x = static_cast<std::uint8_t*>(xmem);
-        if (mode != Mode::DualMapping || x < rx_base || x >= rx_base + ArenaSize) {
+        if (mode != Mode::DualMapping || x < rx_base || x >= rx_base + arena_size) {
             munmap(wmem, size);
             return;
         }
@@ -222,6 +288,10 @@ private:
     bool reported_not_traced = false;
     std::uint8_t* rx_base = nullptr;
     std::uint8_t* rw_base = nullptr;
+    std::size_t arena_size = ArenaSize;
+    void* helper_rx = nullptr;
+    void* helper_rw = nullptr;
+    bool helper_prepared = false;
     /// Free ranges of the arena, offset -> size.
     std::map<std::size_t, std::size_t> free_blocks;
 };
@@ -239,6 +309,14 @@ Mode Initialize(bool has_txm) {
 
 Mode GetMode() {
     return GetState().GetMode();
+}
+
+void* ReserveHelperArena(std::size_t* size) {
+    return GetState().ReserveHelperArena(size);
+}
+
+void MarkHelperArenaPrepared() {
+    GetState().MarkHelperArenaPrepared();
 }
 
 const char* GetModeName(Mode mode) {
