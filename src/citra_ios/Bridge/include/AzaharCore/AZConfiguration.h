@@ -59,6 +59,8 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) BOOL frameGenerationTopOnly;
 /// Show the frames of frame generation from a display link at the display's refreshes (iOS 17).
 @property(nonatomic) BOOL frameGenerationDisplayPaced;
+/// Frame generation with MetalFX's frame interpolator instead of VideoToolbox's.
+@property(nonatomic) BOOL frameGenerationMetalFX;
 /// Highest refresh rate of the display (UIScreen.maximumFramesPerSecond).
 @property(nonatomic) NSInteger displayRefreshRate;
 /// Milliseconds a draw waits for its shader to build before it is skipped (0 never waits).

@@ -666,6 +666,9 @@ struct GraphicsSettingsView: View {
                     Text("Quarter").tag(3)
                 }
                 .disabled(settings.frameGeneration == 0)
+                Toggle("Use MetalFX Interpolation (Experimental)",
+                       isOn: $settings.frameGenerationMetalFX)
+                    .disabled(settings.frameGeneration == 0)
                 Toggle("Top Screen Only", isOn: $settings.frameGenerationTopOnly)
                     .disabled(settings.frameGeneration == 0)
                 Toggle("Display-Driven Pacing", isOn: $settings.frameGenerationDisplayPaced)

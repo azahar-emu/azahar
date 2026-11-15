@@ -138,6 +138,8 @@ struct QualityOptions {
     int frame_generation_size = 1;
     /// Make frames for the top screen only; the bottom screen shows the game's own frames.
     bool frame_generation_top_only = false;
+    /// Frame generation with MetalFX's own frame interpolator instead of VideoToolbox's.
+    bool frame_generation_metalfx = false;
     /// Frames of frame generation are shown by a display link at the display's refreshes.
     bool frame_generation_display_paced = false;
     /// Highest refresh rate of the display, frame generation for 60 FPS games needs 100 or more.

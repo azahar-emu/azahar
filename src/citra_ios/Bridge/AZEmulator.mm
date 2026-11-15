@@ -539,6 +539,7 @@ const char* ThermalStateName() {
     quality.frame_generation_size = static_cast<int>(configuration.frameGenerationSize);
     quality.frame_generation_top_only = configuration.frameGenerationTopOnly;
     quality.frame_generation_display_paced = configuration.frameGenerationDisplayPaced;
+    quality.frame_generation_metalfx = configuration.frameGenerationMetalFX;
     quality.shader_wait_us = static_cast<u32>(std::clamp<NSInteger>(configuration.shaderWaitMs, 0, 16)) * 1000;
     quality.max_anisotropy = static_cast<int>(configuration.anisotropy);
     Metal::SetQualityOptions(quality);

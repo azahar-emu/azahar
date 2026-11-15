@@ -269,6 +269,10 @@ final class AppSettings: ObservableObject {
     @Published var frameGenerationAllGames: Bool {
         didSet { save(frameGenerationAllGames, "frameGenerationAllGames") }
     }
+    /// Make the frames with MetalFX's interpolator instead of VideoToolbox's.
+    @Published var frameGenerationMetalFX: Bool {
+        didSet { save(frameGenerationMetalFX, "frameGenerationMetalFX") }
+    }
     @Published var frameGenerationDisplayPaced: Bool {
         didSet { save(frameGenerationDisplayPaced, "frameGenerationDisplayPaced") }
     }
@@ -453,6 +457,7 @@ final class AppSettings: ObservableObject {
         frameGenerationSize = value("frameGenerationSize", value("frameGenerationFast", false) ? 2 : 1)
         frameGenerationTopOnly = value("frameGenerationTopOnly", false)
         frameGenerationDisplayPaced = value("frameGenerationDisplayPaced", false)
+        frameGenerationMetalFX = value("frameGenerationMetalFX", false)
         frameGenerationAllGames = value("frameGenerationAllGames", false)
         shaderWaitMs = value("shaderWaitMs", 2)
         fastShaderMath = value("fastShaderMath", false)
@@ -595,6 +600,7 @@ final class AppSettings: ObservableObject {
         config.frameGenerationSize = frameGenerationSize
         config.frameGenerationTopOnly = frameGenerationTopOnly
         config.frameGenerationDisplayPaced = frameGenerationDisplayPaced
+        config.frameGenerationMetalFX = frameGenerationMetalFX
         config.displayRefreshRate = UIScreen.main.maximumFramesPerSecond
         config.shaderWaitMs = shaderWaitMs
         config.framePacing = framePacing

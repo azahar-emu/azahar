@@ -34,6 +34,8 @@
 #include "video_core/renderer_metal/renderer_metal.h"
 
 #import <QuartzCore/QuartzCore.h>
+#import <objc/message.h>
+#import <simd/simd.h>
 
 // MetalFX is weakly linked, the spatial scaler needs iOS 16 / macOS 13.
 #if __has_include(<MetalFX/MetalFX.h>)
@@ -450,6 +452,25 @@ private:
     /// Made frames composed at full size, for display-driven pacing.
     std::array<id<MTLTexture>, FG_MADE> fg_made{};
     u32 fg_made_index{};
+    /// The method the resources were made for (MetalFX's interpolator needs shader writes on the
+    /// made frames), and the color picture of the previous real frame.
+    bool fg_metalfx{false};
+    int fg_prev_color{-1};
+    // MetalFX frame interpolation (the other method of frame generation). The objects are used
+    // through the Objective-C runtime (selectors and key-value coding), so the code does not
+    // depend on the SDK's declarations.
+    id fx_interpolator = nil;
+    id fx_scaler = nil; ///< A temporal scaler at 1:1, only when the interpolator wants one
+    std::array<id<MTLTexture>, 2> fx_scaled{};
+    id<MTLTexture> fx_depth = nil;
+    id<MTLTexture> fx_motion = nil;
+    u32 fx_width{}, fx_height{};
+    bool fx_failed{false};
+    bool fx_reset{true};
+    u32 fx_scaled_index{};
+    bool PrepareMetalFX(u32 width, u32 height);
+    bool EncodeMetalFX(id<MTLCommandBuffer> buffer, id<MTLTexture> color, id<MTLTexture> previous,
+                       id<MTLTexture> output, double delta_time);
     /// Display-driven pacing: a CAMetalDisplayLink on a thread of its own shows the frames.
     std::shared_ptr<DisplayPacer> fg_pacer;
     id fg_pacer_link = nil;     ///< CAMetalDisplayLink (iOS 17)
@@ -1261,7 +1282,7 @@ bool RendererMetal::UseFrameGeneration(const Layout::FramebufferLayout& layout) 
     if (layout.width != fg_layout_width || layout.height != fg_layout_height ||
         screens.left != fg_screens.left || screens.top != fg_screens.top ||
         screens.right != fg_screens.right || screens.bottom != fg_screens.bottom ||
-        size != fg_size) {
+        size != fg_size || GetQualityOptions().frame_generation_metalfx != fg_metalfx) {
         // The old setup (the interpolation session and its buffers, the textures, the pacing) may
         // still be in use by the frame that was last handed over, on a callback thread or the
         // display link. Rotating the device or swapping the screens changes the size, and
@@ -1276,6 +1297,10 @@ bool RendererMetal::UseFrameGeneration(const Layout::FramebufferLayout& layout) 
                                 "the size anyway");
         }
         fg_size = size;
+        fg_metalfx = GetQualityOptions().frame_generation_metalfx;
+        fx_interpolator = nil;
+        fx_scaler = nil;
+        fx_failed = false;
         fg_layout_width = layout.width;
         fg_layout_height = layout.height;
         fg_screens = screens;
@@ -1510,6 +1535,10 @@ bool RendererMetal::PrepareFrameGenerationResources() {
             return false;
         }
     }
+    if (fg_metalfx) {
+        // MetalFX's interpolator writes the made frames itself.
+        desc.usage |= MTLTextureUsageShaderWrite;
+    }
     for (u32 i = 0; i < FG_MADE; i++) {
         fg_made[i] = [device newTextureWithDescriptor:desc];
         if (fg_made[i] == nil) {
@@ -1532,6 +1561,219 @@ bool RendererMetal::PrepareFrameGenerationResources() {
         }
     }
 #endif
+    return true;
+}
+
+
+namespace {
+void SetFX(id object, NSString* key, id value) {
+    @try {
+        [object setValue:value forKey:key];
+    } @catch (NSException* exception) {
+        LOG_WARNING(Render, "MetalFX frame interpolation: {} not set ({})", key.UTF8String,
+                    exception.reason.UTF8String);
+    }
+}
+
+id NewFX(id descriptor, NSString* selector, id<MTLDevice> device) {
+    SEL sel = NSSelectorFromString(selector);
+    if (![descriptor respondsToSelector:sel]) {
+        return nil;
+    }
+    return ((id(*)(id, SEL, id))objc_msgSend)(descriptor, sel, device);
+}
+
+NSNumber* PixelFormatNumber(MTLPixelFormat format) {
+    return @(static_cast<unsigned long>(format));
+}
+} // namespace
+
+bool RendererMetal::PrepareMetalFX(u32 width, u32 height) {
+    if (fx_interpolator != nil && fx_width == width && fx_height == height) {
+        return true;
+    }
+    if (fx_failed && fx_width == width && fx_height == height) {
+        return false;
+    }
+    fx_interpolator = nil;
+    fx_scaler = nil;
+    fx_scaled = {};
+    fx_depth = nil;
+    fx_motion = nil;
+    fx_width = width;
+    fx_height = height;
+    fx_reset = true;
+    fx_failed = true;
+
+    id<MTLDevice> device = instance.GetDevice();
+    Class descriptor_class = NSClassFromString(@"MTLFXFrameInterpolatorDescriptor");
+    if (descriptor_class == Nil) {
+        LOG_WARNING(Render, "MetalFX frame interpolation is not available on this system");
+        return false;
+    }
+
+    // The depth and the motion vectors of a game are not there for a 3DS game: a flat depth and
+    // no motion, so the interpolator has to find the movement in the pictures themselves.
+    MTLTextureDescriptor* depth_desc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatR32Float
+                                                           width:width
+                                                          height:height
+                                                       mipmapped:NO];
+    depth_desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+    depth_desc.storageMode = MTLStorageModePrivate;
+    MTLTextureDescriptor* motion_desc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRG16Float
+                                                           width:width
+                                                          height:height
+                                                       mipmapped:NO];
+    motion_desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+    motion_desc.storageMode = MTLStorageModePrivate;
+    fx_depth = [device newTextureWithDescriptor:depth_desc];
+    fx_motion = [device newTextureWithDescriptor:motion_desc];
+    if (fx_depth == nil || fx_motion == nil) {
+        return false;
+    }
+    {
+        id<MTLCommandBuffer> buffer = [instance.GetCommandQueue() commandBuffer];
+        for (int i = 0; i < 2; i++) {
+            MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
+            pass.colorAttachments[0].texture = i == 0 ? fx_depth : fx_motion;
+            pass.colorAttachments[0].loadAction = MTLLoadActionClear;
+            pass.colorAttachments[0].storeAction = MTLStoreActionStore;
+            pass.colorAttachments[0].clearColor =
+                i == 0 ? MTLClearColorMake(0.5, 0.0, 0.0, 0.0) : MTLClearColorMake(0, 0, 0, 0);
+            [[buffer renderCommandEncoderWithDescriptor:pass] endEncoding];
+        }
+        [buffer commit];
+    }
+
+    const auto fill = [&](id descriptor_object) {
+        SetFX(descriptor_object, @"inputWidth", @(width));
+        SetFX(descriptor_object, @"inputHeight", @(height));
+        SetFX(descriptor_object, @"outputWidth", @(width));
+        SetFX(descriptor_object, @"outputHeight", @(height));
+        SetFX(descriptor_object, @"colorTextureFormat", PixelFormatNumber(MTLPixelFormatBGRA8Unorm));
+        SetFX(descriptor_object, @"depthTextureFormat", PixelFormatNumber(MTLPixelFormatR32Float));
+        SetFX(descriptor_object, @"motionTextureFormat", PixelFormatNumber(MTLPixelFormatRG16Float));
+        SetFX(descriptor_object, @"outputTextureFormat",
+              PixelFormatNumber(MTLPixelFormatBGRA8Unorm));
+    };
+
+    // First without a scaler; when the system refuses that, with a temporal scaler of the same
+    // size in front.
+    id descriptor = [[descriptor_class alloc] init];
+    fill(descriptor);
+    id interpolator = NewFX(descriptor, @"newFrameInterpolatorWithDevice:", device);
+    if (interpolator == nil) {
+        LOG_INFO(Render, "MetalFX frame interpolation: no interpolator without a scaler, trying "
+                         "with a temporal scaler");
+        Class scaler_class = NSClassFromString(@"MTLFXTemporalScalerDescriptor");
+        if (scaler_class != Nil) {
+            id scaler_descriptor = [[scaler_class alloc] init];
+            fill(scaler_descriptor);
+            id scaler = NewFX(scaler_descriptor, @"newTemporalScalerWithDevice:", device);
+            if (scaler != nil) {
+                SetFX(descriptor, @"scaler", scaler);
+                interpolator = NewFX(descriptor, @"newFrameInterpolatorWithDevice:", device);
+                if (interpolator != nil) {
+                    fx_scaler = scaler;
+                    MTLTextureDescriptor* scaled_desc = [MTLTextureDescriptor
+                        texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                     width:width
+                                                    height:height
+                                                 mipmapped:NO];
+                    scaled_desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead |
+                                        MTLTextureUsageShaderWrite;
+                    scaled_desc.storageMode = MTLStorageModePrivate;
+                    for (auto& texture : fx_scaled) {
+                        texture = [device newTextureWithDescriptor:scaled_desc];
+                    }
+                }
+            }
+        }
+    }
+    if (interpolator == nil) {
+        LOG_WARNING(Render, "MetalFX frame interpolation: the system did not make an interpolator "
+                            "for {}x{}", width, height);
+        return false;
+    }
+    fx_interpolator = interpolator;
+    fx_failed = false;
+    LOG_INFO(Render, "MetalFX frame interpolation ready for {}x{}{}; usages: color {}, output {}, "
+                     "depth {}, motion {}",
+             width, height, fx_scaler != nil ? " (with a temporal scaler)" : "",
+             [[interpolator valueForKey:@"colorTextureUsage"] unsignedLongValue],
+             [[interpolator valueForKey:@"outputTextureUsage"] unsignedLongValue],
+             [[interpolator valueForKey:@"depthTextureUsage"] unsignedLongValue],
+             [[interpolator valueForKey:@"motionTextureUsage"] unsignedLongValue]);
+    return true;
+}
+
+bool RendererMetal::EncodeMetalFX(id<MTLCommandBuffer> buffer, id<MTLTexture> color,
+                                  id<MTLTexture> previous, id<MTLTexture> output,
+                                  double delta_time) {
+    if (fx_interpolator == nil) {
+        return false;
+    }
+    SEL encode = NSSelectorFromString(@"encodeToCommandBuffer:");
+    id<MTLTexture> frame_color = color;
+    id<MTLTexture> frame_previous = previous;
+
+    if (fx_scaler != nil) {
+        // The scaler runs on every real frame; the interpolator takes its results.
+        fx_scaled_index ^= 1;
+        id<MTLTexture> scaled = fx_scaled[fx_scaled_index];
+        id<MTLTexture> scaled_previous = fx_scaled[fx_scaled_index ^ 1];
+        SetFX(fx_scaler, @"colorTexture", color);
+        SetFX(fx_scaler, @"depthTexture", fx_depth);
+        SetFX(fx_scaler, @"motionTexture", fx_motion);
+        SetFX(fx_scaler, @"outputTexture", scaled);
+        SetFX(fx_scaler, @"inputContentWidth", @(fx_width));
+        SetFX(fx_scaler, @"inputContentHeight", @(fx_height));
+        SetFX(fx_scaler, @"jitterOffsetX", @(0.0f));
+        SetFX(fx_scaler, @"jitterOffsetY", @(0.0f));
+        SetFX(fx_scaler, @"motionVectorScaleX", @(1.0f));
+        SetFX(fx_scaler, @"motionVectorScaleY", @(1.0f));
+        SetFX(fx_scaler, @"reset", @(fx_reset));
+        if (![fx_scaler respondsToSelector:encode]) {
+            return false;
+        }
+        ((void (*)(id, SEL, id))objc_msgSend)(fx_scaler, encode, buffer);
+        frame_color = scaled;
+        frame_previous = scaled_previous;
+    }
+
+    SetFX(fx_interpolator, @"colorTexture", frame_color);
+    SetFX(fx_interpolator, @"prevColorTexture", frame_previous);
+    SetFX(fx_interpolator, @"depthTexture", fx_depth);
+    SetFX(fx_interpolator, @"motionTexture", fx_motion);
+    SetFX(fx_interpolator, @"outputTexture", output);
+    SetFX(fx_interpolator, @"deltaTime", @(static_cast<float>(delta_time)));
+    SetFX(fx_interpolator, @"motionVectorScaleX", @(1.0f));
+    SetFX(fx_interpolator, @"motionVectorScaleY", @(1.0f));
+    SetFX(fx_interpolator, @"jitterOffsetX", @(0.0f));
+    SetFX(fx_interpolator, @"jitterOffsetY", @(0.0f));
+    SetFX(fx_interpolator, @"nearPlane", @(0.1f));
+    SetFX(fx_interpolator, @"farPlane", @(100.0f));
+    SetFX(fx_interpolator, @"fieldOfView", @(1.0f));
+    SetFX(fx_interpolator, @"aspectRatio",
+          @(static_cast<float>(fx_width) / static_cast<float>(std::max(fx_height, 1u))));
+    SetFX(fx_interpolator, @"contentWidth", @(fx_width));
+    SetFX(fx_interpolator, @"contentHeight", @(fx_height));
+    SetFX(fx_interpolator, @"shouldResetHistory", @(fx_reset));
+    // No camera: identity matrices.
+    for (NSString* name in @[ @"setWorldToViewMatrix:", @"setViewToClipMatrix:" ]) {
+        SEL setter = NSSelectorFromString(name);
+        if ([fx_interpolator respondsToSelector:setter]) {
+            ((void (*)(id, SEL, simd_float4x4))objc_msgSend)(fx_interpolator, setter,
+                                                              matrix_identity_float4x4);
+        }
+    }
+    if (![fx_interpolator respondsToSelector:encode]) {
+        return false;
+    }
+    ((void (*)(id, SEL, id))objc_msgSend)(fx_interpolator, encode, buffer);
+    fx_reset = false;
     return true;
 }
 
@@ -1599,8 +1841,23 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     id<MTLTexture> between_luma = (__bridge id<MTLTexture>)g_fg_hooks.texture(destination, 0);
     id<MTLTexture> between_chroma = (__bridge id<MTLTexture>)g_fg_hooks.texture(destination, 1);
 
+    // MetalFX's interpolator works on the color pictures themselves: no planes to convert.
+    bool use_fx = false;
+    id<MTLTexture> fx_output = nil;
+    if (!make_between) {
+        fx_reset = true;
+    }
+    if (make_between && fg_metalfx && fg_prev_color >= 0 &&
+        PrepareMetalFX(layout.width, layout.height)) {
+        fx_output = fg_made[(fg_made_index + 1) % FG_MADE];
+        const double delta = std::clamp(fg_interval, 0.012, 0.1);
+        use_fx = fx_output != nil &&
+                 EncodeMetalFX(scheduler.CommandBuffer(), current, fg_color[fg_prev_color],
+                               fx_output, delta);
+    }
+
     // The smaller copy of the screens' area, in the planes the interpolation reads.
-    {
+    if (!use_fx) {
         id<MTLComputeCommandEncoder> convert = [scheduler.CommandBuffer() computeCommandEncoder];
         [convert setComputePipelineState:fg_to_ycbcr];
         [convert setTexture:current atIndex:0];
@@ -1659,7 +1916,7 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
         if (epoch_now->load(std::memory_order_acquire) != epoch) {
             return; // Given up on: a newer frame owns the screen now
         }
-        made = made && between_luma != nil && between_chroma != nil;
+        made = made && (use_fx || (between_luma != nil && between_chroma != nil));
         id<MTLCommandBuffer> buffer = [queue commandBuffer];
         const auto begin = [&](id<MTLTexture> to) {
             MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
@@ -1688,7 +1945,15 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
         if (made && paced) {
             made = made_texture != nil;
         }
-        if (made) {
+        if (made && use_fx) {
+            // The interpolator wrote the whole picture. For display-driven pacing it is already
+            // in the made texture, otherwise it is drawn onto the drawable.
+            if (!paced) {
+                id<MTLRenderCommandEncoder> draw = begin(drawable_between.texture);
+                EncodeFullscreen(draw, color_pipeline, color_sampler, made_texture, width, height);
+                [draw endEncoding];
+            }
+        } else if (made) {
             bool scaled = false;
 #if AZAHAR_HAS_METALFX
             if (scaler != nil) {
@@ -1805,6 +2070,12 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
           (*show)(false);
           return;
       }
+      if (use_fx) {
+          Stats().fg_made.fetch_add(1, std::memory_order_relaxed);
+          failures->store(0, std::memory_order_relaxed);
+          (*show)(true);
+          return;
+      }
       const auto start = std::chrono::steady_clock::now();
       const bool started = interpolate(previous, source, destination, [show, start,
                                                                       failures](bool ok) {
@@ -1828,6 +2099,7 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     scheduler.Flush();
 
     fg_prev = static_cast<int>(fg_cur);
+    fg_prev_color = static_cast<int>(fg_color_index);
     fg_cur = (fg_cur + 1) % FG_SLOTS;
 }
 
