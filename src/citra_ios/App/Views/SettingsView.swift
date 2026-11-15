@@ -74,12 +74,12 @@ struct GeneralSettingsView: View {
         Form {
             Section {
                 JITStatusRow()
-                Toggle("Built-in JIT Helper (Experimental)", isOn: $settings.builtInJIT)
+                Toggle("Built-in JIT Helper", isOn: $settings.builtInJIT)
                 if settings.builtInJIT {
                     Button(testingHelper ? "Enabling JIT…" : "Enable JIT Now") {
                         testingHelper = true
                         helperReport = nil
-                        AZJITHelper.enableJIT { _, report in
+                        JITLauncher.enableWithHelper { report in
                             helperReport = report
                             testingHelper = false
                         }
@@ -100,7 +100,7 @@ struct GeneralSettingsView: View {
                     }
                     Button("Open Debugger Now") { JITLauncher.open(settings: settings) }
                 }
-                Button(testingHelper ? "Testing the JIT Helper…" : "Test the JIT Helper (Experimental)") {
+                Button(testingHelper ? "Testing the JIT Helper…" : "Test the JIT Helper") {
                     testingHelper = true
                     helperReport = nil
                     AZJITHelper.test { report in

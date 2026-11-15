@@ -202,9 +202,9 @@ static NSDictionary* AttachAndPrepare(DebugProxyHandle* proxy, int pid, NSArray<
     }
 
     // One byte (0x69) per 16 KiB page, through the debugger (writing it from the app itself
-    // would kill the process). 128 packets are sent, then their answers are read.
+    // would kill the process). 512 packets are sent, then their answers are read (fewer round trips than one by one).
     const uint64_t page = 16384;
-    const NSUInteger batchSize = 128;
+    const NSUInteger batchSize = 512;
     uint64_t pages = 0, written = 0;
     for (NSUInteger r = 0; r + 1 < ranges.count; r += 2) {
         const uint64_t base = ranges[r].unsignedLongLongValue;

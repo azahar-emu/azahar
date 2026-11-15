@@ -46,7 +46,10 @@ struct ContentView: View {
         .task {
             // The first activation happens before the phase changes: a short wait lets the
             // window come up before another app is opened over it.
-            try? await Task.sleep(nanoseconds: 800_000_000)
+            // The helper inside the app needs no window: it starts right away.
+            if !settings.builtInJIT {
+                try? await Task.sleep(nanoseconds: 800_000_000)
+            }
             JITLauncher.requestIfNeeded(settings: settings)
         }
         .alert("Emulation Error", isPresented: $session.showingError) {

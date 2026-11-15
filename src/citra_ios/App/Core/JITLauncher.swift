@@ -38,6 +38,55 @@ enum JITDebugger: String, CaseIterable, Identifiable {
     }
 }
 
+/// What the built-in JIT helper is doing, for the status message in the game list. A game that is
+/// started while it is still preparing waits for it.
+@MainActor
+final class JITStatus: ObservableObject {
+    static let shared = JITStatus()
+
+    enum State: Equatable {
+        case idle
+        case preparing
+        case enabled
+        case failed(String)
+    }
+
+    @Published private(set) var state = State.idle
+    @Published private(set) var waitingGame: String?
+    private var waiting: [() -> Void] = []
+
+    var isPreparing: Bool { state == .preparing }
+
+    func begin() {
+        state = .preparing
+    }
+
+    func finish(enabled: Bool, report: String) {
+        state = enabled ? .enabled : .failed(report)
+        let actions = waiting
+        waiting = []
+        waitingGame = nil
+        actions.forEach { $0() }
+        if enabled {
+            // The message goes away by itself.
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                if self.state == .enabled { self.state = .idle }
+            }
+        }
+    }
+
+    func dismiss() {
+        if case .failed = state { state = .idle }
+    }
+
+    /// Runs the action once the helper is done (a game that was started in the meantime).
+    func whenDone(game: String, _ action: @escaping () -> Void) {
+        waitingGame = game
+        waiting.append(action)
+    }
+}
+
 @MainActor
 enum JITLauncher {
     private static var triedThisLaunch = false
@@ -61,10 +110,20 @@ enum JITLauncher {
         if settings.builtInJIT {
             // The helper inside the app takes the place of a debugger app.
             triedThisLaunch = true
-            AZJITHelper.enableJIT { _, _ in }
+            enableWithHelper()
         } else if settings.autoEnableJIT {
             triedThisLaunch = true
             open(settings: settings)
+        }
+    }
+
+    /// Runs the built-in helper and reports to JITStatus (the report is nil-safe to ignore).
+    static func enableWithHelper(completion: ((String) -> Void)? = nil) {
+        guard !JITStatus.shared.isPreparing else { return }
+        JITStatus.shared.begin()
+        AZJITHelper.enableJIT { enabled, report in
+            JITStatus.shared.finish(enabled: enabled, report: report)
+            completion?(report)
         }
     }
 

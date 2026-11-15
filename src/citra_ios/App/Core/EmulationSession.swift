@@ -209,6 +209,14 @@ final class EmulationSession: ObservableObject {
     /// Shows the emulation view. The emulator itself starts once the Metal view is ready.
     func launch(_ game: Game, settings: AppSettings) {
         guard currentGame == nil else { return }
+        if JITStatus.shared.isPreparing {
+            // JIT is being prepared: the game starts when it is ready (with the interpreters it
+            // would be far too slow, and the memory is being set up).
+            JITStatus.shared.whenDone(game: game.title) { [weak self] in
+                self?.launch(game, settings: settings)
+            }
+            return
+        }
         if game.isEncrypted {
             present(error: "\(game.title) is encrypted. Please dump your titles from your own "
                 + "console in a decrypted format.")
