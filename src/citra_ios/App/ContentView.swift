@@ -10,6 +10,7 @@ struct ContentView: View {
     @EnvironmentObject private var session: EmulationSession
     @EnvironmentObject private var compressor: GameCompressor
     @EnvironmentObject private var settings: AppSettings
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -37,6 +38,17 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: session.isActive)
         .onAppear { ControllerNavigator.shared.start(session: session, settings: settings) }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active, !session.isActive {
+                JITLauncher.requestIfNeeded(settings: settings)
+            }
+        }
+        .task {
+            // The first activation happens before the phase changes: a short wait lets the
+            // window come up before another app is opened over it.
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            JITLauncher.requestIfNeeded(settings: settings)
+        }
         .alert("Emulation Error", isPresented: $session.showingError) {
             if let report = session.errorReport {
                 Button("Copy Details") { UIPasteboard.general.string = report }

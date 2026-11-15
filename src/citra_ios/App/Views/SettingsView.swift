@@ -69,6 +69,19 @@ struct GeneralSettingsView: View {
         Form {
             Section {
                 JITStatusRow()
+                Toggle("Open Debugger to Enable JIT", isOn: $settings.autoEnableJIT)
+                if settings.autoEnableJIT {
+                    Picker("Debugger App", selection: $settings.jitDebuggerName) {
+                        ForEach(JITDebugger.allCases) { Text($0.title).tag($0.rawValue) }
+                    }
+                    if settings.jitDebugger == .custom {
+                        TextField("Link, with {pid} for this app", text: $settings.jitCustomURL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                    }
+                    Button("Open Debugger Now") { JITLauncher.open(settings: settings) }
+                }
                 Toggle("CPU JIT", isOn: $settings.cpuJIT)
                     .disabled(!AZEmulator.isJITAvailable)
                 Stepper(value: $settings.cpuClockPercentage, in: 25...400, step: 25) {
@@ -78,7 +91,11 @@ struct GeneralSettingsView: View {
                 InfoHeader("CPU") {
                     Text("JIT recompilation requires the app to be launched with JIT enabled, for "
                          + "example through StikDebug or a debugger. Without JIT the much slower "
-                         + "interpreter is used.")
+                         + "interpreter is used. Open Debugger to Enable JIT opens the chosen "
+                         + "debugger app when this app starts without JIT, and asks it to attach. "
+                         + "The debugger has to be set up already (its pairing file, VPN). The "
+                         + "link formats are guesses: if the app doesn't react, use Custom URL "
+                         + "with the link from that app's documentation.")
                 }
             }
             .listRowBackground(LGRowBackground())

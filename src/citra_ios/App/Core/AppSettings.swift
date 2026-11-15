@@ -216,6 +216,14 @@ final class AppSettings: ObservableObject {
     @Published var autoHideMenuButtons: Bool { didSet { save(autoHideMenuButtons, "autoHideMenuButtons") } }
     /// The Home button of the on-screen Select / Home / Start control.
     @Published var showHomeButton: Bool { didSet { save(showHomeButton, "showHomeButton") } }
+    /// Open the JIT debugger app at launch when JIT is not enabled yet.
+    @Published var autoEnableJIT: Bool { didSet { save(autoEnableJIT, "autoEnableJIT") } }
+    @Published var jitDebuggerName: String { didSet { save(jitDebuggerName, "jitDebugger") } }
+    @Published var jitCustomURL: String { didSet { save(jitCustomURL, "jitCustomURL") } }
+    var jitDebugger: JITDebugger {
+        get { JITDebugger(rawValue: jitDebuggerName) ?? .stikDebug }
+        set { jitDebuggerName = newValue.rawValue }
+    }
     @Published var hideControllerWithHardware: Bool { didSet { save(hideControllerWithHardware, "hideControllerWithHardware") } }
     @Published var showController: Bool { didSet { save(showController, "showController") } }
     @Published var showSwapButton: Bool { didSet { save(showSwapButton, "showSwapButton") } }
@@ -404,6 +412,9 @@ final class AppSettings: ObservableObject {
         libraryStyle = LibraryStyle(rawValue: value("libraryStyle", LibraryStyle.grid.rawValue)) ?? .grid
         showPerformanceOverlay = value("showPerformanceOverlay", true)
         hideControllerWithHardware = value("hideControllerWithHardware", true)
+        autoEnableJIT = value("autoEnableJIT", false)
+        jitDebuggerName = value("jitDebugger", JITDebugger.stikDebug.rawValue)
+        jitCustomURL = value("jitCustomURL", "")
         showHomeButton = value("showHomeButton", true)
         autoHideMenuButtons = value("autoHideMenuButtons", false)
         showController = value("showController", true)
