@@ -472,6 +472,7 @@ private:
     u32 fx_width{}, fx_height{};             ///< Size the interpolator works at
     u32 fx_layout_width{}, fx_layout_height{}; ///< Screen size it was made for
     f32 fx_scale{1.0f};
+    f32 fx_area_width{}, fx_area_height{}; ///< Area of the screen the interpolation covers
     /// With a scale below one the pictures are shrunk before and the made frame is enlarged
     /// after: the interpolator's cost goes with the pixels.
     std::array<id<MTLTexture>, 2> fx_small_color{};
@@ -481,7 +482,8 @@ private:
     bool fx_failed{false};
     bool fx_reset{true};
     u32 fx_scaled_index{};
-    bool PrepareMetalFX(u32 width, u32 height, f32 scale);
+    bool PrepareMetalFX(u32 layout_width, u32 layout_height, f32 area_width, f32 area_height,
+                        f32 scale);
     bool EncodeMetalFX(id<MTLCommandBuffer> buffer, id<MTLTexture> color, id<MTLTexture> previous,
                        id<MTLTexture> output, double delta_time);
     /// Display-driven pacing: a CAMetalDisplayLink on a thread of its own shows the frames.
@@ -1601,8 +1603,10 @@ NSNumber* PixelFormatNumber(MTLPixelFormat format) {
 }
 } // namespace
 
-bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 scale) {
+bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 area_width,
+                                   f32 area_height, f32 scale) {
     const bool same = fx_layout_width == layout_width && fx_layout_height == layout_height &&
+                      fx_area_width == area_width && fx_area_height == area_height &&
                       fx_scale == scale;
     if (fx_interpolator != nil && same) {
         return true;
@@ -1621,8 +1625,12 @@ bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 scal
     fx_layout_width = layout_width;
     fx_layout_height = layout_height;
     fx_scale = scale;
-    const u32 width = std::max(16u, static_cast<u32>(std::floor(layout_width * scale)) & ~1u);
-    const u32 height = std::max(16u, static_cast<u32>(std::floor(layout_height * scale)) & ~1u);
+    fx_area_width = area_width;
+    fx_area_height = area_height;
+    // The interpolation covers the area of the screens (the top screen alone with Top Screen
+    // Only) at the chosen size, not the empty space around them.
+    const u32 width = std::max(16u, static_cast<u32>(std::floor(area_width * scale)) & ~1u);
+    const u32 height = std::max(16u, static_cast<u32>(std::floor(area_height * scale)) & ~1u);
     fx_width = width;
     fx_height = height;
     fx_reset = true;
@@ -1906,7 +1914,7 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     if (make_between && fg_metalfx && fg_prev_color >= 0) {
         constexpr std::array<f32, 5> fx_scales{1.0f, 0.5f, 0.375f, 0.25f, 0.75f};
         const f32 scale = fx_scales[std::clamp(GetQualityOptions().frame_generation_size, 0, 4)];
-        if (PrepareMetalFX(layout.width, layout.height, scale)) {
+        if (PrepareMetalFX(layout.width, layout.height, fg_area_width, fg_area_height, scale)) {
             if (fx_queue == nil) {
                 fx_queue = [instance.GetDevice() newCommandQueue];
                 fx_event = [instance.GetDevice() newEvent];
@@ -1935,8 +1943,16 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
                 pass.colorAttachments[0].storeAction = MTLStoreActionStore;
                 id<MTLRenderCommandEncoder> shrink_encoder =
                     [fx_buffer renderCommandEncoderWithDescriptor:pass];
-                EncodeFullscreen(shrink_encoder, present_pipeline, present_samplers[0], current,
-                                 static_cast<f32>(fx_width), static_cast<f32>(fx_height));
+                // The area of the screens of the real picture, at the size of the interpolation.
+                const f32 target_w = static_cast<f32>(fx_width);
+                const f32 target_h = static_cast<f32>(fx_height);
+                const f32 layout_w = static_cast<f32>(layout.width);
+                const f32 layout_h = static_cast<f32>(layout.height);
+                EncodeRect(shrink_encoder, present_pipeline, present_samplers[0], current,
+                           target_w, target_h, 0.0f, 0.0f, target_w, target_h,
+                           fg_area_x / layout_w, fg_area_y / layout_h,
+                           (fg_area_x + fg_area_width) / layout_w,
+                           (fg_area_y + fg_area_height) / layout_h);
                 [shrink_encoder endEncoding];
             }
             const double delta = std::clamp(fg_interval, 0.012, 0.1);
@@ -1957,7 +1973,8 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
                                  full_width, full_height);
                 EncodeRect(compose, present_pipeline, present_samplers[0],
                            shrink ? fx_small_out : fx_full_out, full_width, full_height,
-                           fg_area_x, fg_area_y, fg_area_width, fg_area_height);
+                           fg_area_x, fg_area_y, fg_area_width, fg_area_height, 0.0f, 0.0f, 1.0f,
+                           1.0f);
                 [compose endEncoding];
             }
             if (!use_fx) {
