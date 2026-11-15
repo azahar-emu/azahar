@@ -22,6 +22,7 @@ set(BRIDGE_OBJCXX_SOURCES
     Bridge/AZFeatures.mm
     Bridge/AZGameInfo.mm
     Bridge/AZJITHelper.mm
+    Bridge/AZMetalFXProbe.mm
     Bridge/AZMultiplayer.mm
     Bridge/camera_ios.mm
     Bridge/mic_ios.mm
@@ -40,6 +41,7 @@ add_library(azahar_ios_bridge STATIC
     Bridge/include/AzaharCore/AZEmulator.h
     Bridge/include/AzaharCore/AZGameInfo.h
     Bridge/include/AzaharCore/AZJITHelper.h
+    Bridge/include/AzaharCore/AZMetalFXProbe.h
     Bridge/include/AzaharCore/AZMultiplayer.h
     Bridge/include/AzaharCore/AZFrameGenerator.h
     Bridge/include/AzaharCore/module.modulemap

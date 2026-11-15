@@ -10,4 +10,5 @@
 #import <AzaharCore/AZFrameGenerator.h>
 #import <AzaharCore/AZGameInfo.h>
 #import <AzaharCore/AZJITHelper.h>
+#import <AzaharCore/AZMetalFXProbe.h>
 #import <AzaharCore/AZMultiplayer.h>

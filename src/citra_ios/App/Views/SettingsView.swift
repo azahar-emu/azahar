@@ -45,6 +45,24 @@ struct SettingsView: View {
     }
 }
 
+/// What this device's MetalFX offers for frame interpolation (read from the system), for trying
+/// MetalFX's own frame interpolation next to the VideoToolbox one.
+private struct MetalFXProbeRow: View {
+    @State private var report: String?
+
+    var body: some View {
+        Button("MetalFX Interpolation Diagnostics") {
+            report = AZMetalFXProbe.report()
+        }
+        if let report {
+            Text(report)
+                .font(.caption2.monospaced())
+                .textSelection(.enabled)
+            Button("Copy Report") { UIPasteboard.general.string = report }
+        }
+    }
+}
+
 private struct JITStatusRow: View {
     var body: some View {
         HStack {
@@ -654,6 +672,7 @@ struct GraphicsSettingsView: View {
                 Toggle("Also 60 FPS Games (120 Hz)", isOn: $settings.frameGenerationAllGames)
                     .disabled(settings.frameGeneration == 0 || !settings.frameGenerationDisplayPaced)
                 .disabled(!FrameGenerator.isSupported)
+                MetalFXProbeRow()
                 Toggle("Show Performance Overlay", isOn: $settings.showPerformanceOverlay)
             } header: {
                 InfoHeader("Performance") {
