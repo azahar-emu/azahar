@@ -476,6 +476,7 @@ private:
     /// after: the interpolator's cost goes with the pixels.
     std::array<id<MTLTexture>, 2> fx_small_color{};
     id<MTLTexture> fx_small_out = nil;
+    id<MTLTexture> fx_full_out = nil; ///< Output at the screen size (when not shrunk)
     u32 fx_small_index{};
     bool fx_failed{false};
     bool fx_reset{true};
@@ -1616,6 +1617,7 @@ bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 scal
     fx_motion = nil;
     fx_small_color = {};
     fx_small_out = nil;
+    fx_full_out = nil;
     fx_layout_width = layout_width;
     fx_layout_height = layout_height;
     fx_scale = scale;
@@ -1732,6 +1734,20 @@ bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 scal
         }
         fx_small_out = [device newTextureWithDescriptor:small_desc];
         if (fx_small_color[0] == nil || fx_small_color[1] == nil || fx_small_out == nil) {
+            return false;
+        }
+    }
+    if (fx_small_out == nil) {
+        MTLTextureDescriptor* full_desc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                               width:width
+                                                              height:height
+                                                           mipmapped:NO];
+        full_desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead |
+                          MTLTextureUsageShaderWrite;
+        full_desc.storageMode = MTLStorageModePrivate;
+        fx_full_out = [device newTextureWithDescriptor:full_desc];
+        if (fx_full_out == nil) {
             return false;
         }
     }
@@ -1906,7 +1922,7 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
             id<MTLTexture> made = fg_made[(fg_made_index + 1) % FG_MADE];
             id<MTLTexture> in_current = current;
             id<MTLTexture> in_previous = fg_color[fg_prev_color];
-            id<MTLTexture> out = made;
+            id<MTLTexture> out = fx_full_out;
             const bool shrink = fx_small_out != nil;
             if (shrink) {
                 fx_small_index ^= 1;
@@ -1925,15 +1941,24 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
             }
             const double delta = std::clamp(fg_interval, 0.012, 0.1);
             use_fx = EncodeMetalFX(fx_buffer, in_current, in_previous, out, delta);
-            if (use_fx && shrink) {
+            if (use_fx) {
+                // The made picture is the real one with the interpolated one over the area of
+                // the screens that frame generation covers (only the top screen with "Top Screen
+                // Only"), so what is outside of it keeps the game's own frames.
                 MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
                 pass.colorAttachments[0].texture = made;
                 pass.colorAttachments[0].loadAction = MTLLoadActionDontCare;
                 pass.colorAttachments[0].storeAction = MTLStoreActionStore;
-                id<MTLRenderCommandEncoder> grow = [fx_buffer renderCommandEncoderWithDescriptor:pass];
-                EncodeFullscreen(grow, present_pipeline, present_samplers[0], fx_small_out,
-                                 static_cast<f32>(layout.width), static_cast<f32>(layout.height));
-                [grow endEncoding];
+                id<MTLRenderCommandEncoder> compose =
+                    [fx_buffer renderCommandEncoderWithDescriptor:pass];
+                const f32 full_width = static_cast<f32>(layout.width);
+                const f32 full_height = static_cast<f32>(layout.height);
+                EncodeFullscreen(compose, present_pipeline, present_samplers[0], current,
+                                 full_width, full_height);
+                EncodeRect(compose, present_pipeline, present_samplers[0],
+                           shrink ? fx_small_out : fx_full_out, full_width, full_height,
+                           fg_area_x, fg_area_y, fg_area_width, fg_area_height);
+                [compose endEncoding];
             }
             if (!use_fx) {
                 [fx_buffer commit];
