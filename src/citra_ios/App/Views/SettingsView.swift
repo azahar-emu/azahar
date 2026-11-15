@@ -74,8 +74,21 @@ struct GeneralSettingsView: View {
         Form {
             Section {
                 JITStatusRow()
+                Toggle("Built-in JIT Helper (Experimental)", isOn: $settings.builtInJIT)
+                if settings.builtInJIT {
+                    Button(testingHelper ? "Enabling JIT…" : "Enable JIT Now") {
+                        testingHelper = true
+                        helperReport = nil
+                        AZJITHelper.enableJIT { _, report in
+                            helperReport = report
+                            testingHelper = false
+                        }
+                    }
+                    .disabled(testingHelper)
+                }
                 Toggle("Open Debugger to Enable JIT", isOn: $settings.autoEnableJIT)
-                if settings.autoEnableJIT {
+                    .disabled(settings.builtInJIT)
+                if settings.autoEnableJIT && !settings.builtInJIT {
                     Picker("Debugger App", selection: $settings.jitDebuggerName) {
                         ForEach(JITDebugger.allCases) { Text($0.title).tag($0.rawValue) }
                     }

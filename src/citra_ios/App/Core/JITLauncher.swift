@@ -57,9 +57,15 @@ enum JITLauncher {
 
     /// Opens the debugger app, once per launch, when the setting is on and JIT is not there yet.
     static func requestIfNeeded(settings: AppSettings) {
-        guard settings.autoEnableJIT, !triedThisLaunch, !AZEmulator.isJITAvailable else { return }
-        triedThisLaunch = true
-        open(settings: settings)
+        guard !triedThisLaunch, !AZEmulator.isJITAvailable else { return }
+        if settings.builtInJIT {
+            // The helper inside the app takes the place of a debugger app.
+            triedThisLaunch = true
+            AZJITHelper.enableJIT { _, _ in }
+        } else if settings.autoEnableJIT {
+            triedThisLaunch = true
+            open(settings: settings)
+        }
     }
 
     /// Opens the debugger app now (the button in the settings).

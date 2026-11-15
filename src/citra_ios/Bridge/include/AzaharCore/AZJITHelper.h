@@ -16,6 +16,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// reachable (a report, on the main queue).
 + (void)checkConnectionWithCompletion:(void (^)(NSString* report))completion;
 
+/// Enables JIT for this process through the helper: reserves executable memory (on devices with
+/// TXM), has the helper attach as a debugger, prepare the memory and detach, then lets the core
+/// pick it up. The report says what happened; enabled is whether JIT is available afterwards.
++ (void)enableJITWithCompletion:(void (^)(BOOL enabled, NSString* report))completion;
+
 /// Where the imported pairing file is kept, and what is known about pairing files: "Imported",
 /// "Found in SideStore (LiveContainer)" or "None".
 + (NSString*)pairingStatus;

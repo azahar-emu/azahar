@@ -179,6 +179,10 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
 /// True when the process can generate code at runtime (a debugger enabled JIT).
 @property(class, nonatomic, readonly) BOOL isJITAvailable;
 
+/// Whether the device has the Trusted Execution Monitor: JIT memory then has to be prepared by a
+/// debugger page by page (see AZJITHelper).
++ (BOOL)deviceNeedsPreparedMemory;
+
 /// True when MetalFX upscaling can be used on this device.
 @property(class, nonatomic, readonly) BOOL isUpscalingSupported;
 

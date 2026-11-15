@@ -9,7 +9,9 @@
 // The way of starting the extension follows the launcher of ARMSX3 and DolphiniOS (GPL-2.0-or-
 // later, https://github.com/OatmealDome/dolphin-ios pull request 277).
 
+#import <AzaharCore/AZEmulator.h>
 #import <AzaharCore/AZJITHelper.h>
+#include "common/apple_jit.h"
 #include <unistd.h>
 #import <objc/message.h>
 #import <objc/runtime.h>
@@ -186,6 +188,8 @@ static const NSUInteger kMaxPairingBytes = 65536;
 
     NSMutableDictionary* userInfo = [NSMutableDictionary dictionaryWithDictionary:info];
     userInfo[@"hostPid"] = @(getpid());
+    const NSTimeInterval timeout = [userInfo[@"timeoutSeconds"] doubleValue] ?: 20;
+    [userInfo removeObjectForKey:@"timeoutSeconds"];
     NSExtensionItem* item = [[NSExtensionItem alloc] init];
     item.userInfo = userInfo;
 
@@ -234,14 +238,83 @@ static const NSUInteger kMaxPairingBytes = 65536;
     }
 
     // Nothing came back: say so instead of leaving the screen waiting.
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC),
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
                      if (!answered) {
                          answered = YES;
-                         [log appendString:@"No reply from the helper within 20 seconds.\n"];
+                         [log appendFormat:@"No reply from the helper within %.0f seconds.\n", timeout];
                          finish(nil);
                      }
                    });
+}
+
++ (void)enableJITWithCompletion:(void (^)(BOOL, NSString*))completion {
+    if ([AZEmulator isJITAvailable]) {
+        completion(YES, @"JIT is already enabled.");
+        return;
+    }
+    NSArray<NSData*>* files = [self pairingFiles];
+    if (files.count == 0) {
+        completion(NO, @"No pairing file. Import one first.");
+        return;
+    }
+    NSArray<NSNumber*>* ranges = @[];
+    const BOOL needsMemory = [AZEmulator deviceNeedsPreparedMemory];
+    if (needsMemory) {
+        std::size_t size = 0;
+        void* base = Common::AppleJIT::ReserveHelperArena(&size);
+        if (base == nullptr) {
+            completion(NO, @"Executable memory could not be reserved.");
+            return;
+        }
+        ranges = @[ @((unsigned long long)(uintptr_t)base), @((unsigned long long)size) ];
+    }
+    [self prepareWithFiles:files index:0 ranges:ranges needsMemory:needsMemory
+                       log:[NSMutableString string] completion:completion];
+}
+
++ (void)prepareWithFiles:(NSArray<NSData*>*)files
+                   index:(NSUInteger)index
+                  ranges:(NSArray<NSNumber*>*)ranges
+             needsMemory:(BOOL)needsMemory
+                     log:(NSMutableString*)total
+              completion:(void (^)(BOOL, NSString*))completion {
+    NSDictionary* request = @{
+        @"op" : @"prepare",
+        @"pairing" : files[index],
+        @"targetPid" : @(getpid()),
+        @"ranges" : ranges,
+        @"timeoutSeconds" : @120,
+    };
+    [self runWithInfo:request
+           completion:^(NSDictionary* reply, NSString* log) {
+             NSString* status = reply[@"status"];
+             [total appendFormat:@"%@File %lu of %lu: %@ %@\n", log, (unsigned long)index + 1,
+                                 (unsigned long)files.count, status ?: @"no reply",
+                                 reply[@"detail"] ?: @""];
+             if (reply != nil) {
+                 [total appendFormat:@"%@\n", reply];
+             }
+             if ([status isEqualToString:@"prepared"]) {
+                 if (needsMemory) {
+                     Common::AppleJIT::MarkHelperArenaPrepared();
+                 }
+                 const BOOL enabled = [AZEmulator isJITAvailable];
+                 [total appendString:enabled ? @"JIT is enabled.\n"
+                                             : @"The helper finished, but the core did not "
+                                               @"find JIT available.\n"];
+                 completion(enabled, total);
+                 return;
+             }
+             const BOOL refused = [status isEqualToString:@"tunnel-failed"] ||
+                                  [status isEqualToString:@"bad-pairing"];
+             if (refused && index + 1 < files.count) {
+                 [self prepareWithFiles:files index:index + 1 ranges:ranges
+                            needsMemory:needsMemory log:total completion:completion];
+                 return;
+             }
+             completion(NO, total);
+           }];
 }
 
 + (void)testWithCompletion:(void (^)(NSString* report))completion {
