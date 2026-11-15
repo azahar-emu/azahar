@@ -22,6 +22,7 @@
 // Texture filtering shader includes
 #include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
 #include "video_core/host_shaders/texture_filtering/mmpx_frag.h"
+#include "video_core/host_shaders/texture_filtering/pass_through_frag.h"
 #include "video_core/host_shaders/texture_filtering/refine_frag.h"
 #include "video_core/host_shaders/texture_filtering/scale_force_frag.h"
 #include "video_core/host_shaders/texture_filtering/x_gradient_frag.h"
@@ -247,6 +248,8 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
           PipelineLayoutCreateInfo(&three_textures_provider.Layout(), false, true))},
       full_screen_vert{Compile(HostShaders::FULL_SCREEN_TRIANGLE_VERT,
                                vk::ShaderStageFlagBits::eVertex, device)},
+      pass_through_frag{
+          Compile(HostShaders::PASS_THROUGH_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       d24s8_to_rgba8_comp{Compile(HostShaders::VULKAN_D24S8_TO_RGBA8_COMP,
                                   vk::ShaderStageFlagBits::eCompute, device)},
       d24s8_to_rgba8_ms_comp{instance_.IsMultiSampleSupported()
@@ -718,7 +721,8 @@ void BlitHelper::ResolveTexture(Surface& surface) {
 }
 
 void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit) {
-    const vk::Pipeline pipeline = {};
+    const vk::Pipeline pipeline =
+        MakeFilterPipeline(pass_through_frag, single_texture_pipeline_layout, surface.pixel_format);
     const vk::PipelineLayout layout = single_texture_pipeline_layout;
     const vk::DescriptorSet texture_descriptor_set = single_texture_provider.Commit();
     update_queue.AddImageSampler(texture_descriptor_set, 0, 0, surface.ImageView(ViewType::Sample),
@@ -752,9 +756,11 @@ void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit&
 
     scheduler.Record([pipeline, layout, texture_descriptor_set, blit, tex_scale_x, tex_scale_y,
                       tex_offset_x, tex_offset_y, src_scale](vk::CommandBuffer cmdbuf) {
-        const FilterPushConstants push_constants{.tex_scale = {tex_scale_x, tex_scale_y},
-                                                 .tex_offset = {tex_offset_x, tex_offset_y},
-                                                 .res_scale = src_scale};
+        const FilterPushConstants push_constants{
+            .tex_scale = {tex_scale_x, tex_scale_y},
+            .tex_offset = {tex_offset_x, tex_offset_y},
+            .res_scale = src_scale,
+        };
 
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 

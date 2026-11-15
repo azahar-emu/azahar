@@ -87,6 +87,7 @@ private:
     vk::PipelineLayout three_textures_pipeline_layout;
 
     vk::ShaderModule full_screen_vert;
+    vk::ShaderModule pass_through_frag;
     vk::ShaderModule d24s8_to_rgba8_comp;
     vk::ShaderModule d24s8_to_rgba8_ms_comp;
     vk::ShaderModule depth_to_buffer_comp;
