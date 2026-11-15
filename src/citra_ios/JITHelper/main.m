@@ -13,14 +13,26 @@
 #include <dlfcn.h>
 #include <unistd.h>
 
+#if AZ_HAVE_IDEVICE
+// A symbol of the library. Weak, so a library without it shows up in the report instead of
+// failing the link. (dlsym can't be used: symbols of an app extension's own binary are not
+// exported.)
+extern int rp_pairing_file_read(void) __attribute__((weak_import));
+#endif
+
 @interface AZJITHelperHandler : NSObject <NSExtensionRequestHandling>
 @end
 
 @implementation AZJITHelperHandler
 
 - (void)beginRequestWithExtensionContext:(NSExtensionContext*)context {
-    // A symbol of the library: it is linked in with -force_load, or not at all.
-    const BOOL linked = dlsym(RTLD_DEFAULT, "rp_pairing_file_read") != NULL;
+#if AZ_HAVE_IDEVICE
+    const BOOL compiledWith = YES;
+    const BOOL linked = (void*)&rp_pairing_file_read != NULL;
+#else
+    const BOOL compiledWith = NO;
+    const BOOL linked = NO;
+#endif
 
     NSExtensionItem* request = (NSExtensionItem*)context.inputItems.firstObject;
     id hostPid = request.userInfo[@"hostPid"];
@@ -30,6 +42,7 @@
         @"status" : @"started",
         @"pid" : @(getpid()),
         @"hostPid" : hostPid ?: @(0),
+        @"ideviceFoundAtBuild" : @(compiledWith),
         @"ideviceLinked" : @(linked),
     };
     [context completeRequestReturningItems:@[ reply ] completionHandler:nil];
