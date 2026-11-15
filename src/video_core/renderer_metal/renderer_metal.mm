@@ -464,11 +464,18 @@ private:
     std::array<id<MTLTexture>, 2> fx_scaled{};
     id<MTLTexture> fx_depth = nil;
     id<MTLTexture> fx_motion = nil;
-    u32 fx_width{}, fx_height{};
+    u32 fx_width{}, fx_height{};             ///< Size the interpolator works at
+    u32 fx_layout_width{}, fx_layout_height{}; ///< Screen size it was made for
+    f32 fx_scale{1.0f};
+    /// With a scale below one the pictures are shrunk before and the made frame is enlarged
+    /// after: the interpolator's cost goes with the pixels.
+    std::array<id<MTLTexture>, 2> fx_small_color{};
+    id<MTLTexture> fx_small_out = nil;
+    u32 fx_small_index{};
     bool fx_failed{false};
     bool fx_reset{true};
     u32 fx_scaled_index{};
-    bool PrepareMetalFX(u32 width, u32 height);
+    bool PrepareMetalFX(u32 width, u32 height, f32 scale);
     bool EncodeMetalFX(id<MTLCommandBuffer> buffer, id<MTLTexture> color, id<MTLTexture> previous,
                        id<MTLTexture> output, double delta_time);
     /// Display-driven pacing: a CAMetalDisplayLink on a thread of its own shows the frames.
@@ -1588,11 +1595,13 @@ NSNumber* PixelFormatNumber(MTLPixelFormat format) {
 }
 } // namespace
 
-bool RendererMetal::PrepareMetalFX(u32 width, u32 height) {
-    if (fx_interpolator != nil && fx_width == width && fx_height == height) {
+bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 scale) {
+    const bool same = fx_layout_width == layout_width && fx_layout_height == layout_height &&
+                      fx_scale == scale;
+    if (fx_interpolator != nil && same) {
         return true;
     }
-    if (fx_failed && fx_width == width && fx_height == height) {
+    if (fx_failed && same) {
         return false;
     }
     fx_interpolator = nil;
@@ -1600,6 +1609,13 @@ bool RendererMetal::PrepareMetalFX(u32 width, u32 height) {
     fx_scaled = {};
     fx_depth = nil;
     fx_motion = nil;
+    fx_small_color = {};
+    fx_small_out = nil;
+    fx_layout_width = layout_width;
+    fx_layout_height = layout_height;
+    fx_scale = scale;
+    const u32 width = std::max(16u, static_cast<u32>(std::floor(layout_width * scale)) & ~1u);
+    const u32 height = std::max(16u, static_cast<u32>(std::floor(layout_height * scale)) & ~1u);
     fx_width = width;
     fx_height = height;
     fx_reset = true;
@@ -1697,11 +1713,28 @@ bool RendererMetal::PrepareMetalFX(u32 width, u32 height) {
                             "for {}x{}", width, height);
         return false;
     }
+    if (width != layout_width || height != layout_height) {
+        MTLTextureDescriptor* small_desc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                               width:width
+                                                              height:height
+                                                           mipmapped:NO];
+        small_desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead |
+                           MTLTextureUsageShaderWrite;
+        small_desc.storageMode = MTLStorageModePrivate;
+        for (auto& texture : fx_small_color) {
+            texture = [device newTextureWithDescriptor:small_desc];
+        }
+        fx_small_out = [device newTextureWithDescriptor:small_desc];
+        if (fx_small_color[0] == nil || fx_small_color[1] == nil || fx_small_out == nil) {
+            return false;
+        }
+    }
     fx_interpolator = interpolator;
     fx_failed = false;
-    LOG_INFO(Render, "MetalFX frame interpolation ready for {}x{}{}; usages: color {}, output {}, "
-                     "depth {}, motion {}",
-             width, height, fx_scaler != nil ? " (with a temporal scaler)" : "",
+    LOG_INFO(Render, "MetalFX frame interpolation ready for {}x{} (screen {}x{}){}; usages: color {}, "
+                     "output {}, depth {}, motion {}",
+             width, height, layout_width, layout_height, fx_scaler != nil ? " (with a temporal scaler)" : "",
              [[interpolator valueForKey:@"colorTextureUsage"] unsignedLongValue],
              [[interpolator valueForKey:@"outputTextureUsage"] unsignedLongValue],
              [[interpolator valueForKey:@"depthTextureUsage"] unsignedLongValue],
@@ -1841,19 +1874,58 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     id<MTLTexture> between_luma = (__bridge id<MTLTexture>)g_fg_hooks.texture(destination, 0);
     id<MTLTexture> between_chroma = (__bridge id<MTLTexture>)g_fg_hooks.texture(destination, 1);
 
-    // MetalFX's interpolator works on the color pictures themselves: no planes to convert.
+    // MetalFX's interpolator works on the color pictures themselves: no planes to convert. It has
+    // a command buffer of its own (after the one with the real picture), which also gives the
+    // time it takes on the GPU.
     bool use_fx = false;
-    id<MTLTexture> fx_output = nil;
+    id<MTLCommandBuffer> fx_buffer = nil;
     if (!make_between) {
         fx_reset = true;
     }
-    if (make_between && fg_metalfx && fg_prev_color >= 0 &&
-        PrepareMetalFX(layout.width, layout.height)) {
-        fx_output = fg_made[(fg_made_index + 1) % FG_MADE];
-        const double delta = std::clamp(fg_interval, 0.012, 0.1);
-        use_fx = fx_output != nil &&
-                 EncodeMetalFX(scheduler.CommandBuffer(), current, fg_color[fg_prev_color],
-                               fx_output, delta);
+    if (make_between && fg_metalfx && fg_prev_color >= 0) {
+        constexpr std::array<f32, 5> fx_scales{1.0f, 0.5f, 0.375f, 0.25f, 0.75f};
+        const f32 scale = fx_scales[std::clamp(GetQualityOptions().frame_generation_size, 0, 4)];
+        if (PrepareMetalFX(layout.width, layout.height, scale)) {
+            scheduler.Flush();
+            fx_buffer = [instance.GetCommandQueue() commandBuffer];
+            fx_buffer.label = @"MetalFX frame interpolation";
+            id<MTLTexture> made = fg_made[(fg_made_index + 1) % FG_MADE];
+            id<MTLTexture> in_current = current;
+            id<MTLTexture> in_previous = fg_color[fg_prev_color];
+            id<MTLTexture> out = made;
+            const bool shrink = fx_small_out != nil;
+            if (shrink) {
+                fx_small_index ^= 1;
+                in_current = fx_small_color[fx_small_index];
+                in_previous = fx_small_color[fx_small_index ^ 1];
+                out = fx_small_out;
+                MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
+                pass.colorAttachments[0].texture = in_current;
+                pass.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+                pass.colorAttachments[0].storeAction = MTLStoreActionStore;
+                id<MTLRenderCommandEncoder> shrink_encoder =
+                    [fx_buffer renderCommandEncoderWithDescriptor:pass];
+                EncodeFullscreen(shrink_encoder, present_pipeline, present_samplers[0], current,
+                                 static_cast<f32>(fx_width), static_cast<f32>(fx_height));
+                [shrink_encoder endEncoding];
+            }
+            const double delta = std::clamp(fg_interval, 0.012, 0.1);
+            use_fx = EncodeMetalFX(fx_buffer, in_current, in_previous, out, delta);
+            if (use_fx && shrink) {
+                MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
+                pass.colorAttachments[0].texture = made;
+                pass.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+                pass.colorAttachments[0].storeAction = MTLStoreActionStore;
+                id<MTLRenderCommandEncoder> grow = [fx_buffer renderCommandEncoderWithDescriptor:pass];
+                EncodeFullscreen(grow, present_pipeline, present_samplers[0], fx_small_out,
+                                 static_cast<f32>(layout.width), static_cast<f32>(layout.height));
+                [grow endEncoding];
+            }
+            if (!use_fx) {
+                [fx_buffer commit];
+                fx_buffer = nil;
+            }
+        }
     }
 
     // The smaller copy of the screens' area, in the planes the interpolation reads.
@@ -2065,15 +2137,26 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
 
     // Once the GPU has the picture in the planes, the interpolation makes the frame between the
     // previous one and this one; without a previous frame only this one is shown.
-    [scheduler.CommandBuffer() addCompletedHandler:^(id<MTLCommandBuffer>) {
-      if (!make_between) {
-          (*show)(false);
-          return;
-      }
-      if (use_fx) {
+    if (use_fx) {
+        // The interpolator's own buffer: the frame is shown when the GPU has made it.
+        [fx_buffer addCompletedHandler:^(id<MTLCommandBuffer> done) {
+          const double gpu_seconds = done.GPUEndTime - done.GPUStartTime;
+          if (gpu_seconds > 0.0) {
+              Stats().fg_ns.fetch_add(static_cast<u64>(gpu_seconds * 1e9),
+                                      std::memory_order_relaxed);
+          }
           Stats().fg_made.fetch_add(1, std::memory_order_relaxed);
           failures->store(0, std::memory_order_relaxed);
           (*show)(true);
+        }];
+        [fx_buffer commit];
+    }
+    [scheduler.CommandBuffer() addCompletedHandler:^(id<MTLCommandBuffer>) {
+      if (use_fx) {
+          return;
+      }
+      if (!make_between) {
+          (*show)(false);
           return;
       }
       const auto start = std::chrono::steady_clock::now();
