@@ -186,36 +186,44 @@ float3 present_catmull_rom(texture2d<float> tex, sampler s, float2 uv) {
     return clamp(result, 0.0f, 1.0f);
 }
 
-float present_lanczos_weight(float x) {
-    x = fabs(x);
-    if (x < 1e-4f) {
-        return 1.0f;
-    }
-    if (x >= 2.0f) {
-        return 0.0f;
-    }
-    const float px = 3.14159265f * x;
-    return sin(px) * sin(px * 0.5f) / (px * px * 0.5f);
+// The four weights of Lanczos (two lobes) for the texels at -1, 0, 1 and 2 around a sample point
+// that is f (0 to 1) past the center of texel 0. The sines are the same for all four texels up to
+// a sign (sin(pi (f - i)) is sin(pi f) with the sign of i), so three sine and cosine calls give all
+// four weights instead of eight.
+float4 present_lanczos_weights(float f) {
+    const float pi = 3.14159265f;
+    const float a = sin(pi * f);
+    const float b = sin(pi * 0.5f * f);
+    const float c = cos(pi * 0.5f * f);
+    const float k = 2.0f / (pi * pi);
+    float4 w;
+    w.x = -k * a * c / ((f + 1.0f) * (f + 1.0f));
+    w.y = f < 1e-4f ? 1.0f : k * a * b / (f * f);
+    w.z = (1.0f - f) < 1e-4f ? 1.0f : k * a * c / ((f - 1.0f) * (f - 1.0f));
+    w.w = -k * a * b / ((f - 2.0f) * (f - 2.0f));
+    return w;
 }
 
 // Lanczos (two lobes) over the 4x4 nearest texels: sharper than bicubic, a little more ringing.
+// The weights are separable: four for x and four for y, multiplied per texel.
 float3 present_lanczos(texture2d<float> tex, float2 uv) {
     constexpr sampler nearest_sampler(filter::nearest, address::clamp_to_edge);
     float2 size = float2(tex.get_width(), tex.get_height());
     float2 pos = uv * size;
     float2 base = floor(pos - 0.5f);
-    float3 sum = float3(0.0f);
-    float total = 0.0f;
-    for (int j = -1; j <= 2; j++) {
-        for (int i = -1; i <= 2; i++) {
-            float2 texel = base + float2(i, j);
-            float w = present_lanczos_weight(pos.x - (texel.x + 0.5f)) *
-                      present_lanczos_weight(pos.y - (texel.y + 0.5f));
-            sum += tex.sample(nearest_sampler, (texel + 0.5f) / size).rgb * w;
-            total += w;
+    float2 f = pos - base - 0.5f;
+    float4 wx = present_lanczos_weights(f.x);
+    float4 wy = present_lanczos_weights(f.y);
+    half3 sum = half3(0.0h);
+    for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < 4; i++) {
+            float2 texel = base + float2(i - 1, j - 1);
+            sum += half3(tex.sample(nearest_sampler, (texel + 0.5f) / size).rgb) *
+                   half(wx[i] * wy[j]);
         }
     }
-    return clamp(sum / max(total, 1e-4f), 0.0f, 1.0f);
+    const float total = (wx.x + wx.y + wx.z + wx.w) * (wy.x + wy.y + wy.z + wy.w);
+    return clamp(float3(sum) / max(total, 1e-4f), 0.0f, 1.0f);
 }
 
 fragment float4 present_fs(PresentVOut in [[stage_in]], texture2d<float> screen [[texture(0)]],
@@ -249,26 +257,33 @@ fragment float4 present_fs(PresentVOut in [[stage_in]], texture2d<float> screen 
                                          : (u.effect == 1 ? 0.8f : 0.0f);
     if (amount > 0.0f) {
         float2 texel = 1.0f / float2(screen.get_width(), screen.get_height());
-        float3 right = screen.sample(s, uv + float2(texel.x, 0.0f)).rgb;
-        float3 left = screen.sample(s, uv - float2(texel.x, 0.0f)).rgb;
-        float3 down = screen.sample(s, uv + float2(0.0f, texel.y)).rgb;
-        float3 up = screen.sample(s, uv - float2(0.0f, texel.y)).rgb;
+        // The arithmetic is half precision (twice the rate on this GPU), the coordinates stay
+        // full precision.
+        half3 center = half3(color);
+        half3 right = half3(screen.sample(s, uv + float2(texel.x, 0.0f)).rgb);
+        half3 left = half3(screen.sample(s, uv - float2(texel.x, 0.0f)).rgb);
+        half3 down = half3(screen.sample(s, uv + float2(0.0f, texel.y)).rgb);
+        half3 up = half3(screen.sample(s, uv - float2(0.0f, texel.y)).rgb);
         if (u.sharpen_method == 1) {
             // Contrast adaptive sharpening (AMD FidelityFX CAS, MIT): sharpens where the picture
             // is soft and leaves strong edges alone, so there are fewer halos than with the
             // unsharp mask. The amount (0.015 per percent) maps to its strength 0 to 1.
-            float3 mn = min(min(min(left, right), min(up, down)), color);
-            float3 mx = max(max(max(left, right), max(up, down)), color);
-            float3 amp = sqrt(clamp(min(mn, 2.0f - mx) / max(mx, 1e-4f), 0.0f, 1.0f));
+            half3 mn = min(min(min(left, right), min(up, down)), center);
+            half3 mx = max(max(max(left, right), max(up, down)), center);
+            half3 amp = sqrt(clamp(min(mn, half(2.0f) - mx) / max(mx, half(0.001f)), half(0.0f),
+                                   half(1.0f)));
             float strength = clamp(amount / 1.2f, 0.0f, 1.0f);
-            float peak = -1.0f / mix(8.0f, 5.0f, strength);
-            float3 w = amp * peak;
-            color = clamp((color + (left + right + up + down) * w) / (1.0f + 4.0f * w), 0.0f, 1.0f);
+            half peak = half(-1.0f / mix(8.0f, 5.0f, strength));
+            half3 w = amp * peak;
+            center = clamp((center + (left + right + up + down) * w) / (half(1.0f) + half(4.0f) * w),
+                           half(0.0f), half(1.0f));
         } else {
             // Unsharp mask: add the difference to the average of the four neighbours.
-            float3 around = right + left + down + up;
-            color = clamp(color + (color - around * 0.25f) * amount, 0.0f, 1.0f);
+            half3 around = right + left + down + up;
+            center = clamp(center + (center - around * half(0.25f)) * half(amount), half(0.0f),
+                           half(1.0f));
         }
+        color = float3(center);
     }
     if (u.effect == 2) {
         // LCD grid: darken the gaps between the pixels of the console's screen.
@@ -281,13 +296,14 @@ fragment float4 present_fs(PresentVOut in [[stage_in]], texture2d<float> screen 
         float row = fract(in.tex_coord.y * float(screen.get_height()));
         color *= mix(0.6f, 1.0f, smoothstep(0.0f, 0.5f, row) * smoothstep(0.0f, 0.5f, 1.0f - row));
     }
-    // Color adjustment.
+    // Color adjustment (half precision).
     if (u.saturation != 0 || u.contrast != 0 || u.brightness != 0) {
-        const float luma = dot(color, float3(0.2126f, 0.7152f, 0.0722f));
-        color = mix(float3(luma), color, 1.0f + float(u.saturation) * 0.01f);
-        color = (color - 0.5f) * (1.0f + float(u.contrast) * 0.01f) + 0.5f;
-        color += float(u.brightness) * 0.005f;
-        color = clamp(color, 0.0f, 1.0f);
+        half3 c = half3(color);
+        const half luma = dot(c, half3(0.2126h, 0.7152h, 0.0722h));
+        c = mix(half3(luma), c, half(1.0f + float(u.saturation) * 0.01f));
+        c = (c - half(0.5f)) * half(1.0f + float(u.contrast) * 0.01f) + half(0.5f);
+        c += half(float(u.brightness) * 0.005f);
+        color = float3(clamp(c, half(0.0f), half(1.0f)));
     }
     return float4(color, 1.0f);
 }
