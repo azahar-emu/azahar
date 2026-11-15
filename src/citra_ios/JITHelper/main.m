@@ -22,11 +22,14 @@
     // A symbol of the library: it is linked in with -force_load, or not at all.
     const BOOL linked = dlsym(RTLD_DEFAULT, "rp_pairing_file_read") != NULL;
 
+    NSExtensionItem* request = (NSExtensionItem*)context.inputItems.firstObject;
+    id hostPid = request.userInfo[@"hostPid"];
+
     NSExtensionItem* reply = [[NSExtensionItem alloc] init];
     reply.userInfo = @{
         @"status" : @"started",
         @"pid" : @(getpid()),
-        @"hostPid" : context.inputItems.firstObject.userInfo[@"hostPid"] ?: @(0),
+        @"hostPid" : hostPid ?: @(0),
         @"ideviceLinked" : @(linked),
     };
     [context completeRequestReturningItems:@[ reply ] completionHandler:nil];
