@@ -338,6 +338,7 @@ BlitHelper::~BlitHelper() {
     }
     // Destroy texture filtering shader modules
     device.destroyShaderModule(bicubic_frag);
+    device.destroyShaderModule(pass_through_frag);
     device.destroyShaderModule(scale_force_frag);
     device.destroyShaderModule(xbrz_frag);
     device.destroyShaderModule(mmpx_frag);
