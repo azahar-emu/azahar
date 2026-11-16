@@ -30,6 +30,8 @@
 #include "video_core/host_shaders/texture_filtering/y_gradient_frag.h"
 #include "vk_blit_helper.h"
 
+#include <bit>
+
 namespace Vulkan {
 
 using Settings::TextureFilter;
@@ -274,14 +276,14 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
               : VK_NULL_HANDLE},
       depth_to_buffer_pipeline{
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
-      depth_blit_pipeline{VK_NULL_HANDLE},
       linear_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eLinear>)},
       nearest_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eNearest>)} {
 
     if (instance.IsShaderStencilExportSupported()) {
         blit_depth_stencil_frag = Compile(HostShaders::VULKAN_BLIT_DEPTH_STENCIL_FRAG,
                                           vk::ShaderStageFlagBits::eFragment, device);
-        depth_blit_pipeline = MakeDepthStencilBlitPipeline();
+        // Create just the first one, the rest will be created on demand when needed
+        MakeDepthStencilBlitPipeline(vk::SampleCountFlagBits::e1);
     }
 
     if (instance.HasDebuggingToolAttached()) {
@@ -309,9 +311,6 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                           "BlitHelper: d24s8_to_rgba8_ms_pipeline");
         }
         SetObjectName(device, depth_to_buffer_pipeline, "BlitHelper: depth_to_buffer_pipeline");
-        if (depth_blit_pipeline) {
-            SetObjectName(device, depth_blit_pipeline, "BlitHelper: depth_blit_pipeline");
-        }
         SetObjectName(device, linear_sampler, "BlitHelper: linear_sampler");
         SetObjectName(device, nearest_sampler, "BlitHelper: nearest_sampler");
     }
@@ -348,7 +347,11 @@ BlitHelper::~BlitHelper() {
     if (d24s8_to_rgba8_ms_pipeline) {
         device.destroyPipeline(d24s8_to_rgba8_ms_pipeline);
     }
-    device.destroyPipeline(depth_blit_pipeline);
+    for (const vk::Pipeline& pipeline : depth_blit_pipeline) {
+        if (pipeline) {
+            device.destroyPipeline(pipeline);
+        }
+    }
     device.destroySampler(linear_sampler);
     device.destroySampler(nearest_sampler);
 }
@@ -416,7 +419,8 @@ bool BlitHelper::BlitDepthStencil(Surface& source, Surface& dest,
     scheduler.Record([blit, descriptor_set, &dest, this](vk::CommandBuffer cmdbuf) {
         const vk::PipelineLayout layout = two_textures_pipeline_layout;
 
-        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, depth_blit_pipeline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                            MakeDepthStencilBlitPipeline(vk::SampleCountFlagBits::e1));
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, descriptor_set, {});
         BindBlitState(cmdbuf, layout, blit, dest);
         cmdbuf.draw(3, 1, 0, 0);
@@ -722,6 +726,53 @@ void BlitHelper::ResolveTexture(Surface& surface) {
 }
 
 void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit) {
+    if (surface.sample_count == 1) {
+        LOG_ERROR(Render_Vulkan, "Unable to do a multisample blit on a non-multisample surface");
+        return;
+    }
+
+    const bool is_depth_stencil = surface.type == VideoCore::SurfaceType::Depth ||
+                                  surface.type == VideoCore::SurfaceType::DepthStencil;
+    if (is_depth_stencil) {
+        if (!instance.IsShaderStencilExportSupported()) {
+            LOG_ERROR(Render_Vulkan, "Unable to emulate depth stencil images");
+            return;
+        }
+
+        const vk::Rect2D dst_render_area = {
+            .offset = {0, 0},
+            .extent = {surface.GetScaledWidth(), surface.GetScaledHeight()},
+        };
+
+        const vk::DescriptorSet descriptor_set = two_textures_provider.Commit();
+        update_queue.AddImageSampler(descriptor_set, 0, 0, surface.DepthView(), nearest_sampler);
+        update_queue.AddImageSampler(descriptor_set, 1, 0, surface.StencilView(), nearest_sampler);
+
+        const RenderPass depth_pass = {
+            .framebuffer = surface.Framebuffer(Type::MultiSampled),
+            .render_pass = renderpass_cache.GetRenderpass(
+                PixelFormat::Invalid, surface.pixel_format, false, surface.sample_count),
+            .render_area = dst_render_area,
+        };
+        renderpass_cache.BeginRendering(depth_pass);
+
+        const vk::Pipeline depth_blit_pipeline = MakeDepthStencilBlitPipeline(
+            static_cast<vk::SampleCountFlagBits>(surface.sample_count));
+
+        scheduler.Record(
+            [blit, descriptor_set, &surface, depth_blit_pipeline, this](vk::CommandBuffer cmdbuf) {
+                const vk::PipelineLayout layout = two_textures_pipeline_layout;
+
+                cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, depth_blit_pipeline);
+                cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
+                                          descriptor_set, {});
+                BindBlitState(cmdbuf, layout, blit, surface);
+                cmdbuf.draw(3, 1, 0, 0);
+            });
+        scheduler.MakeDirty(StateFlags::Pipeline);
+        return;
+    }
+
     const vk::Pipeline pipeline =
         MakeFilterPipeline(pass_through_frag, single_texture_pipeline_layout, surface.pixel_format,
                            surface.sample_count);
@@ -818,11 +869,28 @@ vk::Pipeline BlitHelper::MakeComputePipeline(vk::ShaderModule shader, vk::Pipeli
     }
 }
 
-vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
+vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline(vk::SampleCountFlagBits sample_count) {
+
+    if (!instance.IsShaderStencilExportSupported()) {
+        LOG_ERROR(Render_Vulkan, "Unable to create depth stencil blit pipeline");
+        return VK_NULL_HANDLE;
+    }
     const std::array stages = MakeStages(full_screen_vert, blit_depth_stencil_frag);
     const auto renderpass = renderpass_cache.GetRenderpass(VideoCore::PixelFormat::Invalid,
-                                                           VideoCore::PixelFormat::D24S8, false);
-    vk::GraphicsPipelineCreateInfo depth_stencil_info = {
+                                                           VideoCore::PixelFormat::D24S8, false,
+                                                           static_cast<u8>(sample_count));
+
+    const u32 samples_index = static_cast<u32>(std::bit_width(static_cast<u32>(sample_count)) - 1);
+
+    if (depth_blit_pipeline[samples_index]) {
+        return depth_blit_pipeline[samples_index];
+    }
+
+    vk::PipelineMultisampleStateCreateInfo multisample_state =
+        PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisample_state.rasterizationSamples = sample_count;
+
+    const vk::GraphicsPipelineCreateInfo depth_stencil_info = {
         .stageCount = static_cast<u32>(stages.size()),
         .pStages = stages.data(),
         .pVertexInputState = &PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -830,7 +898,7 @@ vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
         .pTessellationState = nullptr,
         .pViewportState = &PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pRasterizationState = &PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-        .pMultisampleState = &PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pMultisampleState = &multisample_state,
         .pDepthStencilState = &PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
         .pColorBlendState = &PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pDynamicState = &PIPELINE_DYNAMIC_STATE_CREATE_INFO,
@@ -840,6 +908,9 @@ vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
 
     if (const auto result = device.createGraphicsPipeline({}, depth_stencil_info);
         result.result == vk::Result::eSuccess) {
+        SetObjectName(device, result.value, "BlitHelper: depth_blit_pipeline samples:{}",
+                      static_cast<u32>(sample_count));
+        depth_blit_pipeline[samples_index] = result.value;
         return result.value;
     } else {
         LOG_CRITICAL(Render_Vulkan, "Depth stencil blit pipeline creation failed!");

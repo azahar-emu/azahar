@@ -46,7 +46,8 @@ public:
 
 private:
     vk::Pipeline MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout);
-    vk::Pipeline MakeDepthStencilBlitPipeline();
+    vk::Pipeline MakeDepthStencilBlitPipeline(
+        vk::SampleCountFlagBits sample_count = vk::SampleCountFlagBits::e1);
     vk::Pipeline MakeFilterPipeline(
         vk::ShaderModule fragment_shader, vk::PipelineLayout layout,
         VideoCore::PixelFormat color_format = VideoCore::PixelFormat::RGBA8, u8 sample_count = 1u);
@@ -101,7 +102,7 @@ private:
     vk::Pipeline d24s8_to_rgba8_pipeline;
     vk::Pipeline d24s8_to_rgba8_ms_pipeline;
     vk::Pipeline depth_to_buffer_pipeline;
-    vk::Pipeline depth_blit_pipeline;
+    std::array<vk::Pipeline, 6> depth_blit_pipeline;
     vk::Sampler linear_sampler;
     vk::Sampler nearest_sampler;
 
