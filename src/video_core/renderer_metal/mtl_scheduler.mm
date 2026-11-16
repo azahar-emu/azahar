@@ -600,11 +600,11 @@ void Scheduler::Flush() {
             // The buffer moves the whole timeline a little into the future: a frame that is up to
             // that much late (the emulation thread had a slow frame) still reaches its slot
             // instead of being shown a refresh late, at the price of that much more delay.
-            const double buffer = g_pacing_buffer_ms.load(std::memory_order_relaxed) * 0.001;
-            const double now = CACurrentMediaTime() + buffer;
+            const double lead = g_pacing_buffer_ms.load(std::memory_order_relaxed) * 0.001;
+            const double now = CACurrentMediaTime() + lead;
             const double step = period * pending.swaps;
             double target = pace_last_target > 0.0 ? pace_last_target + step : now;
-            if (target < now - period * 0.5 - buffer || target > now + period) {
+            if (target < now - period * 0.5 - lead || target > now + period) {
                 target = now;
             }
             pace_last_target = target;
