@@ -223,6 +223,9 @@ void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit&
     SCOPE_EXIT({ prev_state.Apply(); });
     state.texture_units[0].texture_2d = surface.Handle(1);
     state.texture_units[0].target = GL_TEXTURE_2D;
+    // Disable sample shading for the blit, as we want one sample from the source
+    // texture to be used for all samples in the destination texture
+    state.multisample.sample_shading = GL_FALSE;
     SetParams(pass_through_program, surface.RealExtent(false), blit.src_rect);
     Draw(pass_through_program, surface.Handle(3), draw_fbo.handle, blit.dst_level, blit.dst_rect,
          true);
