@@ -727,7 +727,7 @@ void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit&
     const vk::PipelineLayout layout = single_texture_pipeline_layout;
     const vk::DescriptorSet texture_descriptor_set = single_texture_provider.Commit();
     update_queue.AddImageSampler(texture_descriptor_set, 0, 0, surface.ImageView(ViewType::Sample),
-                                 linear_sampler, vk::ImageLayout::eGeneral);
+                                 nearest_sampler, vk::ImageLayout::eGeneral);
     const vk::RenderPass renderpass = renderpass_cache.GetRenderpass(
         surface.pixel_format, VideoCore::PixelFormat::Invalid, false, surface.sample_count);
 
