@@ -934,7 +934,6 @@ vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
     vk::PipelineMultisampleStateCreateInfo multisample_state =
         PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     if (sample_count > 1) {
-        multisample_state.sampleShadingEnable = vk::True;
         multisample_state.rasterizationSamples = static_cast<vk::SampleCountFlagBits>(sample_count);
     }
 
