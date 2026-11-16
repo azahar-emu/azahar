@@ -17,6 +17,7 @@
 #include "video_core/host_shaders/full_screen_triangle_vert.h"
 #include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
 #include "video_core/host_shaders/texture_filtering/mmpx_frag.h"
+#include "video_core/host_shaders/texture_filtering/pass_through_frag.h"
 #include "video_core/host_shaders/texture_filtering/refine_frag.h"
 #include "video_core/host_shaders/texture_filtering/scale_force_frag.h"
 #include "video_core/host_shaders/texture_filtering/x_gradient_frag.h"
@@ -60,6 +61,7 @@ BlitHelper::BlitHelper(const Driver& driver_)
     : driver{driver_}, linear_sampler{CreateSampler(GL_LINEAR)},
       nearest_sampler{CreateSampler(GL_NEAREST)},
       bicubic_program{CreateProgram(HostShaders::BICUBIC_FRAG, "BICUBIC_FRAG")},
+      pass_through_program{CreateProgram(HostShaders::PASS_THROUGH_FRAG, "PASS_THROUGH_FRAG")},
       scale_force_program{CreateProgram(HostShaders::SCALE_FORCE_FRAG, "SCALE_FORCE_FRAG")},
       xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG, "XBRZ_FREESCALE_FRAG")},
       mmpx_program{CreateProgram(HostShaders::MMPX_FRAG, "MMPX_FRAG")},
@@ -213,6 +215,17 @@ void BlitHelper::ResolveTexture(Surface& surface, u32 level, u32 layer) {
                                        : GL_COLOR_BUFFER_BIT;
     glBlitFramebuffer(0, 0, surface.GetScaledWidth(), surface.GetScaledHeight(), 0, 0,
                       surface.GetScaledWidth(), surface.GetScaledHeight(), buffer_mask, GL_NEAREST);
+}
+
+void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit) {
+    // Render into the MSAA texture from the base/scaled texture using a simple pass-through shader
+    const OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+    state.texture_units[0].texture_2d = surface.Handle(1);
+    state.texture_units[0].target = GL_TEXTURE_2D;
+    SetParams(pass_through_program, surface.RealExtent(false), blit.src_rect);
+    Draw(pass_through_program, surface.Handle(3), draw_fbo.handle, blit.dst_level, blit.dst_rect,
+         true);
 }
 
 bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
