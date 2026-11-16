@@ -218,6 +218,20 @@ void BlitHelper::ResolveTexture(Surface& surface, u32 level, u32 layer) {
 }
 
 void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit) {
+    if (surface.sample_count == 1) {
+        LOG_ERROR(Render_OpenGL, "Unable to do a multisample blit to a non-multisample surface");
+        return;
+    }
+
+    const bool is_depth_stencil =
+        surface.type == SurfaceType::Depth || surface.type == SurfaceType::DepthStencil;
+    if (is_depth_stencil) {
+        LOG_ERROR(Render_OpenGL, "Unable to emulate a requested non-multisample depth/stencil blit "
+                                 "to a multisample surface");
+        return;
+        // TODO(wunk): Use GL_ARB_shader_stencil_export to emulate this blit, similar to Vulkan.
+    }
+
     // Render into the MSAA texture from the base/scaled texture using a simple pass-through shader
     const OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
