@@ -908,8 +908,10 @@ vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline(vk::SampleCountFlagBits sa
 
     if (const auto result = device.createGraphicsPipeline({}, depth_stencil_info);
         result.result == vk::Result::eSuccess) {
-        SetObjectName(device, result.value, "BlitHelper: depth_blit_pipeline samples:{}",
-                      static_cast<u32>(sample_count));
+        if (instance.HasDebuggingToolAttached()) {
+            SetObjectName(device, result.value, "BlitHelper: depth_blit_pipeline samples:{}",
+                          static_cast<u32>(sample_count));
+        }
         depth_blit_pipeline[samples_index] = result.value;
         return result.value;
     } else {
