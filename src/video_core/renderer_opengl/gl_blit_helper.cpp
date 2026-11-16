@@ -221,8 +221,9 @@ void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit&
     // Render into the MSAA texture from the base/scaled texture using a simple pass-through shader
     const OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
-    state.texture_units[0].texture_2d = surface.Handle(1);
+    state.texture_units[0].texture_2d = surface.Handle();
     state.texture_units[0].target = GL_TEXTURE_2D;
+    state.texture_units[0].sampler = nearest_sampler.handle;
     // Disable sample shading for the blit, as we want one sample from the source
     // texture to be used for all samples in the destination texture
     state.multisample.sample_shading = GL_FALSE;
