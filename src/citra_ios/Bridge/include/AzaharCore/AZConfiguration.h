@@ -238,6 +238,10 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) NSInteger region;
 @property(nonatomic) BOOL useFrameLimit;
 @property(nonatomic) NSInteger frameLimit;
+/// At a speed limit of 100% the emulation runs at the display's 60 Hz instead of the console's
+/// 59.83 Hz (0.3% faster), so frames and refreshes stay in step. Otherwise a refresh is repeated
+/// every few seconds, which shows as a hitch.
+@property(nonatomic) BOOL syncSpeedToDisplay;
 
 /// Default configuration.
 + (instancetype)defaultConfiguration NS_SWIFT_NAME(makeDefault());

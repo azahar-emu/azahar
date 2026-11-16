@@ -108,6 +108,7 @@ struct GameSettingsView: View {
                                value: $overrides.frameGenerationDisplayPaced)
                 OverrideToggle("Frame Generation With MetalFX (Experimental)",
                                value: $overrides.frameGenerationMetalFX)
+                OverrideToggle("Sync Speed to Display", value: $overrides.syncSpeedToDisplay)
                 OverrideToggle("Custom Textures", value: $overrides.customTextures)
                 OverrideToggle("Preload Custom Textures", value: $overrides.preloadTextures)
                 OverrideToggle("Hidden Surface Removal", value: $overrides.hiddenSurfaceRemoval)

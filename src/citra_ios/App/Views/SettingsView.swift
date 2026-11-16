@@ -169,6 +169,7 @@ struct GeneralSettingsView: View {
             .listRowBackground(LGRowBackground())
 
             Section {
+                Toggle("Sync Speed to Display", isOn: $settings.syncSpeedToDisplay)
                 Toggle("Limit Speed", isOn: $settings.useFrameLimit)
                 if settings.useFrameLimit {
                     Stepper(value: $settings.frameLimit, in: 25...400, step: 25) {

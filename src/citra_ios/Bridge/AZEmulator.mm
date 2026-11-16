@@ -39,6 +39,7 @@
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "core/core.h"
+#include "core/core_timing.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/hle/service/service.h"
 #include "core/loader/loader.h"
@@ -687,6 +688,12 @@ const char* ThermalStateName() {
     values.region_value = static_cast<s32>(configuration.region);
     values.frame_limit =
         configuration.useFrameLimit ? static_cast<double>(configuration.frameLimit) : 0.0;
+    if (configuration.syncSpeedToDisplay && configuration.useFrameLimit &&
+        configuration.frameLimit == 100) {
+        // The console refreshes at 59.83 Hz, the display at 60 (or 120). Run at the display's
+        // rate: 0.3% faster, which no one notices, and no refresh is repeated now and then.
+        values.frame_limit = 100.0 * 60.0 / SCREEN_REFRESH_RATE;
+    }
 
     values.graphics_api = Settings::GraphicsAPI::Metal;
     // Vertex shaders run on the GPU unless disabled; draws the Metal backend cannot translate

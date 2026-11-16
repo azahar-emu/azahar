@@ -121,6 +121,7 @@
     config.region = -1;
     config.useFrameLimit = YES;
     config.frameLimit = 100;
+    config.syncSpeedToDisplay = YES;
     return config;
 }
 

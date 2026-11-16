@@ -421,6 +421,8 @@ final class AppSettings: ObservableObject {
     @Published var region: ConsoleRegion { didSet { save(region.rawValue, "region") } }
     @Published var useFrameLimit: Bool { didSet { save(useFrameLimit, "useFrameLimit") } }
     @Published var frameLimit: Int { didSet { save(frameLimit, "frameLimit") } }
+    /// Run at 60 Hz instead of 59.83 Hz at a limit of 100%, so the frames match the display.
+    @Published var syncSpeedToDisplay: Bool { didSet { save(syncSpeedToDisplay, "syncSpeedToDisplay") } }
 
     init() {
         let d = UserDefaults.standard
@@ -574,6 +576,7 @@ final class AppSettings: ObservableObject {
         region = ConsoleRegion(rawValue: value("region", -1)) ?? .auto
         useFrameLimit = value("useFrameLimit", true)
         frameLimit = value("frameLimit", 100)
+        syncSpeedToDisplay = value("syncSpeedToDisplay", true)
         // The saved choice applies from the start (property observers do not run in init).
         AZEmulator.setLoggingEnabled(loggingEnabled)
     }
@@ -709,6 +712,7 @@ final class AppSettings: ObservableObject {
         config.region = region.rawValue
         config.useFrameLimit = useFrameLimit
         config.frameLimit = frameLimit
+        config.syncSpeedToDisplay = syncSpeedToDisplay
         return config
     }
 }
