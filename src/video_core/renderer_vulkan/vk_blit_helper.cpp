@@ -722,7 +722,8 @@ void BlitHelper::ResolveTexture(Surface& surface) {
 
 void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit) {
     const vk::Pipeline pipeline =
-        MakeFilterPipeline(pass_through_frag, single_texture_pipeline_layout, surface.pixel_format);
+        MakeFilterPipeline(pass_through_frag, single_texture_pipeline_layout, surface.pixel_format,
+                           surface.sample_count);
     const vk::PipelineLayout layout = single_texture_pipeline_layout;
     const vk::DescriptorSet texture_descriptor_set = single_texture_provider.Commit();
     update_queue.AddImageSampler(texture_descriptor_set, 0, 0, surface.ImageView(ViewType::Sample),
@@ -910,14 +911,16 @@ void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit
 
 vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
                                             vk::PipelineLayout layout,
-                                            VideoCore::PixelFormat color_format) {
+                                            VideoCore::PixelFormat color_format, u8 sample_count) {
 
     const VkShaderModule c_shader = static_cast<VkShaderModule>(fragment_shader);
     const VkPipelineLayout c_layout = static_cast<VkPipelineLayout>(layout);
     const u64 cache_key = Common::HashCombine(
-        Common::HashCombine(static_cast<u64>(reinterpret_cast<uintptr_t>(c_shader)),
-                            static_cast<u64>(reinterpret_cast<uintptr_t>(c_layout))),
-        static_cast<u64>(color_format));
+        Common::HashCombine(
+            Common::HashCombine(static_cast<u64>(reinterpret_cast<uintptr_t>(c_shader)),
+                                static_cast<u64>(reinterpret_cast<uintptr_t>(c_layout))),
+            static_cast<u64>(color_format)),
+        static_cast<u8>(sample_count));
 
     if (const auto it = filter_pipeline_cache.find(cache_key); it != filter_pipeline_cache.end()) {
         return it->second;
@@ -925,10 +928,17 @@ vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
 
     const std::array stages = MakeStages(full_screen_vert, fragment_shader);
     // Use the provided color format for render pass compatibility
-    const auto renderpass =
-        renderpass_cache.GetRenderpass(color_format, VideoCore::PixelFormat::Invalid, false);
+    const auto renderpass = renderpass_cache.GetRenderpass(
+        color_format, VideoCore::PixelFormat::Invalid, false, sample_count);
 
-    vk::GraphicsPipelineCreateInfo pipeline_info = {
+    vk::PipelineMultisampleStateCreateInfo multisample_state =
+        PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    if (sample_count > 1) {
+        multisample_state.sampleShadingEnable = vk::True;
+        multisample_state.rasterizationSamples = static_cast<vk::SampleCountFlagBits>(sample_count);
+    }
+
+    const vk::GraphicsPipelineCreateInfo pipeline_info = {
         .stageCount = static_cast<u32>(stages.size()),
         .pStages = stages.data(),
         .pVertexInputState = &PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -936,7 +946,7 @@ vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
         .pTessellationState = nullptr,
         .pViewportState = &PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pRasterizationState = &PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-        .pMultisampleState = &PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pMultisampleState = &multisample_state,
         .pDepthStencilState = nullptr,
         .pColorBlendState = &PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pDynamicState = &PIPELINE_DYNAMIC_STATE_CREATE_INFO,

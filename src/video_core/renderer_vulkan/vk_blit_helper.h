@@ -49,7 +49,7 @@ private:
     vk::Pipeline MakeDepthStencilBlitPipeline();
     vk::Pipeline MakeFilterPipeline(
         vk::ShaderModule fragment_shader, vk::PipelineLayout layout,
-        VideoCore::PixelFormat color_format = VideoCore::PixelFormat::RGBA8);
+        VideoCore::PixelFormat color_format = VideoCore::PixelFormat::RGBA8, u8 sample_count = 1u);
 
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
     void FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit);
@@ -105,7 +105,7 @@ private:
     vk::Sampler linear_sampler;
     vk::Sampler nearest_sampler;
 
-    /// Cache of texture filter pipelines (keyed by shader+layout+format hash)
+    /// Cache of texture filter pipelines (keyed by shader+layout+format+sample_count hash)
     std::unordered_map<std::uint64_t, vk::Pipeline> filter_pipeline_cache;
 };
 
