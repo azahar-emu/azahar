@@ -70,6 +70,9 @@ void SetCustomPostShader(const std::string& path);
 /// Holds each frame on screen for the time of an emulated frame so frames are evenly spaced.
 void SetFramePacing(bool enabled);
 
+/// Delay (milliseconds) the frame pacing adds so slow frames still meet their slot, 0 for none.
+void SetPacingBuffer(int milliseconds);
+
 /// How textures are kept in GPU memory, see Surface::CreateTexture.
 enum class TextureCompression : int {
     Off = 0,

@@ -256,6 +256,8 @@ final class AppSettings: ObservableObject {
     @Published var swapEyes3D: Bool { didSet { save(swapEyes3D, "swapEyes3D") } }
     @Published var refreshRate: RefreshRateOption { didSet { save(refreshRate.rawValue, "refreshRate") } }
     @Published var framePacing: Bool { didSet { save(framePacing, "framePacing") } }
+    /// Delay in milliseconds that the pacing adds so a slow frame still meets its slot.
+    @Published var pacingBufferMs: Int { didSet { save(pacingBufferMs, "pacingBufferMs") } }
     @Published var asyncShaders: Bool { didSet { save(asyncShaders, "asyncShaders") } }
     @Published var shaderWaitMs: Int { didSet { save(shaderWaitMs, "shaderWaitMs") } }
     @Published var frameGeneration: Int { didSet { save(frameGeneration, "frameGeneration") } }
@@ -462,6 +464,7 @@ final class AppSettings: ObservableObject {
         swapEyes3D = value("swapEyes3D", false)
         refreshRate = RefreshRateOption(rawValue: value("refreshRate", RefreshRateOption.automatic.rawValue)) ?? .automatic
         framePacing = value("framePacing", true)
+        pacingBufferMs = value("pacingBufferMs", 0)
         asyncShaders = value("asyncShaders", true)
         holdFramesForShaders = value("holdFramesForShaders", true)
         frameGeneration = min(value("frameGeneration", 0), 1)
@@ -623,6 +626,7 @@ final class AppSettings: ObservableObject {
         config.displayRefreshRate = UIScreen.main.maximumFramesPerSecond
         config.shaderWaitMs = shaderWaitMs
         config.framePacing = framePacing
+        config.pacingBufferMs = pacingBufferMs
         config.fastShaderMath = fastShaderMath
         config.fastLighting = fastLighting
         config.fastColor = fastColor

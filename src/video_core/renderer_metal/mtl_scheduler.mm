@@ -28,6 +28,8 @@ GpuStats& Stats() {
 
 namespace {
 std::atomic<bool> g_frame_pacing{true};
+/// How far ahead of the frames the pacing timeline runs, in milliseconds (see Scheduler::Flush).
+std::atomic<int> g_pacing_buffer_ms{0};
 /// Presented time of the previous frame of the main display, 0 when there is none.
 std::atomic<double> g_last_presented{0.0};
 /// Duration of an emulated frame at full speed (a 3DS runs at about 59.83 frames per second).
@@ -271,6 +273,10 @@ bool StatisticsEnabled() {
 
 void SetFramePacing(bool enabled) {
     g_frame_pacing.store(enabled, std::memory_order_relaxed);
+}
+
+void SetPacingBuffer(int milliseconds) {
+    g_pacing_buffer_ms.store(std::clamp(milliseconds, 0, 50), std::memory_order_relaxed);
 }
 
 Scheduler::Scheduler(const Instance& instance) : queue{instance.GetCommandQueue()} {}
@@ -591,10 +597,14 @@ void Scheduler::Flush() {
             // early waits for its time, one that is late is shown at once and the timeline
             // starts again from it. Without this each frame was shown at the first display
             // refresh after it was ready, which jitters by a whole refresh (8 ms at 120 Hz).
-            const double now = CACurrentMediaTime();
+            // The buffer moves the whole timeline a little into the future: a frame that is up to
+            // that much late (the emulation thread had a slow frame) still reaches its slot
+            // instead of being shown a refresh late, at the price of that much more delay.
+            const double buffer = g_pacing_buffer_ms.load(std::memory_order_relaxed) * 0.001;
+            const double now = CACurrentMediaTime() + buffer;
             const double step = period * pending.swaps;
             double target = pace_last_target > 0.0 ? pace_last_target + step : now;
-            if (target < now - period * 0.5 || target > now + period) {
+            if (target < now - period * 0.5 - buffer || target > now + period) {
                 target = now;
             }
             pace_last_target = target;

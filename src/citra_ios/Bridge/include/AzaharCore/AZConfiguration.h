@@ -103,6 +103,8 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) BOOL fastDepthReadback;
 /// Holds each frame on screen for the time of a game frame so frames are evenly spaced.
 @property(nonatomic) BOOL framePacing;
+/// Milliseconds of delay the frame pacing adds so a slow frame still meets its slot (0 for none).
+@property(nonatomic) NSInteger pacingBufferMs;
 @property(nonatomic) BOOL fastShaderMath;
 /// Settings::StereoRenderOption: 0 off, 1 side by side, 3 anaglyph, 4 interlaced, 5 reverse.
 @property(nonatomic) NSInteger stereoMode;

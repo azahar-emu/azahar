@@ -29,6 +29,7 @@
     config.skipDuplicateFrames = NO;
     config.asyncShaderCompilation = YES;
     config.framePacing = YES;
+    config.pacingBufferMs = 0;
     config.fastShaderMath = NO;
     config.fastLighting = NO;
     config.fastColor = NO;

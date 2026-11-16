@@ -63,6 +63,9 @@ bool StatisticsEnabled();
 /// Turns even frame pacing on or off, see Scheduler::PresentDrawable.
 void SetFramePacing(bool enabled);
 
+/// Delay (milliseconds) the frame pacing adds so slow frames still meet their slot, 0 for none.
+void SetPacingBuffer(int milliseconds);
+
 GpuStats& Stats();
 
 /// What is asking for the data of a surface while it is read back from the GPU (every readback

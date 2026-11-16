@@ -620,6 +620,7 @@ const char* ThermalStateName() {
     values.enable_required_online_lle_modules = configuration.onlineModules;
     values.async_shader_compilation = configuration.asyncShaderCompilation;
     Metal::SetFramePacing(configuration.framePacing);
+    Metal::SetPacingBuffer(static_cast<int>(configuration.pacingBufferMs));
     // The device microphone, or the static noise the console got before it was available.
     values.input_type = configuration.useMicrophone ? AudioCore::InputType::Custom
                                                     : AudioCore::InputType::Static;

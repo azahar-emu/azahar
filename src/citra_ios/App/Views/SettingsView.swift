@@ -613,6 +613,13 @@ struct GraphicsSettingsView: View {
 
             Section {
                 Toggle("Frame Pacing", isOn: $settings.framePacing)
+                Picker("Frame Pacing Buffer", selection: $settings.pacingBufferMs) {
+                    Text("Off").tag(0)
+                    Text("8 ms").tag(8)
+                    Text("17 ms").tag(17)
+                    Text("25 ms").tag(25)
+                }
+                .disabled(!settings.framePacing)
                 Picker("Display Refresh Rate", selection: $settings.refreshRate) {
                     ForEach(RefreshRateOption.allCases) { Text($0.title).tag($0) }
                 }
