@@ -82,6 +82,7 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
         return;
     }
     const double target = update.targetPresentationTimestamp;
+    Metal::NoteDisplayCallback(CACurrentMediaTime(), target);
     Metal::DisplayPacer::Frame next;
     {
         std::scoped_lock lock{p->mutex};
@@ -347,6 +348,9 @@ private:
     bool UseFrameGeneration(const Layout::FramebufferLayout& layout);
     void RenderGenerated(CAMetalLayer* target, const Layout::FramebufferLayout& layout);
     bool RenderPacedPlain(const Layout::FramebufferLayout& layout);
+    /// A frame without frame generation through the display link (display sync), see
+    /// QualityOptions::display_sync. False when the display link could not be started.
+    bool RenderDisplaySynced(CAMetalLayer* target, const Layout::FramebufferLayout& layout);
     /// When frame generation last made a pair of frames: the display link stays a little while
     /// after, so a short stretch without frame generation does not restart it.
     std::chrono::steady_clock::time_point fg_last_generated{};
@@ -459,6 +463,12 @@ private:
     u32 fg_swaps{};      ///< SwapBuffers calls (60 per second of emulation)
     u32 fg_last_swaps{}; ///< fg_swaps at the previous new frame
     u32 plain_last_swaps{}; ///< fg_swaps at the previous frame shown without frame generation
+    /// Display sync: the pictures waiting for the display link or on screen (it keeps up to two
+    /// waiting and one shown, so four never overwrite one in use).
+    static constexpr u32 DS_COLORS = 4;
+    std::array<id<MTLTexture>, DS_COLORS> ds_color{};
+    u32 ds_index{};
+    u32 ds_width{}, ds_height{};
     f32 fg_cadence{1.0f}; ///< Swaps per new frame of the game, smoothed: 2 for a 30 FPS game
     std::chrono::steady_clock::time_point fg_last_frame{};
     double fg_interval{};
@@ -1221,6 +1231,9 @@ void RendererMetal::RenderToLayer(CAMetalLayer* target, const Layout::Framebuffe
     if (allow_upscale && UseFrameGeneration(layout)) {
         // Takes its drawables itself, when the frames are ready to be shown.
         RenderGenerated(target, layout);
+        return;
+    }
+    if (allow_upscale && GetQualityOptions().display_sync && RenderDisplaySynced(target, layout)) {
         return;
     }
     if (allow_upscale && fg_pacer_link != nil) {
@@ -2278,6 +2291,68 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     fg_cur = (fg_cur + 1) % FG_SLOTS;
 }
 
+bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
+                                        const Layout::FramebufferLayout& layout) {
+    if (!StartPacer(target) || !fg_pacer) {
+        return false;
+    }
+    id<MTLDevice> device = instance.GetDevice();
+    if (ds_width != layout.width || ds_height != layout.height || ds_color[0] == nil) {
+        MTLTextureDescriptor* desc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                               width:layout.width
+                                                              height:layout.height
+                                                           mipmapped:NO];
+        desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+        desc.storageMode = MTLStorageModePrivate;
+        for (auto& texture : ds_color) {
+            texture = [device newTextureWithDescriptor:desc];
+            if (texture == nil) {
+                return false;
+            }
+        }
+        ds_width = layout.width;
+        ds_height = layout.height;
+    }
+    ds_index = (ds_index + 1) % DS_COLORS;
+    id<MTLTexture> current = ds_color[ds_index];
+
+    // How long this frame of the game lasts: as many of the game's refreshes as swaps went by.
+    const u32 swaps = std::clamp(fg_swaps - plain_last_swaps, 1u, 4u);
+    plain_last_swaps = fg_swaps;
+
+    scheduler.Flush();
+    scheduler.MarkPresentation();
+#if AZAHAR_HAS_METALFX
+    PrepareUpscaling(layout);
+#endif
+    MTLRenderPassDescriptor* desc = [MTLRenderPassDescriptor renderPassDescriptor];
+    desc.colorAttachments[0].texture = current;
+    desc.colorAttachments[0].loadAction = MTLLoadActionClear;
+    desc.colorAttachments[0].storeAction = MTLStoreActionStore;
+    desc.colorAttachments[0].clearColor =
+        MTLClearColorMake(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
+                          Settings::values.bg_blue.GetValue(), 1.0);
+    scheduler.SetPassLabel("present (display sync)");
+    id<MTLRenderCommandEncoder> encoder = scheduler.BeginRendering(desc);
+    DrawScreens(encoder, layout);
+    scheduler.EndEncoding();
+#if AZAHAR_HAS_METALFX
+    upscale_pass = UpscalePass::Off;
+#endif
+    // Submitted before it is handed over: the display link draws it on the same queue, after.
+    scheduler.Flush();
+
+    const double limit = Settings::GetFrameLimit();
+    const double frame = limit > 0.0 ? (1.0 / 59.83) * 100.0 / limit : 1.0 / 60.0;
+    std::scoped_lock lock{fg_pacer->mutex};
+    // The display link shows it once the frame before it has been on screen for its time.
+    fg_pacer->slot = frame * swaps;
+    fg_pacer->waiting.push_back(
+        {current, static_cast<float>(layout.width), static_cast<float>(layout.height)});
+    return true;
+}
+
 bool RendererMetal::RenderPacedPlain(const Layout::FramebufferLayout& layout) {
     if (!fg_pacer || !fg_ready || layout.width != fg_layout_width ||
         layout.height != fg_layout_height) {
@@ -2347,7 +2422,9 @@ bool RendererMetal::StartPacer(CAMetalLayer* layer) {
             return false;
         }
         link.delegate = delegate;
-        link.preferredFrameLatency = 2.0f;
+        // Frame generation draws its frames ahead and needs the time; the frames of display sync
+        // are ready when handed over, so one refresh is enough and keeps the delay down.
+        link.preferredFrameLatency = GetQualityOptions().frame_generation > 0 ? 2.0f : 1.0f;
         link.preferredFrameRateRange =
             CAFrameRateRangeMake(static_cast<float>(hz), static_cast<float>(hz),
                                  static_cast<float>(hz));
@@ -2546,6 +2623,71 @@ QualityOptions g_quality_options;
 
 void SetFrameGeneratorHooks(FrameGeneratorHooks hooks) {
     g_fg_hooks = std::move(hooks);
+}
+
+namespace {
+// The display's refresh grid, from the display link (display sync). Written on the display link's
+// thread, read by the emulation thread when the frame limiter wakes up.
+std::atomic<double> g_refresh_anchor{0.0}; ///< A time a refresh callback came (smoothed)
+std::atomic<double> g_refresh_period{0.0}; ///< Time between refreshes
+std::atomic<double> g_refresh_seen{0.0};   ///< When the last callback came
+double g_last_presentation = 0.0;          ///< Display link thread only
+double g_period_candidate = 0.0;           ///< Display link thread only
+} // namespace
+
+void NoteDisplayCallback(double now, double presentation) {
+    double period = g_refresh_period.load(std::memory_order_relaxed);
+    if (period <= 0.0) {
+        period = 1.0 / std::clamp(GetQualityOptions().display_hz, 30, 240);
+    }
+    // The refresh interval from the times the refreshes reach the screen. A different interval
+    // is taken only when two in a row agree, so one late callback does not count as a new rate.
+    if (g_last_presentation > 0.0) {
+        const double interval = presentation - g_last_presentation;
+        if (interval > 1.0 / 250.0 && interval < 1.0 / 20.0) {
+            if (std::abs(interval - period) < period * 0.2) {
+                period = period * 0.95 + interval * 0.05;
+            } else if (g_period_candidate > 0.0 &&
+                       std::abs(interval - g_period_candidate) < g_period_candidate * 0.05) {
+                period = interval;
+            }
+            g_period_candidate = interval;
+        }
+    }
+    g_last_presentation = presentation;
+
+    // Where the callbacks fall, smoothed so the jitter of a single callback does not move it.
+    double anchor = g_refresh_anchor.load(std::memory_order_relaxed);
+    const double seen = g_refresh_seen.load(std::memory_order_relaxed);
+    if (anchor <= 0.0 || now - seen > 0.5) {
+        anchor = now;
+    } else {
+        const double predicted = anchor + std::round((now - anchor) / period) * period;
+        anchor = predicted + (now - predicted) * 0.1;
+    }
+    g_refresh_period.store(period, std::memory_order_relaxed);
+    g_refresh_anchor.store(anchor, std::memory_order_relaxed);
+    g_refresh_seen.store(now, std::memory_order_relaxed);
+}
+
+std::chrono::steady_clock::time_point SnapDeadlineToDisplay(
+    std::chrono::steady_clock::time_point deadline) {
+    const double now_media = CACurrentMediaTime();
+    const double seen = g_refresh_seen.load(std::memory_order_relaxed);
+    const double period = g_refresh_period.load(std::memory_order_relaxed);
+    const double anchor = g_refresh_anchor.load(std::memory_order_relaxed);
+    if (seen <= 0.0 || now_media - seen > 0.25 || period <= 0.0) {
+        return deadline; // The display link is not running
+    }
+    const auto now = std::chrono::steady_clock::now();
+    const double wanted = now_media + std::chrono::duration<double>(deadline - now).count();
+    // Just after a refresh callback: the frame has nearly a whole refresh before the next one
+    // picks it up, and it lands at the same place every time instead of drifting.
+    constexpr double wake_after = 0.001;
+    const double snapped =
+        anchor + std::round((wanted - anchor - wake_after) / period) * period + wake_after;
+    return now + std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+                     std::chrono::duration<double>(snapped - now_media));
 }
 
 void SetQualityOptions(const QualityOptions& options) {

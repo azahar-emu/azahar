@@ -47,6 +47,7 @@ struct GameOverrides: Codable, Equatable {
     var frameGenerationMetalFX: Bool?
     var syncSpeedToDisplay: Bool?
     var pacingBufferMs: Int?
+    var displaySync: Bool?
     var shaderWaitMs: Int?
     var disableRightEyeRender: Bool?
     var integerScaling: Bool?
@@ -124,6 +125,7 @@ struct GameOverrides: Codable, Equatable {
         if let frameGenerationMetalFX { config.frameGenerationMetalFX = frameGenerationMetalFX }
         if let syncSpeedToDisplay { config.syncSpeedToDisplay = syncSpeedToDisplay }
         if let pacingBufferMs { config.pacingBufferMs = pacingBufferMs }
+        if let displaySync { config.displaySync = displaySync }
         if let frameGenerationDisplayPaced {
             config.frameGenerationDisplayPaced = frameGenerationDisplayPaced
         }

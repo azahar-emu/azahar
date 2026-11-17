@@ -539,7 +539,13 @@ const char* ThermalStateName() {
     quality.display_hz = static_cast<int>(configuration.displayRefreshRate);
     quality.frame_generation_size = static_cast<int>(configuration.frameGenerationSize);
     quality.frame_generation_top_only = configuration.frameGenerationTopOnly;
-    quality.frame_generation_display_paced = configuration.frameGenerationDisplayPaced;
+    // With display sync the display link owns the layer, so frame generation goes through it too.
+    quality.display_sync = configuration.displaySync;
+    quality.frame_generation_display_paced =
+        configuration.frameGenerationDisplayPaced || configuration.displaySync;
+    // The emulation wakes up for each frame just after a refresh of the display (display sync).
+    Core::System::GetInstance().frame_limiter.SetDeadlineSnap(
+        configuration.displaySync ? &Metal::SnapDeadlineToDisplay : nullptr);
     quality.frame_generation_metalfx = configuration.frameGenerationMetalFX;
     quality.shader_wait_us = static_cast<u32>(std::clamp<NSInteger>(configuration.shaderWaitMs, 0, 16)) * 1000;
     quality.max_anisotropy = static_cast<int>(configuration.anisotropy);

@@ -103,6 +103,9 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) BOOL fastDepthReadback;
 /// Holds each frame on screen for the time of a game frame so frames are evenly spaced.
 @property(nonatomic) BOOL framePacing;
+/// Frames go to the screen through a display link, and the emulation makes each one just after a
+/// refresh of the display, so they stay in step with it (replaces the timeline of framePacing).
+@property(nonatomic) BOOL displaySync;
 /// Milliseconds of delay the frame pacing adds so a slow frame still meets its slot (0 for none).
 @property(nonatomic) NSInteger pacingBufferMs;
 @property(nonatomic) BOOL fastShaderMath;

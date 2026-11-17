@@ -256,6 +256,8 @@ final class AppSettings: ObservableObject {
     @Published var swapEyes3D: Bool { didSet { save(swapEyes3D, "swapEyes3D") } }
     @Published var refreshRate: RefreshRateOption { didSet { save(refreshRate.rawValue, "refreshRate") } }
     @Published var framePacing: Bool { didSet { save(framePacing, "framePacing") } }
+    /// Frames shown by a display link and made in step with the display's refreshes.
+    @Published var displaySync: Bool { didSet { save(displaySync, "displaySync") } }
     /// Delay in milliseconds that the pacing adds so a slow frame still meets its slot.
     @Published var pacingBufferMs: Int { didSet { save(pacingBufferMs, "pacingBufferMs") } }
     @Published var asyncShaders: Bool { didSet { save(asyncShaders, "asyncShaders") } }
@@ -479,6 +481,7 @@ final class AppSettings: ObservableObject {
         swapEyes3D = value("swapEyes3D", false)
         refreshRate = RefreshRateOption(rawValue: value("refreshRate", RefreshRateOption.automatic.rawValue)) ?? .automatic
         framePacing = value("framePacing", true)
+        displaySync = value("displaySync", true)
         pacingBufferMs = value("pacingBufferMs", 0)
         asyncShaders = value("asyncShaders", true)
         holdFramesForShaders = value("holdFramesForShaders", true)
@@ -655,6 +658,7 @@ final class AppSettings: ObservableObject {
         config.displayRefreshRate = refreshRate == .automatic ? screenMax : min(refreshRate.rawValue, screenMax)
         config.shaderWaitMs = shaderWaitMs
         config.framePacing = framePacing
+        config.displaySync = displaySync
         config.pacingBufferMs = pacingBufferMs
         config.fastShaderMath = fastShaderMath
         config.fastLighting = fastLighting

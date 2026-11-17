@@ -208,10 +208,26 @@ public:
      */
     void SetWaitCallback(WaitCallback callback);
 
+    /// Moves the time the limiter wakes up at, e.g. onto a refresh of the display so the frames
+    /// are made in step with it (see SetDeadlineSnap). nullptr leaves the deadline as it is.
+    using DeadlineSnap =
+        std::chrono::steady_clock::time_point (*)(std::chrono::steady_clock::time_point deadline);
+
+    /**
+     * Sets a function that moves each wake-up deadline (by less than half of a display refresh).
+     * The limiter keeps count of the time it is ahead or behind, so the speed stays the same on
+     * average; the frames are only made at a fixed place within the display's refresh instead of
+     * a place that drifts. Can be changed from another thread.
+     */
+    void SetDeadlineSnap(DeadlineSnap snap) {
+        deadline_snap.store(snap, std::memory_order_relaxed);
+    }
+
 private:
     void WaitForFrameAdvance();
 
     WaitCallback wait_callback;
+    std::atomic<DeadlineSnap> deadline_snap{nullptr};
 
     /// Emulated system time (in microseconds) at the last limiter invocation
     std::chrono::microseconds previous_system_time_us{0};

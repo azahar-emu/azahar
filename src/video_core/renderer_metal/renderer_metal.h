@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <functional>
 
 #include <memory>
@@ -75,6 +76,16 @@ void SetPacingBuffer(int milliseconds);
 
 /// The refresh rate of the display (60 or 120), for locking the pacing to its refreshes.
 void SetPacingDisplayHz(int hz);
+
+/// Called by the display link at every refresh: the time it was called and the time that
+/// refresh reaches the screen (both CACurrentMediaTime). Keeps the display's refresh grid.
+void NoteDisplayCallback(double now, double presentation);
+
+/// For the frame limiter (Core::FrameLimiter::SetDeadlineSnap): the wake-up deadline moved to
+/// just after the nearest refresh of the display, so each frame is made right after a refresh
+/// and is ready well before the next one. Unchanged when the display link is not running.
+std::chrono::steady_clock::time_point SnapDeadlineToDisplay(
+    std::chrono::steady_clock::time_point deadline);
 
 /// How textures are kept in GPU memory, see Surface::CreateTexture.
 enum class TextureCompression : int {
@@ -150,6 +161,9 @@ struct QualityOptions {
     int frame_generation_size = 1;
     /// Make frames for the top screen only; the bottom screen shows the game's own frames.
     bool frame_generation_top_only = false;
+    /// Frames without frame generation go to the screen through the display link, and the
+    /// emulation makes them in step with the display's refreshes (see SnapDeadlineToDisplay).
+    bool display_sync = false;
     /// Frame generation with MetalFX's own frame interpolator instead of VideoToolbox's.
     bool frame_generation_metalfx = false;
     /// Frames of frame generation are shown by a display link at the display's refreshes.

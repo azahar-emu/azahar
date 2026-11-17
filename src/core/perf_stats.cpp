@@ -263,10 +263,14 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
         std::clamp(frame_limiting_delta_err, -max_lag_time_us, max_lag_time_us);
 
     if (frame_limiting_delta_err > microseconds::zero()) {
+        auto deadline = std::chrono::steady_clock::now() + frame_limiting_delta_err;
+        if (const DeadlineSnap snap = deadline_snap.load(std::memory_order_relaxed)) {
+            deadline = snap(deadline);
+        }
         if (wait_callback) {
-            wait_callback(std::chrono::steady_clock::now() + frame_limiting_delta_err);
+            wait_callback(deadline);
         } else {
-            std::this_thread::sleep_for(frame_limiting_delta_err);
+            std::this_thread::sleep_until(deadline);
         }
         auto now_after_sleep = Clock::now();
         frame_limiting_delta_err -= duration_cast<microseconds>(now_after_sleep - now);

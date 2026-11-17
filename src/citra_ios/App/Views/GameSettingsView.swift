@@ -109,6 +109,7 @@ struct GameSettingsView: View {
                 OverrideToggle("Frame Generation With MetalFX (Experimental)",
                                value: $overrides.frameGenerationMetalFX)
                 OverrideToggle("Sync Speed to Display", value: $overrides.syncSpeedToDisplay)
+                OverrideToggle("Sync to Display Refresh", value: $overrides.displaySync)
                 OverridePicker("Frame Pacing Buffer", value: $overrides.pacingBufferMs,
                                options: [0, 8, 17, 25]) { $0 == 0 ? "Off" : "\($0) ms" }
                 OverrideToggle("Custom Textures", value: $overrides.customTextures)
