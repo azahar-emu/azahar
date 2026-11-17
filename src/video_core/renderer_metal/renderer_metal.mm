@@ -63,6 +63,16 @@ struct DisplayPacer {
     double shown_at = 0.0; ///< Presentation time of the frame on screen, 0 for none
     double slot = 1.0 / 60.0;
     id<MTLCommandQueue> command_queue = nil;
+    // Counted per second and logged by the display link, to tell why a frame was shown a refresh
+    // late: it was not handed over in time (the emulation), or it was handed over but reached the
+    // screen at a later refresh than asked for (drawing or presenting too slowly).
+    u32 refreshes = 0;
+    u32 shown = 0;
+    u32 not_ready = 0;       ///< A frame was due but none was waiting
+    bool missed_this_frame = false;
+    double queued_sum = 0.0; ///< Frames waiting when one was taken, summed
+    std::atomic<u32> presented_late{0};
+    double last_log = 0.0;
     /// Draws a frame over the whole drawable.
     std::function<void(id<MTLRenderCommandEncoder>, const Frame&)> draw;
 };
@@ -90,14 +100,37 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
         while (p->waiting.size() > 2) {
             p->waiting.pop_front();
         }
+        p->refreshes++;
+        if (p->last_log <= 0.0) {
+            p->last_log = target;
+        } else if (target - p->last_log >= 1.0) {
+            LOG_INFO(Render,
+                     "Display link: {} refreshes, {} frames shown ({:.1f} waiting on average), "
+                     "{} times no frame was ready when one was due, {} shown at a later refresh "
+                     "than asked",
+                     p->refreshes, p->shown, p->shown > 0 ? p->queued_sum / p->shown : 0.0,
+                     p->not_ready, p->presented_late.exchange(0));
+            p->refreshes = 0;
+            p->shown = 0;
+            p->not_ready = 0;
+            p->queued_sum = 0.0;
+            p->last_log = target;
+        }
         const bool due = p->shown_at <= 0.0 || target - p->shown_at >= p->slot - 0.002 ||
                          target < p->shown_at;
+        if (due && p->waiting.empty() && p->shown_at > 0.0 && !p->missed_this_frame) {
+            p->not_ready++;
+            p->missed_this_frame = true;
+        }
         if (p->waiting.empty() || !due) {
             return; // The frame on screen stays for this refresh
         }
+        p->queued_sum += static_cast<double>(p->waiting.size());
         next = p->waiting.front();
         p->waiting.pop_front();
         p->shown_at = target;
+        p->shown++;
+        p->missed_this_frame = false;
     }
     id<CAMetalDrawable> drawable = update.drawable;
     if (drawable == nil || next.texture == nil) {
@@ -111,8 +144,14 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
     id<MTLRenderCommandEncoder> draw = [buffer renderCommandEncoderWithDescriptor:pass];
     p->draw(draw, next);
     [draw endEncoding];
+    std::atomic<u32>* late = &p->presented_late;
+    const std::shared_ptr<Metal::DisplayPacer> keep = p;
     [drawable addPresentedHandler:^(id<MTLDrawable> presented) {
       Metal::RecordPresentedTime(presented.presentedTime);
+      if (presented.presentedTime > target + 0.002) {
+          late->fetch_add(1, std::memory_order_relaxed);
+      }
+      (void)keep;
     }];
     [buffer presentDrawable:drawable];
     [buffer commit];
