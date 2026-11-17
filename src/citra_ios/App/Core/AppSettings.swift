@@ -648,7 +648,11 @@ final class AppSettings: ObservableObject {
         config.frameGenerationTopOnly = frameGenerationTopOnly
         config.frameGenerationDisplayPaced = frameGenerationDisplayPaced
         config.frameGenerationMetalFX = frameGenerationMetalFX
-        config.displayRefreshRate = UIScreen.main.maximumFramesPerSecond
+        // The rate the display really runs at: the one chosen in the settings (never above what the
+        // screen can do), or the fastest the screen can do with Automatic. The renderer paces
+        // frames to its refreshes and decides from it whether 60 FPS games can be interpolated.
+        let screenMax = UIScreen.main.maximumFramesPerSecond
+        config.displayRefreshRate = refreshRate == .automatic ? screenMax : min(refreshRate.rawValue, screenMax)
         config.shaderWaitMs = shaderWaitMs
         config.framePacing = framePacing
         config.pacingBufferMs = pacingBufferMs
