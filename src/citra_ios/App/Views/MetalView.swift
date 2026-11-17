@@ -117,20 +117,47 @@ final class RefreshRateController: NSObject {
     static let shared = RefreshRateController()
 
     private var link: CADisplayLink?
+    /// The refresh interval the display really runs at, seen by the display link, so the log shows
+    /// when iOS changes the rate (which shows as a stutter when frames are paced to a rate that
+    /// is gone): the shortest and longest interval and how many refreshes in the last 5 seconds.
+    private var shortest = Double.infinity
+    private var longest = 0.0
+    private var refreshes = 0
+    private var windowStart = 0.0
 
-    @objc private func tick() {}
+    @objc private func tick(_ link: CADisplayLink) {
+        let interval = link.targetTimestamp - link.timestamp
+        guard interval > 0 else { return }
+        shortest = min(shortest, interval)
+        longest = max(longest, interval)
+        refreshes += 1
+        if windowStart == 0 { windowStart = link.timestamp }
+        let elapsed = link.timestamp - windowStart
+        if elapsed >= 5 {
+            AZEmulator.log(String(format: "Display refresh: %.1f to %.1f Hz (%.1f on average) over %.0f s",
+                                  1 / longest, 1 / shortest, Double(refreshes) / elapsed, elapsed))
+            shortest = .infinity
+            longest = 0
+            refreshes = 0
+            windowStart = link.timestamp
+        }
+    }
 
     func apply(_ option: RefreshRateOption) {
         link?.invalidate()
         link = nil
+        windowStart = 0
+        shortest = .infinity
+        longest = 0
+        refreshes = 0
         guard option != .automatic else { return }
 
-        let link = CADisplayLink(target: self, selector: #selector(tick))
+        let link = CADisplayLink(target: self, selector: #selector(tick(_:)))
         let rate = Float(option.rawValue)
-        // 120 Hz also allows the rates in between, which iOS picks when it has to save power.
-        link.preferredFrameRateRange = option == .oneTwenty
-            ? CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
-            : CAFrameRateRange(minimum: rate, maximum: rate, preferred: rate)
+        // Exactly the chosen rate. 120 Hz used to allow the rates in between, which iOS picks when
+        // it wants to save power, but frames paced to 120 Hz stutter when the display drops to
+        // another rate; Automatic is the choice that leaves it to iOS.
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: rate, maximum: rate, preferred: rate)
         link.add(to: .main, forMode: .common)
         self.link = link
     }
