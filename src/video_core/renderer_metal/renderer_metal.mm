@@ -2550,6 +2550,8 @@ void SetFrameGeneratorHooks(FrameGeneratorHooks hooks) {
 
 void SetQualityOptions(const QualityOptions& options) {
     g_quality_options = options;
+    // Frame pacing locks to the refreshes of this display (60 Hz, or 120 on a ProMotion one).
+    SetPacingDisplayHz(options.display_hz >= 100 ? 120 : 60);
 }
 
 const QualityOptions& GetQualityOptions() {
@@ -2581,6 +2583,20 @@ FrameStats TakeFrameStats() {
     const u64 interval_us = stats.present_interval_us.exchange(0);
     const u64 interval_sq_us = stats.present_interval_sq_us.exchange(0);
     result.present_late = static_cast<double>(stats.present_late.exchange(0));
+    {
+        const u32 count = stats.phase_count.exchange(0);
+        const double cos_sum = static_cast<double>(stats.phase_cos_micro.exchange(0)) / 1e6;
+        const double sin_sum = static_cast<double>(stats.phase_sin_micro.exchange(0)) / 1e6;
+        if (count > 0) {
+            const double refresh = GetQualityOptions().display_hz >= 100 ? 1.0 / 120.0 : 1.0 / 60.0;
+            double mean = std::atan2(sin_sum, cos_sum) / (2.0 * M_PI) * refresh;
+            if (mean < 0.0) {
+                mean += refresh;
+            }
+            result.phase_ms = mean * 1000.0;
+            result.phase_lock = std::hypot(cos_sum, sin_sum) / count;
+        }
+    }
     const u64 fg_ns = stats.fg_ns.exchange(0);
     const u32 fg_made = stats.fg_made.exchange(0);
     result.fg_made = static_cast<double>(fg_made);

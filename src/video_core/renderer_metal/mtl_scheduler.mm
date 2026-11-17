@@ -3,6 +3,7 @@
 // Refer to the LICENSE.txt file included.
 
 #include <algorithm>
+#include <cmath>
 #include <optional>
 #include <chrono>
 #include <map>
@@ -30,6 +31,13 @@ namespace {
 std::atomic<bool> g_frame_pacing{true};
 /// How far ahead of the frames the pacing timeline runs, in milliseconds (see Scheduler::Flush).
 std::atomic<int> g_pacing_buffer_ms{0};
+std::atomic<int> g_pacing_display_hz{60};
+/// Smoothed position of the frames within a display refresh as a point on a circle (a refresh
+/// is one turn, so a frame that lands just after one refresh and one that lands just before the
+/// next are close together). See Scheduler::Flush.
+std::atomic<double> g_phase_cos{0.0};
+std::atomic<double> g_phase_sin{0.0};
+std::atomic<bool> g_phase_known{false};
 /// Presented time of the previous frame of the main display, 0 when there is none.
 std::atomic<double> g_last_presented{0.0};
 /// Duration of an emulated frame at full speed (a 3DS runs at about 59.83 frames per second).
@@ -273,6 +281,36 @@ bool StatisticsEnabled() {
 
 void SetFramePacing(bool enabled) {
     g_frame_pacing.store(enabled, std::memory_order_relaxed);
+}
+
+void SetPacingDisplayHz(int hz) {
+    g_pacing_display_hz.store(std::clamp(hz, 30, 240), std::memory_order_relaxed);
+}
+
+/// A paced frame was shown `slack` seconds after the time it was due. The display shows a frame
+/// at the first refresh after its due time, so a frame due just before a refresh may flip to the
+/// refresh before or after with the smallest change in timing, which is what shows as a
+/// stutter. Kept as a point on the circle of one refresh.
+void RecordPaceSlack(double slack) {
+    const double refresh = 1.0 / g_pacing_display_hz.load(std::memory_order_relaxed);
+    if (slack < 0.0 || slack > refresh * 3.0) {
+        return;
+    }
+    const double angle = 2.0 * M_PI * std::fmod(slack, refresh) / refresh;
+    const double c = std::cos(angle), s = std::sin(angle);
+    if (!g_phase_known.exchange(true, std::memory_order_relaxed)) {
+        g_phase_cos.store(c, std::memory_order_relaxed);
+        g_phase_sin.store(s, std::memory_order_relaxed);
+    } else {
+        g_phase_cos.store(g_phase_cos.load(std::memory_order_relaxed) * 0.9 + c * 0.1,
+                          std::memory_order_relaxed);
+        g_phase_sin.store(g_phase_sin.load(std::memory_order_relaxed) * 0.9 + s * 0.1,
+                          std::memory_order_relaxed);
+    }
+    GpuStats& stats = Stats();
+    stats.phase_cos_micro.fetch_add(static_cast<s64>(c * 1e6), std::memory_order_relaxed);
+    stats.phase_sin_micro.fetch_add(static_cast<s64>(s * 1e6), std::memory_order_relaxed);
+    stats.phase_count.fetch_add(1, std::memory_order_relaxed);
 }
 
 void SetPacingBuffer(int milliseconds) {
@@ -607,8 +645,31 @@ void Scheduler::Flush() {
             if (target < now - period * 0.5 - lead || target > now + period) {
                 target = now;
             }
+            // Lock to the display's refreshes: a frame is shown at the first refresh after its
+            // due time, so the due time should sit in the middle between two refreshes, where
+            // small differences in timing do not change which refresh it gets. The timeline
+            // is moved slowly toward that (at most 0.3 ms per frame).
+            if (g_phase_known.load(std::memory_order_relaxed)) {
+                const double refresh = 1.0 / g_pacing_display_hz.load(std::memory_order_relaxed);
+                const double angle = std::atan2(g_phase_sin.load(std::memory_order_relaxed),
+                                                g_phase_cos.load(std::memory_order_relaxed));
+                double mean = angle / (2.0 * M_PI) * refresh; // -refresh/2 ... refresh/2
+                if (mean < 0.0) {
+                    mean += refresh;
+                }
+                // Positive: shown too long after its due time, so due too early: move later.
+                double error = mean - refresh * 0.5;
+                error = std::clamp(error * 0.1, -0.0003, 0.0003);
+                target += error;
+            }
             pace_last_target = target;
+            const double asked = target;
             [buffer presentDrawable:pending.drawable atTime:target];
+            [pending.drawable addPresentedHandler:^(id<MTLDrawable> presented) {
+              if (presented.presentedTime > 0.0) {
+                  RecordPaceSlack(presented.presentedTime - asked);
+              }
+            }];
         } else {
             [buffer presentDrawable:pending.drawable];
         }

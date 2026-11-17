@@ -73,6 +73,9 @@ void SetFramePacing(bool enabled);
 /// Delay (milliseconds) the frame pacing adds so slow frames still meet their slot, 0 for none.
 void SetPacingBuffer(int milliseconds);
 
+/// The refresh rate of the display (60 or 120), for locking the pacing to its refreshes.
+void SetPacingDisplayHz(int hz);
+
 /// How textures are kept in GPU memory, see Surface::CreateTexture.
 enum class TextureCompression : int {
     Off = 0,
@@ -177,6 +180,10 @@ struct FrameStats {
     double fg_made = 0.0;    ///< Frames made in the interval
     double fg_skipped = 0.0; ///< Frames not made because the previous one was still being made
     double present_late = 0.0;        ///< Frames shown clearly later than the frame time, per second
+    /// Where frames land within a display refresh (ms after their due time, mean) and how
+    /// tightly (1 all in the same place, 0 spread over the whole refresh).
+    double phase_ms = 0.0;
+    double phase_lock = 0.0;
     double presented = 0.0;  ///< Frames that reached the screen in the interval
     double cpu_ms = 0.0;     ///< Emulation thread CPU time per frame (without waiting)
     double cpu_max_ms = 0.0; ///< The longest frame of those

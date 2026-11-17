@@ -38,6 +38,12 @@ struct GpuStats {
     std::atomic<u64> present_interval_us{};    ///< Sum of the intervals
     std::atomic<u64> present_interval_sq_us{}; ///< Sum of their squares
     std::atomic<u32> present_late{};           ///< Intervals well above the frame time
+    /// Where on the display's refresh a paced frame landed: how long after the time it was due
+    /// it was shown, as an angle on the circle of one refresh (the sums of cos and sin, in
+    /// millionths), see Scheduler::Flush.
+    std::atomic<s64> phase_cos_micro{};
+    std::atomic<s64> phase_sin_micro{};
+    std::atomic<u32> phase_count{};
     std::atomic<u32> presented{};              ///< Frames that reached the screen
     std::atomic<u64> fg_ns{};      ///< GPU time of making frames (frame generation)
     std::atomic<u32> fg_made{};    ///< Frames made
@@ -65,6 +71,9 @@ void SetFramePacing(bool enabled);
 
 /// Delay (milliseconds) the frame pacing adds so slow frames still meet their slot, 0 for none.
 void SetPacingBuffer(int milliseconds);
+
+/// The refresh rate of the display (60 or 120), for locking the pacing to its refreshes.
+void SetPacingDisplayHz(int hz);
 
 GpuStats& Stats();
 
