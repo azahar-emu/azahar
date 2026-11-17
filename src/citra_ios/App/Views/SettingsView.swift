@@ -1489,6 +1489,17 @@ struct AppColorsSettingsView: View {
     var body: some View {
         Form {
             Section {
+                Toggle("Game Grid Background", isOn: $settings.gridBackdropEnabled)
+                Toggle("Game List Background", isOn: $settings.listBackdropEnabled)
+            } header: {
+                Text("Games Tab")
+            } footer: {
+                Text("Turn the colored background off behind the game grid or the game list "
+                     + "separately. The settings screens always have it.")
+            }
+            .listRowBackground(LGRowBackground())
+
+            Section {
                 Picker("Colors For", selection: Binding(get: { dark }, set: { editingDark = $0 })) {
                     Text("Light Mode").tag(false)
                     Text("Dark Mode").tag(true)

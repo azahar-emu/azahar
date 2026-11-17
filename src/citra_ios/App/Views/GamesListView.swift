@@ -206,12 +206,12 @@ struct GamesListView: View {
             }
             .buttonStyle(.plain)
             .contextMenu { contextMenu(for: game) }
-            .listRowBackground(Color.clear)
+            .listRowBackground(settings.listBackdropEnabled ? Color.clear : nil)
         }
         .listStyle(.plain)
         // The same background as the settings: the colors blended behind the list.
-        .scrollContentBackground(.hidden)
-        .background { LGAmbientBackdrop() }
+        .scrollContentBackground(settings.listBackdropEnabled ? .hidden : .automatic)
+        .background { if settings.listBackdropEnabled { LGAmbientBackdrop() } }
     }
 
     private var gridView: some View {
@@ -230,7 +230,7 @@ struct GamesListView: View {
             }
             .padding()
         }
-        .background { LGAmbientBackdrop() }
+        .background { if settings.gridBackdropEnabled { LGAmbientBackdrop() } }
         .onAppear { TiltMotion.shared.start() }
         .onDisappear { TiltMotion.shared.stop() }
     }

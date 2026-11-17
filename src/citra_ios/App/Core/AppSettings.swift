@@ -433,6 +433,9 @@ final class AppSettings: ObservableObject {
     @Published var backdropDarkColor2: String { didSet { save(backdropDarkColor2, "backdropDarkColor2") } }
     @Published var backdropDarkColor3: String { didSet { save(backdropDarkColor3, "backdropDarkColor3") } }
     @Published var backdropIntensity: Int { didSet { save(backdropIntensity, "backdropIntensity") } }
+    /// Whether the colored background is shown behind the game grid and the game list.
+    @Published var gridBackdropEnabled: Bool { didSet { save(gridBackdropEnabled, "gridBackdropEnabled") } }
+    @Published var listBackdropEnabled: Bool { didSet { save(listBackdropEnabled, "listBackdropEnabled") } }
     /// Run at 60 Hz instead of 59.83 Hz at a limit of 100%, so the frames match the display.
     @Published var syncSpeedToDisplay: Bool { didSet { save(syncSpeedToDisplay, "syncSpeedToDisplay") } }
 
@@ -597,6 +600,8 @@ final class AppSettings: ObservableObject {
         backdropDarkColor2 = value("backdropDarkColor2", value("backdropColor2", BackdropPalette.defaultColors[1]))
         backdropDarkColor3 = value("backdropDarkColor3", value("backdropColor3", BackdropPalette.defaultColors[2]))
         backdropIntensity = value("backdropIntensity", 100)
+        gridBackdropEnabled = value("gridBackdropEnabled", true)
+        listBackdropEnabled = value("listBackdropEnabled", true)
         // The saved choice applies from the start (property observers do not run in init).
         AZEmulator.setLoggingEnabled(loggingEnabled)
     }
