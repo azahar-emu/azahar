@@ -31,6 +31,9 @@ struct SettingsView: View {
                     NavigationLink { ControlsSettingsView() } label: {
                         Label("Controls", systemImage: "gamecontroller")
                     }
+                    NavigationLink { AppColorsSettingsView() } label: {
+                        Label("App Colors", systemImage: "paintpalette")
+                    }
                 }
                 .listRowBackground(LGRowBackground())
                 Section {
@@ -1451,5 +1454,68 @@ private struct InfoSheet<Content: View>: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+
+/// The colors blended in the soft background of the app, and how strong it is.
+struct AppColorsSettingsView: View {
+    @EnvironmentObject private var settings: AppSettings
+
+    private func binding(_ keyPath: ReferenceWritableKeyPath<AppSettings, String>) -> Binding<Color> {
+        Binding(get: { Color(hex: settings[keyPath: keyPath]) },
+                set: { settings[keyPath: keyPath] = $0.hexString })
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                ColorPicker("First Color", selection: binding(\.backdropColor1), supportsOpacity: false)
+                ColorPicker("Second Color", selection: binding(\.backdropColor2), supportsOpacity: false)
+                ColorPicker("Third Color", selection: binding(\.backdropColor3), supportsOpacity: false)
+                VStack(alignment: .leading) {
+                    LabeledContent("Intensity", value: "\(settings.backdropIntensity)%")
+                    Slider(value: Binding(get: { Double(settings.backdropIntensity) },
+                                          set: { settings.backdropIntensity = Int(($0 / 5).rounded()) * 5 }),
+                           in: 0...200, step: 5)
+                }
+            } header: {
+                Text("Background")
+            } footer: {
+                Text("Three soft blobs of color are blended behind the game list and the settings. "
+                     + "Intensity above 100% makes them stronger.")
+            }
+            .listRowBackground(LGRowBackground())
+
+            Section {
+                ForEach(BackdropPalette.presets, id: \.name) { preset in
+                    Button {
+                        settings.backdropColor1 = preset.colors[0]
+                        settings.backdropColor2 = preset.colors[1]
+                        settings.backdropColor3 = preset.colors[2]
+                    } label: {
+                        HStack {
+                            Text(preset.name)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            ForEach(preset.colors, id: \.self) { hex in
+                                Circle().fill(Color(hex: hex)).frame(width: 22, height: 22)
+                            }
+                        }
+                    }
+                }
+                Button("Reset to Default", role: .destructive) {
+                    settings.backdropColor1 = BackdropPalette.defaultColors[0]
+                    settings.backdropColor2 = BackdropPalette.defaultColors[1]
+                    settings.backdropColor3 = BackdropPalette.defaultColors[2]
+                    settings.backdropIntensity = 100
+                }
+            } header: {
+                Text("Presets")
+            }
+            .listRowBackground(LGRowBackground())
+        }
+        .navigationTitle("App Colors")
+        .lgSettingsStyle()
     }
 }

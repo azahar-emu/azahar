@@ -206,8 +206,12 @@ struct GamesListView: View {
             }
             .buttonStyle(.plain)
             .contextMenu { contextMenu(for: game) }
+            .listRowBackground(Color.clear)
         }
         .listStyle(.plain)
+        // The same background as the settings: the colors blended behind the list.
+        .scrollContentBackground(.hidden)
+        .background { LGAmbientBackdrop() }
     }
 
     private var gridView: some View {

@@ -423,6 +423,12 @@ final class AppSettings: ObservableObject {
     @Published var region: ConsoleRegion { didSet { save(region.rawValue, "region") } }
     @Published var useFrameLimit: Bool { didSet { save(useFrameLimit, "useFrameLimit") } }
     @Published var frameLimit: Int { didSet { save(frameLimit, "frameLimit") } }
+    /// The three colors blended in the soft background of the app (hex, RRGGBB) and how strong
+    /// the background is (percent of the default).
+    @Published var backdropColor1: String { didSet { save(backdropColor1, "backdropColor1") } }
+    @Published var backdropColor2: String { didSet { save(backdropColor2, "backdropColor2") } }
+    @Published var backdropColor3: String { didSet { save(backdropColor3, "backdropColor3") } }
+    @Published var backdropIntensity: Int { didSet { save(backdropIntensity, "backdropIntensity") } }
     /// Run at 60 Hz instead of 59.83 Hz at a limit of 100%, so the frames match the display.
     @Published var syncSpeedToDisplay: Bool { didSet { save(syncSpeedToDisplay, "syncSpeedToDisplay") } }
 
@@ -580,6 +586,10 @@ final class AppSettings: ObservableObject {
         useFrameLimit = value("useFrameLimit", true)
         frameLimit = value("frameLimit", 100)
         syncSpeedToDisplay = value("syncSpeedToDisplay", true)
+        backdropColor1 = value("backdropColor1", BackdropPalette.defaultColors[0])
+        backdropColor2 = value("backdropColor2", BackdropPalette.defaultColors[1])
+        backdropColor3 = value("backdropColor3", BackdropPalette.defaultColors[2])
+        backdropIntensity = value("backdropIntensity", 100)
         // The saved choice applies from the start (property observers do not run in init).
         AZEmulator.setLoggingEnabled(loggingEnabled)
     }

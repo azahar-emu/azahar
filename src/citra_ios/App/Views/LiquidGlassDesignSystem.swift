@@ -189,26 +189,60 @@ extension View {
 
 // MARK: - Settings screens
 
-/// A soft, still backdrop of color for the settings lists, so their translucent rows and the
-/// glass bars have something to show through. It does not move, so it costs nothing to keep.
+/// The colors of the backdrop, as hex strings (RRGGBB), and the ready-made sets of them.
+enum BackdropPalette {
+    static let defaultColors = ["5856D6", "30B0C7", "AF52DE"]
+
+    static let presets: [(name: String, colors: [String])] = [
+        ("Default", defaultColors),
+        ("Ocean", ["0A84FF", "32ADE6", "64D2FF"]),
+        ("Sunset", ["FF6B35", "FF2D55", "BF5AF2"]),
+        ("Forest", ["34C759", "30B0C7", "A2845E"]),
+        ("Candy", ["FF2D92", "5E5CE6", "64D2FF"]),
+        ("Graphite", ["8E8E93", "636366", "48484A"]),
+    ]
+}
+
+extension Color {
+    /// A color from "RRGGBB" (the default is gray for anything that is not a color).
+    init(hex: String) {
+        var value: UInt64 = 0x808080
+        Scanner(string: hex).scanHexInt64(&value)
+        self.init(red: Double((value >> 16) & 0xFF) / 255, green: Double((value >> 8) & 0xFF) / 255,
+                  blue: Double(value & 0xFF) / 255)
+    }
+
+    /// "RRGGBB" of the color in the sRGB space.
+    var hexString: String {
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return String(format: "%02X%02X%02X", Int((red * 255).rounded()), Int((green * 255).rounded()),
+                      Int((blue * 255).rounded()))
+    }
+}
+
+/// A soft, still backdrop of color for the settings lists and the game list, so their translucent
+/// rows and the glass bars have something to show through. The colors are set in Settings > App
+/// Colors. It does not move, so it costs nothing to keep.
 struct LGAmbientBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
         GeometryReader { geometry in
             let size = max(geometry.size.width, geometry.size.height)
             ZStack {
                 Color(uiColor: .systemGroupedBackground)
-                Circle().fill(Color.indigo)
+                Circle().fill(Color(hex: settings.backdropColor1))
                     .frame(width: size * 0.7).offset(x: -size * 0.3, y: -size * 0.35)
-                Circle().fill(Color.teal)
+                Circle().fill(Color(hex: settings.backdropColor2))
                     .frame(width: size * 0.6).offset(x: size * 0.35, y: size * 0.05)
-                Circle().fill(Color.purple)
+                Circle().fill(Color(hex: settings.backdropColor3))
                     .frame(width: size * 0.6).offset(x: -size * 0.15, y: size * 0.45)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .blur(radius: 90)
-            .opacity(colorScheme == .dark ? 0.55 : 0.35)
+            .opacity((colorScheme == .dark ? 0.55 : 0.35) * Double(settings.backdropIntensity) / 100)
             .background(Color(uiColor: .systemGroupedBackground))
         }
         .ignoresSafeArea()
