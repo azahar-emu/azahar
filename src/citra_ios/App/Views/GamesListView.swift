@@ -230,6 +230,7 @@ struct GamesListView: View {
             }
             .padding()
         }
+        .background { LGAmbientBackdrop() }
         .onAppear { TiltMotion.shared.start() }
         .onDisappear { TiltMotion.shared.stop() }
     }

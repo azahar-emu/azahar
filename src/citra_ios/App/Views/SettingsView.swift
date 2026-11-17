@@ -1458,21 +1458,48 @@ private struct InfoSheet<Content: View>: View {
 }
 
 
-/// The colors blended in the soft background of the app, and how strong it is.
+/// The colors blended in the soft background of the app (one set for light mode, one for dark
+/// mode), and how strong it is.
 struct AppColorsSettingsView: View {
     @EnvironmentObject private var settings: AppSettings
+    @Environment(\.colorScheme) private var colorScheme
+    /// Which set is being edited; it starts with the mode the device is in.
+    @State private var editingDark: Bool?
 
-    private func binding(_ keyPath: ReferenceWritableKeyPath<AppSettings, String>) -> Binding<Color> {
-        Binding(get: { Color(hex: settings[keyPath: keyPath]) },
-                set: { settings[keyPath: keyPath] = $0.hexString })
+    private var dark: Bool { editingDark ?? (colorScheme == .dark) }
+
+    private var keyPaths: [ReferenceWritableKeyPath<AppSettings, String>] {
+        dark ? [\.backdropDarkColor1, \.backdropDarkColor2, \.backdropDarkColor3]
+             : [\.backdropColor1, \.backdropColor2, \.backdropColor3]
+    }
+
+    private func binding(_ index: Int) -> Binding<Color> {
+        let keyPath = keyPaths[index]
+        return Binding(get: { Color(hex: settings[keyPath: keyPath]) },
+                       set: { settings[keyPath: keyPath] = $0.hexString })
+    }
+
+    private func apply(_ colors: [String], toDark: Bool) {
+        let paths: [ReferenceWritableKeyPath<AppSettings, String>] = toDark
+            ? [\.backdropDarkColor1, \.backdropDarkColor2, \.backdropDarkColor3]
+            : [\.backdropColor1, \.backdropColor2, \.backdropColor3]
+        for (path, hex) in zip(paths, colors) { settings[keyPath: path] = hex }
     }
 
     var body: some View {
         Form {
             Section {
-                ColorPicker("First Color", selection: binding(\.backdropColor1), supportsOpacity: false)
-                ColorPicker("Second Color", selection: binding(\.backdropColor2), supportsOpacity: false)
-                ColorPicker("Third Color", selection: binding(\.backdropColor3), supportsOpacity: false)
+                Picker("Colors For", selection: Binding(get: { dark }, set: { editingDark = $0 })) {
+                    Text("Light Mode").tag(false)
+                    Text("Dark Mode").tag(true)
+                }
+                .pickerStyle(.segmented)
+                ColorPicker("First Color", selection: binding(0), supportsOpacity: false)
+                ColorPicker("Second Color", selection: binding(1), supportsOpacity: false)
+                ColorPicker("Third Color", selection: binding(2), supportsOpacity: false)
+                Button("Copy to \(dark ? "Light" : "Dark") Mode") {
+                    apply(keyPaths.map { settings[keyPath: $0] }, toDark: !dark)
+                }
                 VStack(alignment: .leading) {
                     LabeledContent("Intensity", value: "\(settings.backdropIntensity)%")
                     Slider(value: Binding(get: { Double(settings.backdropIntensity) },
@@ -1483,16 +1510,15 @@ struct AppColorsSettingsView: View {
                 Text("Background")
             } footer: {
                 Text("Three soft blobs of color are blended behind the game list and the settings. "
-                     + "Intensity above 100% makes them stronger.")
+                     + "Light mode and dark mode have colors of their own; the set shown here is "
+                     + "the one you are editing. Intensity above 100% makes the colors stronger.")
             }
             .listRowBackground(LGRowBackground())
 
             Section {
                 ForEach(BackdropPalette.presets, id: \.name) { preset in
                     Button {
-                        settings.backdropColor1 = preset.colors[0]
-                        settings.backdropColor2 = preset.colors[1]
-                        settings.backdropColor3 = preset.colors[2]
+                        apply(preset.colors, toDark: dark)
                     } label: {
                         HStack {
                             Text(preset.name)
@@ -1505,13 +1531,12 @@ struct AppColorsSettingsView: View {
                     }
                 }
                 Button("Reset to Default", role: .destructive) {
-                    settings.backdropColor1 = BackdropPalette.defaultColors[0]
-                    settings.backdropColor2 = BackdropPalette.defaultColors[1]
-                    settings.backdropColor3 = BackdropPalette.defaultColors[2]
+                    apply(BackdropPalette.defaultColors, toDark: false)
+                    apply(BackdropPalette.defaultColors, toDark: true)
                     settings.backdropIntensity = 100
                 }
             } header: {
-                Text("Presets")
+                Text("Presets (for the set shown above)")
             }
             .listRowBackground(LGRowBackground())
         }

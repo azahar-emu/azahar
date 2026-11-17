@@ -233,11 +233,11 @@ struct LGAmbientBackdrop: View {
             let size = max(geometry.size.width, geometry.size.height)
             ZStack {
                 Color(uiColor: .systemGroupedBackground)
-                Circle().fill(Color(hex: settings.backdropColor1))
+                Circle().fill(Color(hex: colorScheme == .dark ? settings.backdropDarkColor1 : settings.backdropColor1))
                     .frame(width: size * 0.7).offset(x: -size * 0.3, y: -size * 0.35)
-                Circle().fill(Color(hex: settings.backdropColor2))
+                Circle().fill(Color(hex: colorScheme == .dark ? settings.backdropDarkColor2 : settings.backdropColor2))
                     .frame(width: size * 0.6).offset(x: size * 0.35, y: size * 0.05)
-                Circle().fill(Color(hex: settings.backdropColor3))
+                Circle().fill(Color(hex: colorScheme == .dark ? settings.backdropDarkColor3 : settings.backdropColor3))
                     .frame(width: size * 0.6).offset(x: -size * 0.15, y: size * 0.45)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)

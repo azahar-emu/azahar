@@ -428,6 +428,10 @@ final class AppSettings: ObservableObject {
     @Published var backdropColor1: String { didSet { save(backdropColor1, "backdropColor1") } }
     @Published var backdropColor2: String { didSet { save(backdropColor2, "backdropColor2") } }
     @Published var backdropColor3: String { didSet { save(backdropColor3, "backdropColor3") } }
+    /// The same three colors for dark mode (the three above are for light mode).
+    @Published var backdropDarkColor1: String { didSet { save(backdropDarkColor1, "backdropDarkColor1") } }
+    @Published var backdropDarkColor2: String { didSet { save(backdropDarkColor2, "backdropDarkColor2") } }
+    @Published var backdropDarkColor3: String { didSet { save(backdropDarkColor3, "backdropDarkColor3") } }
     @Published var backdropIntensity: Int { didSet { save(backdropIntensity, "backdropIntensity") } }
     /// Run at 60 Hz instead of 59.83 Hz at a limit of 100%, so the frames match the display.
     @Published var syncSpeedToDisplay: Bool { didSet { save(syncSpeedToDisplay, "syncSpeedToDisplay") } }
@@ -589,6 +593,9 @@ final class AppSettings: ObservableObject {
         backdropColor1 = value("backdropColor1", BackdropPalette.defaultColors[0])
         backdropColor2 = value("backdropColor2", BackdropPalette.defaultColors[1])
         backdropColor3 = value("backdropColor3", BackdropPalette.defaultColors[2])
+        backdropDarkColor1 = value("backdropDarkColor1", value("backdropColor1", BackdropPalette.defaultColors[0]))
+        backdropDarkColor2 = value("backdropDarkColor2", value("backdropColor2", BackdropPalette.defaultColors[1]))
+        backdropDarkColor3 = value("backdropDarkColor3", value("backdropColor3", BackdropPalette.defaultColors[2]))
         backdropIntensity = value("backdropIntensity", 100)
         // The saved choice applies from the start (property observers do not run in init).
         AZEmulator.setLoggingEnabled(loggingEnabled)
