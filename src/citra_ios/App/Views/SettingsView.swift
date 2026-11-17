@@ -1489,6 +1489,21 @@ struct AppColorsSettingsView: View {
     var body: some View {
         Form {
             Section {
+                Picker("Appearance", selection: $settings.appearance) {
+                    Text("System").tag(0)
+                    Text("Light").tag(1)
+                    Text("Dark").tag(2)
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text("Theme")
+            } footer: {
+                Text("System follows the device's light or dark mode. Light and Dark keep the app in "
+                     + "that mode whatever the device uses.")
+            }
+            .listRowBackground(LGRowBackground())
+
+            Section {
                 Toggle("Game Grid Background", isOn: $settings.gridBackdropEnabled)
                 Toggle("Game List Background", isOn: $settings.listBackdropEnabled)
             } header: {

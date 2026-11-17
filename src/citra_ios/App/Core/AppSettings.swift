@@ -433,6 +433,8 @@ final class AppSettings: ObservableObject {
     @Published var backdropDarkColor2: String { didSet { save(backdropDarkColor2, "backdropDarkColor2") } }
     @Published var backdropDarkColor3: String { didSet { save(backdropDarkColor3, "backdropDarkColor3") } }
     @Published var backdropIntensity: Int { didSet { save(backdropIntensity, "backdropIntensity") } }
+    /// The app's appearance: 0 follows the system, 1 always light, 2 always dark.
+    @Published var appearance: Int { didSet { save(appearance, "appearance") } }
     /// Whether the colored background is shown behind the game grid and the game list.
     @Published var gridBackdropEnabled: Bool { didSet { save(gridBackdropEnabled, "gridBackdropEnabled") } }
     @Published var listBackdropEnabled: Bool { didSet { save(listBackdropEnabled, "listBackdropEnabled") } }
@@ -600,6 +602,7 @@ final class AppSettings: ObservableObject {
         backdropDarkColor2 = value("backdropDarkColor2", value("backdropColor2", BackdropPalette.defaultColors[1]))
         backdropDarkColor3 = value("backdropDarkColor3", value("backdropColor3", BackdropPalette.defaultColors[2]))
         backdropIntensity = value("backdropIntensity", 100)
+        appearance = value("appearance", 0)
         gridBackdropEnabled = value("gridBackdropEnabled", true)
         listBackdropEnabled = value("listBackdropEnabled", true)
         // The saved choice applies from the start (property observers do not run in init).

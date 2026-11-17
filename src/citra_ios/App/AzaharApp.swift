@@ -32,6 +32,9 @@ struct AzaharApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // Follows the system, or is always light or dark (Settings > App Colors).
+                .preferredColorScheme(settings.appearance == 1 ? .light
+                                      : (settings.appearance == 2 ? .dark : nil))
                 .environmentObject(settings)
                 .environmentObject(library)
                 .environmentObject(session)
