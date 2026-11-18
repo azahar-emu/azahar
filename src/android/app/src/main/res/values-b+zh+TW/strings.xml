@@ -1,4 +1,1084 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    </resources>
+    <string name="app_notification_channel_description">Azahar 3DS 模擬器通知</string>
+    <string name="app_notification_running">Azahar 正在執行中</string>
+    <string name="app_game_install_description">接下來，您需要選取應用程式資料夾。Azahar 將會顯示該選取資料夾內的所有 3DS ROM 遊戲。\n\nCIA 格式 ROM、更新檔與 DLC 需透過點擊資料夾圖示並選擇「安裝 CIA」單獨進行安裝。</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">設定</string>
+    <string name="home_options">選項</string>
+    <string name="home_search">搜尋</string>
+    <string name="home_games">應用</string>
+    <string name="settings_description">配置模擬器設定項</string>
+    <string name="install_game_content">安裝 CIA 檔案</string>
+    <string name="install_game_content_description">安裝應用、更新或 DLC</string>
+    <string name="share_log">分享記錄檔</string>
+    <string name="share_log_description">分享 Azahar 的記錄檔以利排查問題</string>
+    <string name="gpu_driver_manager">GPU 驅動管理器</string>
+    <string name="install_gpu_driver">安裝 GPU 驅動</string>
+    <string name="install_gpu_driver_description">安裝替代的驅動以獲得更好的效能及精度</string>
+    <string name="driver_already_installed">驅動已安裝</string>
+    <string name="custom_driver_not_supported">不支援自訂驅動程式</string>
+    <string name="custom_driver_not_supported_description">此裝置暫不支援自訂驅動程式。\n請之後再來檢視您的裝置是否已被支援！</string>
+    <string name="custom_driver_non_adreno_warning">偵測到非 Adreno GPU</string>
+    <string name="custom_driver_non_adreno_warning_description">大多數自訂驅動程式都是專為 Qualcomm Adreno GPU 打造，請僅安裝適用於您 GPU 的驅動程式。若驅動程式載入失敗，Azahar 將自動退回使用系統驅動程式。若應用程式發生閃退，請選擇「系統 GPU 驅動程式」。</string>
+    <string name="share_log_not_found">未找到記錄檔</string>
+    <string name="select_games_folder">選擇應用資料夾</string>
+    <string name="select_games_folder_description">允許 Azahar 載入應用程式清單</string>
+    <string name="about">關於</string>
+    <string name="about_description">構建版本、貢獻者以及更多</string>
+    <string name="games_dir_selected">已選擇應用目錄</string>
+    <string name="select_citra_user_folder_home_description">更改 Azahar 用於載入應用的相關檔案</string>
+    <string name="theme_and_color_description">更改應用程式的外觀</string>
+    <string name="install_cia_title">安裝 CIA</string>
+
+    <!-- Network Settings-->
+    <string name="preferences_network">網路</string>
+    <string name="web_api_url">Web API 網址</string>
+    <string name="web_api_url_description">公開大廳房間功能的 Web API 伺服器網址</string>
+    <string name="network_token">網路權杖 (Token)</string>
+    <string name="network_token_description">用於公開大廳房間功能的驗證權杖</string>
+    <string name="username_uses_system">此設定已與 3DS 系統使用者名稱連動。</string>
+    <string name="username_invalid">使用者名稱無效。必須為 4 至 20 個半形英數字元。</string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">選擇 GPU 驅動</string>
+    <string name="select_gpu_driver_title">您要替換當前的 GPU 驅動嗎？</string>
+    <string name="select_gpu_driver_install">安裝</string>
+    <string name="select_gpu_driver_default">預設</string>
+    <string name="select_gpu_driver_install_success">已安裝 %s</string>
+    <string name="select_gpu_driver_use_default">使用預設 GPU 驅動</string>
+    <string name="select_gpu_driver_error">您選擇了無效的驅動，因此將使用系統預設驅動！</string>
+    <string name="system_gpu_driver">系統 GPU 驅動</string>
+    <string name="installing_driver">正在安裝驅動…</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">已複製到剪貼簿</string>
+    <string name="contributors">貢獻者</string>
+    <string name="contributors_description">使 Azahar 得以實現的貢獻者</string>
+    <string name="licenses_description">Azahar 安卓版使用的專案</string>
+    <string name="build">構建版本</string>
+    <string name="licenses">許可證</string>
+    <!-- Setup strings -->
+    <string name="welcome">歡迎！</string>
+    <string name="welcome_description"><![CDATA[瞭解如何設定 <b>Azahar</b> 並進行模擬。]]></string>
+    <string name="get_started">開始</string>
+    <string name="step_complete">完成！</string>
+    <string name="games">應用</string>
+    <string name="games_description"><![CDATA[使用下面的按鈕選擇您的 <b>應用</b> 資料夾。]]></string>
+    <string name="done">完成</string>
+    <string name="done_description">一切就緒。\n盡情使用模擬器吧！</string>
+    <string name="text_continue">繼續</string>
+    <string name="notifications_permission">通知權限</string>
+    <string name="notifications_permission_description">請點擊下方按鈕以授予通知權限。</string>
+    <string name="give_permission">授予權限</string>
+    <string name="notification_warning">略過授予通知權限？</string>
+    <string name="notification_warning_description">Azahar 將無法通知您重要資訊。</string>
+    <string name="filesystem_permission_warning_description">Azahar 需要管理此裝置上檔案的權限，以便儲存與管理其資料。\n\n請在繼續之前授予「檔案系統」存取權限。</string>
+    <string name="camera_permission">相機</string>
+    <string name="camera_permission_description">在下方授予相機存取權限，以模擬 3DS 的相機鏡頭。</string>
+    <string name="microphone_permission">麥克風</string>
+    <string name="microphone_permission_description">在下方授予麥克風存取權限，以模擬 3DS 的麥克風。</string>
+    <string name="filesystem_permission">檔案系統</string>
+    <string name="filesystem_permission_description">在下方授予檔案系統存取權限，以允許 Azahar 儲存檔案。</string>
+    <string name="lan_permission">區域網路存取</string>
+    <string name="lan_permission_description">授予區域網路存取權限，以便連線至真實 3DS 主機進行系統設定及其他功能。</string>
+    <string name="lan_warning_description">Azahar 需要區域網路存取權限，才能連線至真實 3DS 主機進行系統設定及其他功能。</string>
+    <string name="permission_denied">授權遭拒</string>
+    <string name="add_games_warning">跳過選擇應用資料夾？</string>
+    <string name="add_games_warning_description">如果未選擇資料夾，軟體將不會顯示在應用程式清單中。</string>
+    <string name="permissions">權限</string>
+    <string name="select_emulator_data_folders">資料資料夾</string>
+    <string name="select_emulator_data_folders_description"><![CDATA[選擇資料資料夾<br/>(需先設定使用者資料夾)]]></string>
+    <string name="permissions_description">授予選用權限以使用模擬器的特定功能</string>
+    <string name="missing_permissions">缺少必要權限</string>
+    <string name="warning_help">說明</string>
+    <string name="warning_skip">跳過</string>
+    <string name="warning_cancel">取消</string>
+    <string name="select_citra_user_folder">選擇使用者資料夾</string>
+    <string name="select_which_user_directory_to_use">您似乎同時為 Lime3DS 和 Azahar 設定了使用者目錄。這可能是因為您升級到了 Azahar，並在系統提示時選擇了與 Lime3DS 不同的使用者目錄。\n\n這可能導致您誤以為遺失了存檔或其他設定 - 如果發生這種情況，我們深表歉意。\n\n您想恢復原來的 Lime3DS 使用者目錄、Lime3DS 設定和遊戲存檔，還是保持當前的 ​​Azahar 使用者目錄？\n\n無論您選擇哪種方式，這兩個目錄都不會被刪除，您可以使用“選擇使用者資料夾”選項在它們之間自由切換。</string>
+    <string name="keep_current_azahar_directory">保持當前的 Azahar 目錄</string>
+    <string name="use_prior_lime3ds_directory">使用先前的 Lime3DS 目錄</string>
+    <string name="select">選擇</string>
+    <string name="cannot_skip">您不能跳過設定使用者資料夾</string>
+    <string name="cannot_skip_directory_description">此步驟是 Azahar 正常執行所必需的。請選擇一個目錄，然後才可繼續。</string>
+    <string name="invalid_selection">選取無效</string>
+    <string name="invalid_user_directory">使用者目錄選取無效。\n請重新選取使用者目錄，並確保是從裝置儲存空間的根目錄瀏覽進入。</string>
+    <string name="filesystem_permission_lost">Azahar 已失去管理此裝置上檔案的權限。這通常會在應用程式更新或 Android 系統更新後發生。請在下一個畫面重新授予此權限以繼續使用本 App。</string>
+    <string name="lan_permission_lost">Azahar 已失去區域網路存取權限。這可能在部分應用程式或 Android 系統更新後發生。請在下一畫面重新授予此權限以繼續使用應用程式。</string>
+    <string name="lan_permission_manual">請授予「鄰近裝置」權限。</string>
+    <string name="set_up_theme_settings">主題設定</string>
+    <string name="setup_theme_settings_description">配置您的 Azahar 主題偏好。</string>
+    <string name="setup_set_theme">設定主題</string>
+
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">搜尋和篩選應用</string>
+    <string name="home_search_games">搜尋應用</string>
+    <string name="search_recently_played">最近遊玩</string>
+    <string name="search_recently_added">最近新增</string>
+    <string name="search_installed">已安裝</string>
+
+    <!-- Input related strings -->
+    <string name="controller_auto_map">自動映射控制器</string>
+    <string name="controller_auto_map_description">為所有按鍵與搖桿套用標準遊戲手把配置</string>
+    <string name="auto_map_prompt">請按下手把上的此按鈕！</string>
+    <string name="auto_map_image_description">3DS 正面按鍵菱形配置，其中 A 鍵醒目提示</string>
+    <string name="controller_clear_all">清除所有按鍵配置</string>
+    <string name="controller_clear_all_confirm">這將會移除目前所有的控制器按鍵配置。</string>
+    <string name="controller_reset_all">將所有按鍵綁定重設為全域設定</string>
+    <string name="controller_reset_all_confirm">這將會把所有控制器按鍵綁定重設為全域綁定設定。</string>
+    <string name="controller_circlepad">方向搖桿</string>
+    <string name="controller_c">C 搖桿</string>
+    <string name="controller_hotkeys">熱鍵</string>
+    <string name="controller_hotkeys_description">若設定了「啟用快速鍵」按鈕，則必須同時按住該鍵與對應的快速鍵才能觸發功能</string>
+    <string name="controller_hotkey_enable_button">啟用快速鍵按鈕</string>
+    <string name="controller_triggers">雙肩按鍵</string>
+    <string name="controller_trigger">雙肩按鍵</string>
+    <string name="controller_dpad">十字方向鍵</string>
+    <string name="controller_dpad_axis">十字鍵（搖桿軸）</string>
+    <string name="controller_dpad_axis_description">有些控制器可能無法將其方向鍵對映為軸。如果是這種情況，只能使用方向鍵（按鍵）部分。</string>
+    <string name="controller_dpad_button">十字鍵（按鍵）</string>
+    <string name="controller_dpad_button_description">僅當您在方向鍵 (軸) 對映遇到問題時，才將方向鍵對映到這些按鍵。</string>
+    <string name="controller_axis_vertical">垂直軸</string>
+    <string name="controller_axis_horizontal">水平軸</string>
+    <string name="direction_up">上</string>
+    <string name="direction_down">下</string>
+    <string name="direction_left">左</string>
+    <string name="direction_right">右</string>
+    <string name="input_dialog_title">繫結 %1$s %2$s</string>
+    <string name="input_dialog_description">按下或移動以進行輸入。</string>
+    <string name="input_binding">繫結輸入</string>
+    <string name="input_binding_description">按下按鍵或輕推搖桿，將其繫結到 %1$s。</string>
+    <string name="input_binding_description_vertical_axis">請將搖桿向上推。</string>
+    <string name="input_binding_description_horizontal_axis">請將搖桿向右推。</string>
+    <string name="button_home">HOME</string>
+    <string name="button_swap">交換螢幕</string>
+    <string name="button_turbo">加速</string>
+    <string name="button_combo">組合鍵</string>
+    <string name="input_message_analog_only">此操作只能繫結到遊戲手把的搖桿或十字方向鍵上！</string>
+    <string name="input_message_button_only">此操作只能繫結到遊戲手把的按鍵上！</string>
+    <string name="turbo_toggle_hotkey">加速（切換）</string>
+    <string name="turbo_hold_hotkey">加速（按住）</string>
+    <string name="turbo_enabled_toast">加速已啟用</string>
+    <string name="turbo_disabled_toast">加速已禁用</string>
+    <string name="combo_button_settings">設定組合鍵</string>
+    <string name="combo_button_settings_description">選取按下組合鍵時同時觸發的按鈕。</string>
+
+    <!-- System files strings -->
+    <string name="setup_system_files">系統檔案</string>
+    <string name="setup_system_files_description">執行系統檔案操作，如安裝系統檔案或啟動 HOME 選單</string>
+    <string name="setup_tool_connect">連線到 Artic 設定工具</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar 需要來自真實掌機的獨有資料和韌體檔案才能使用其部分功能。此類檔案和資料可透過 <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic 設定工具</a>進行設定。<br>注意：<ul><li><b>此操作會將掌機獨有資料安裝到 Azahar，執行設定過程後請勿共享您的使用者或 nand 資料夾！</b></li><li>在執行設定過程時，Azahar 將關聯到執行設定工具的掌機。您可以隨時從模擬器配置選單的“系統檔案”分頁標籤中取消關聯掌機。</li><li>設定系統檔案後，請勿同時使用 Azahar 和 3DS 掌機連線上網，因為這可能會導致問題。</li><li>New 3DS 設定需要先進行舊版 3DS 設定才能運作（建議兩種設定模式都執行）。</li><li>無論執行設定工具的掌機型號如何，兩種設定模式均可運作。</li></ul>]]></string>
+    <string name="setup_system_files_detect">正在獲取當前系統檔案狀態，請稍候...</string>
+    <string name="delete_system_files">取消關聯掌機獨有資料</string>
+    <string name="delete_system_files_description"><![CDATA[此操作將取消您真實掌機與 Azahar 的關聯，並產生以下後果：<br><ul><li>您的 OTP、SecureInfo 和 LocalFriendCodeSeed 檔案將從 Azahar 中刪除。</li><li>您的好友清單將被重設，並且登出 NNID/PNID 帳戶。</li><li>透過 Azahar 獲得的系統檔案和 eshop 數位版遊戲軟體將無法存取，直到再次關聯同一掌機（儲存的資料不會遺失）。</ul><br>是否繼續？</li>]]></string>
+    <string name="setup_system_files_o3ds">舊版 3DS 設定</string>
+    <string name="setup_system_files_n3ds">New 3DS 設定</string>
+    <string name="setup_system_files_possible">可以進行設定。</string>
+    <string name="setup_system_files_o3ds_needed">首先需要設定舊版 3DS。</string>
+    <string name="setup_system_files_completed">設定已完成。</string>
+    <string name="setup_system_files_enter_address">輸入 Artic 設定工具地址</string>
+    <string name="setup_system_files_preparing">正在準備設定，請稍候...</string>
+    <string name="boot_home_menu">啟動 HOME 選單</string>
+    <string name="show_home_apps">在應用程式清單中顯示 HOME 選單應用</string>
+    <string name="run_system_setup">啟動 HOME 選單時執行系統設定</string>
+    <string name="home_menu">HOME 選單</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">按鍵</string>
+    <string name="button">按鍵</string>
+
+    <!-- System settings strings -->
+    <string name="emulation_settings">模擬設定</string>
+    <string name="username">使用者名稱</string>
+    <string name="new_3ds">New 3DS 模式</string>
+    <string name="lle_applets">使用 LLE 小程式 (如果已安裝)</string>
+    <string name="apply_region_free_patch">對已安裝應用程式套用全區 (Region Free) 補丁</string>
+    <string name="apply_region_free_patch_desc">將已安裝應用程式的區域修改為全區，使其一律顯示在 HOME 主選單中。</string>
+    <string name="enable_required_online_lle_modules">啟用線上功能所需的 LLE 模組（如果已安裝）</string>
+    <string name="enable_required_online_lle_modules_desc">啟用線上多人遊戲、eShop 存取等所需的 LLE 模組。</string>
+    <string name="clock">裝置時鐘</string>
+    <string name="init_clock">系統時鐘型別</string>
+    <string name="init_clock_description">將模擬 3DS 時鐘設為對映裝置的實際時鐘或是使用自訂的時間和日期。</string>
+    <string name="device_clock">裝置時鐘</string>
+    <string name="simulated_clock">模擬時鐘</string>
+    <string name="simulated_clock_description">如果將“系統時鐘型別”設定為“模擬時鐘”，可以修改時鐘的日期和時間。</string>
+    <string name="profile_settings">資料設定</string>
+    <string name="emulated_region">區域</string>
+    <string name="emulated_language">語言</string>
+    <string name="birthday">生日</string>
+    <string name="birthday_month">月</string>
+    <string name="birthday_day">日</string>
+    <string name="country">國家/地區</string>
+    <string name="play_coins">遊戲幣</string>
+    <string name="steps_per_hour">計步器每小時步數</string>
+    <string name="steps_per_hour_description">計步器報告的每小時步數。範圍從 0 到 65535。</string>
+    <string name="console_id">裝置 ID</string>
+    <string name="regenerate_console_id">重新生成裝置 ID</string>
+    <string name="regenerate_console_id_description">這將使用一個新的虛擬 3DS 掌機 ID 取代您當前的虛擬 3DS 掌機 ID。您當前的虛擬 3DS 掌機 ID 將無法恢復。對應用內部可能會產生意外影響。如果您使用一個過時的配置存檔則可能會失敗。是否繼續？</string>
+    <string name="mac_address">MAC 地址</string>
+    <string name="regenerate_mac_address">重新生成 MAC 地址</string>
+    <string name="regenerate_mac_address_description">這將用新 MAC 地址替換您當前的 MAC 地址。如果您使用設定工具從真實掌機獲取 MAC 地址，則不建議執行此操作。是否繼續？</string>
+    <string name="plugin_loader">3GX 外掛載入器</string>
+    <string name="plugin_loader_description">當外掛可用時，從模擬 SD 卡載入 3GX 外掛。</string>
+    <string name="allow_plugin_loader">允許應用更改外掛載入器狀態</string>
+    <string name="allow_plugin_loader_description">允許自制程式啟用外掛載入器。</string>
+    <string name="region_mismatch">區域不匹配警告</string>
+    <string name="region_mismatch_emulated">此國家/地區設定對於所選擇的模擬區域無效。</string>
+    <string name="region_mismatch_console">此國家/地區設定對於當前關聯的掌機無效。</string>
+    <string name="storage">儲存</string>
+    <string name="compress_cia_installs">壓縮已安裝的 CIA 內容</string>
+    <string name="compress_cia_installs_description">安裝到模擬 SD 卡時，壓縮 CIA 檔案的內容。僅影響啟用此設定時安裝的 CIA 內容。</string>
+    <string name="async_fs_operations">非同步檔案系統操作</string>
+    <string name="async_fs_operations_description">使模擬檔案系統的存取採非同步處理。可大幅減少檔案存取造成的畫面頓挫與延遲，但載入時間可能會稍微增加。</string>
+
+    <string name="per_app_settings_unsupported">不支援個別應用程式設定</string>
+    <string name="per_app_settings_unsupported_description">此應用程式不支援個別應用程式設定，可能是因為它屬於自製程式（Homebrew）。</string>
+    <!-- Camera settings strings -->
+    <string name="inner_camera">內建相機 (鏡頭)</string>
+    <string name="outer_left_camera">外側左相機 (鏡頭)</string>
+    <string name="outer_right_camera">外側右相機 (鏡頭)</string>
+    <string name="image_source">相機影像來源</string>
+    <string name="image_source_description">設定虛擬相機的影像來源。您可以選擇一張圖片或支援的實體相機裝置。</string>
+    <string name="camera_device">相機裝置</string>
+    <string name="camera_device_description">若將「影像來源」設定為「實體相機裝置」，將會使用本裝置的相機鏡頭作為影像來源。</string>
+    <string name="camera_facing_front">前置鏡頭</string>
+    <string name="camera_facing_back">後置鏡頭</string>
+    <string name="camera_facing_external">外接相機鏡頭</string>
+    <string name="image_flip">影像翻轉</string>
+
+    <!-- Graphics settings strings -->
+    <string name="renderer">轉譯器</string>
+    <string name="graphics_api">圖形 API</string>
+    <string name="spirv_shader_gen">啟用 SPIR-V 著色器</string>
+    <string name="spirv_shader_gen_description">使用 SPIR-V 而不是 GLSL 來模擬 PICA 的著色器</string>
+    <string name="disable_spirv_optimizer">停用 SPIR-V 最佳化器</string>
+    <string name="disable_spirv_optimizer_description">停用 SPIR-V 最佳化過程，可顯著減少延遲與頓挫，同時幾乎不影響效能。</string>
+    <string name="async_shaders">啟用非同步著色器編譯</string>
+    <string name="async_shaders_description">在背景編譯著色器以減少畫面頓挫。可能出現短暫的畫面破圖現象</string>
+    <string name="linear_filtering">線性過濾</string>
+    <string name="linear_filtering_description">開啟後，遊戲視覺效果會更加平滑。</string>
+    <string name="use_integer_scaling">整數縮放</string>
+    <string name="use_integer_scaling_description">以原始 3DS 螢幕的整數倍率進行縮放。對於包含兩種不同螢幕尺寸的配置，最大螢幕將採整數縮放。</string>
+    <string name="texture_filter_name">紋理濾鏡</string>
+    <string name="texture_filter_description">透過對紋理使用濾鏡來增強應用的視覺效果。支援的濾鏡包括 Anime4K Ultrafast、Bicubic、ScaleForce、xBRZ freescale 和 MMPX。</string>
+    <string name="delay_render_thread">延遲遊戲轉譯執行緒</string>
+    <string name="delay_render_thread_description">在遊戲轉譯執行緒向 GPU 提交資料時延遲執行緒。有助於解決（極少數）具有動態幀率應用的效能問題。</string>
+    <string name="simulate_3ds_gpu_timings">模擬 3DS GPU 時序</string>
+    <string name="simulate_3ds_gpu_timings_description">依據實機測量數據延遲 GPU 完成事件，使遊戲擁有更貼近實機的 GPU 時間計量。有助於穩定動態 FPS 遊戲。在極少數情況下關閉此功能可能提升效能，但會降低穩定性。</string>
+    <string name="advanced">高階選項</string>
+    <string name="texture_sampling_name">紋理取樣</string>
+    <string name="texture_sampling_description">覆蓋遊戲所使用的取樣過濾器。這在某些情況下提升表現不佳的遊戲畫質時可能很有用。如果不確定，請將其設定為“由遊戲控制”</string>
+    <string name="use_skip_duplicate_frames">跳過重繪重複畫面</string>
+    <string name="use_skip_duplicate_frames_description">跳過非獨特畫面的呈現。這也允許外部幀生成工具 (如 Lossless Scaling / LSFG) 能在 30fps 遊戲中正常運作。</string>
+    <string name="use_limit_frames_ahead_of_gpu">限制領先 GPU 的影格數</string>
+    <string name="use_limit_frames_ahead_of_gpu_description">限制模擬執行緒可領先 GPU 的影格數量。啟用後可降低輸入延遲，但可能會降低執行效能。</string>
+    <string name="shaders_accurate_mul">精確乘法運算</string>
+    <string name="shaders_accurate_mul_description">在硬體著色器中使用更加精確的乘法運算，這可能會修復一些圖形錯誤。啟用後，效能將有所降低。</string>
+    <string name="asynchronous_gpu">啟用非同步 GPU 模擬</string>
+    <string name="asynchronous_gpu_description">使用一個單獨執行緒非同步模擬 GPU 。啟用後，遊戲效能將有所提高。</string>
+    <string name="frame_limit_enable">執行速度限制</string>
+    <string name="frame_limit_enable_description">啟用後，模擬速度將被限制為正常速度的指定百分比。如果禁用，模擬速度則不受限制，並且加速熱鍵將不起作用。</string>
+    <string name="frame_limit_slider">限制執行速度百分比</string>
+    <string name="frame_limit_slider_description">指定限制執行速度的百分比。預設情況下，100% 將限制為正常執行速度。較高或較低的值將增加或降低執行速度。</string>
+    <string name="android_hide_images">在 Android 裝置上隱藏 3DS 影像</string>
+    <string name="android_hide_images_description">防止 Android 媒體庫索引 3DS 相機照片、螢幕截圖與自訂材質影像，避免顯示在相簿中。變更此設定後可能需要重新啟動裝置方能生效。</string>
+    <string name="turbo_limit">加速限制</string>
+    <string name="turbo_limit_description">加速熱鍵啟用時使用的模擬速度限制。</string>
+    <string name="internal_resolution">內部解析度</string>
+    <string name="internal_resolution_description">指定轉譯使用的解析度。高解析度將大大提高視覺質量，但也會對效能造成很大影響，並可能導致某些應用出現故障。</string>
+    <string name="internal_resolution_setting_auto">自動（螢幕大小）</string>
+    <string name="internal_resolution_setting_1x">原生（400x240）</string>
+    <string name="internal_resolution_setting_2x">2 倍（800x480）</string>
+    <string name="internal_resolution_setting_3x">3 倍（1200x720）</string>
+    <string name="internal_resolution_setting_4x">4 倍（1600x960）</string>
+    <string name="internal_resolution_setting_5x">5 倍（2000x1200）</string>
+    <string name="internal_resolution_setting_6x">6 倍（2400x1440）</string>
+    <string name="internal_resolution_setting_7x">7 倍（2800x1680）</string>
+    <string name="internal_resolution_setting_8x">8 倍（3200x1920）</string>
+    <string name="internal_resolution_setting_9x">9 倍（3600x2160）</string>
+    <string name="internal_resolution_setting_10x">10 倍（4000x2400）</string>
+    <string name="internal_resolution_setting_11x">11x 原生解析度 (4400x2640)</string>
+    <string name="internal_resolution_setting_12x">12x 原生解析度 (4800x2880)</string>
+    <string name="internal_resolution_setting_13x">13x 原生解析度 (5200x3120)</string>
+    <string name="internal_resolution_setting_14x">14x 原生解析度 (5600x3360)</string>
+    <string name="internal_resolution_setting_15x">15x 原生解析度 (6000x3600)</string>
+    <string name="internal_resolution_setting_16x">16x 原生解析度 (6400x3840)</string>
+    <string name="internal_resolution_setting_17x">17x 原生解析度 (6800x4080)</string>
+    <string name="internal_resolution_setting_18x">18x 原生解析度 (7200x4320)</string>
+    <string name="performance_warning">關閉此項將顯著降低模擬效能！為了獲得最佳體驗，建議啟用。</string>
+    <string name="debug_warning">警告：更改這些設定將降低模擬速度！</string>
+    <string name="stereoscopy">畫面立體</string>
+    <string name="render3d">立體 3D 模式</string>
+    <string name="render3d_description">選取 3D 轉譯的立體 3D 模式。左右分離模式 (Side by Side) 在現代裝置中最常見。紅藍 (Anaglyph) 與隔行掃描 (Interlaced) 模式將一律套用於所有連接的顯示螢幕。</string>
+    <string name="factor3d">畫面深度</string>
+    <string name="factor3d_description">指定 3D 滑塊按鈕的值。啟用立體 3D 模式時，應將其設定為高於 0% 的值。\n注意：實機硬體上不可能出現超過 100% 的深度值，並且可能會導致圖形問題</string>
+    <string name="disable_right_eye_render">禁用右眼轉譯</string>
+    <string name="disable_right_eye_render_description">極大地提高某些應用的效能，但可能會導致其他應用出現閃爍。</string>
+    <string name="swap_eyes_3d">左右眼交換</string>
+    <string name="swap_eyes_3d_description">交換哪隻眼睛顯示在哪一側。結合左右分離模式，可透過鬥雞眼直接裸眼看見 3D 效果！</string>
+    <string name="render_3d_which_display">轉譯立體 3D</string>
+    <string name="render_3d_which_display_description">是否啟用立體 3D，以及在哪些螢幕上啟用。單螢幕選項僅在連接多個螢幕時生效。</string>
+    <string name="render_3d_which_display_both">開啟 (所有螢幕)</string>
+    <string name="render_3d_which_display_primary">開啟 (僅主螢幕)</string>
+    <string name="render_3d_which_display_secondary">開啟 (僅副螢幕)</string>
+    <string name="cardboard_vr">Google Cardboard 虛擬實境 (VR)</string>
+    <string name="cardboard_screen_size">紙板螢幕大小</string>
+    <string name="cardboard_screen_size_description">將螢幕縮放至其原始大小的指定百分比。</string>
+    <string name="cardboard_x_shift">水平偏移</string>
+    <string name="cardboard_x_shift_description">指定用於水平移動螢幕的百分比。正值會將左右兩個視野移向中間，而負值會將左右兩個視野向外側移動。</string>
+    <string name="cardboard_y_shift">豎直偏移</string>
+    <string name="cardboard_y_shift_description">指定用於豎直移動螢幕的百分比。正值會將左右兩個視野向底部移動，而負值會將左右兩個視野向頂部移動。</string>
+    <string name="use_shader_jit">著色器即時編譯</string>
+    <string name="use_disk_shader_cache">磁碟著色器快取</string>
+    <string name="use_disk_shader_cache_description">透過將生成的著色器快取到儲存空間並載入，以減少畫面頓挫。使用此功能需要啟用硬體著色器。</string>
+    <string name="utility">工具</string>
+    <string name="dump_textures">傾印材質貼圖</string>
+    <string name="custom_textures">載入自訂高畫質材質</string>
+    <string name="preload_textures">預先載入自訂材質</string>
+    <string name="preload_textures_description">遊戲啟動時將自訂材質全數預先載入至記憶體，減少遊玩過程中的讀取頓挫 (需較多 RAM)</string>
+    <string name="async_custom_loading">非同步載入自訂材質</string>
+    <string name="async_custom_loading_description">在背景非同步載入自訂高畫質材質，以減輕畫面頓挫。</string>
+
+    <!-- Audio settings strings -->
+    <string name="audio_volume">音量</string>
+    <string name="audio_stretch">音訊拉伸</string>
+    <string name="realtime_audio">啟用實時音訊</string>
+    <string name="realtime_audio_description">調整音訊播放速度以適應模擬幀率的下降。這意味著即使遊戲幀率較低，音訊也會全速播放。可能會導致音訊不同步問題。</string>
+    <string name="simulate_headphones_plugged">模擬耳機插入</string>
+    <string name="simulate_headphones_plugged_description">模擬耳機是否已插入模擬的 3DS 主機。</string>
+    <string name="audio_input_type">音訊輸入裝置</string>
+    <string name="sound_output_mode">聲音輸出模式</string>
+
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT 即時編譯</string>
+    <string name="cpu_jit_description">使用即時編譯 (JIT) 進行 CPU 模擬。啟用後，遊戲效能將顯著提高。</string>
+    <string name="use_fastinterp">使用快速直譯器</string>
+    <string name="use_fastinterp_description">停用 CPU JIT 時，改用快速直譯器取代舊版直譯器。需要重新啟動。</string>
+    <string name="hw_shaders">啟用硬體著色器</string>
+    <string name="hw_shaders_description">使用硬體模擬 3DS 著色器。啟用後，遊戲效能將顯著提高。</string>
+    <string name="cpu_clock_speed">CPU 時脈頻率</string>
+    <string name="vsync">啟用垂直同步</string>
+    <string name="vsync_description">將遊戲幀率與裝置的螢幕重新整理率同步。可能會增加輸入延遲，但在某些情況下可以減少畫面撕裂。</string>
+    <string name="renderer_debug">除錯轉譯器</string>
+    <string name="renderer_debug_description">記錄更多與圖形相關的除錯資訊。啟用後，遊戲效能將顯著降低。</string>
+    <string name="instant_debug_log">每條訊息都即時重新整理記錄輸出</string>
+    <string name="instant_debug_log_description">立即將除錯記錄寫入檔案。如果 Azahar 當機並且記錄檔輸出被截斷，請使用此選項。</string>
+    <string name="delay_start_lle_modules">使用 LLE 模組延遲啟動</string>
+    <string name="delay_start_lle_modules_description">當 LLE 模組啟用時延遲應用的啟動。</string>
+    <string name="deterministic_async_operations">確定性非同步操作</string>
+    <string name="deterministic_async_operations_description">使非同步操作在除錯時具有確定性。啟用此功能可能會導致停滯。</string>
+    <string name="enable_rpc_server">啟用 RPC 伺服器</string>
+    <string name="enable_rpc_server_desc">在埠 45987 上啟用 RPC 伺服器。這允許遠端讀/寫客戶機記憶體。</string>
+    <string name="toggle_unique_data_console_type">切換主機型號資料類型</string>
+    <string name="toggle_unique_data_console_type_desc">在舊型 3DS ↔ 新型 3DS 之間切換主機型號資料，以便從系統設定下載對應的主機韌體類型。</string>
+    <string name="shader_jit">啟用著色器 JIT</string>
+    <string name="shader_jit_description">使用 JIT 引擎而不是直譯器進行軟體著色器模擬。</string>
+
+  <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">螢幕方向</string>
+    <string name="layout_screen_orientation_auto_sensor">自動</string>
+    <string name="layout_screen_orientation_landscape">橫向</string>
+    <string name="layout_screen_orientation_landscape_reverse">橫向反轉</string>
+    <string name="layout_screen_orientation_portrait">縱向</string>
+    <string name="layout_screen_orientation_portrait_reverse">縱向反轉</string>
+    <string name="layouts_to_cycle">輪替顯示配置清單</string>
+    <string name="layouts_to_cycle_description">按下「輪替配置」快速鍵時要循序循環切換的畫面配置</string>
+    <string name="aspect_ratio_default">預設</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">拉伸</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">清除</string>
+    <string name="slider_default">預設</string>
+    <string name="ini_saved">已儲存的設定</string>
+    <string name="gameid_saved">已將設定儲存於 %1$s 中</string>
+    <string name="error_saving">儲存 %1$s.ini 失敗：%2$s</string>
+    <string name="saving">正在儲存...</string>
+    <string name="loading">載入中…</string>
+    <string name="next">下一步</string>
+    <string name="back">上一步</string>
+    <string name="learn_more">瞭解更多</string>
+    <string name="close">關閉</string>
+    <string name="reset_to_default">恢復預設</string>
+    <string name="option_default">預設</string>
+    <string name="none">無</string>
+    <string name="auto">自動</string>
+    <string name="off">關閉</string>
+    <string name="install">安裝</string>
+    <string name="delete">刪除</string>
+    <string name="reset_all_settings">重設所有設定項目？</string>
+    <string name="reset_all_settings_description">所有高階選項都將恢復為預設值。此操作不可撤銷。</string>
+    <string name="settings_reset">設定項目已重設</string>
+    <string name="reset_settings_to_global">重設個別應用程式設定</string>
+    <string name="reset_settings_to_global_description">此應用程式的所有自訂設定都將重設為全域設定值，此操作無法復原。</string>
+    <string name="select_rtc_date">選擇日期</string>
+    <string name="select_rtc_time">選擇時間</string>
+    <string name="reset_setting_confirmation">您確定要將此設定項目重設為預設值嗎？</string>
+    <string name="reset_setting_global_confirmation">確定要將此自訂設定重設回全域設定值嗎？</string>
+    <string name="setting_not_editable">您現在不能編輯此項</string>
+    <string name="setting_disabled">設定已禁用</string>
+    <string name="setting_disabled_description_incompatible_setting">由於另一項設定目前不是適用值，因此此設定已被停用。</string>
+    <string name="setting_disabled_description_angle">無法變更轉譯器，因為此裝置使用 ANGLE 執行 OpenGL，目前與 Azahar 不相容。將強制使用 Vulkan。</string>
+    <string name="setting_not_editable_description">在遊戲執行時此項不能更改。</string>
+    <string name="auto_select">自動選擇</string>
+    <string name="start">開始</string>
+    <string name="cancelling">取消中…</string>
+    <string name="visibility">可見度</string>
+    <string name="information">資訊</string>
+    <string name="refresh">重新整理</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">選擇遊戲目錄</string>
+
+    <!-- Game Properties -->
+    <string name="properties">屬性</string>
+    <string name="properties_not_loaded">無法載入遊戲屬性。</string>
+
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">設定</string>
+    <string name="preferences_general">通用</string>
+    <string name="preferences_system">系統</string>
+    <string name="preferences_camera">相機設定</string>
+    <string name="preferences_controls">遊戲手把</string>
+    <string name="preferences_graphics">圖形</string>
+    <string name="preferences_audio">聲音</string>
+    <string name="preferences_debug">除錯</string>
+    <string name="preferences_theme">主題和色彩</string>
+    <string name="preferences_layout">佈局</string>
+    <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">載入應用程式時發生錯誤</string>
+    <string name="loader_error_invalid_format">應用程式檔案格式無效</string>
+    <string name="loader_error_invalid_system_mode">系統模式無效</string>
+    <string name="loader_error_invalid_system_mode_description">若未啟用「New 3DS」模式，則無法載入 New 3DS 專用應用程式。</string>
+    <string name="loader_error_applying_patches">套用補丁時發生錯誤</string>
+    <string name="loader_error_applying_patches_description">向應用程式套用補丁時發生未預期的錯誤。請查看記錄檔以取得詳細資訊。</string>
+    <string name="loader_error_patch_wrong_application">無法套用補丁，因為該補丁是為不同的應用程式所設計。請確認補丁對應正確的應用程式 ID、發行區域與版本。</string>
+    <string name="loader_error_encrypted">您的 ROM 是加密的</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar 不支援未解密的加密應用程式。請閱讀我們的 <a href="https://azahar-emu.org/blog/game-loading-changes/">官方部落格文章</a> 瞭解更多資訊。]]></string>
+    <string name="loader_error_file_not_found">ROM 檔案不存在</string>
+    <string name="no_game_present">目前沒有可啟動的遊戲！</string>
+    <string name="invalid_rom">無效的 ROM 映像檔</string>
+    <string name="loader_error_generic">載入 ROM 時發生錯誤：\"%s (%d)\"</string>
+    <string name="core_error_success">成功</string>
+    <string name="core_error_not_initialized">核心尚未初始化</string>
+    <string name="core_error_get_loader">找不到支援該檔案類型的載入器，檔案格式不相容</string>
+    <string name="core_error_system_mode">解析檔案失敗</string>
+    <string name="core_error_loader">一般載入器錯誤</string>
+    <string name="core_error_loader_encrypted">檔案已加密</string>
+    <string name="core_error_loader_invalid_format">檔案已損毀</string>
+    <string name="core_error_loader_gba_title">此檔案為 GBA 遊戲</string>
+    <string name="core_error_loader_error_patches">套用補丁時發生錯誤</string>
+    <string name="core_error_loader_patches_invalid_title">此補丁適用於其他應用程式</string>
+    <string name="core_error_system_files">缺少系統檔案</string>
+    <string name="core_error_savestate">即時存檔失敗</string>
+    <string name="core_error_artic_disconnected">Artic Base 連線中斷</string>
+    <string name="core_error_n3ds_application">此檔案為 New 3DS 專用遊戲軟體</string>
+    <string name="core_error_core_exception_raised">模擬核心引發例外異常</string>
+    <string name="core_error_savestate_build_mismatch">即時存檔版本不相容</string>
+    <string name="core_error_shutdown_requested">已收到關閉模擬器請求</string>
+    <string name="core_error_unknown">未知錯誤</string>
+    <string name="core_error_shader_cache_crash">著色器快取發生閃退</string>
+
+    <!-- Emulation Menu -->
+    <string name="emulation_menu_help">按返回鍵撥出選單。</string>
+    <string name="emulation_empty_state_slot">插槽 %1$d</string>
+    <string name="emulation_occupied_state_slot">插槽 %1$d - %2$tF %2$tR</string>
+    <string name="emulation_show_fps">顯示 FPS</string>
+    <string name="emulation_haptic_feedback">觸控反饋</string>
+    <string name="emulation_overlay_options">虛擬按鍵選項</string>
+    <string name="emulation_configure_controls">控制設定</string>
+    <string name="emulation_edit_layout">編輯佈局</string>
+    <string name="emulation_done">完成</string>
+    <string name="emulation_button_sliding">按鍵滑行</string>
+    <string name="emulation_button_sliding_disabled">按住起始按下的按鍵</string>
+    <string name="emulation_button_sliding_enabled">按住當前按下的按鍵</string>
+    <string name="emulation_button_sliding_alternative">按住起始和當前按下的按鍵</string>
+    <string name="emulation_toggle_controls">切換控制</string>
+    <string name="emulation_control_scale">調整大小</string>
+    <string name="emulation_control_scale_global">全域性縮放</string>
+    <string name="emulation_control_scale_reset_all">全部重設</string>
+    <string name="emulation_control_opacity">調整透明度</string>
+    <string name="emulation_control_joystick_rel_center">相對搖桿中心</string>
+    <string name="emulation_control_dpad_slide_enable">十字鍵滑行</string>
+    <string name="emulation_open_settings">開啟設定項</string>
+    <string name="emulation_open_cheats">開啟金手指 (作弊碼)</string>
+    <string name="emulation_aspect_ratio">寬高比</string>
+    <string name="emulation_switch_screen_layout">螢幕布局</string>
+    <string name="emulation_switch_portrait_layout">縱向螢幕布局</string>
+    <string name="emulation_secondary_display_enable">啟用副螢幕顯示</string>
+    <string name="emulation_secondary_display_enable_description">若停用，將由 Android 系統自行管理外接顯示螢幕。若啟用且已連接多個螢幕，您可以在「模擬快捷選單」中選取 Azahar 要使用的螢幕。</string>
+    <string name="emulation_switch_secondary_layout">副螢幕版型配置</string>
+    <string name="emulation_secondary_display_management">副螢幕管理</string>
+    <string name="emulation_select_secondary_display">選取顯示螢幕</string>
+    <string name="emulation_switch_secondary_layout_description">有線或無線連線的副螢幕使用佈局（Chromecast, Miracast）</string>
+    <string name="emulation_screen_layout_largescreen">大螢幕</string>
+    <string name="emulation_screen_layout_portrait">縱向</string>
+    <string name="emulation_screen_layout_single">單個螢幕</string>
+    <string name="emulation_screen_layout_sidebyside">並排螢幕</string>
+    <string name="emulation_screen_layout_hybrid">混合式螢幕</string>
+    <string name="emulation_screen_layout_original">原始</string>
+    <string name="emulation_portrait_layout_top_full">預設</string>
+    <string name="emulation_secondary_display_opposite">對側螢幕</string>
+    <string name="emulation_screen_layout_custom">自訂版型</string>
+    <string name="bg_color">背景顏色</string>
+    <string name="bg_color_description">在模擬執行時螢幕後面出現的顏色，以 RGB 值表示。</string>
+    <string name="bg_red">紅</string>
+    <string name="bg_green">綠</string>
+    <string name="bg_blue">藍</string>
+    <string name="second_screen_opacity">自訂版型副螢幕不透明度</string>
+    <string name="second_screen_opacity_description">使用自訂螢幕版型配置時， 3DS 副螢幕的不透明度。當副螢幕位於主螢幕前面時，此選項很有用。</string>
+    <string name="emulation_small_screen_position">小螢幕位置</string>
+    <string name="small_screen_position_description">在“大螢幕”佈局中，小螢幕相對於大螢幕應該出現的位置？</string>
+    <string name="small_screen_position_top_right">右上</string>
+    <string name="small_screen_position_middle_right">右中</string>
+    <string name="small_screen_position_bottom_right">右下（預設）</string>
+    <string name="small_screen_position_top_left">左上</string>
+    <string name="small_screen_position_middle_left">左中</string>
+    <string name="small_screen_position_bottom_left">左下</string>
+    <string name="small_screen_position_above">上面</string>
+    <string name="small_screen_position_below">下面</string>
+    <string name="screen_gap">螢幕間隔</string>
+    <string name="screen_gap_description">所有雙屏模式下螢幕之間的間隔。以畫素為單位，相對於上屏的 240 畫素高度進行測量。</string>
+    <string name="large_screen_proportion">大螢幕佔比</string>
+    <string name="large_screen_proportion_description">“大螢幕”佈局中大螢幕比小螢幕大多少倍？</string>
+    <string name="emulation_adjust_custom_layout">在設定中調整自訂版型</string>
+    <string name="emulation_landscape_custom_layout">橫向自訂版型</string>
+    <string name="emulation_portrait_custom_layout">縱向自訂版型</string>
+    <string name="emulation_top_screen">上螢幕</string>
+    <string name="emulation_bottom_screen">下螢幕</string>
+    <string name="emulation_custom_layout_x">X-位置</string>
+    <string name="emulation_custom_layout_y">Y-位置</string>
+    <string name="emulation_custom_layout_width">寬度</string>
+    <string name="emulation_custom_layout_height">高度</string>
+    <string name="emulation_swap_screens">交換上下屏</string>
+    <string name="emulation_rotate_upright">順時針旋轉螢幕</string>
+    <string name="emulation_touch_overlay_reset">重設虛擬按鍵</string>
+    <string name="emulation_show_controller_overlay">顯示虛擬控制器</string>
+    <string name="emulation_close_game">關閉遊戲</string>
+    <string name="emulation_toggle_pause">暫停/繼續</string>
+    <string name="miscellaneous">雜項</string>
+    <string name="use_artic_base_controller">連線到 Artic Base 伺服器時使用 Artic 控制器</string>
+    <string name="use_artic_base_controller_description">連線到 Artic Base 伺服器時使用其提供的控制器，而不是配置的輸入裝置。</string>
+    <string name="emulation_close_game_message">您確定要關閉當前的遊戲嗎？</string>
+    <string name="menu_emulation_amiibo">Amiibo 虛擬公仔</string>
+    <string name="menu_emulation_amiibo_load">載入</string>
+    <string name="menu_emulation_amiibo_remove">移除</string>
+    <string name="application_settings">個別應用程式設定</string>
+    <string name="global_settings">全域設定</string>
+    <string name="use_global">已自訂：長按即可重設為全域設定</string>
+    <string name="editing_global_when_customized">注意：此項目目前已套用自訂設定，但您正在編輯的是全域設定。</string>
+    <string name="select_amiibo">選擇 Amiibo 檔案</string>
+    <string name="amiibo_load_error">載入 Amiibo 時出錯</string>
+    <string name="amiibo_load_error_message">載入該 Amiibo 檔案時，發生了一個錯誤。請檢查檔案是否完整無錯誤。</string>
+    <string name="pause_emulation">暫停模擬</string>
+    <string name="resume_emulation">繼續模擬</string>
+    <string name="lock_drawer">鎖定側滑選單</string>
+    <string name="unlock_drawer">解鎖側滑選單</string>
+
+    <string name="write_permission_needed">您需要允許 Azahar 對外部儲存空間進行讀寫存取，以便模擬器正常工作。</string>
+    <string name="load_settings">正在載入設定…</string>
+
+    <string name="external_storage_not_mounted">需要可用的外部儲存才能使用 Azahar</string>
+
+    <string name="select_dir">選擇此目錄</string>
+    <string name="empty_gamelist">找不到遊戲檔案或尚未新增遊戲目錄。</string>
+
+    <string name="do_not_show_this_again">不要再顯示</string>
+    <string name="searching_directory">正在搜尋目錄：%s</string>
+    <string name="move_data">資料移動</string>
+    <string name="moving_data">移動資料中…</string>
+    <string name="copy_file_name">複製檔案：%s</string>
+    <string name="copy_complete">複製完成</string>
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">軟體鍵盤</string>
+    <string name="i_forgot">我忘記了</string>
+    <string name="fixed_length_required">文字長度不正確（應為 %d 個字元）</string>
+    <string name="max_length_exceeded">輸入文字過長（不應超過 %d 個字元）</string>
+    <string name="blank_input_not_allowed">不允許空白輸入</string>
+    <string name="empty_input_not_allowed">請輸入字元</string>
+    <string name="invalid_input">無效輸入</string>
+
+    <!-- Mii Selector -->
+    <string name="mii_selector">Mii 選擇器</string>
+    <string name="standard_mii">標準 Mii</string>
+
+    <!-- Camera -->
+    <string name="camera_select_image">選取相機靜態圖片</string>
+    <string name="camera">相機</string>
+    <string name="camera_permission_needed">Azahar 需要存取您的相機以模擬 3DS 的相機鏡頭。\n\n或者，您也可以在相機設定中將「影像來源」設定為「靜態圖片」。</string>
+
+    <!-- Microphone -->
+    <string name="microphone">麥克風</string>
+    <string name="microphone_permission_needed">Azahar 需要存取您的麥克風以模擬 3DS 麥克風。\n\n或者，您也可以在音效設定中更改「音訊輸入裝置」。</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">中止</string>
+    <string name="continue_button">繼續</string>
+    <string name="system_archive_not_found">未找到系統檔案</string>
+    <string name="system_archive_not_found_message">%s 遺失。請傾印您的系統檔案。\n繼續模擬可能會導致錯誤與當機。</string>
+    <string name="cia_file_not_found">安裝失敗。未找到 CIA 檔案。</string>
+    <string name="system_archive_general">系統檔案</string>
+    <string name="save_load_error">儲存/讀取出現錯誤</string>
+    <string name="savestate_error_message">無法建立或還原即時存檔。&lt;br/&gt;&lt;br/&gt;%1$s</string>
+    <string name="fatal_error">致命錯誤</string>
+    <string name="fatal_error_message">發生致命錯誤。請查閱記錄檔以取得相關資訊。\n繼續模擬可能會導致錯誤與當機。</string>
+    <string name="unsupported_encrypted">不支援的加密應用</string>
+    <string name="invalid_system_mode">無效的系統模式</string>
+    <string name="invalid_system_mode_message">必須在系統設定中開啟「New 3DS 模式」方可載入 New 3DS 專屬遊戲軟體。</string>
+    <string name="shader_cache_crash">著色器快取閃退</string>
+    <string name="shader_cache_crash_message">Azahar 上次為目前遊戲建立著色器快取時意外關閉。圖形驅動程式可能在編譯其中一個快取著色器時發生當機，若繼續執行可能會再次閃退。&lt;br/&gt;&lt;br/&gt;若要重設著色器快取，請在應用程式清單中長按該應用程式，點選 &lt;b&gt;刪除著色器快取&lt;/b&gt;，並選擇 &lt;b&gt;Vulkan&lt;/b&gt;。</string>
+    <!-- Disk Shader Cache -->
+    <string name="preparing_shaders">正在準備著色器</string>
+    <string name="building_shaders">正在建構著色器：%s</string>
+    <string name="delete_shader_cache">刪除著色器快取</string>
+    <string name="delete_cache_select_backend">選取欲刪除著色器快取的繪圖 API 後端</string>
+    <string name="deleting_shader_cache">正在刪除遊戲的著色器快取，請稍候…</string>
+    <string name="shader_cache_deleted">著色器快取已刪除</string>
+
+    <!-- About Game Dialog -->
+    <string name="play">開始遊戲</string>
+    <string name="uninstall_cia">解除安裝應用</string>
+    <string name="uninstalling">正在解除安裝...</string>
+    <string name="game_context_open_save_dir">開啟存檔資料資料夾</string>
+    <string name="game_context_open_app">開啟應用資料夾</string>
+    <string name="game_context_open_mods">開啟模組資料夾</string>
+    <string name="game_context_open_textures">開啟紋理資料夾</string>
+    <string name="game_context_open_dlc">開啟 DLC 資料夾</string>
+    <string name="game_context_open_updates">開啟更新資料夾</string>
+    <string name="game_context_open_extra">開啟額外資料資料夾</string>
+    <string name="game_context_uninstall_dlc">解除安裝 DLC</string>
+    <string name="game_context_uninstall_updates">解除安裝更新</string>
+    <string name="shortcut">捷徑</string>
+    <string name="shortcut_name">捷徑名稱</string>
+    <string name="edit_icon">編輯圖示</string>
+    <string name="create_shortcut">建立捷徑</string>
+    <string name="shortcut_name_empty">捷徑名稱不能為空</string>
+    <string name="shortcut_image_stretch_toggle">拉伸以填滿影像</string>
+    <string name="game_context_region">發行地區：</string>
+    <string name="game_context_id">遊戲 ID：</string>
+    <string name="game_context_file">檔案:</string>
+    <string name="game_context_type">型別:</string>
+    <string name="game_context_playtime">遊玩時間：</string>
+    <string name="game_context_insert">插入卡匣</string>
+    <string name="game_context_eject">彈出卡匣</string>
+
+    <!-- Performance Overlay settings -->
+    <string name="performance_overlay_show">顯示效能引數</string>
+    <string name="performance_overlay_options">效能引數覆蓋</string>
+    <string name="performance_overlay_enable">啟用效能引數覆蓋</string>
+    <string name="performance_overlay_options_description">設定是否顯示效能引數以及其他覆蓋資訊。</string>
+    <string name="performance_overlay_show_fps">顯示幀率</string>
+    <string name="performance_overlay_show_fps_description">顯示當前每秒幀數。</string>
+    <string name="performance_overlay_show_frametime">顯示幀生成時間</string>
+    <string name="performance_overlay_show_frametime_description">顯示當前幀生成時間。</string>
+    <string name="performance_overlay_show_speed">顯示速度</string>
+    <string name="performance_overlay_show_speed_description">顯示當前模擬速度百分比。</string>
+    <string name="performance_overlay_show_app_ram_usage">顯示應用記憶體使用情況</string>
+    <string name="performance_overlay_show_app_ram_usage_description">顯示模擬器佔用的記憶體大小。</string>
+    <string name="performance_overlay_show_available_ram">顯示可用記憶體</string>
+    <string name="performance_overlay_show_available_ram_description">顯示可用的記憶體大小。</string>
+    <string name="performance_overlay_show_battery_temp">顯示電池溫度</string>
+    <string name="performance_overlay_show_battery_temp_description">以攝氏度和華氏度顯示當前電池溫度。</string>
+    <string name="performance_overlay_position">覆蓋位置</string>
+    <string name="performance_overlay_position_description">選擇效能引數覆蓋在螢幕上的顯示位置。</string>
+    <string name="performance_overlay_position_top_left">左上</string>
+    <string name="performance_overlay_position_top_right">右上</string>
+    <string name="performance_overlay_position_bottom_left">左下</string>
+    <string name="performance_overlay_position_bottom_right">右下</string>
+    <string name="performance_overlay_position_center_top">中上</string>
+    <string name="performance_overlay_position_center_bottom">中下</string>
+    <string name="performance_overlay_background">覆蓋背景</string>
+    <string name="performance_overlay_background_description">在覆蓋層後面新增背景以便於識別。</string>
+
+    <!-- Cheats -->
+    <string name="cheats">金手指 (作弊碼)</string>
+    <string name="cheats_add">新增金手指 (作弊碼)</string>
+    <string name="cheats_name">名稱</string>
+    <string name="cheats_notes">註釋</string>
+    <string name="cheats_code">程式碼</string>
+    <string name="cheats_edit">編輯</string>
+    <string name="cheats_delete">刪除</string>
+    <string name="cheats_delete_confirmation">您確定要刪除“%1$s”嗎？</string>
+    <string name="cheats_error_no_name">名稱不能為空</string>
+    <string name="cheats_error_no_code_lines">程式碼不能為空</string>
+    <string name="cheats_error_on_line">第 %1$d 行出現錯誤</string>
+
+    <!-- CIA Install -->
+    <plurals name="cia_install_toast">
+        <item quantity="other">正在安裝 %d 個檔案。請查看通知以了解詳情。</item>
+    </plurals>
+    <string name="cia_install_notification_channel_description">CIA 安裝期間的 Azahar 通知</string>
+    <string name="cia_install_notification_title">正在安裝 CIA 檔案</string>
+    <string name="cia_install_notification_installing">正在安裝 %1$s (%2$d/%3$d)</string>
+    <string name="cia_install_notification_success_title">CIA 檔案安裝成功</string>
+    <string name="cia_install_notification_error_title">CIA 檔案安裝失敗</string>
+    <string name="cia_install_success">“%s”已安裝成功</string>
+    <string name="cia_install_error_aborted">“%s”的安裝中斷。
+\n詳情請參閱記錄檔</string>
+    <string name="cia_install_error_invalid">“%s”不是有效的 CIA 檔案</string>
+    <string name="cia_install_error_encrypted">“%s”必須先解密才能與 Azahar 一起使用。\n 需要一臺真正的 3DS 掌機</string>
+    <string name="cia_install_error_unknown">安裝“%s”時出現未知錯誤。
+\n詳情請參閱記錄檔</string>
+
+    <string name="memory_byte">位元組</string>
+    <string name="memory_byte_shorthand">B</string>
+    <string name="memory_kilobyte">KB</string>
+    <string name="memory_megabyte">MB</string>
+    <string name="memory_gigabyte">GB</string>
+    <string name="memory_terabyte">TB</string>
+    <string name="memory_petabyte">PB</string>
+    <string name="memory_exabyte">EB</string>
+
+    <!-- System theme -->
+    <string name="change_theme_mode">主題模式</string>
+    <string name="theme_mode_follow_system">跟隨系統</string>
+    <string name="theme_mode_light">淺色</string>
+    <string name="theme_mode_dark">深色</string>
+
+    <!-- Material You theme -->
+    <string name="material_you">Material You</string>
+    <string name="material_you_description">在整個應用中使用作業系統的顏色主題（啟用後將覆蓋“主題顏色”設定）</string>
+
+    <!-- Static theme color -->
+    <string name="static_theme_color">主題顏色</string>
+    <string name="static_theme_color_description">更改應用選單的顏色主題</string>
+
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">黑色背景</string>
+    <string name="use_black_backgrounds_description">使用深色主題時，套用黑色背景。</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">日語（日本語）</string>
+    <string name="language_english">英語（English）</string>
+    <string name="language_french">法語（Français）</string>
+    <string name="language_german">德語（Deutsch）</string>
+    <string name="language_italian">義大利語（Italiano）</string>
+    <string name="language_spanish">西班牙語（Español）</string>
+    <string name="language_simplified_chinese">簡體中文</string>
+    <string name="language_korean">韓語（한국어）</string>
+    <string name="language_dutch">荷蘭語（Nederlands）</string>
+    <string name="language_portuguese">葡萄牙語（Português）</string>
+    <string name="language_russian">俄語（Русский）</string>
+    <string name="language_traditional_chinese">繁體中文（正體中文）</string>
+
+    <!-- Camera image sources -->
+    <string name="blank">空白</string>
+    <string name="still_image">圖片</string>
+    <string name="device_camera">實體相機</string>
+
+    <!-- Camera device names -->
+    <string name="any_front_camera">前置鏡頭</string>
+    <string name="any_back_camera">後置鏡頭</string>
+
+    <!-- Camera flip names -->
+    <string name="horizontal">水平偏移</string>
+    <string name="vertical">豎直偏移</string>
+    <string name="reverse">顛倒</string>
+
+    <!-- Audio input types -->
+    <string name="static_noise">靜態噪聲</string>
+    <string name="real_cubeb">實體裝置（cubeb）</string>
+    <string name="real_openal">實體裝置（OpenAL）</string>
+
+    <!-- Render 3D modes -->
+    <string name="side_by_side">並排螢幕</string>
+    <string name="side_by_side_full">左右並排 (全寬)</string>
+    <string name="interlaced">交錯</string>
+    <string name="reverse_interlaced">逆向交錯</string>
+
+    <!-- Texture filters -->
+    <string name="anime4k">Anime4K</string>
+    <string name="incompatible_texture_filter">不相容的紋理濾鏡</string>
+    <string name="incompatible_texture_filter_description">所選的紋理濾鏡（Anime4K）與 Vulkan 算繪器不相容。\n紋理濾鏡將重設為「無」。</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">由遊戲控制</string>
+    <string name="nearest_neighbor">最近鄰</string>
+    <string name="linear">線性過濾</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">單聲道</string>
+    <string name="stereo">立體聲</string>
+    <string name="surround">環繞聲</string>
+
+    <!-- Countries -->
+    <string name="japan">日本</string>
+    <string name="anguilla">安圭拉</string>
+    <string name="antigua_and_barbuda">安地卡及巴布達</string>
+    <string name="argentina">阿根廷</string>
+    <string name="aruba">阿魯巴</string>
+    <string name="bahamas">巴哈馬</string>
+    <string name="barbados">巴貝多</string>
+    <string name="belize">貝里斯</string>
+    <string name="bolivia">玻利維亞</string>
+    <string name="brazil">巴西</string>
+    <string name="british_virgin_islands">英屬維爾京群島</string>
+    <string name="canada">加拿大</string>
+    <string name="cayman_islands">開曼群島</string>
+    <string name="chile">智利</string>
+    <string name="colombia">哥倫比亞</string>
+    <string name="costa_rica">哥斯大黎加</string>
+    <string name="dominica">多米尼克</string>
+    <string name="dominican_republic">多明尼加</string>
+    <string name="ecuador">厄瓜多</string>
+    <string name="el_salvador">薩爾瓦多</string>
+    <string name="french_guiana">法屬蓋亞那</string>
+    <string name="grenada">格瑞那達</string>
+    <string name="guadeloupe">瓜德羅普</string>
+    <string name="guatemala">瓜地馬拉</string>
+    <string name="guyana">蓋亞那</string>
+    <string name="haiti">海地</string>
+    <string name="honduras">宏都拉斯</string>
+    <string name="jamaica">牙買加</string>
+    <string name="matinique">馬提尼克</string>
+    <string name="mexico">墨西哥</string>
+    <string name="monsterrat">蒙特塞拉特</string>
+    <string name="netherlands_antilles">荷屬安的列斯群島</string>
+    <string name="nicaragua">尼加拉瓜</string>
+    <string name="panama">巴拿馬</string>
+    <string name="paraguay">巴拉圭</string>
+    <string name="peru">秘魯</string>
+    <string name="saint_kittis_and_nevis">聖克里斯多福及尼維斯</string>
+    <string name="saint_lucia">聖露西亞</string>
+    <string name="saint_vincent_and_the_grenadines">聖文森及格瑞那丁</string>
+    <string name="suriname">蘇利南</string>
+    <string name="trinidad_and_tobago">千里達及托巴哥</string>
+    <string name="turks_and_caicos_islands">特克斯和凱科斯群島</string>
+    <string name="united_states">美國</string>
+    <string name="uruguay">烏拉圭</string>
+    <string name="us_virgin_islands">美屬維爾京群島</string>
+    <string name="venezuela">委內瑞拉</string>
+    <string name="albania">阿爾巴尼亞</string>
+    <string name="australia">澳大利亞</string>
+    <string name="austria">奧地利</string>
+    <string name="belgium">比利時</string>
+    <string name="bosnia_and_herzegovnia">波斯尼亞和黑塞哥維那</string>
+    <string name="botswana">波札那</string>
+    <string name="bulgaria">保加利亞</string>
+    <string name="croatia">克羅埃西亞</string>
+    <string name="cyprus">塞普勒斯</string>
+    <string name="czech_republic">捷克</string>
+    <string name="denmark">丹麥</string>
+    <string name="estonia">愛沙尼亞</string>
+    <string name="finland">芬蘭</string>
+    <string name="france">法國</string>
+    <string name="germany">德國</string>
+    <string name="greece">希臘</string>
+    <string name="hungary">匈牙利</string>
+    <string name="iceland">冰島</string>
+    <string name="ireland">愛爾蘭</string>
+    <string name="italy">義大利</string>
+    <string name="latvia">拉脫維亞</string>
+    <string name="lesotho">賴索托</string>
+    <string name="liechtenstein">列支敦斯登</string>
+    <string name="lithuania">立陶宛</string>
+    <string name="luxembourg">盧森堡</string>
+    <string name="macedonia">馬其頓</string>
+    <string name="malta">馬耳他</string>
+    <string name="montenegro">黑山</string>
+    <string name="mozambique">莫三比克</string>
+    <string name="namibia">奈米比亞</string>
+    <string name="netherlands">荷蘭</string>
+    <string name="new_zealand">紐西蘭</string>
+    <string name="norway">挪威</string>
+    <string name="poland">波蘭</string>
+    <string name="portugal">葡萄牙</string>
+    <string name="romania">羅馬尼亞</string>
+    <string name="russia">俄羅斯</string>
+    <string name="serbia">塞爾維亞</string>
+    <string name="slovakia">斯洛伐克</string>
+    <string name="slovenia">斯洛維尼亞</string>
+    <string name="south_africa">南非</string>
+    <string name="spain">西班牙</string>
+    <string name="swaziland">史瓦濟蘭</string>
+    <string name="sweden">瑞典</string>
+    <string name="switzerland">瑞士</string>
+    <string name="turkey">土耳其</string>
+    <string name="united_kingdom">英國</string>
+    <string name="zambia">尚比亞</string>
+    <string name="zimbabwe">辛巴威</string>
+    <string name="azerbaijan">亞塞拜然</string>
+    <string name="mauritania">茅利塔尼亞</string>
+    <string name="mali">馬裡</string>
+    <string name="niger">尼日</string>
+    <string name="chad">查德</string>
+    <string name="sudan">蘇丹</string>
+    <string name="eritrea">厄利垂亞</string>
+    <string name="djibouti">吉布提</string>
+    <string name="somalia">索馬利亞</string>
+    <string name="andorra">安道爾</string>
+    <string name="gibraltar">直布羅陀</string>
+    <string name="guernsey">根西島</string>
+    <string name="isle_of_man">馬恩島</string>
+    <string name="jersey">澤西島</string>
+    <string name="monaco">摩納哥</string>
+    <string name="taiwan">台灣</string>
+    <string name="south_korea">韓國</string>
+    <string name="hong_kong">香港</string>
+    <string name="macau">澳門</string>
+    <string name="indonesia">印度尼西亞</string>
+    <string name="singapore">新加坡</string>
+    <string name="thailand">泰國</string>
+    <string name="philippines">菲律賓</string>
+    <string name="malaysia">馬來西亞</string>
+    <string name="china">中國大陸</string>
+    <string name="united_arab_emirates">阿聯酋</string>
+    <string name="india">印度</string>
+    <string name="egypt">埃及</string>
+    <string name="oman">阿曼</string>
+    <string name="qatar">卡達</string>
+    <string name="kuwait">科威特</string>
+    <string name="saudi_arabia">沙烏地阿拉伯</string>
+    <string name="syria">敘利亞</string>
+    <string name="bahrain">巴林</string>
+    <string name="jordan">約旦</string>
+    <string name="san_marino">聖馬利諾</string>
+    <string name="vatican_city">梵蒂岡城</string>
+    <string name="bermuda">百慕大群島</string>
+
+    <!-- Regions (Japan, Australia, China and Taiwan are above) -->
+    <string name="north_america">北美 (North America)</string>
+    <string name="europe">歐洲 (Europe)</string>
+    <string name="korea">韓國 (Korea)</string>
+    <string name="region_free">全區 (無分區限制)</string>
+    <string name="invalid_region">無效區域</string>
+    <string name="region_get_error">取得區域錯誤，請回報</string>
+
+    <!-- Months -->
+    <string name="january">一月</string>
+    <string name="february">二月</string>
+    <string name="march">三月</string>
+    <string name="april">四月</string>
+    <string name="may">五月</string>
+    <string name="june">六月</string>
+    <string name="july">七月</string>
+    <string name="august">八月</string>
+    <string name="september">九月</string>
+    <string name="october">十月</string>
+    <string name="november">十一月</string>
+    <string name="december">十二月</string>
+
+    <!-- Artic base -->
+    <string name="artic_server_comm_error">無法與 Artic Base 伺服器通訊。將停止模擬。</string>
+    <string name="artic_base">Artic Base</string>
+    <string name="artic_base_connect_description">連線到執行 Artic Base 伺服器的真實主機</string>
+    <string name="artic_base_connect">連線到 Artic Base</string>
+    <string name="artic_base_enter_address">輸入 Artic Base 伺服器地址</string>
+
+    <!-- Quickload&Save-->
+    <string name="emulation_quicksave_slot">快速儲存</string>
+    <string name="emulation_quicksave">快速儲存</string>
+    <string name="emulation_quickload">快速載入</string>
+    <string name="emulation_occupied_quicksave_slot">快速儲存 - %1$tF %1$tR</string>
+    <string name="quickload_not_found">沒有可用的快速儲存。</string>
+
+    <!-- File Compression -->
+    <string name="compress">壓縮</string>
+    <string name="compressing">正在壓縮中…</string>
+    <string name="decompress">解壓縮</string>
+    <string name="decompressing">正在解壓縮中…</string>
+    <string name="compress_success">檔案壓縮成功完成。</string>
+    <string name="compress_unsupported">此檔案格式不支援壓縮。</string>
+    <string name="compress_already">此檔案已經是壓縮格式。</string>
+    <string name="compress_failed">檔案壓縮失敗。</string>
+    <string name="decompress_success">檔案解壓縮成功完成。</string>
+    <string name="decompress_unsupported">此檔案格式不支援解壓縮。</string>
+    <string name="decompress_not_compressed">此檔案未被壓縮。</string>
+    <string name="decompress_failed">檔案解壓縮失敗。</string>
+    <string name="compress_decompress_installed_app">已安裝之應用程式無法直接進行壓縮或解壓縮。</string>
+
+  <!-- Multiplayer -->
+    <string name="multiplayer">多人連線</string>
+    <string name="multiplayer_description">建立專屬遊戲房間或加入現有房間與全球玩家連線同樂</string>
+    <string name="multiplayer_room_title">房間：%1$s</string>
+    <string name="multiplayer_console_id">主機 ID：%1$s</string>
+    <string name="multiplayer_create_room">建立房間</string>
+    <string name="multiplayer_join_room">加入房間</string>
+    <string name="multiplayer_public_room">瀏覽公開大廳</string>
+    <string name="multiplayer_username">玩家名稱</string>
+    <string name="multiplayer_ip_address">伺服器 IP 位址</string>
+    <string name="multiplayer_ip_port">通訊埠 (Port)</string>
+    <string name="multiplayer_create_room_success">房間建立成功！</string>
+    <string name="multiplayer_join_room_success">已成功加入房間！</string>
+    <string name="multiplayer_create_room_failed">建立房間失敗！</string>
+    <string name="multiplayer_join_room_failed">加入房間失敗！</string>
+    <string name="multiplayer_input_invalid">位址格式無效或名稱長度過短！</string>
+    <string name="multiplayer_port_invalid">通訊埠號碼無效！</string>
+    <string name="multiplayer_exit_room">離開房間</string>
+    <string name="multiplayer_network_error">網路連線錯誤</string>
+    <string name="multiplayer_lost_connection">連線已中斷</string>
+    <string name="multiplayer_name_collision">玩家名稱重複衝突</string>
+    <string name="multiplayer_mac_collision">MAC 位址衝突</string>
+    <string name="multiplayer_console_id_collision">主機 ID 衝突</string>
+    <string name="multiplayer_wrong_version">遊戲或模擬器版本不符</string>
+    <string name="multiplayer_wrong_password">房間密碼錯誤</string>
+    <string name="multiplayer_could_not_connect">無法連線至伺服器</string>
+    <string name="multiplayer_room_is_full">房間人數已滿</string>
+    <string name="multiplayer_permission_denied">權限不足，拒絕存取</string>
+    <string name="multiplayer_no_such_user">查無此使用者</string>
+    <string name="multiplayer_already_in_room">您已在房間中</string>
+    <string name="multiplayer_create_room_error">建立房間時發生錯誤</string>
+    <string name="multiplayer_unknown_error">未知錯誤</string>
+    <string name="multiplayer_room_uninitialized">房間尚未初始化</string>
+    <string name="multiplayer_room_idle">房間閒置中</string>
+    <string name="multiplayer_room_joining">正在加入房間…</string>
+    <string name="multiplayer_room_joined">已成功進入房間</string>
+    <string name="multiplayer_room_moderator">房間管理員</string>
+    <string name="multiplayer_member_join">%1$s 已加入房間</string>
+    <string name="multiplayer_member_leave">%1$s 已離開房間</string>
+    <string name="multiplayer_member_banned">%1$s 已被封鎖</string>
+    <string name="multiplayer_address_unbanned">位址已解除封鎖</string>
+    <string name="multiplayer_kick_member">踢出房間</string>
+    <string name="multiplayer_chat_input_hint">輸入聊天訊息…</string>
+    <string name="multiplayer_password">房間密碼</string>
+    <string name="original_button_text">加入</string>
+    <string name="disabled_button_text">加入中…</string>
+    <string name="multiplayer_room_name">房間名稱</string>
+    <string name="multiplayer_room_name_invalid">房間名稱長度必須介於 3 到 20 個字元之間</string>
+    <string name="multiplayer_max_players">最大玩家人數</string>
+    <string name="multiplayer_max_players_value">人數上限：%d 人</string>
+    <string name="multiplayer_chat">聊天室</string>
+    <string name="multiplayer_more_options">更多進階選項</string>
+    <string name="multiplayer_ip_copied">IP 位址已複製到剪貼簿</string>
+    <string name="multiplayer_server_address">伺服器位址</string>
+    <string name="chat">房間聊天</string>
+    <string name="type_message">輸入訊息…</string>
+    <string name="send">傳送</string>
+    <string name="send_message">傳送訊息</string>
+    <string name="multiplayer_moderation">管理控制台</string>
+    <string name="multiplayer_moderation_title">封鎖名單 (黑名單)</string>
+    <string name="multiplayer_no_bans">目前無任何被封鎖的玩家</string>
+    <string name="multiplayer_unban_title">解除封鎖玩家</string>
+    <string name="multiplayer_unban">解除封鎖</string>
+    <string name="multiplayer_unban_message">確定要解除對「%1$s」的封鎖嗎？</string>
+    <string name="multiplayer_ban">封鎖玩家</string>
+    <string name="multiplayer_room_browser">公開大廳清單</string>
+    <string name="multiplayer_no_rooms_found">未找到任何公開房間</string>
+    <string name="multiplayer_password_required">此房間需要密碼</string>
+    <string name="multiplayer_game">指定遊戲</string>
+    <string name="multiplayer_no_game_info">任意遊戲</string>
+    <string name="multiplayer_password_protected">受密碼保護的房間</string>
+    <string name="multiplayer_hide_full_rooms">隱藏已滿員房間</string>
+    <string name="multiplayer_hide_empty_rooms">隱藏無人空房間</string>
+    <string name="multiplayer_tap_refresh_to_check_again">點擊重新整理以再次搜尋</string>
+    <string name="multiplayer_search_public_lobbies">搜尋公開大廳…</string>
+    <string name="multiplayer_game_name">偏好遊戲清單</string>
+    <string name="prefered_game_name">偏好遊戲</string>
+    <string name="multiplayer_no_game">未找到遊戲</string>
+    <string name="no_preference">不限遊戲</string>
+
+    <string name="update_available">發現新版本</string>
+    <string name="update_available_description">已有新版本的 Azahar 釋出（版本 %1$s）。\n是否前往下載？</string>
+    <string name="check_for_updates">檢查軟體更新</string>
+    <string name="check_for_updates_description">當 Azahar 有可用之新版本時在應用程式內發出通知提示。</string>
+    <string name="update_check_channel">更新檢查通道</string>
+    <string name="update_check_channel_description">檢查更新時所依循之發布版本通道。</string>
+    <string name="update_check_channel_stable">穩定版 (Stable)</string>
+    <string name="update_check_channel_prerelease">預覽測試版 (Prerelease)</string>
+
+</resources>

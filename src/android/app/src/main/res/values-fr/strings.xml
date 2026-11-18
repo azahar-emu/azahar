@@ -72,6 +72,8 @@
     <string name="done">Terminé</string>
     <string name="done_description">Vous êtes prêt.\nProfitez de l\'émulateur !</string>
     <string name="text_continue">Continuer</string>
+    <string name="notifications_permission">Notifications</string>
+    <string name="notifications_permission_description">Autorisez les notifications avec le bouton ci-dessous.</string>
     <string name="give_permission">Accorder l\'autorisation</string>
     <string name="notification_warning">Ne pas autoriser les notifications ?</string>
     <string name="notification_warning_description">Azahar ne pourra pas vous avertir des informations importantes.</string>
@@ -82,6 +84,9 @@
     <string name="microphone_permission_description">Accorder l\'autorisation du microphone ci-dessous pour émuler le microphone 3DS.</string>
     <string name="filesystem_permission">Accès à tous les fichiers</string>
     <string name="filesystem_permission_description">Accordez l\'autorisation de l\'accès à tous les fichiers ci-dessous pour autoriser Azahar à stocker des fichiers.</string>
+    <string name="lan_permission">Accès au réseau local</string>
+    <string name="lan_permission_description">Accordez l\'autorisation d\'accéder au réseau local afin de pouvoir se connecter à des consoles 3DS réelles pour mettre en place les fichiers systèmes et d\'autres fonctionnalités.</string>
+    <string name="lan_warning_description">Azahar nécessite l\'autorisation d\'accéder au réseau local afin de pouvoir se connecter à des consoles 3DS réelles pour mettre en place les fichiers systèmes et d\'autres fonctionnalités.</string>
     <string name="permission_denied">Autorisation refusée</string>
     <string name="add_games_warning">Passer la sélection du dossier des applications ?</string>
     <string name="add_games_warning_description">Les logiciels ne seront pas affichés dans la liste des applications si un dossier n\'est pas sélectionné.</string>
@@ -89,6 +94,7 @@
     <string name="select_emulator_data_folders">Dossiers de données</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Sélectionnez les dossiers de données<br/>(le dossier utilisateur est obligatoire)]]></string>
     <string name="permissions_description">Accorder des autorisations facultatives pour utiliser des fonctionnalités spécifiques de l\'émulateur</string>
+    <string name="missing_permissions">Permissions manquantes</string>
     <string name="warning_help">Aide</string>
     <string name="warning_skip">Passer</string>
     <string name="warning_cancel">Annuler</string>
@@ -104,6 +110,8 @@
     <string name="invalid_selection">Sélection Invalide</string>
     <string name="invalid_user_directory">La sélection du répertoire utilisateur était invalide.\nVeuillez re-sélectionner le répertoire utilisateur, en s\'assurant de le sélectionner depuis la racine du stockage de votre appareil.</string>
     <string name="filesystem_permission_lost">Azahar a perdu l\'autorisation de gérer les fichiers de cet appareil. Cela peut arriver suite à des mises à jour d\'applis ou d\'Android. Veuillez ré-accorder cette autorisation sur l\'écran suivant pour continuer d\'utiliser l\'appli.</string>
+    <string name="lan_permission_lost">Azahar a perdu l\'autorisation d\'accéder au réseau local. Cela peut arriver suite à des mises à jour d\'applis ou d\'Android. Veuillez ré-accorder cette autorisation sur l\'écran suivant pour continuer d\'utiliser l\'appli.</string>
+    <string name="lan_permission_manual">Veuillez accorder l\'autorisation \"Appareils à proximité\".</string>
     <string name="set_up_theme_settings">Paramètres du thème</string>
     <string name="setup_theme_settings_description">Configurez les préférences de votre thème pour Azahar.</string>
     <string name="setup_set_theme">Mettre le thème</string>
@@ -268,6 +276,8 @@
     <string name="texture_sampling_description">Remplace le filtre d\'échantillonnage utilisé par les jeux. Cela peut être utile dans certains cas où les jeux se comportent mal lors de la conversion ascendante. En cas de doute, réglez ce paramètre sur « Contrôlé par le jeu ».</string>
     <string name="use_skip_duplicate_frames">Passer la présentation d\'images dupliquées</string>
     <string name="use_skip_duplicate_frames_description">Détecte et passe la présentation d\'images qui ne sont pas uniques. Cela permet aussi aux outils externes de génération d\'images de fonctionner correctement avec les jeux 30 fps. </string>
+    <string name="use_limit_frames_ahead_of_gpu">Limiter le nombre d\'images en avance sur la carte graphique</string>
+    <string name="use_limit_frames_ahead_of_gpu_description">Limite le nombre d\'images en avance sur la carte graphique qu\'il peut y avoir sur le thread d\'émulation. L\'activer peut diminuer la latence d\'entrée, mais peut réduire les performances.</string>
     <string name="shaders_accurate_mul">Multiplication précise</string>
     <string name="shaders_accurate_mul_description">Utilise une multiplication plus précise dans les shaders hardware, ce qui peut corriger certains bugs graphiques. Lorsqu\'elle est activée, la performance sera réduite.</string>
     <string name="asynchronous_gpu">Activer l\'émulation asynchrone du GPU</string>
