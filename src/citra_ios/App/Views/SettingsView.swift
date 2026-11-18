@@ -618,6 +618,9 @@ struct GraphicsSettingsView: View {
                 Toggle("Sync to Display Refresh", isOn: $settings.displaySync)
                 if settings.displaySync {
                     Toggle("30 FPS Frame Cap", isOn: $settings.frameCap30)
+                    if settings.frameCap30 {
+                        Toggle("Run Game at 30", isOn: $settings.frameCapHoldsGame)
+                    }
                 }
                 // The older pacing, only used when Sync to Display Refresh is off.
                 if !settings.displaySync {
@@ -645,8 +648,12 @@ struct GraphicsSettingsView: View {
                          + "Cap (with Sync to Display Refresh) shows every new frame of the game for "
                          + "exactly two 3DS refreshes, for games that run at 30 FPS but hand their "
                          + "frames over unevenly (for example with Minimum GPU Time); a game running "
-                         + "faster is held to 30. It is best set per game. Applies "
-                         + "when a game starts.")
+                         + "faster is held to 30. Run Game at 30 also makes the game itself run "
+                         + "at 30 (its 3D work never finishes within one refresh), so it hands "
+                         + "over frames evenly and does not draw frames that would be thrown "
+                         + "away; it works with or without Simulate 3DS GPU Timing. Turn it off "
+                         + "for a game that slows down instead of dropping to 30. The cap is best "
+                         + "set per game. Applies when a game starts.")
                 }
             }
 

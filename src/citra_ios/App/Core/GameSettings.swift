@@ -49,6 +49,7 @@ struct GameOverrides: Codable, Equatable {
     var pacingBufferMs: Int?
     var displaySync: Bool?
     var frameCap30: Bool?
+    var frameCapHoldsGame: Bool?
     var shaderWaitMs: Int?
     var disableRightEyeRender: Bool?
     var integerScaling: Bool?
@@ -128,6 +129,7 @@ struct GameOverrides: Codable, Equatable {
         if let pacingBufferMs { config.pacingBufferMs = pacingBufferMs }
         if let displaySync { config.displaySync = displaySync }
         if let frameCap30 { config.frameCap30 = frameCap30 }
+        if let frameCapHoldsGame { config.frameCapHoldsGame = frameCapHoldsGame }
         if let frameGenerationDisplayPaced {
             config.frameGenerationDisplayPaced = frameGenerationDisplayPaced
         }

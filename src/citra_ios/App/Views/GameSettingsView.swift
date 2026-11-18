@@ -111,6 +111,7 @@ struct GameSettingsView: View {
                 OverrideToggle("Sync Speed to Display", value: $overrides.syncSpeedToDisplay)
                 OverrideToggle("Sync to Display Refresh", value: $overrides.displaySync)
                 OverrideToggle("30 FPS Frame Cap", value: $overrides.frameCap30)
+                OverrideToggle("Frame Cap: Run Game at 30", value: $overrides.frameCapHoldsGame)
                 OverridePicker("Frame Pacing Buffer", value: $overrides.pacingBufferMs,
                                options: [0, 8, 17, 25]) { $0 == 0 ? "Off" : "\($0) ms" }
                 OverrideToggle("Custom Textures", value: $overrides.customTextures)

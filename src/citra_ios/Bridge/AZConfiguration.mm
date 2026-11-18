@@ -31,6 +31,7 @@
     config.framePacing = YES;
     config.displaySync = YES;
     config.frameCap30 = NO;
+    config.frameCapHoldsGame = YES;
     config.pacingBufferMs = 0;
     config.fastShaderMath = NO;
     config.fastLighting = NO;

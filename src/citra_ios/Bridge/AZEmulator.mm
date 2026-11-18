@@ -687,10 +687,27 @@ const char* ThermalStateName() {
     values.simulate_headphones_plugged = configuration.simulateHeadphones;
     values.simulate_3ds_gpu_timings = configuration.simulateGPUTimings;
     Pica::g_gpu_timing_percent.store(static_cast<u32>(std::clamp<NSInteger>(configuration.gpuTimingPercent, 50, 800)));
-    Pica::g_gpu_timing_min_us.store(static_cast<u32>(std::clamp<NSInteger>(configuration.gpuTimingMinMs, 0, 600)) * 100);
+    // Minimum GPU Time belongs to the GPU simulation. The 30 FPS frame cap can also hold the game
+    // itself at 30: the 3D work then never finishes within the refresh it started in (one refresh
+    // is 16.71 ms), so a game that adapts its frame rate does not make frames that the cap would
+    // throw away.
+    u32 gpu_floor_us = configuration.simulateGPUTimings
+                           ? static_cast<u32>(std::clamp<NSInteger>(configuration.gpuTimingMinMs, 0, 600)) * 100
+                           : 0;
+    const bool capHoldsGame =
+        configuration.displaySync && configuration.frameCap30 && configuration.frameCapHoldsGame;
+    if (capHoldsGame) {
+        gpu_floor_us = std::max<u32>(gpu_floor_us, 17000);
+    }
+    Pica::g_gpu_timing_min_us.store(gpu_floor_us);
     if (configuration.simulateGPUTimings) {
         LOG_INFO(Frontend, "Simulating the GPU time: strength {}%, at least {:.1f} ms",
                  Pica::g_gpu_timing_percent.load(), Pica::g_gpu_timing_min_us.load() / 1000.0);
+    }
+    if (capHoldsGame) {
+        LOG_INFO(Frontend, "The 30 FPS frame cap holds the game at 30: its 3D work takes at least "
+                           "{:.1f} ms from the vertical blank",
+                 gpu_floor_us / 1000.0);
     }
     _secondaryLayoutMode = configuration.secondaryDisplayLayout;
     values.preload_textures = configuration.preloadTextures;
