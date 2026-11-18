@@ -21,14 +21,12 @@ import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
-import org.citra.citra_emu.utils.BuildUtil
 
 @RequiresApi(Build.VERSION_CODES.CINNAMON_BUN)
 class GrantMissingLanPermissionFragment : DialogFragment() {
     private lateinit var mainActivity: MainActivity
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        BuildUtil.assertNotGooglePlay()
         mainActivity = requireActivity() as MainActivity
 
         isCancelable = false
