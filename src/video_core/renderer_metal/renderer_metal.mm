@@ -57,12 +57,20 @@ struct DisplayPacer {
         id<MTLTexture> texture = nil;
         float width = 0.0f;
         float height = 0.0f;
+        /// Set for the frames of display sync: the picture is finished once the event reaches
+        /// the value. Such frames are drawn on a queue of their own (present_queue), so they do
+        /// not wait behind the next frames of the game on the GPU.
+        id<MTLEvent> event = nil;
+        u64 value = 0;
     };
     std::mutex mutex;
     std::deque<Frame> waiting;
     double shown_at = 0.0; ///< Presentation time of the frame on screen, 0 for none
     double slot = 1.0 / 60.0;
     id<MTLCommandQueue> command_queue = nil;
+    /// A queue for display sync frames only: on the game's queue the drawing of a frame waited
+    /// behind the work of the next frames and often missed its refresh at 120 Hz.
+    id<MTLCommandQueue> present_queue = nil;
     // Counted per second and logged by the display link, to tell why a frame was shown a refresh
     // late: it was not handed over in time (the emulation), or it was handed over but reached the
     // screen at a later refresh than asked for (drawing or presenting too slowly).
@@ -136,7 +144,11 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
     if (drawable == nil || next.texture == nil) {
         return;
     }
-    id<MTLCommandBuffer> buffer = [p->command_queue commandBuffer];
+    const bool own_queue = next.event != nil && p->present_queue != nil;
+    id<MTLCommandBuffer> buffer = [own_queue ? p->present_queue : p->command_queue commandBuffer];
+    if (own_queue) {
+        [buffer encodeWaitForEvent:next.event value:next.value];
+    }
     MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
     pass.colorAttachments[0].texture = drawable.texture;
     pass.colorAttachments[0].loadAction = MTLLoadActionDontCare;
@@ -508,6 +520,8 @@ private:
     std::array<id<MTLTexture>, DS_COLORS> ds_color{};
     u32 ds_index{};
     u32 ds_width{}, ds_height{};
+    id<MTLEvent> ds_event = nil;
+    u64 ds_event_value{};
     f32 fg_cadence{1.0f}; ///< Swaps per new frame of the game, smoothed: 2 for a 30 FPS game
     std::chrono::steady_clock::time_point fg_last_frame{};
     double fg_interval{};
@@ -2379,7 +2393,12 @@ bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
 #if AZAHAR_HAS_METALFX
     upscale_pass = UpscalePass::Off;
 #endif
-    // Submitted before it is handed over: the display link draws it on the same queue, after.
+    // The display link draws it on a queue of its own once this event says it is finished.
+    if (ds_event == nil) {
+        ds_event = [device newEvent];
+    }
+    ds_event_value++;
+    [scheduler.CommandBuffer() encodeSignalEvent:ds_event value:ds_event_value];
     scheduler.Flush();
 
     const double limit = Settings::GetFrameLimit();
@@ -2387,8 +2406,8 @@ bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
     std::scoped_lock lock{fg_pacer->mutex};
     // The display link shows it once the frame before it has been on screen for its time.
     fg_pacer->slot = frame * swaps;
-    fg_pacer->waiting.push_back(
-        {current, static_cast<float>(layout.width), static_cast<float>(layout.height)});
+    fg_pacer->waiting.push_back({current, static_cast<float>(layout.width),
+                                 static_cast<float>(layout.height), ds_event, ds_event_value});
     return true;
 }
 
@@ -2447,6 +2466,7 @@ bool RendererMetal::StartPacer(CAMetalLayer* layer) {
         }
         auto pacer = std::make_shared<DisplayPacer>();
         pacer->command_queue = instance.GetCommandQueue();
+        pacer->present_queue = [instance.GetDevice() newCommandQueue];
         id<MTLRenderPipelineState> pipeline = present_pipeline;
         id<MTLSamplerState> sampler = present_samplers[0];
         pacer->draw = [pipeline, sampler](id<MTLRenderCommandEncoder> encoder,
