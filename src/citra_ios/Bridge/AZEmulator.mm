@@ -39,6 +39,12 @@
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "common/frame_cost.h"
+#if defined(__aarch64__)
+namespace Dynarmic {
+/// Defined by externals/patches/dynarmic-ios-jit-timing.patch.
+extern void (*g_block_compile_hook)(std::uint64_t nanoseconds);
+} // namespace Dynarmic
+#endif
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/frontend/applets/default_applets.h"
@@ -1077,6 +1083,14 @@ const char* ThermalStateName() {
     _shaderProgress = -1.0;
     system.RegisterCoreLoopThreadId();
     Common::FrameCost::MarkEmulationThread();
+#if defined(__aarch64__)
+    // The JIT reports how long compiling each new block of game code takes (a patch of dynarmic).
+    Dynarmic::g_block_compile_hook = [](std::uint64_t nanoseconds) {
+        if (Common::FrameCost::t_emulation_thread) {
+            Common::FrameCost::Add(Common::FrameCost::Kind::JitCompile, nanoseconds);
+        }
+    };
+#endif
 
     NSError* error = nil;
     // The performance counters only update when they are collected, which resets them. Collect

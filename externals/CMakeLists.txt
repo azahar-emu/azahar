@@ -126,6 +126,10 @@ if (IOS AND NOT USE_SYSTEM_OAKNUT AND NOT USE_SYSTEM_DYNARMIC)
                        ${CMAKE_CURRENT_SOURCE_DIR}/patches/oaknut-ios-dual-mapping.patch)
     azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
                        ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-dual-mapping.patch)
+    # Reports the time compiling each new block takes (the slow frame log). After the patch
+    # above, which changes the same file.
+    azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
+                       ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-jit-timing.patch)
 endif()
 
 # Oaknut

@@ -1,0 +1,42 @@
+diff --git a/src/dynarmic/backend/arm64/address_space.cpp b/src/dynarmic/backend/arm64/address_space.cpp
+index 029799c..9123986 100644
+--- a/src/dynarmic/backend/arm64/address_space.cpp
++++ b/src/dynarmic/backend/arm64/address_space.cpp
+@@ -3,6 +3,8 @@
+  * SPDX-License-Identifier: 0BSD
+  */
+ 
++#include <chrono>
++#include <cstdint>
+ #include <cstdio>
+ 
+ #include <mcl/bit_cast.hpp>
+@@ -18,6 +20,11 @@
+ #include "dynarmic/common/llvm_disassemble.h"
+ #include "dynarmic/interface/exclusive_monitor.h"
+ 
++namespace Dynarmic {
++/// Called with the time each newly compiled block took, when set (Azahar).
++void (*g_block_compile_hook)(std::uint64_t nanoseconds) = nullptr;
++} // namespace Dynarmic
++
+ namespace Dynarmic::Backend::Arm64 {
+ 
+ AddressSpace::AddressSpace(size_t code_cache_size)
+@@ -65,8 +72,16 @@ CodePtr AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
+         return block_entry;
+     }
+ 
++    // The time compiling a new block takes, reported to the frontend (Azahar's slow frame log).
++    const auto hook = g_block_compile_hook;
++    const auto start = hook ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+     IR::Block ir_block = GenerateIR(descriptor);
+     const EmittedBlockInfo block_info = Emit(std::move(ir_block));
++    if (hook) {
++        hook(static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
++                                            std::chrono::steady_clock::now() - start)
++                                            .count()));
++    }
+     return block_info.entry_point;
+ }
+ 

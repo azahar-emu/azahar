@@ -2667,13 +2667,14 @@ void RendererMetal::SwapBuffers() {
             if (used > 12'000'000 && logged_this_second < 5) {
                 logged_this_second++;
                 const auto ms = [](u64 ns) { return static_cast<double>(ns) / 1e6; };
-                const u64 known = costs[0] + costs[1] + costs[2] + costs[3];
+                const u64 known = costs[0] + costs[1] + costs[2] + costs[3] + costs[4];
                 LOG_INFO(Render,
                          "Slow frame: {:.1f} ms of CPU; textures {:.1f} ms, shaders {:.1f} ms, "
-                         "file reads {:.1f} ms, waiting for the GPU {:.1f} ms, the rest (the "
-                         "game's code, JIT compilation, everything else) about {:.1f} ms",
+                         "file reads {:.1f} ms, waiting for the GPU {:.1f} ms, JIT compiling new "
+                         "game code {:.1f} ms, the rest (the game's code, services, everything "
+                         "else) about {:.1f} ms",
                          ms(used), ms(costs[0]), ms(costs[1]), ms(costs[2]), ms(costs[3]),
-                         ms(used > known ? used - known : 0));
+                         ms(costs[4]), ms(used > known ? used - known : 0));
             }
         }
         last_cpu_ns = now_ns;

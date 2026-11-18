@@ -23,6 +23,7 @@ enum class Kind : std::size_t {
     ShaderBuild,   ///< Generating shader source and compiling shaders or pipelines in place
     FileRead,      ///< Reading files of the game (RomFS, saves)
     GpuWait,       ///< Waiting for the GPU (readbacks, a full queue)
+    JitCompile,    ///< Compiling new game code into host code (dynarmic)
     Count,
 };
 
