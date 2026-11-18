@@ -120,20 +120,9 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
                      "than asked (lead {:.0f} refreshes)",
                      p->refreshes, p->shown, p->shown > 0 ? p->queued_sum / p->shown : 0.0,
                      p->not_ready, late, link.preferredFrameLatency);
-            // Frames that were drawn in time but reached the screen a refresh late: the GPU,
-            // busy with the game, did not get to the display link's draw before the refresh (seen
-            // at 120 Hz, where a refresh is 8 ms). One more refresh of lead fixes it, at the price
-            // of that refresh of delay, so it is only taken when it keeps happening.
-            if (late >= 3 && link.preferredFrameLatency < 2.0f) {
-                p->late_seconds++;
-                if (p->late_seconds >= 2) {
-                    link.preferredFrameLatency = 2.0f;
-                    LOG_INFO(Render, "Display link: frames keep reaching the screen late, "
-                                     "drawing them one refresh earlier from now on");
-                }
-            } else {
-                p->late_seconds = 0;
-            }
+            // More lead (preferredFrameLatency 2) was tried for frames that reach the screen a
+            // refresh late at 120 Hz and did not change how many do, so the lead stays at one
+            // refresh: the lateness is not the time the GPU needs for the draw.
             p->refreshes = 0;
             p->shown = 0;
             p->not_ready = 0;
