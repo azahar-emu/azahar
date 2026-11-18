@@ -43,6 +43,7 @@
 namespace Dynarmic {
 /// Defined by externals/patches/dynarmic-ios-jit-timing.patch.
 extern void (*g_block_compile_hook)(std::uint64_t nanoseconds);
+extern void (*g_cache_clear_hook)(int full, std::uint64_t used, std::uint64_t size);
 } // namespace Dynarmic
 #endif
 #include "core/core.h"
@@ -1088,6 +1089,17 @@ const char* ThermalStateName() {
     Dynarmic::g_block_compile_hook = [](std::uint64_t nanoseconds) {
         if (Common::FrameCost::t_emulation_thread) {
             Common::FrameCost::Add(Common::FrameCost::Kind::JitCompile, nanoseconds);
+        }
+    };
+    // A code cache thrown away means everything it held is compiled again as it runs, which
+    // shows as stutter: logged so it can be told whether the caches are big enough.
+    Dynarmic::g_cache_clear_hook = [](int full, std::uint64_t used, std::uint64_t size) {
+        if (full) {
+            LOG_WARNING(Frontend, "JIT: a code cache was full ({} of {} MiB), all its compiled "
+                                  "code is thrown away and compiled again as it runs",
+                        used >> 20, size >> 20);
+        } else {
+            LOG_INFO(Frontend, "JIT: a code cache was cleared as a whole on request");
         }
     };
 #endif

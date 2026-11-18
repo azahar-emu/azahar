@@ -1,5 +1,38 @@
+diff --git a/src/dynarmic/backend/arm64/a32_interface.cpp b/src/dynarmic/backend/arm64/a32_interface.cpp
+index 6b38c41..2ca4080 100644
+--- a/src/dynarmic/backend/arm64/a32_interface.cpp
++++ b/src/dynarmic/backend/arm64/a32_interface.cpp
+@@ -3,6 +3,7 @@
+  * SPDX-License-Identifier: 0BSD
+  */
+ 
++#include <cstdint>
+ #include <memory>
+ #include <mutex>
+ 
+@@ -17,6 +18,10 @@
+ #include "dynarmic/common/atomic.h"
+ #include "dynarmic/interface/A32/a32.h"
+ 
++namespace Dynarmic {
++extern void (*g_cache_clear_hook)(int full, std::uint64_t used, std::uint64_t size);
++} // namespace Dynarmic
++
+ namespace Dynarmic::A32 {
+ 
+ using namespace Backend::Arm64;
+@@ -134,6 +139,9 @@ private:
+             ClearHalt(HaltReason::CacheInvalidation);
+ 
+             if (invalidate_entire_cache) {
++                if (const auto hook = g_cache_clear_hook) {
++                    hook(0, 0, 0);
++                }
+                 current_address_space.ClearCache();
+ 
+                 invalidate_entire_cache = false;
 diff --git a/src/dynarmic/backend/arm64/address_space.cpp b/src/dynarmic/backend/arm64/address_space.cpp
-index 029799c..9123986 100644
+index 029799c..49f6c95 100644
 --- a/src/dynarmic/backend/arm64/address_space.cpp
 +++ b/src/dynarmic/backend/arm64/address_space.cpp
 @@ -3,6 +3,8 @@
@@ -11,19 +44,22 @@ index 029799c..9123986 100644
  #include <cstdio>
  
  #include <mcl/bit_cast.hpp>
-@@ -18,6 +20,11 @@
+@@ -18,6 +20,14 @@
  #include "dynarmic/common/llvm_disassemble.h"
  #include "dynarmic/interface/exclusive_monitor.h"
  
 +namespace Dynarmic {
 +/// Called with the time each newly compiled block took, when set (Azahar).
 +void (*g_block_compile_hook)(std::uint64_t nanoseconds) = nullptr;
++/// Called when a code cache is thrown away: full (1, with the bytes it held and its size) or on
++/// request (0, the cache was invalidated as a whole).
++void (*g_cache_clear_hook)(int full, std::uint64_t used, std::uint64_t size) = nullptr;
 +} // namespace Dynarmic
 +
  namespace Dynarmic::Backend::Arm64 {
  
  AddressSpace::AddressSpace(size_t code_cache_size)
-@@ -65,8 +72,16 @@ CodePtr AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
+@@ -65,8 +75,16 @@ CodePtr AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
          return block_entry;
      }
  
@@ -39,4 +75,14 @@ index 029799c..9123986 100644
 +    }
      return block_info.entry_point;
  }
+ 
+@@ -109,6 +127,9 @@ size_t AddressSpace::GetRemainingSize() {
+ 
+ EmittedBlockInfo AddressSpace::Emit(IR::Block block) {
+     if (GetRemainingSize() < 1024 * 1024) {
++        if (const auto hook = g_cache_clear_hook) {
++            hook(1, static_cast<std::uint64_t>(code.offset()), static_cast<std::uint64_t>(code_cache_size));
++        }
+         ClearCache();
+     }
  
