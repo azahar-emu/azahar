@@ -289,7 +289,7 @@ int main(int argc, char** argv) {
         metal_config.half_luts = metal_config.fast_lighting;
         metal_config.half_interpolants = (i % 5) < 2;
         metal_config.vertex_depth = metal_config.has_depth_attachment && (i % 6) < 3;
-        // MSL 4.0 per-vertex quaternions, the validation script compiles those as Metal 4.
+        // The per-triangle quaternion correction in the fragment shader.
         metal_config.fragment_quaternion_fix = (i % 8) < 4;
 
         Write(out_dir, "fs_random_" + std::to_string(i) + ".metal",

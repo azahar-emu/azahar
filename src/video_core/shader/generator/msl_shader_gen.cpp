@@ -170,6 +170,42 @@ struct FSInput {
 };
 )";
 
+} // Anonymous namespace
+
+const std::string_view QUATERNION_FIX_MSL = R"(
+// Interpolating between opposite quaternions breaks the lighting. Like the PICA rasterizer, the
+// quaternions of the other corners are flipped to the side of the first corner's. The vertex
+// shader cannot (a vertex is shared by several triangles), so the corners are recovered here:
+// the interpolated value is exactly q = qa + b.y * (qb - qa) + b.z * (qc - qa) with the
+// perspective correct barycentric coordinates b, at this pixel and at its neighbours in the 2x2
+// quad (the GPU evaluates the same triangle there), so the differences between the pixels give
+// qb - qa and qc - qa. Only used when a flip is needed, otherwise q is returned unchanged. Must
+// be called outside of any branch (derivatives).
+static float4 FixQuaternion(float4 q, float3 b) {
+    const float4 dqx = dfdx(q);
+    const float4 dqy = dfdy(q);
+    const float3 dbx = dfdx(b);
+    const float3 dby = dfdy(b);
+    const float det = dbx.y * dby.z - dbx.z * dby.y;
+    if (det == 0.0f) {
+        return q;
+    }
+    const float4 eb = (dqx * dby.z - dqy * dbx.z) / det;
+    const float4 ec = (dqy * dbx.y - dqx * dby.y) / det;
+    const float4 qa = q - b.y * eb - b.z * ec;
+    const float4 qb = qa + eb;
+    const float4 qc = qa + ec;
+    const bool flip_b = dot(qa, qb) < 0.0f;
+    const bool flip_c = dot(qa, qc) < 0.0f;
+    if (!flip_b && !flip_c) {
+        return q;
+    }
+    return qa * b.x + (flip_b ? -qb : qb) * b.y + (flip_c ? -qc : qc) * b.z;
+}
+)";
+
+namespace {
+
 constexpr std::string_view VSSanitizeDef = R"(
 constant float2 EPSILON_Z = float2(0.000001f, -1.00001f);
 
@@ -227,14 +263,15 @@ public:
         out += FSUniformDef;
         out += InterpColorDef;
         if (quaternion_fix) {
-            // Each corner's quaternion, not the interpolated one, see FixedQuaternion below.
+            // The barycentric coordinates give back each corner's quaternion, see
+            // QUATERNION_FIX_MSL.
             std::string input{FSInputDef};
             const std::string_view plain = "float4 normquat [[user(normquat)]];";
             input.replace(input.find(plain), plain.size(),
-                          "vertex_value<float4> normquat [[user(normquat)]];\n"
+                          "float4 normquat [[user(normquat)]];\n"
                           "    float3 barycentric [[barycentric_coord, center_perspective]];");
-            out += "#include <metal_vertex_value>\n";
             out += input;
+            out += QUATERNION_FIX_MSL;
         } else {
             out += FSInputDef;
         }
@@ -411,20 +448,8 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
         }
         out += ")\n{\n";
         if (quaternion_fix) {
-            // Interpolating between opposite quaternions breaks the lighting. Like the PICA
-            // rasterizer, flip the quaternions of the other corners to the side of the first
-            // corner's, then interpolate them as the rasterizer would have.
-            static constexpr char axes[] = "xyz";
-            const auto& order = metal.quaternion_barycentric;
-            out += fmt::format(R"(    const float4 quat0 = in.normquat.get(vertex_index::first);
-    float4 quat1 = in.normquat.get(vertex_index::second);
-    float4 quat2 = in.normquat.get(vertex_index::third);
-    quat1 = dot(quat0, quat1) < 0.0f ? -quat1 : quat1;
-    quat2 = dot(quat0, quat2) < 0.0f ? -quat2 : quat2;
-    const float4 normquat = quat0 * in.barycentric.{} + quat1 * in.barycentric.{} +
-                            quat2 * in.barycentric.{};
-)",
-                               axes[order[0] % 3], axes[order[1] % 3], axes[order[2] % 3]);
+            // Before any branch: it takes derivatives.
+            out += "    const float4 normquat = FixQuaternion(in.normquat, in.barycentric);\n";
         }
         out += "    FSMain m(";
         for (std::size_t i = 0; i < ctor_members.size(); i++) {

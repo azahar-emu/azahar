@@ -13,12 +13,7 @@ shown=0
 for shader in "$SHADER_DIR"/*.metal; do
     count=$((count + 1))
     name=$(basename "$shader")
-    # Shaders reading per-vertex values are compiled as MSL 4.0 (iOS 26), like the runtime does.
-    std=ios-metal2.4
-    if grep -q "vertex_value<" "$shader"; then
-        std=metal4.0
-    fi
-    if ! xcrun -sdk iphoneos metal -std=$std -Werror=return-type -c "$shader" \
+    if ! xcrun -sdk iphoneos metal -std=ios-metal2.4 -Werror=return-type -c "$shader" \
             -o /dev/null 2> "$LOG_DIR/$name.log"; then
         failures=$((failures + 1))
         echo "::error file=$shader::Failed to compile $name"
