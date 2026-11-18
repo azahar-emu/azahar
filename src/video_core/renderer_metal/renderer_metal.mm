@@ -17,6 +17,7 @@
 #include <vector>
 #include "common/assert.h"
 #include "common/file_util.h"
+#include "common/frame_cost.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
@@ -2653,6 +2654,26 @@ void RendererMetal::SwapBuffers() {
             stats.cpu_frames.fetch_add(1, std::memory_order_relaxed);
             u64 worst = stats.cpu_max_ns.load(std::memory_order_relaxed);
             while (used > worst && !stats.cpu_max_ns.compare_exchange_weak(worst, used)) {
+            }
+            // A slow frame (over 12 ms of the thread's CPU time): what it spent its time on, so
+            // the stutters (mostly while a game loads) can be told apart. At most 5 a second.
+            const auto costs = Common::FrameCost::Take();
+            thread_local u32 logged_this_second = 0;
+            thread_local u64 second_start_ns = 0;
+            if (now_ns - second_start_ns > 1'000'000'000) {
+                second_start_ns = now_ns;
+                logged_this_second = 0;
+            }
+            if (used > 12'000'000 && logged_this_second < 5) {
+                logged_this_second++;
+                const auto ms = [](u64 ns) { return static_cast<double>(ns) / 1e6; };
+                const u64 known = costs[0] + costs[1] + costs[2] + costs[3];
+                LOG_INFO(Render,
+                         "Slow frame: {:.1f} ms of CPU; textures {:.1f} ms, shaders {:.1f} ms, "
+                         "file reads {:.1f} ms, waiting for the GPU {:.1f} ms, the rest (the "
+                         "game's code, JIT compilation, everything else) about {:.1f} ms",
+                         ms(used), ms(costs[0]), ms(costs[1]), ms(costs[2]), ms(costs[3]),
+                         ms(used > known ? used - known : 0));
             }
         }
         last_cpu_ns = now_ns;

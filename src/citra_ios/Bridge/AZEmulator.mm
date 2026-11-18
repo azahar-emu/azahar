@@ -38,6 +38,7 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/settings.h"
+#include "common/frame_cost.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/frontend/applets/default_applets.h"
@@ -1075,6 +1076,7 @@ const char* ThermalStateName() {
         });
     _shaderProgress = -1.0;
     system.RegisterCoreLoopThreadId();
+    Common::FrameCost::MarkEmulationThread();
 
     NSError* error = nil;
     // The performance counters only update when they are collected, which resets them. Collect

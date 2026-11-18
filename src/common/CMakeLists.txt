@@ -34,6 +34,7 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     file_derived.h
     file_util.cpp
     file_util.h
+    frame_cost.h
     hash.h
     hacks/hack_list.h
     hacks/hack_list.cpp

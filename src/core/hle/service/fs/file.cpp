@@ -2,6 +2,7 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
+#include "common/frame_cost.h"
 #include <algorithm>
 #include <boost/serialization/unique_ptr.hpp>
 #include "common/archives.h"
@@ -55,6 +56,7 @@ File::File(Kernel::KernelSystem& kernel)
 }
 
 void File::Read(Kernel::HLERequestContext& ctx) {
+    Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::FileRead};
     IPC::RequestParser rp(ctx);
     u64 offset = rp.Pop<u64>();
     u32 length = rp.Pop<u32>();

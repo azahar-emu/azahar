@@ -10,6 +10,7 @@
 #include <mutex>
 #include <string>
 #include "common/assert.h"
+#include "common/frame_cost.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
@@ -695,6 +696,7 @@ void Scheduler::Finish() {
 }
 
 void Scheduler::Wait(u64 tick) {
+    Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::GpuWait};
     if (tick >= current_tick) {
         // The requested tick is still being recorded, submit it.
         Flush();

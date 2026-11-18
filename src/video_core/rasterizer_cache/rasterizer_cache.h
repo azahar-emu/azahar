@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "common/frame_cost.h"
 #include <algorithm>
 #include <atomic>
 #include <span>
@@ -1170,6 +1171,7 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
 template <class T>
 void RasterizerCache<T>::UploadSurface(Surface& surface, SurfaceInterval interval) {
     MICROPROFILE_SCOPE(RasterizerCache_UploadSurface);
+    Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::TextureUpload};
 
     const SurfaceParams load_info = surface.FromInterval(interval);
     ASSERT(load_info.addr >= surface.addr && load_info.end <= surface.end);

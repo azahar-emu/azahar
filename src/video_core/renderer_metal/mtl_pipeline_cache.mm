@@ -9,6 +9,7 @@
 #include <thread>
 #include <pthread/qos.h>
 #include <fmt/format.h>
+#include "common/frame_cost.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -169,6 +170,7 @@ u64 PipelineCache::HashOf(const ShaderHandle& shader) {
 id<MTLLibrary> PipelineCache::Compile(const std::string& source, std::string_view name,
                                       bool fragment) {
     MICROPROFILE_SCOPE(Metal_ShaderCompile);
+    Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::ShaderBuild};
     NSError* error = nil;
     id<MTLLibrary> library = [instance.GetDevice()
         newLibraryWithSource:ToNSString(source)
@@ -259,6 +261,7 @@ PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInt
         return it->second;
     }
 
+    Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::ShaderBuild};
     auto shader = MakeShader(
         hash, false, MSL::GenerateFragmentShader(fs_config, user, GetProfile(), metal_config));
     AppendShaderRecord(*shader);
@@ -282,6 +285,7 @@ PipelineCache::ShaderHandle PipelineCache::UseVertexShader(const Pica::RegsInter
         return shader->failed.load(std::memory_order_relaxed) ? nullptr : shader;
     }
 
+    Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::ShaderBuild};
     std::string source = MSL::GenerateVertexShader(setup, config, use_clip_planes, sanitize_mul, half_interpolants);
     auto shader = MakeShader(hash, true, std::move(source));
     if (shader->source.empty()) {
@@ -333,6 +337,7 @@ void PipelineCache::BuildPipeline(Pipeline& pipeline) {
             desc.depthAttachmentPixelFormat = static_cast<MTLPixelFormat>(key.depth_format);
             desc.stencilAttachmentPixelFormat = static_cast<MTLPixelFormat>(key.stencil_format);
 
+            Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::ShaderBuild};
             id<MTLDevice> device = instance.GetDevice();
             id<MTLRenderPipelineState> state = nil;
             NSError* error = nil;
