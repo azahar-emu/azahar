@@ -1203,15 +1203,13 @@ const char* ThermalStateName() {
                          "{:.1f} ms in {:.1f} stalls, {:.0f} draws, {:.1f} skipped, {:.1f} render passes, "
                          "{:.1f} blit passes, {:.1f} feedback copies, drawable wait {:.1f} ms "
                          "per frame; frames on screen every {:.2f} ms (spread {:.2f} ms), {:.0f} late, "
-                         "refresh phase {:.1f} ms (lock {:.2f}), "
                          "emulation thread CPU {:.1f} ms per frame (worst {:.1f} ms), CPU JIT {}, shader JIT {}, "
                          "device {}{}",
                          _speed.load(), _fps.load(), gpu.gpu_ms, gpu.present_ms, gpu.stall_ms,
                          gpu.stalls,
                          gpu.draws, gpu.skipped, gpu.render_passes, gpu.blit_passes,
                          gpu.feedback_copies, gpu.drawable_ms, gpu.present_interval_ms,
-                         gpu.present_jitter_ms, gpu.present_late, gpu.phase_ms, gpu.phase_lock,
-                         gpu.cpu_ms, gpu.cpu_max_ms,
+                         gpu.present_jitter_ms, gpu.present_late, gpu.cpu_ms, gpu.cpu_max_ms,
                          Settings::values.use_cpu_jit.GetValue() ? "on" : "OFF (slow)",
                          Settings::values.use_shader_jit.GetValue() ? "on" : "off",
                          ThermalStateName(),

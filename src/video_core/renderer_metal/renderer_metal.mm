@@ -114,15 +114,15 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
             p->last_log = target;
         } else if (target - p->last_log >= 1.0) {
             const u32 late = p->presented_late.exchange(0);
-            LOG_INFO(Render,
-                     "Display link: {} refreshes, {} frames shown ({:.1f} waiting on average), "
-                     "{} times no frame was ready when one was due, {} shown at a later refresh "
-                     "than asked (lead {:.0f} refreshes)",
-                     p->refreshes, p->shown, p->shown > 0 ? p->queued_sum / p->shown : 0.0,
-                     p->not_ready, late, link.preferredFrameLatency);
-            // More lead (preferredFrameLatency 2) was tried for frames that reach the screen a
-            // refresh late at 120 Hz and did not change how many do, so the lead stays at one
-            // refresh: the lateness is not the time the GPU needs for the draw.
+            // Only seconds with something to report: a frame missing or late.
+            if (p->not_ready > 0 || late > 0) {
+                LOG_INFO(Render,
+                         "Display link: {} refreshes, {} frames shown ({:.1f} waiting on "
+                         "average), {} times no frame was ready when one was due, {} shown at a "
+                         "later refresh than asked (lead {:.0f} refreshes)",
+                         p->refreshes, p->shown, p->shown > 0 ? p->queued_sum / p->shown : 0.0,
+                         p->not_ready, late, link.preferredFrameLatency);
+            }
             p->refreshes = 0;
             p->shown = 0;
             p->not_ready = 0;

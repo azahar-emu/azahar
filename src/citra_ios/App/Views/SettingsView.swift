@@ -616,15 +616,17 @@ struct GraphicsSettingsView: View {
 
             Section {
                 Toggle("Sync to Display Refresh", isOn: $settings.displaySync)
-                Toggle("Frame Pacing", isOn: $settings.framePacing)
-                    .disabled(settings.displaySync)
-                Picker("Frame Pacing Buffer", selection: $settings.pacingBufferMs) {
-                    Text("Off").tag(0)
-                    Text("8 ms").tag(8)
-                    Text("17 ms").tag(17)
-                    Text("25 ms").tag(25)
+                // The older pacing, only used when Sync to Display Refresh is off.
+                if !settings.displaySync {
+                    Toggle("Frame Pacing", isOn: $settings.framePacing)
+                    Picker("Frame Pacing Buffer", selection: $settings.pacingBufferMs) {
+                        Text("Off").tag(0)
+                        Text("8 ms").tag(8)
+                        Text("17 ms").tag(17)
+                        Text("25 ms").tag(25)
+                    }
+                    .disabled(!settings.framePacing)
                 }
-                .disabled(!settings.framePacing || settings.displaySync)
                 Picker("Display Refresh Rate", selection: $settings.refreshRate) {
                     ForEach(RefreshRateOption.allCases) { Text($0.title).tag($0) }
                 }
