@@ -98,6 +98,9 @@ struct MetalFSConfig {
     /// per-triangle sign correction themselves, so the vertex shaders can share vertices between
     /// triangles. Needs MSL 4.0 and barycentric coordinates. Only used when lighting is enabled.
     bool fragment_quaternion_fix = false;
+    /// The barycentric coordinate (0 x, 1 y, 2 z) weighting the first, second and third corner's
+    /// value. Measured at startup, the GPU's order is not the documented one everywhere.
+    std::array<u8, 3> quaternion_barycentric{0, 1, 2};
 };
 
 /// Depth mapping done in the vertex shader instead of the fragment shader. Writing [[depth]] in a

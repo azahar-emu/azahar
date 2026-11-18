@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <mutex>
@@ -177,6 +178,9 @@ private:
     /// fragment_compile_options with MSL 4.0, for the shaders reading per-vertex values.
     MTLCompileOptions* fragment_compile_options_msl4 = nil;
     bool fragment_quaternion_fix{};
+    /// The barycentric coordinate (0 x, 1 y, 2 z) of the first, second and third corner, as
+    /// measured by ProbeFragmentQuaternionFix.
+    std::array<u8, 3> quaternion_barycentric{0, 1, 2};
     ShaderHandle trivial_vertex_shader;
 
     // Only accessed from the GPU thread.

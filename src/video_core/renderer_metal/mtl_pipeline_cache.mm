@@ -3,6 +3,8 @@
 // Refer to the LICENSE.txt file included.
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <chrono>
 #include <cstddef>
 #include <cstring>
@@ -69,7 +71,8 @@ u64 ProfileHash(const Pica::Shader::Profile& profile) {
 
 /// The header a cache file written now starts with. Files with another header are discarded.
 CacheHeader ExpectedCacheHeader(const Pica::Shader::Profile& profile,
-                                bool fragment_quaternion_fix) {
+                                bool fragment_quaternion_fix,
+                                const std::array<u8, 3>& quaternion_barycentric) {
     const auto& quality = Metal::GetQualityOptions();
     return CacheHeader{
         .magic = CACHE_MAGIC,
@@ -80,7 +83,10 @@ CacheHeader ExpectedCacheHeader(const Pica::Shader::Profile& profile,
                                       static_cast<u64>(quality.fast_functions) << 1 |
                                       static_cast<u64>(quality.vertex_fast_functions) << 2 |
                                       static_cast<u64>(quality.vertex_fast_math) << 3 |
-                                      static_cast<u64>(fragment_quaternion_fix) << 4),
+                                      static_cast<u64>(fragment_quaternion_fix) << 4 |
+                                      static_cast<u64>(quaternion_barycentric[0]) << 5 |
+                                      static_cast<u64>(quaternion_barycentric[1]) << 7 |
+                                      static_cast<u64>(quaternion_barycentric[2]) << 9),
     };
 }
 
@@ -200,21 +206,31 @@ bool PipelineCache::ProbeFragmentQuaternionFix() {
                          "coordinates)");
         return false;
     }
-    // Build a tiny pipeline with the same interface as the real shaders: the vertex side in
-    // MSL 2.4, the fragment side reading the corners with vertex_value in MSL 4.0.
+    // Draw a strip of two triangles over two pixels, one pixel in each, with the same interface
+    // as the real shaders: the vertex side in MSL 2.4, the fragment side reading the corners with
+    // vertex_value in MSL 4.0. Every vertex outputs its own unit vector, so the rasterizer's
+    // interpolation of it gives the weight of each vertex at the pixel. Comparing those with the
+    // barycentric coordinates tells which coordinate belongs to which corner (the order is not
+    // the one the documentation suggests on every GPU) and that they are perspective correct
+    // (the vertices have different w).
     static constexpr const char* VERTEX = R"(
 #include <metal_stdlib>
 using namespace metal;
 struct ProbeOutput {
     float4 position [[position, invariant]];
     float4 normquat [[user(normquat)]];
-    float3 view [[user(view)]];
+    float4 weights [[user(weights)]];
 };
 vertex ProbeOutput probe_vs(uint vid [[vertex_id]]) {
+    const float4 screen[4] = {float4(-2.0f, -2.0f, 0.5f, 1.0f), float4(-1.6f, 2.2f, 0.5f, 1.4f),
+                              float4(1.9f, -1.8f, 0.5f, 2.6f), float4(1.7f, 2.5f, 0.5f, 1.2f)};
+    const float4 v = screen[vid];
     ProbeOutput out;
-    out.position = float4(float(vid & 1u), float(vid >> 1u), 0.0f, 1.0f);
-    out.normquat = float4(0.0f, 0.0f, 0.0f, vid == 2u ? -1.0f : 1.0f);
-    out.view = float3(1.0f);
+    out.position = float4(v.xyz * v.w, v.w);
+    const float4 unit = float4(vid == 0u ? 1.0f : 0.0f, vid == 1u ? 1.0f : 0.0f,
+                               vid == 2u ? 1.0f : 0.0f, vid == 3u ? 1.0f : 0.0f);
+    out.normquat = unit;
+    out.weights = unit;
     return out;
 }
 )";
@@ -226,17 +242,22 @@ struct ProbeInput {
     float4 position [[position]];
     vertex_value<float4> normquat [[user(normquat)]];
     float3 barycentric [[barycentric_coord, center_perspective]];
-    float3 view [[user(view)]];
+    float4 weights [[user(weights)]];
 };
-fragment float4 probe_fs(ProbeInput in [[stage_in]]) {
-    const float4 quat0 = in.normquat.get(vertex_index::first);
-    float4 quat1 = in.normquat.get(vertex_index::second);
-    float4 quat2 = in.normquat.get(vertex_index::third);
-    quat1 = dot(quat0, quat1) < 0.0f ? -quat1 : quat1;
-    quat2 = dot(quat0, quat2) < 0.0f ? -quat2 : quat2;
-    const float4 quat = quat0 * in.barycentric.x + quat1 * in.barycentric.y +
-                        quat2 * in.barycentric.z;
-    return float4(normalize(quat).xyz + in.view, 1.0f);
+struct ProbeColors {
+    float4 weights [[color(0)]];
+    float4 barycentric [[color(1)]];
+    float4 corners [[color(2)]];
+};
+fragment ProbeColors probe_fs(ProbeInput in [[stage_in]]) {
+    const float4 ids = float4(0.0f, 1.0f, 2.0f, 3.0f);
+    ProbeColors out;
+    out.weights = in.weights;
+    out.barycentric = float4(in.barycentric, 0.0f);
+    out.corners = float4(dot(in.normquat.get(vertex_index::first), ids),
+                         dot(in.normquat.get(vertex_index::second), ids),
+                         dot(in.normquat.get(vertex_index::third), ids), 0.0f);
+    return out;
 }
 )";
     NSError* error = nil;
@@ -253,7 +274,9 @@ fragment float4 probe_fs(ProbeInput in [[stage_in]]) {
         desc.vertexFunction = [vertex_library newFunctionWithName:@"probe_vs"];
         desc.fragmentFunction = [fragment_library newFunctionWithName:@"probe_fs"];
         desc.inputPrimitiveTopology = MTLPrimitiveTopologyClassTriangle;
-        desc.colorAttachments[0].pixelFormat = MTLPixelFormatRGBA8Unorm;
+        for (NSUInteger i = 0; i < 3; i++) {
+            desc.colorAttachments[i].pixelFormat = MTLPixelFormatRGBA32Float;
+        }
         state = [device newRenderPipelineStateWithDescriptor:desc error:&error];
     }
     if (!state) {
@@ -262,7 +285,102 @@ fragment float4 probe_fs(ProbeInput in [[stage_in]]) {
                     error ? [error.localizedDescription UTF8String] : "unknown error");
         return false;
     }
-    LOG_INFO(Render, "Lit draws share vertices (the lighting fix runs in the fragment shader)");
+
+    // Draw and read back the two pixels.
+    MTLTextureDescriptor* tex_desc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA32Float
+                                                           width:2
+                                                          height:1
+                                                       mipmapped:NO];
+    tex_desc.usage = MTLTextureUsageRenderTarget;
+    tex_desc.storageMode = MTLStorageModeShared;
+    std::array<id<MTLTexture>, 3> targets;
+    MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
+    for (NSUInteger i = 0; i < 3; i++) {
+        targets[i] = [device newTextureWithDescriptor:tex_desc];
+        if (targets[i] == nil) {
+            return false;
+        }
+        pass.colorAttachments[i].texture = targets[i];
+        pass.colorAttachments[i].loadAction = MTLLoadActionClear;
+        pass.colorAttachments[i].clearColor = MTLClearColorMake(-1.0, -1.0, -1.0, -1.0);
+        pass.colorAttachments[i].storeAction = MTLStoreActionStore;
+    }
+    id<MTLCommandQueue> queue = [device newCommandQueue];
+    id<MTLCommandBuffer> buffer = [queue commandBuffer];
+    id<MTLRenderCommandEncoder> encoder = [buffer renderCommandEncoderWithDescriptor:pass];
+    [encoder setRenderPipelineState:state];
+    [encoder setViewport:MTLViewport{0.0, 0.0, 2.0, 1.0, 0.0, 1.0}];
+    [encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
+    [encoder endEncoding];
+    [buffer commit];
+    [buffer waitUntilCompleted];
+    if (buffer.status != MTLCommandBufferStatusCompleted) {
+        LOG_WARNING(Render, "Lit draws are shaded corner by corner, the per-vertex value test "
+                            "did not run");
+        return false;
+    }
+    std::array<std::array<float, 8>, 3> pixels{}; // [target][pixel * 4 + component]
+    for (std::size_t i = 0; i < 3; i++) {
+        [targets[i] getBytes:pixels[i].data()
+                 bytesPerRow:sizeof(float) * 8
+                  fromRegion:MTLRegionMake2D(0, 0, 2, 1)
+                 mipmapLevel:0];
+    }
+
+    // For each pixel, the barycentric coordinate matching each corner's weight.
+    std::array<std::array<int, 3>, 2> orders{};
+    bool valid = true;
+    for (std::size_t pixel = 0; pixel < 2 && valid; pixel++) {
+        const float* weights = &pixels[0][pixel * 4];
+        const float* barycentric = &pixels[1][pixel * 4];
+        const float* corners = &pixels[2][pixel * 4];
+        std::array<bool, 3> used{};
+        for (std::size_t corner = 0; corner < 3 && valid; corner++) {
+            const int vertex = static_cast<int>(std::lround(corners[corner]));
+            if (vertex < 0 || vertex > 3) {
+                valid = false;
+                break;
+            }
+            int match = -1;
+            for (int j = 0; j < 3; j++) {
+                if (!used[j] && std::abs(barycentric[j] - weights[vertex]) < 0.003f) {
+                    match = j;
+                    break;
+                }
+            }
+            if (match < 0) {
+                valid = false;
+                break;
+            }
+            used[match] = true;
+            orders[pixel][corner] = match;
+        }
+    }
+    const auto dump = [&] {
+        return fmt::format("weights {:.3f} {:.3f} {:.3f} {:.3f} / {:.3f} {:.3f} {:.3f} {:.3f}, "
+                           "barycentric {:.3f} {:.3f} {:.3f} / {:.3f} {:.3f} {:.3f}, corners "
+                           "{:.0f} {:.0f} {:.0f} / {:.0f} {:.0f} {:.0f}",
+                           pixels[0][0], pixels[0][1], pixels[0][2], pixels[0][3], pixels[0][4],
+                           pixels[0][5], pixels[0][6], pixels[0][7], pixels[1][0], pixels[1][1],
+                           pixels[1][2], pixels[1][4], pixels[1][5], pixels[1][6], pixels[2][0],
+                           pixels[2][1], pixels[2][2], pixels[2][4], pixels[2][5], pixels[2][6]);
+    };
+    if (!valid || orders[0] != orders[1]) {
+        LOG_WARNING(Render,
+                    "Lit draws are shaded corner by corner, the per-vertex values do not match "
+                    "the barycentric coordinates ({})",
+                    dump());
+        return false;
+    }
+    static constexpr char AXES[] = "xyz";
+    for (std::size_t corner = 0; corner < 3; corner++) {
+        quaternion_barycentric[corner] = static_cast<u8>(orders[0][corner]);
+    }
+    LOG_INFO(Render,
+             "Lit draws share vertices (the lighting fix runs in the fragment shader; corners use "
+             "barycentric {}{}{}; {})",
+             AXES[orders[0][0]], AXES[orders[0][1]], AXES[orders[0][2]], dump());
     return true;
 }
 
@@ -354,8 +472,12 @@ PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInt
     metal_config.half_interpolants = GetQualityOptions().half_interpolants;
     metal_config.fragment_quaternion_fix =
         fragment_quaternion_fix && fs_config.lighting.enable.Value() != 0;
+    metal_config.quaternion_barycentric = quaternion_barycentric;
     if (metal_config.fragment_quaternion_fix) {
-        hash = Common::HashCombine(hash, 0x9A7E'0F1C'0000'0006ULL);
+        hash = Common::HashCombine(hash, 0x9A7E'0F1C'0000'0006ULL,
+                                   static_cast<u64>(quaternion_barycentric[0]) |
+                                       static_cast<u64>(quaternion_barycentric[1]) << 2 |
+                                       static_cast<u64>(quaternion_barycentric[2]) << 4);
     }
     if (metal_config.fast_lighting) {
         hash = Common::HashCombine(hash, 0xFA57'1164'7000'0001ULL);
@@ -645,7 +767,7 @@ void PipelineCache::OpenDiskCache(u64 title_id_) {
     title_id = title_id_;
     FileUtil::CreateFullPath(CachePath("cache"));
 
-    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix);
+    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix, quaternion_barycentric);
 
     // Reuse the file when it was written by this build with the same profile, otherwise start over.
     bool valid = false;
@@ -752,7 +874,7 @@ void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_lo
         return;
     }
     // The same header OpenDiskCache keeps. (They used to differ, which threw every cache away.)
-    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix);
+    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix, quaternion_barycentric);
     if (contents.size() < sizeof(CacheHeader) ||
         std::memcmp(contents.data(), &expected, sizeof(CacheHeader)) != 0) {
         return;

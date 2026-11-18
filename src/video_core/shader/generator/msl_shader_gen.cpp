@@ -414,14 +414,17 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
             // Interpolating between opposite quaternions breaks the lighting. Like the PICA
             // rasterizer, flip the quaternions of the other corners to the side of the first
             // corner's, then interpolate them as the rasterizer would have.
-            out += R"(    const float4 quat0 = in.normquat.get(vertex_index::first);
+            static constexpr char axes[] = "xyz";
+            const auto& order = metal.quaternion_barycentric;
+            out += fmt::format(R"(    const float4 quat0 = in.normquat.get(vertex_index::first);
     float4 quat1 = in.normquat.get(vertex_index::second);
     float4 quat2 = in.normquat.get(vertex_index::third);
     quat1 = dot(quat0, quat1) < 0.0f ? -quat1 : quat1;
     quat2 = dot(quat0, quat2) < 0.0f ? -quat2 : quat2;
-    const float4 normquat = quat0 * in.barycentric.x + quat1 * in.barycentric.y +
-                            quat2 * in.barycentric.z;
-)";
+    const float4 normquat = quat0 * in.barycentric.{} + quat1 * in.barycentric.{} +
+                            quat2 * in.barycentric.{};
+)",
+                               axes[order[0] % 3], axes[order[1] % 3], axes[order[2] % 3]);
         }
         out += "    FSMain m(";
         for (std::size_t i = 0; i < ctor_members.size(); i++) {
