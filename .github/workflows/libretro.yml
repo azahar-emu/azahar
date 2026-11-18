@@ -19,13 +19,16 @@ permissions:
 jobs:
   libretro-android:
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        target: [arm64-v8a, x86_64]
     env:
       OS: android
-      TARGET: arm64-v8a
+      TARGET: ${{ matrix.target }}
       API_LEVEL: 21
       ANDROID_NDK_VERSION: 29.0.14206865
-      ANDROID_ABI: arm64-v8a
-      BUILD_DIR: build/android-arm64-v8a
+      ANDROID_ABI: ${{ matrix.target }}
+      BUILD_DIR: build/android-${{ matrix.target }}
       EXTRA_PATH: bin/Release
     steps:
       - uses: actions/checkout@v6
@@ -59,7 +62,7 @@ jobs:
         with:
           path: build/
           format: spdx-json
-          output-file: libretro-android.spdx.json
+          output-file: libretro-android-${{ matrix.target }}.spdx.json
           upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v7
@@ -74,14 +77,21 @@ jobs:
         with:
           subject-path: |
             ./*.zip
-          sbom-path: libretro-android.spdx.json
+          sbom-path: libretro-android-${{ matrix.target }}.spdx.json
 
   libretro-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64
+            runner: ubuntu-22.04
+          - target: aarch64
+            runner: ubuntu-22.04-arm
     env:
       OS: linux
-      TARGET: x86_64
-      BUILD_DIR: build/linux-x86_64
+      TARGET: ${{ matrix.target }}
+      BUILD_DIR: build/linux-${{ matrix.target }}
       EXTRA_PATH: bin/Release
       EXTRA_CORE_ARGS: -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 -DENABLE_LTO=OFF
     steps:
@@ -105,7 +115,7 @@ jobs:
         with:
           path: build/
           format: spdx-json
-          output-file: libretro-linux.spdx.json
+          output-file: libretro-linux-${{ matrix.target }}.spdx.json
           upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v7
@@ -120,7 +130,7 @@ jobs:
         with:
           subject-path: |
             ./*.zip
-          sbom-path: libretro-linux.spdx.json
+          sbom-path: libretro-linux-${{ matrix.target }}.spdx.json
 
   libretro-windows:
     runs-on: ubuntu-latest
