@@ -522,6 +522,10 @@ private:
     u32 ds_width{}, ds_height{};
     id<MTLEvent> ds_event = nil;
     u64 ds_event_value{};
+    /// The same for the made and real frames of frame generation, which are handed over from the
+    /// callbacks of the interpolation (one frame at a time, so the values stay in order).
+    id<MTLEvent> fg_event = nil;
+    std::atomic<u64> fg_event_value{0};
     f32 fg_cadence{1.0f}; ///< Swaps per new frame of the game, smoothed: 2 for a 30 FPS game
     std::chrono::steady_clock::time_point fg_last_frame{};
     double fg_interval{};
@@ -2122,6 +2126,11 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     std::atomic<u32>* failures = &fg_failures;
     std::atomic<double>* last_real_time = &fg_last_real_time;
     id<MTLCommandQueue> queue = instance.GetCommandQueue();
+    if (fg_event == nil) {
+        fg_event = [instance.GetDevice() newEvent];
+    }
+    id<MTLEvent> present_event = fg_event;
+    std::atomic<u64>* present_value = &fg_event_value;
     // Display-driven pacing: the frames go to the display link instead of being presented here.
     const bool paced = GetQualityOptions().frame_generation_display_paced && StartPacer(target);
     const std::shared_ptr<DisplayPacer> pacer = paced ? fg_pacer : nullptr;
@@ -2225,14 +2234,18 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
         if (paced) {
             // The display link shows them, the made frame first. The composition goes to the GPU
             // before the frames are handed over, so it is done before the display link draws them.
+            // The display link draws them on a queue of its own once this event says they are
+            // finished, instead of behind the next frames of the game on this queue.
+            const u64 value = present_value->fetch_add(1, std::memory_order_relaxed) + 1;
+            [buffer encodeSignalEvent:present_event value:value];
             [buffer commit];
             {
                 std::scoped_lock lock{pacer->mutex};
                 pacer->slot = std::clamp(interval * 0.5, 0.008, 0.05);
                 if (made) {
-                    pacer->waiting.push_back({made_texture, width, height});
+                    pacer->waiting.push_back({made_texture, width, height, present_event, value});
                 }
-                pacer->waiting.push_back({current, width, height});
+                pacer->waiting.push_back({current, width, height, present_event, value});
             }
             busy->store(false, std::memory_order_release);
             return;
@@ -2445,12 +2458,17 @@ bool RendererMetal::RenderPacedPlain(const Layout::FramebufferLayout& layout) {
 #if AZAHAR_HAS_METALFX
     upscale_pass = UpscalePass::Off;
 #endif
-    // Submitted before it is handed over: the display link draws it on the same queue, after.
+    // The display link draws it on a queue of its own once this event says it is finished.
+    if (ds_event == nil) {
+        ds_event = [instance.GetDevice() newEvent];
+    }
+    ds_event_value++;
+    [scheduler.CommandBuffer() encodeSignalEvent:ds_event value:ds_event_value];
     scheduler.Flush();
     std::scoped_lock lock{fg_pacer->mutex};
     fg_pacer->slot = 1.0 / 60.0;
-    fg_pacer->waiting.push_back(
-        {current, static_cast<float>(layout.width), static_cast<float>(layout.height)});
+    fg_pacer->waiting.push_back({current, static_cast<float>(layout.width),
+                                 static_cast<float>(layout.height), ds_event, ds_event_value});
     return true;
 }
 
