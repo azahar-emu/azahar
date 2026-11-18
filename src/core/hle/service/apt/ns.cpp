@@ -5,6 +5,7 @@
 #include "core/core.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/ns.h"
+#include "core/hle/service/ptm/ptm.h"
 #include "core/loader/loader.h"
 
 namespace Service::NS {
@@ -63,6 +64,10 @@ std::shared_ptr<Kernel::Process> LaunchTitle(Core::System& system, FS::MediaType
     if (result != Loader::ResultStatus::Success) {
         LOG_WARNING(Service_NS, "Error loading .app for title 0x{:016x}", title_id);
         return nullptr;
+    }
+
+    if (auto ptm_module = Service::PTM::GetModule(system)) {
+        ptm_module->RecordPlayedTitle(title_id);
     }
 
     return process;
