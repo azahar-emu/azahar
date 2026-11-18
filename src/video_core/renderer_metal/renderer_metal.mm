@@ -2504,9 +2504,12 @@ bool RendererMetal::StartPacer(CAMetalLayer* layer) {
             return false;
         }
         link.delegate = delegate;
-        // Frame generation draws its frames ahead and needs the time; the frames of display sync
-        // are ready when handed over, so one refresh is enough and keeps the delay down.
-        link.preferredFrameLatency = GetQualityOptions().frame_generation > 0 ? 2.0f : 1.0f;
+        // Two refreshes of lead for frame generation (it draws its frames late) and at 120 Hz:
+        // with one, frames reached the screen a refresh late hundreds of times in a few minutes
+        // at 120 Hz, with two (frame generation runs) almost never. It has to be set here: set on
+        // a running display link it did not help. At 60 Hz one refresh is enough.
+        link.preferredFrameLatency =
+            GetQualityOptions().frame_generation > 0 || hz >= 100 ? 2.0f : 1.0f;
         link.preferredFrameRateRange =
             CAFrameRateRangeMake(static_cast<float>(hz), static_cast<float>(hz),
                                  static_cast<float>(hz));
