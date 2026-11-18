@@ -460,6 +460,8 @@ void GPU::ApplyPerProgramSettings(u64 program_ID) {
         }
     }
     impl->rasterizer->SetAccurateMul(use_accurate_mul);
+    impl->rasterizer->SetSubpixelHudQuadCollapse(Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::COLLAPSE_SUBPIXEL_HUD_QUAD, program_ID, false));
 }
 
 void GPU::SubmitCmdList(u32 index) {

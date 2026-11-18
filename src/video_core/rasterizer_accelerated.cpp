@@ -160,6 +160,14 @@ void RasterizerAccelerated::SyncDrawUniforms() {
     const bool prev_flipped = std::exchange(vs_data.flip_viewport, is_flipped);
     vs_data_dirty |= is_flipped != prev_flipped;
 
+    const bool collapse_hud_quad =
+        collapse_subpixel_hud_quad &&
+        f24::FromRaw(regs.rasterizer.viewport_size_x).ToFloat32() == 120.f &&
+        f24::FromRaw(regs.rasterizer.viewport_size_y).ToFloat32() == 200.f &&
+        regs.rasterizer.viewport_corner.x == 0 && regs.rasterizer.viewport_corner.y == 0;
+    vs_data_dirty |=
+        std::exchange(vs_data.collapse_subpixel_hud_quad, collapse_hud_quad) != collapse_hud_quad;
+
     // Sync clip plane uniforms
     if (dirty.CheckClipping()) {
         const auto raw_clip_coef = regs.rasterizer.GetClipCoef();

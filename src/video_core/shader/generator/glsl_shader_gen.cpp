@@ -35,6 +35,7 @@ layout (binding = 1, std140) uniform vs_data {
 #endif
     bool enable_clip1;
     bool flip_viewport;
+    bool collapse_subpixel_hud_quad;
     vec4 clip_coef;
 )"
 #ifdef ENABLE_FREECAM
@@ -46,7 +47,18 @@ R"(};
 
 const vec2 EPSILON_Z = vec2(0.000001f, -1.00001f);
 
-vec4 SanitizeVertex(vec4 vtx_pos) {
+vec4 SanitizeVertex(vec4 vtx_pos, vec2 texcoord) {
+    if (collapse_subpixel_hud_quad && vtx_pos.w == 1.0 &&
+        (texcoord.x == 0.0 || texcoord.x == 43.0 / 128.0) &&
+        (texcoord.y == 19.0 / 64.0 || texcoord.y == 23.0 / 64.0)) {
+        // Match Ridge Racer's inactive HUD quad at native x = 28..372, y = 110 +/- 0.25.
+        // Clip x = 1/12 maps to native y = 110, collapsing the quad to zero area.
+        vec2 screen_pos = vec2(200.0 - vtx_pos.y * 200.0, 120.0 - vtx_pos.x * 120.0);
+        if ((abs(screen_pos.x - 28.0) < 0.001 || abs(screen_pos.x - 372.0) < 0.001) &&
+            abs(abs(screen_pos.y - 110.0) - 0.25) < 0.001) {
+            vtx_pos.x = 1.0 / 12.0;
+        }
+    }
     float ndc_z = vtx_pos.z / vtx_pos.w;
     if (ndc_z > 0.f && ndc_z < EPSILON_Z[0]) {
         vtx_pos.z = 0.f;
@@ -146,7 +158,7 @@ void main() {
     texcoord0_w = vert_texcoord0_w;
     normquat = vert_normquat;
     view = vert_view;
-    vec4 vtx_pos = SanitizeVertex(vert_position);
+    vec4 vtx_pos = SanitizeVertex(vert_position, vert_texcoord0);
     if (flip_viewport) {
         vtx_pos.y = -vtx_pos.y;
     }
@@ -268,7 +280,9 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
                semantic(VSOutputAttributes::POSITION_Y) + ", " +
                semantic(VSOutputAttributes::POSITION_Z) + ", " +
                semantic(VSOutputAttributes::POSITION_W) + ");\n";
-        out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
+        out += "    vtx_pos = SanitizeVertex(vtx_pos, vec2(" +
+               semantic(VSOutputAttributes::TEXCOORD0_U) + ", " +
+               semantic(VSOutputAttributes::TEXCOORD0_V) + "));\n";
         out += "    if (flip_viewport) {\n";
         out += "        vtx_pos.y = -vtx_pos.y;\n";
         out += "    }\n";
@@ -370,7 +384,9 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Y) + ", " +
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
-    out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
+    out += "    vtx_pos = SanitizeVertex(vtx_pos, vec2(" +
+           semantic(VSOutputAttributes::TEXCOORD0_U) + ", " +
+           semantic(VSOutputAttributes::TEXCOORD0_V) + "));\n";
     out += "    if (flip_viewport) {\n";
     out += "        vtx_pos.y = -vtx_pos.y;\n";
     out += "    }\n";
