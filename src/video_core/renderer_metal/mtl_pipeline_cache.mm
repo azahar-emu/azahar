@@ -67,6 +67,23 @@ u64 ProfileHash(const Pica::Shader::Profile& profile) {
     return Common::ComputeHash64(&profile, offsetof(Pica::Shader::Profile, vk_disable_spirv_optimizer));
 }
 
+/// The header a cache file written now starts with. Files with another header are discarded.
+CacheHeader ExpectedCacheHeader(const Pica::Shader::Profile& profile,
+                                bool fragment_quaternion_fix) {
+    const auto& quality = Metal::GetQualityOptions();
+    return CacheHeader{
+        .magic = CACHE_MAGIC,
+        .version = CACHE_VERSION,
+        .build_hash = BuildHash(),
+        .profile_hash = Common::HashCombine(
+            ProfileHash(profile), static_cast<u64>(quality.fast_math) |
+                                      static_cast<u64>(quality.fast_functions) << 1 |
+                                      static_cast<u64>(quality.vertex_fast_functions) << 2 |
+                                      static_cast<u64>(quality.vertex_fast_math) << 3 |
+                                      static_cast<u64>(fragment_quaternion_fix) << 4),
+    };
+}
+
 } // Anonymous namespace
 
 struct PipelineCache::Shader {
@@ -140,6 +157,23 @@ PipelineCache::PipelineCache(const Instance& instance_, MTLVertexDescriptor* ver
         LOG_INFO(Render, "Fragment shaders are compiled with fast math");
     }
 
+    // Lit fragment shaders that fix the lighting quaternions themselves, see
+    // ProbeFragmentQuaternionFix. Only useful when the draws share vertices.
+    if (GetQualityOptions().vertex_reuse) {
+        if (@available(iOS 26.0, macOS 26.0, *)) {
+            fragment_compile_options_msl4 =
+                make_options(GetQualityOptions().fast_math, GetQualityOptions().fast_functions);
+            fragment_compile_options_msl4.languageVersion = MTLLanguageVersion4_0;
+            fragment_quaternion_fix = ProbeFragmentQuaternionFix();
+            if (!fragment_quaternion_fix) {
+                fragment_compile_options_msl4 = nil;
+            }
+        } else {
+            LOG_INFO(Render, "Lit draws are shaded corner by corner (needs iOS 26 for sharing "
+                             "their vertices)");
+        }
+    }
+
     trivial_vertex_shader =
         MakeShader(0, true, MSL::GenerateTrivialVertexShader(GetProfile().has_clip_planes,
                                          GetQualityOptions().half_interpolants));
@@ -159,6 +193,79 @@ PipelineCache::~PipelineCache() {
     CloseDiskCache();
 }
 
+bool PipelineCache::ProbeFragmentQuaternionFix() {
+    id<MTLDevice> device = instance.GetDevice();
+    if (![device supportsShaderBarycentricCoordinates]) {
+        LOG_INFO(Render, "Lit draws are shaded corner by corner (the GPU has no barycentric "
+                         "coordinates)");
+        return false;
+    }
+    // Build a tiny pipeline with the same interface as the real shaders: the vertex side in
+    // MSL 2.4, the fragment side reading the corners with vertex_value in MSL 4.0.
+    static constexpr const char* VERTEX = R"(
+#include <metal_stdlib>
+using namespace metal;
+struct ProbeOutput {
+    float4 position [[position, invariant]];
+    float4 normquat [[user(normquat)]];
+    float3 view [[user(view)]];
+};
+vertex ProbeOutput probe_vs(uint vid [[vertex_id]]) {
+    ProbeOutput out;
+    out.position = float4(float(vid & 1u), float(vid >> 1u), 0.0f, 1.0f);
+    out.normquat = float4(0.0f, 0.0f, 0.0f, vid == 2u ? -1.0f : 1.0f);
+    out.view = float3(1.0f);
+    return out;
+}
+)";
+    static constexpr const char* FRAGMENT = R"(
+#include <metal_stdlib>
+#include <metal_vertex_value>
+using namespace metal;
+struct ProbeInput {
+    float4 position [[position]];
+    vertex_value<float4> normquat [[user(normquat)]];
+    float3 barycentric [[barycentric_coord, center_perspective]];
+    float3 view [[user(view)]];
+};
+fragment float4 probe_fs(ProbeInput in [[stage_in]]) {
+    const float4 quat0 = in.normquat.get(vertex_index::first);
+    float4 quat1 = in.normquat.get(vertex_index::second);
+    float4 quat2 = in.normquat.get(vertex_index::third);
+    quat1 = dot(quat0, quat1) < 0.0f ? -quat1 : quat1;
+    quat2 = dot(quat0, quat2) < 0.0f ? -quat2 : quat2;
+    const float4 quat = quat0 * in.barycentric.x + quat1 * in.barycentric.y +
+                        quat2 * in.barycentric.z;
+    return float4(normalize(quat).xyz + in.view, 1.0f);
+}
+)";
+    NSError* error = nil;
+    id<MTLLibrary> vertex_library =
+        [device newLibraryWithSource:@(VERTEX) options:compile_options error:&error];
+    id<MTLLibrary> fragment_library =
+        vertex_library ? [device newLibraryWithSource:@(FRAGMENT)
+                                              options:fragment_compile_options_msl4
+                                                error:&error]
+                       : nil;
+    id<MTLRenderPipelineState> state = nil;
+    if (vertex_library && fragment_library) {
+        MTLRenderPipelineDescriptor* desc = [MTLRenderPipelineDescriptor new];
+        desc.vertexFunction = [vertex_library newFunctionWithName:@"probe_vs"];
+        desc.fragmentFunction = [fragment_library newFunctionWithName:@"probe_fs"];
+        desc.inputPrimitiveTopology = MTLPrimitiveTopologyClassTriangle;
+        desc.colorAttachments[0].pixelFormat = MTLPixelFormatRGBA8Unorm;
+        state = [device newRenderPipelineStateWithDescriptor:desc error:&error];
+    }
+    if (!state) {
+        LOG_WARNING(Render,
+                    "Lit draws are shaded corner by corner, the per-vertex value test failed: {}",
+                    error ? [error.localizedDescription UTF8String] : "unknown error");
+        return false;
+    }
+    LOG_INFO(Render, "Lit draws share vertices (the lighting fix runs in the fragment shader)");
+    return true;
+}
+
 const Pica::Shader::Profile& PipelineCache::GetProfile() const {
     return instance.GetProfile();
 }
@@ -174,7 +281,11 @@ id<MTLLibrary> PipelineCache::Compile(const std::string& source, std::string_vie
     NSError* error = nil;
     id<MTLLibrary> library = [instance.GetDevice()
         newLibraryWithSource:ToNSString(source)
-                     options:fragment ? fragment_compile_options : compile_options
+                     options:!fragment ? compile_options
+                             : fragment_compile_options_msl4 &&
+                                     source.find("vertex_value<") != std::string::npos
+                                 ? fragment_compile_options_msl4
+                                 : fragment_compile_options
                        error:&error];
     if (!library) {
         LOG_CRITICAL(Render, "Failed to compile {}: {}\n{}", name,
@@ -241,6 +352,11 @@ PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInt
     metal_config.fast_color = GetQualityOptions().fast_color;
     metal_config.half_luts = GetQualityOptions().fast_lighting;
     metal_config.half_interpolants = GetQualityOptions().half_interpolants;
+    metal_config.fragment_quaternion_fix =
+        fragment_quaternion_fix && fs_config.lighting.enable.Value() != 0;
+    if (metal_config.fragment_quaternion_fix) {
+        hash = Common::HashCombine(hash, 0x9A7E'0F1C'0000'0006ULL);
+    }
     if (metal_config.fast_lighting) {
         hash = Common::HashCombine(hash, 0xFA57'1164'7000'0001ULL);
     }
@@ -277,7 +393,8 @@ PipelineCache::ShaderHandle PipelineCache::UseVertexShader(const Pica::RegsInter
     const bool half_interpolants = GetQualityOptions().half_interpolants;
     u64 hash = Common::HashCombine(config.Hash(), static_cast<u64>(use_clip_planes),
                                    static_cast<u64>(sanitize_mul),
-                                   static_cast<u64>(half_interpolants));
+                                   static_cast<u64>(half_interpolants),
+                                   static_cast<u64>(fragment_quaternion_fix));
     hash = hash == 0 ? 1 : hash;
     if (const auto it = vertex_shaders.find(hash); it != vertex_shaders.end()) {
         const ShaderHandle& shader = it->second;
@@ -286,7 +403,8 @@ PipelineCache::ShaderHandle PipelineCache::UseVertexShader(const Pica::RegsInter
     }
 
     Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::ShaderBuild};
-    std::string source = MSL::GenerateVertexShader(setup, config, use_clip_planes, sanitize_mul, half_interpolants);
+    std::string source = MSL::GenerateVertexShader(setup, config, use_clip_planes, sanitize_mul,
+                                                   half_interpolants, fragment_quaternion_fix);
     auto shader = MakeShader(hash, true, std::move(source));
     if (shader->source.empty()) {
         LOG_INFO(Render, "Vertex shader {:016x} cannot be translated, using the CPU for it",
@@ -527,17 +645,7 @@ void PipelineCache::OpenDiskCache(u64 title_id_) {
     title_id = title_id_;
     FileUtil::CreateFullPath(CachePath("cache"));
 
-    const CacheHeader expected{
-        .magic = CACHE_MAGIC,
-        .version = CACHE_VERSION,
-        .build_hash = BuildHash(),
-        .profile_hash = Common::HashCombine(
-            ProfileHash(GetProfile()),
-            static_cast<u64>(GetQualityOptions().fast_math) |
-                static_cast<u64>(GetQualityOptions().fast_functions) << 1 |
-                static_cast<u64>(GetQualityOptions().vertex_fast_functions) << 2 |
-                static_cast<u64>(GetQualityOptions().vertex_fast_math) << 3),
-    };
+    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix);
 
     // Reuse the file when it was written by this build with the same profile, otherwise start over.
     bool valid = false;
@@ -643,8 +751,8 @@ void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_lo
     if (!disk_cache_open) {
         return;
     }
-    const CacheHeader expected{CACHE_MAGIC, CACHE_VERSION, BuildHash(),
-                               ProfileHash(GetProfile())};
+    // The same header OpenDiskCache keeps. (They used to differ, which threw every cache away.)
+    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix);
     if (contents.size() < sizeof(CacheHeader) ||
         std::memcmp(contents.data(), &expected, sizeof(CacheHeader)) != 0) {
         return;

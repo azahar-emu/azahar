@@ -233,7 +233,8 @@ std::string RandomVertexShader(std::mt19937& rng, int index) {
         attribute.map_w.Assign(static_cast<Pica::RasterizerRegs::VSOutputAttributes::Semantic>(pick()));
     }
 
-    return MSL::GenerateVertexShader(*setup, config, index % 3 != 0, index % 4 != 0, index % 5 < 2);
+    return MSL::GenerateVertexShader(*setup, config, index % 3 != 0, index % 4 != 0, index % 5 < 2,
+                                     index % 7 < 3);
 }
 
 } // Anonymous namespace
@@ -288,6 +289,8 @@ int main(int argc, char** argv) {
         metal_config.half_luts = metal_config.fast_lighting;
         metal_config.half_interpolants = (i % 5) < 2;
         metal_config.vertex_depth = metal_config.has_depth_attachment && (i % 6) < 3;
+        // MSL 4.0 per-vertex quaternions, the validation script compiles those as Metal 4.
+        metal_config.fragment_quaternion_fix = (i % 8) < 4;
 
         Write(out_dir, "fs_random_" + std::to_string(i) + ".metal",
               MSL::GenerateFragmentShader(config, user, profile, metal_config));

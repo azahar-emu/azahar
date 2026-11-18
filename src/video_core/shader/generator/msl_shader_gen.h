@@ -94,6 +94,10 @@ struct MetalFSConfig {
     /// The vertex color goes from the vertex to the fragment stage as half4. The vertex shaders
     /// are generated with the same setting.
     bool half_interpolants = false;
+    /// Lit shaders read the normal quaternion of each corner (Metal 4 vertex_value) and do the
+    /// per-triangle sign correction themselves, so the vertex shaders can share vertices between
+    /// triangles. Needs MSL 4.0 and barycentric coordinates. Only used when lighting is enabled.
+    bool fragment_quaternion_fix = false;
 };
 
 /// Depth mapping done in the vertex shader instead of the fragment shader. Writing [[depth]] in a
@@ -169,7 +173,8 @@ static_assert(sizeof(VSVertexLayout) == 544, "VSVertexLayout must match the MSL 
  */
 std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSConfig& config,
                                  bool use_clip_planes, bool sanitize_mul,
-                                 bool half_interpolants = false);
+                                 bool half_interpolants = false,
+                                 bool fragment_quaternion_fix = false);
 
 /// Returns the vertex shader used by the software (CPU) vertex processing path.
 std::string GenerateTrivialVertexShader(bool use_clip_planes, bool half_interpolants = false);

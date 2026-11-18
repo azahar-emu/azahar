@@ -148,6 +148,12 @@ public:
         return fragment_shaders.size();
     }
 
+    /// True when lit fragment shaders correct the normal quaternions per triangle themselves
+    /// (MetalFSConfig::fragment_quaternion_fix), so lit draws may share vertices too.
+    bool FragmentQuaternionFix() const {
+        return fragment_quaternion_fix;
+    }
+
 private:
     struct Pipeline;
 
@@ -155,6 +161,7 @@ private:
     void CompileShader(Shader& shader);
     void BuildPipeline(Pipeline& pipeline);
     id<MTLLibrary> Compile(const std::string& source, std::string_view name, bool fragment);
+    bool ProbeFragmentQuaternionFix();
 
     void OpenDiskCache(u64 title_id);
     void CloseDiskCache();
@@ -167,6 +174,9 @@ private:
     MTLVertexDescriptor* vertex_descriptor;
     MTLCompileOptions* compile_options;
     MTLCompileOptions* fragment_compile_options; ///< Like compile_options, optionally fast math
+    /// fragment_compile_options with MSL 4.0, for the shaders reading per-vertex values.
+    MTLCompileOptions* fragment_compile_options_msl4 = nil;
+    bool fragment_quaternion_fix{};
     ShaderHandle trivial_vertex_shader;
 
     // Only accessed from the GPU thread.

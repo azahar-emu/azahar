@@ -239,10 +239,13 @@ bool RasterizerMetal::AccelerateDrawBatch(bool is_indexed) {
     draw.vertex_count = triangles * 3;
 
     // Native draws let the GPU reuse the shaded vertices. The per-triangle quaternion correction
-    // of lit draws needs the first corner of every triangle, those keep the corner by corner
-    // draw, and so do fans (Metal has none). A strip index of 0xFFFF would restart the strip.
+    // of lit draws needs the first corner of every triangle: unless the fragment shader does it
+    // (iOS 26), those keep the corner by corner draw. So do fans (Metal has none). A strip
+    // index of 0xFFFF would restart the strip.
     const bool index_u16 = regs.pipeline.index_array.format != 0;
-    draw.direct = GetQualityOptions().vertex_reuse && regs.lighting.disable.Value() != 0 &&
+    draw.direct = GetQualityOptions().vertex_reuse &&
+                  (regs.lighting.disable.Value() != 0 ||
+                   pipeline_cache.FragmentQuaternionFix()) &&
                   topology != Topology::Fan &&
                   !(is_indexed && topology == Topology::Strip &&
                     draw.vertex_info.vs_input_index_max >= 0xFFFFu);

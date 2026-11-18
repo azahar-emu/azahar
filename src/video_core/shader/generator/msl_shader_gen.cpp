@@ -213,6 +213,7 @@ public:
         // writes depth through the shadow buffer image instead.
         write_fragment_depth = metal.has_depth_attachment && !config.framebuffer.shadow_rendering &&
                                !metal.vertex_depth;
+        quaternion_fix = metal.fragment_quaternion_fix && config.lighting.enable.Value() != 0;
     }
 
     std::string Generate() {
@@ -225,7 +226,18 @@ public:
         }
         out += FSUniformDef;
         out += InterpColorDef;
-        out += FSInputDef;
+        if (quaternion_fix) {
+            // Each corner's quaternion, not the interpolated one, see FixedQuaternion below.
+            std::string input{FSInputDef};
+            const std::string_view plain = "float4 normquat [[user(normquat)]];";
+            input.replace(input.find(plain), plain.size(),
+                          "vertex_value<float4> normquat [[user(normquat)]];\n"
+                          "    float3 barycentric [[barycentric_coord, center_perspective]];");
+            out += "#include <metal_vertex_value>\n";
+            out += input;
+        } else {
+            out += FSInputDef;
+        }
         DefineOutput();
         DefineConstants();
 
@@ -397,7 +409,21 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
                                "[[texture({}), raster_order_group(0)]]",
                                +FS_TEXTURE_SHADOW_BUFFER);
         }
-        out += ")\n{\n    FSMain m(";
+        out += ")\n{\n";
+        if (quaternion_fix) {
+            // Interpolating between opposite quaternions breaks the lighting. Like the PICA
+            // rasterizer, flip the quaternions of the other corners to the side of the first
+            // corner's, then interpolate them as the rasterizer would have.
+            out += R"(    const float4 quat0 = in.normquat.get(vertex_index::first);
+    float4 quat1 = in.normquat.get(vertex_index::second);
+    float4 quat2 = in.normquat.get(vertex_index::third);
+    quat1 = dot(quat0, quat1) < 0.0f ? -quat1 : quat1;
+    quat2 = dot(quat0, quat2) < 0.0f ? -quat2 : quat2;
+    const float4 normquat = quat0 * in.barycentric.x + quat1 * in.barycentric.y +
+                            quat2 * in.barycentric.z;
+)";
+        }
+        out += "    FSMain m(";
         for (std::size_t i = 0; i < ctor_members.size(); i++) {
             const auto& name = ctor_members[i].second;
             std::string arg = name;
@@ -405,6 +431,8 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
                 arg = "in.position";
             } else if (name == "primary_color") {
                 arg = "float4(in.primary_color)";
+            } else if (name == "normquat" && quaternion_fix) {
+                arg = "normquat";
             } else if (name == "texcoord0" || name == "texcoord1" ||
                        name == "texcoord2" || name == "texcoord0_w" || name == "normquat" ||
                        name == "view") {
@@ -1366,7 +1394,8 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
         }
 
         // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
-        // eyespace. Opposite quaternions were already fixed up by the CPU when building the batch.
+        // eyespace. Opposite quaternions were already fixed up per triangle (by the CPU for
+        // software vertices, the vertex shader, or the entry point, see quaternion_fix).
         out +=
             "        float4 normalized_normquat = normalize(normquat);\n"
             "        float3 normal = quaternion_rotate(normalized_normquat, surface_normal);\n"
@@ -1928,6 +1957,8 @@ private:
     std::vector<std::pair<std::string, std::string>> ctor_members;
     bool use_framebuffer_fetch{};
     bool write_fragment_depth{};
+    /// The lighting quaternion is corrected per triangle here, see MetalFSConfig.
+    bool quaternion_fix = false;
 };
 
 } // Anonymous namespace
@@ -2112,7 +2143,8 @@ static uint FetchVertexIndex(constant VertexLayout& layout, device const uchar* 
 } // Anonymous namespace
 
 std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSConfig& config,
-                                 bool use_clip_planes, bool sanitize_mul, bool half_interpolants) {
+                                 bool use_clip_planes, bool sanitize_mul, bool half_interpolants,
+                                 bool fragment_quaternion_fix) {
     using VSOutputAttributes = Pica::RasterizerRegs::VSOutputAttributes;
     const auto& state = config.state;
 
@@ -2217,8 +2249,9 @@ std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSCon
     out += "    }\n";
     out += "};\n";
 
-    // Per-triangle quaternion correction, only needed when the fragment shader does lighting.
-    const bool fix_quaternions = !state.lighting_disable;
+    // Per-triangle quaternion correction, only needed when the fragment shader does lighting, and
+    // done there instead when it can read every corner (MetalFSConfig::fragment_quaternion_fix).
+    const bool fix_quaternions = !state.lighting_disable && !fragment_quaternion_fix;
 
     out += fmt::format(R"(
 vertex VSOutput {}(uint vid [[vertex_id]], constant VSUniforms& vs [[buffer({})]],
