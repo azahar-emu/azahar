@@ -616,6 +616,9 @@ struct GraphicsSettingsView: View {
 
             Section {
                 Toggle("Sync to Display Refresh", isOn: $settings.displaySync)
+                if settings.displaySync {
+                    Toggle("30 FPS Frame Cap", isOn: $settings.frameCap30)
+                }
                 // The older pacing, only used when Sync to Display Refresh is off.
                 if !settings.displaySync {
                     Toggle("Frame Pacing", isOn: $settings.framePacing)
@@ -638,7 +641,11 @@ struct GraphicsSettingsView: View {
                          + "60 Hz (saves power, one refresh per game frame) or up to 120 Hz; games run "
                          + "at 60 frames per second either way. iOS may ignore the request, especially "
                          + "when the app runs inside another app. The performance overlay's Pace value is "
-                         + "how much the time between frames varies (lower is smoother). Applies "
+                         + "how much the time between frames varies (lower is smoother). 30 FPS Frame "
+                         + "Cap (with Sync to Display Refresh) shows every new frame of the game for "
+                         + "exactly two 3DS refreshes, for games that run at 30 FPS but hand their "
+                         + "frames over unevenly (for example with Minimum GPU Time); a game running "
+                         + "faster is held to 30. It is best set per game. Applies "
                          + "when a game starts.")
                 }
             }

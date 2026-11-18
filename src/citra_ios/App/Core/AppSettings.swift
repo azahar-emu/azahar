@@ -258,6 +258,8 @@ final class AppSettings: ObservableObject {
     @Published var framePacing: Bool { didSet { save(framePacing, "framePacing") } }
     /// Frames shown by a display link and made in step with the display's refreshes.
     @Published var displaySync: Bool { didSet { save(displaySync, "displaySync") } }
+    /// Each new game frame is shown for two 3DS refreshes (steady 30 FPS), with display sync.
+    @Published var frameCap30: Bool { didSet { save(frameCap30, "frameCap30") } }
     /// Delay in milliseconds that the pacing adds so a slow frame still meets its slot.
     @Published var pacingBufferMs: Int { didSet { save(pacingBufferMs, "pacingBufferMs") } }
     @Published var asyncShaders: Bool { didSet { save(asyncShaders, "asyncShaders") } }
@@ -482,6 +484,7 @@ final class AppSettings: ObservableObject {
         refreshRate = RefreshRateOption(rawValue: value("refreshRate", RefreshRateOption.automatic.rawValue)) ?? .automatic
         framePacing = value("framePacing", true)
         displaySync = value("displaySync", true)
+        frameCap30 = value("frameCap30", false)
         pacingBufferMs = value("pacingBufferMs", 0)
         asyncShaders = value("asyncShaders", true)
         holdFramesForShaders = value("holdFramesForShaders", true)
@@ -659,6 +662,7 @@ final class AppSettings: ObservableObject {
         config.shaderWaitMs = shaderWaitMs
         config.framePacing = framePacing
         config.displaySync = displaySync
+        config.frameCap30 = frameCap30
         config.pacingBufferMs = pacingBufferMs
         config.fastShaderMath = fastShaderMath
         config.fastLighting = fastLighting

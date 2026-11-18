@@ -164,6 +164,9 @@ struct QualityOptions {
     /// Frames without frame generation go to the screen through the display link, and the
     /// emulation makes them in step with the display's refreshes (see SnapDeadlineToDisplay).
     bool display_sync = false;
+    /// With display sync, each new frame of the game is shown for this many of the 3DS's
+    /// refreshes (2: a steady 30 FPS), whatever its own timing was. 0 follows the game.
+    int frame_cap = 0;
     /// Frame generation with MetalFX's own frame interpolator instead of VideoToolbox's.
     bool frame_generation_metalfx = false;
     /// Frames of frame generation are shown by a display link at the display's refreshes.

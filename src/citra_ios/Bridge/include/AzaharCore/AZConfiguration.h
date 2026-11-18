@@ -106,6 +106,9 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 /// Frames go to the screen through a display link, and the emulation makes each one just after a
 /// refresh of the display, so they stay in step with it (replaces the timeline of framePacing).
 @property(nonatomic) BOOL displaySync;
+/// With displaySync, every new frame of the game is shown for two of the 3DS's refreshes: a steady
+/// 30 FPS for games that run at 30 but hand over their frames unevenly.
+@property(nonatomic) BOOL frameCap30;
 /// Milliseconds of delay the frame pacing adds so a slow frame still meets its slot (0 for none).
 @property(nonatomic) NSInteger pacingBufferMs;
 @property(nonatomic) BOOL fastShaderMath;

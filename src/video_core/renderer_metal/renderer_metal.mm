@@ -7,6 +7,7 @@
 #include <chrono>
 #include <thread>
 #include <time.h>
+#include <utility>
 #include <cmath>
 #include <cstring>
 #include <deque>
@@ -408,6 +409,7 @@ private:
     /// A frame without frame generation through the display link (display sync), see
     /// QualityOptions::display_sync. False when the display link could not be started.
     bool RenderDisplaySynced(CAMetalLayer* target, const Layout::FramebufferLayout& layout);
+    void NoteFrameRhythm();
     /// When frame generation last made a pair of frames: the display link stays a little while
     /// after, so a short stretch without frame generation does not restart it.
     std::chrono::steady_clock::time_point fg_last_generated{};
@@ -520,6 +522,11 @@ private:
     u32 fg_swaps{};      ///< SwapBuffers calls (60 per second of emulation)
     u32 fg_last_swaps{}; ///< fg_swaps at the previous new frame
     u32 plain_last_swaps{}; ///< fg_swaps at the previous frame shown without frame generation
+    // How many of the 3DS's refreshes the game's frames lasted, counted per second and logged
+    // when they were not all the same (an uneven frame rhythm, see SwapBuffers).
+    std::array<u32, 4> rhythm{};
+    u32 rhythm_last_swaps{};
+    std::chrono::steady_clock::time_point rhythm_start{};
     /// Display sync: the pictures waiting for the display link or on screen (it keeps up to two
     /// waiting and one shown, so four never overwrite one in use).
     static constexpr u32 DS_COLORS = 4;
@@ -2363,6 +2370,35 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     fg_cur = (fg_cur + 1) % FG_SLOTS;
 }
 
+void RendererMetal::NoteFrameRhythm() {
+    // A new frame of the game: count how many refreshes the previous one lasted.
+    if (Core::PerfStats::game_frames_updated) {
+        const u32 lasted = std::clamp(fg_swaps - rhythm_last_swaps, 1u, 4u);
+        rhythm_last_swaps = fg_swaps;
+        rhythm[lasted - 1]++;
+    }
+    const auto now = std::chrono::steady_clock::now();
+    if (now - rhythm_start < std::chrono::seconds{1}) {
+        return;
+    }
+    rhythm_start = now;
+    const auto counts = std::exchange(rhythm, {});
+    // Only uneven seconds, and not while fast-forwarding or slowed down (Sync Speed to Display
+    // runs a little above 100%).
+    const int kinds = (counts[0] > 0) + (counts[1] > 0) + (counts[2] > 0) + (counts[3] > 0);
+    if (kinds < 2 || std::abs(Settings::GetFrameLimit() - 100.0) > 1.0) {
+        return;
+    }
+    const int cap = GetQualityOptions().frame_cap;
+    LOG_INFO(Render,
+             "Game frame rhythm: {} frames lasted 1 refresh of the 3DS, {} lasted 2, {} lasted "
+             "3, {} lasted 4 or more{}",
+             counts[0], counts[1], counts[2], counts[3],
+             cap > 0 && GetQualityOptions().display_sync
+                 ? fmt::format(" (frame cap on: each is shown for {})", cap)
+                 : std::string{});
+}
+
 bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
                                         const Layout::FramebufferLayout& layout) {
     if (!StartPacer(target) || !fg_pacer) {
@@ -2390,8 +2426,12 @@ bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
     id<MTLTexture> current = ds_color[ds_index];
 
     // How long this frame of the game lasts: as many of the game's refreshes as swaps went by.
+    // With the frame cap every frame gets the same time, the waiting frames absorb the
+    // unevenness of the game's own timing.
     const u32 swaps = std::clamp(fg_swaps - plain_last_swaps, 1u, 4u);
     plain_last_swaps = fg_swaps;
+    const int cap = GetQualityOptions().frame_cap;
+    const u32 held = cap > 0 ? static_cast<u32>(cap) : swaps;
 
     scheduler.Flush();
     scheduler.MarkPresentation();
@@ -2424,7 +2464,7 @@ bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
     const double frame = limit > 0.0 ? (1.0 / 59.83) * 100.0 / limit : 1.0 / 60.0;
     std::scoped_lock lock{fg_pacer->mutex};
     // The display link shows it once the frame before it has been on screen for its time.
-    fg_pacer->slot = frame * swaps;
+    fg_pacer->slot = frame * held;
     fg_pacer->waiting.push_back({current, static_cast<float>(layout.width),
                                  static_cast<float>(layout.height), ds_event, ds_event_value});
     return true;
@@ -2684,6 +2724,7 @@ void RendererMetal::SwapBuffers() {
     PrepareRendertarget();
     RenderScreenshot();
     fg_swaps++;
+    NoteFrameRhythm();
 
     // A frame with a draw that was skipped (shader still being built) would show up with parts
     // missing for a moment: keep the previous frame instead.
@@ -2696,8 +2737,12 @@ void RendererMetal::SwapBuffers() {
         held_frames = 0;
     }
 
-    if (!hold_frame && (!Settings::values.use_skip_duplicate_frames.GetValue() ||
-                        Core::PerfStats::game_frames_updated)) {
+    // The frame cap shows new frames of the game only (a repeated one would take a slot).
+    const bool skip_duplicates =
+        Settings::values.use_skip_duplicate_frames.GetValue() ||
+        (GetQualityOptions().frame_cap > 0 && GetQualityOptions().display_sync &&
+         GetQualityOptions().frame_generation == 0);
+    if (!hold_frame && (!skip_duplicates || Core::PerfStats::game_frames_updated)) {
         if (layer_dirty) {
             AcquireLayer();
         }

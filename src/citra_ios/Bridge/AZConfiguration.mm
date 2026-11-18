@@ -30,6 +30,7 @@
     config.asyncShaderCompilation = YES;
     config.framePacing = YES;
     config.displaySync = YES;
+    config.frameCap30 = NO;
     config.pacingBufferMs = 0;
     config.fastShaderMath = NO;
     config.fastLighting = NO;
