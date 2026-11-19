@@ -20,7 +20,8 @@ constexpr u32 SPIRV_VERSION_1_3 = 0x00010300;
 FragmentModule::FragmentModule(const FSConfig& config_, const Profile& profile_)
     : Sirit::Module{SPIRV_VERSION_1_3}, config{config_}, profile{profile_},
       use_fragment_shader_barycentric{profile.has_fragment_shader_barycentric &&
-                                      config.lighting.enable} {
+                                      config.lighting.enable},
+      use_float16{static_cast<bool>(profile.has_float16)} {
     config.ApplyProfile(profile_);
     DefineArithmeticTypes();
     DefineUniformStructs();
@@ -1500,12 +1501,22 @@ void FragmentModule::DefineArithmeticTypes() {
     i32_id = Name(TypeSInt(32), "i32_id");
     u32_id = Name(TypeUInt(32), "u32_id");
 
+    f16_id = Name(TypeFloat(16), "f16_id");
+
     for (u32 size = 2; size <= 4; size++) {
         const u32 i = size - 2;
         f32vec_ids.ids[i] = Name(TypeVector(f32_id, size), fmt::format("vec{}_id", size));
         i32vec_ids.ids[i] = Name(TypeVector(i32_id, size), fmt::format("ivec{}_id", size));
         u32vec_ids.ids[i] = Name(TypeVector(u32_id, size), fmt::format("uvec{}_id", size));
         bvec_ids.ids[i] = Name(TypeVector(bool_id, size), fmt::format("bvec{}_id", size));
+
+        if (use_float16) {
+            f16vec_ids.ids[i] = Name(TypeVector(f16_id, size), fmt::format("f16vec{}_id", size));
+        } else {
+            // Float16 not supported, use relaxed-precision float32 instead
+            f16vec_ids.ids[i] = Name(TypeVector(f32_id, size), fmt::format("vec{}_id", size));
+            Decorate(f16vec_ids.ids[i], spv::Decoration::RelaxedPrecision);
+        }
     }
 }
 
@@ -1513,6 +1524,9 @@ void FragmentModule::DefineEntryPoint() {
     AddCapability(spv::Capability::Shader);
     AddCapability(spv::Capability::SampledBuffer);
     AddCapability(spv::Capability::ImageQuery);
+    if (use_float16) {
+        AddCapability(spv::Capability::Float16);
+    }
     if (use_fragment_shader_barycentric) {
         AddCapability(spv::Capability::FragmentBarycentricKHR);
         AddExtension("SPV_KHR_fragment_shader_barycentric");

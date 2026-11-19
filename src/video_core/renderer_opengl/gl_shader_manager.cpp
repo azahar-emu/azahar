@@ -276,6 +276,8 @@ public:
             .has_fragment_shader_interlock = driver.HasArbFragmentShaderInterlock(),
             // TODO: This extension requires GLSL 450 / OpenGL 4.5 context.
             .has_fragment_shader_barycentric = false,
+            // TODO: Requires GL_EXT_shader_explicit_arithmetic_types_float16
+            .has_float16 = false,
             .has_blend_minmax_factor = driver.HasBlendMinMaxFactor(),
             .has_minus_one_to_one_range = true,
             .has_logic_op = !driver.IsOpenGLES(),

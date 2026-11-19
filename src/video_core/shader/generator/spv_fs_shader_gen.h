@@ -213,6 +213,19 @@ private:
         return ConstantComposite(type, constituents);
     }
 
+    [[nodiscard]] Id ConstF16(f32 value) {
+        return Constant(f16_id, value);
+    }
+
+    template <typename... Args>
+    [[nodiscard]] Id ConstF16(Args... values) {
+        constexpr u32 size = static_cast<u32>(sizeof...(values));
+        static_assert(size >= 2);
+        const std::array constituents{Constant(f16_id, values)...};
+        const Id type = size <= 4 ? f16vec_ids.Get(size) : TypeArray(f16_id, ConstU32(size));
+        return ConstantComposite(type, constituents);
+    }
+
     void DefineArithmeticTypes();
     void DefineEntryPoint();
     void DefineUniformStructs();
@@ -224,6 +237,7 @@ private:
     const Profile& profile;
 
     bool use_fragment_shader_barycentric{};
+    bool use_float16{};
 
     Id void_id{};
     Id bool_id{};
@@ -235,6 +249,11 @@ private:
     VectorIds f32vec_ids{};
     VectorIds i32vec_ids{};
     VectorIds u32vec_ids{};
+
+    // Depending on the platform-support, f16 might be up-casted to f32 with relaxed-precision
+    // decoration
+    Id f16_id{};
+    VectorIds f16vec_ids{};
 
     Id image2d_id{};
     Id image_cube_id{};

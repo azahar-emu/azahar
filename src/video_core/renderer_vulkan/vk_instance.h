@@ -186,6 +186,11 @@ public:
         return fragment_shader_barycentric;
     }
 
+    /// Returns true when VK_KHR_shader_float16_int8 is supported
+    bool IsShaderFloat16Supported() const {
+        return shader_float16;
+    }
+
     /// Returns the vendor ID of the physical device
     u32 GetVendorID() const {
         return properties.vendorID;
@@ -347,6 +352,7 @@ protected:
     bool depth_stencil_resolve{};
     bool pipeline_creation_cache_control{};
     bool fragment_shader_barycentric{};
+    bool shader_float16{};
     bool shader_stencil_export{};
     bool external_memory_host{};
     u64 min_imported_host_pointer_alignment{};

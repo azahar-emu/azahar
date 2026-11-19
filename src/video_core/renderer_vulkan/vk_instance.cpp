@@ -403,7 +403,8 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceRobustness2FeaturesEXT,
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT,
         vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT,
-        vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR>();
+        vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR,
+        vk::PhysicalDeviceShaderFloat16Int8FeaturesKHR>();
     const vk::StructureChain properties_chain =
         physical_device
             .getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceDriverProperties,
@@ -479,6 +480,7 @@ bool Instance::CreateDevice() {
     const bool has_fragment_shader_barycentric =
         add_extension(VK_KHR_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME, is_moltenvk,
                       "the PerVertexKHR attribute is not supported by MoltenVK");
+    const bool has_shader_float16 = add_extension(VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME);
 
     const auto family_properties = physical_device.getQueueFamilyProperties();
     if (family_properties.empty()) {
@@ -540,6 +542,7 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT{},
         vk::PhysicalDevicePipelineCreationCacheControlFeaturesEXT{},
         vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR{},
+        vk::PhysicalDeviceShaderFloat16Int8FeaturesKHR{},
     };
 
 #define PROP_GET(structName, prop, property) property = properties_chain.get<structName>().prop;
@@ -623,6 +626,12 @@ bool Instance::CreateDevice() {
                  fragment_shader_barycentric)
     } else {
         device_chain.unlink<vk::PhysicalDeviceFragmentShaderBarycentricFeaturesKHR>();
+    }
+
+    if (has_shader_float16) {
+        FEAT_SET(vk::PhysicalDeviceShaderFloat16Int8FeaturesKHR, shaderFloat16, shader_float16)
+    } else {
+        device_chain.unlink<vk::PhysicalDeviceShaderFloat16Int8FeaturesKHR>();
     }
 
 #undef PROP_GET

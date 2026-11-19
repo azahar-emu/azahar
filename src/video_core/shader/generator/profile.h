@@ -31,6 +31,7 @@ struct Profile {
     u8 has_custom_border_color{};
     u8 has_fragment_shader_interlock{};
     u8 has_fragment_shader_barycentric{};
+    u8 has_float16{};
     u8 has_blend_minmax_factor{};
     u8 has_minus_one_to_one_range{};
     u8 has_logic_op{};
