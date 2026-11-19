@@ -596,6 +596,12 @@ private:
 
     /// Emulated time of the last vertical blank (not part of the saved state).
     u64 last_vblank_us{};
+    /// Emulated time of the vertical blank where the game's current frame started: the one that
+    /// showed its previous frame (the top screen's buffer swap). The GPU time floor counts from
+    /// it, so a frame whose work goes past a refresh is not held for another one. Not saved.
+    u64 frame_start_us{};
+    /// The game asked for a top screen buffer swap (SetBufferSwap) since the last vertical blank.
+    bool top_swap_requested{};
 
     class PendingInterruptArray {
     public:
