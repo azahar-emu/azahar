@@ -58,6 +58,19 @@ struct GpuStats {
 /// lighting, 2 corner by corner otherwise, and the vertices it draws.
 void NoteHardwareDraw(int kind, u32 vertices);
 
+/// What the pixel shader of a draw of the game does that keeps the GPU from skipping hidden
+/// pixels (hidden surface removal), for the render pass statistics.
+struct PixelTraits {
+    bool depth_stencil_only; ///< Color writes off or no color buffer
+    bool no_fragment;        ///< Drawn without a fragment function
+    bool writes_depth;       ///< The fragment shader outputs the depth
+    bool alpha_test;         ///< The fragment shader may discard (alpha test)
+    bool scissor_test;       ///< The fragment shader may discard (scissor test)
+    bool lit;
+    bool blended;
+};
+void NotePixelTraits(const PixelTraits& traits);
+
 /// Counts a frame of the main display that reached the screen at this time (the presentedTime
 /// of its drawable), for the statistics of the intervals between frames.
 void RecordPresentedTime(double time);

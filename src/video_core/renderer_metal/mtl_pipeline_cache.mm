@@ -505,8 +505,10 @@ PipelineCache::ShaderHandle PipelineCache::UseVertexShader(const Pica::RegsInter
 void PipelineCache::BuildPipeline(Pipeline& pipeline) {
     std::call_once(pipeline.once, [&] {
         CompileShader(*pipeline.vertex);
-        CompileShader(*pipeline.fragment);
-        if (pipeline.vertex->failed || pipeline.fragment->failed) {
+        if (pipeline.fragment) {
+            CompileShader(*pipeline.fragment);
+        }
+        if (pipeline.vertex->failed || (pipeline.fragment && pipeline.fragment->failed)) {
             pipeline.done.store(true, std::memory_order_release);
             return;
         }
@@ -515,7 +517,8 @@ void PipelineCache::BuildPipeline(Pipeline& pipeline) {
         const PipelineKey& key = pipeline.key;
         @autoreleasepool {
             MTLRenderPipelineDescriptor* desc = [MTLRenderPipelineDescriptor new];
-            desc.fragmentFunction = pipeline.fragment->function;
+            // Depth and stencil only draws run no fragment function (PipelineKey::no_fragment).
+            desc.fragmentFunction = pipeline.fragment ? pipeline.fragment->function : nil;
             desc.vertexFunction = pipeline.vertex->function;
             if (key.vs_hash == 0) {
                 desc.vertexDescriptor = vertex_descriptor;
@@ -888,14 +891,18 @@ void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_lo
             }
             vertex = it->second;
         }
-        const auto it = fragment_shaders.find(key.fs_hash);
-        if (it == fragment_shaders.end()) {
-            continue;
+        ShaderHandle fragment;
+        if (!key.no_fragment) {
+            const auto it = fragment_shaders.find(key.fs_hash);
+            if (it == fragment_shaders.end()) {
+                continue;
+            }
+            fragment = it->second;
         }
         auto pipeline = std::make_shared<Pipeline>();
         pipeline->key = key;
         pipeline->vertex = vertex;
-        pipeline->fragment = it->second;
+        pipeline->fragment = fragment;
         pipeline->queued = true;
         pipelines.emplace(hash, pipeline);
         to_build.push_back(std::move(pipeline));

@@ -43,7 +43,9 @@ struct PipelineKey {
     u8 src_alpha;  ///< MTLBlendFactor
     u8 dst_alpha;  ///< MTLBlendFactor
     u8 write_mask; ///< MTLColorWriteMask
-    u8 pad[4];
+    /// 1: no fragment function, the draw only writes depth and stencil (fs_hash is 0).
+    u8 no_fragment;
+    u8 pad[3];
 
     u64 Hash() const noexcept {
         return Common::ComputeHash64(this, sizeof(PipelineKey));

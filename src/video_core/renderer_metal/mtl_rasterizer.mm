@@ -476,12 +476,41 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
         key.blend_enable = 0;
     }
     key.vs_hash = PipelineCache::HashOf(vertex);
+
+    // A draw that writes no color (stencil shadow volumes, depth pre-passes) needs its fragment
+    // function only to discard pixels or to output the depth. Otherwise it is drawn without one:
+    // the PICA keeps the lighting and texturing state of the draws before, and the GPU ran all of
+    // it for every covered pixel only to throw the color away.
+    const auto& output_merger = regs.framebuffer.output_merger;
+    PixelTraits traits{};
+    traits.depth_stencil_only =
+        !shadow_rendering &&
+        (key.write_mask == static_cast<u8>(MTLColorWriteMaskNone) ||
+         key.color_format == static_cast<u32>(MTLPixelFormatInvalid));
+    traits.writes_depth = has_depth && !shadow_rendering && !vertex_depth;
+    traits.alpha_test =
+        output_merger.alpha_test.enable.Value() != 0 &&
+        output_merger.alpha_test.func.Value() != Pica::FramebufferRegs::CompareFunc::Always;
+    traits.scissor_test = regs.rasterizer.scissor_test.mode.Value() !=
+                          Pica::RasterizerRegs::ScissorMode::Disabled;
+    traits.lit = regs.lighting.disable.Value() == 0;
+    traits.blended = key.blend_enable != 0;
+    traits.no_fragment = traits.depth_stencil_only && !traits.writes_depth &&
+                         !traits.alpha_test && !traits.scissor_test;
+    NotePixelTraits(traits);
+    PipelineCache::ShaderHandle fragment_used = fragment;
+    if (traits.no_fragment) {
+        key.no_fragment = 1;
+        key.fs_hash = 0;
+        key.blend_enable = 0;
+        fragment_used = nullptr;
+    }
     // With async shader compilation a draw whose pipeline is still being built is skipped, but
     // small draws (fullscreen passes, UI quads) wait: skipping them is much more visible.
     const u32 draw_vertices =
         hw_draw ? regs.pipeline.num_vertices : static_cast<u32>(vertex_batch.size());
     id<MTLRenderPipelineState> pipeline =
-        pipeline_cache.GetPipeline(key, vertex, fragment, draw_vertices <= 6);
+        pipeline_cache.GetPipeline(key, vertex, fragment_used, draw_vertices <= 6);
     if (pipeline == nil) {
         Stats().skipped.fetch_add(1, std::memory_order_relaxed);
         // Only a hole in a target the size of a screen makes a frame worth holding back; shadow
