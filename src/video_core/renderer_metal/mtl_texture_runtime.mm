@@ -570,6 +570,17 @@ bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
     const bool full_clear = rect.left == 0 && std::min(rect.bottom, rect.top) == 0 &&
                             rect.GetWidth() >= level_width && rect.GetHeight() >= level_height;
 
+    if (!full_clear && !GetQualityOptions().draw_optimizations) {
+        // A pass of its own (Draw Optimizations off).
+        if (surface.IsDepth()) {
+            blit_helper.ClearDepthStencil(texture, clear.texture_level, surface.HasStencil(), rect,
+                                          clear.value.depth, clear.value.stencil);
+        } else {
+            blit_helper.ClearColor(texture, clear.texture_level, clear.texture_layer, rect,
+                                   clear.value.color);
+        }
+        return true;
+    }
     if (!full_clear) {
         // Drawn into the pass that renders to the texture (now or next) instead of a pass of its
         // own, see Scheduler::ClearColorRect.

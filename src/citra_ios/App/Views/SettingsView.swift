@@ -325,8 +325,9 @@ struct GraphicsSettingsView: View {
         text += "frame (Mario Kart 7's sun glare) with the previous frame's values instead "
         text += "of waiting for the GPU. "
         text += "Draw Optimizations draws depth-only geometry (like shadow volumes) without a "
-        text += "pixel shader, does the scissor test with the GPU's own scissor and drops "
-        text += "blending that changes nothing; turn it off if a game shows glitches it did not "
+        text += "pixel shader, does the scissor test with the GPU's own scissor, drops "
+        text += "blending that changes nothing and draws clears of part of the screen inside the "
+        text += "game's own render passes; turn it off if a game shows glitches it did not "
         text += "have before. "
         text += "All of these apply the next time a game starts."
         return text
