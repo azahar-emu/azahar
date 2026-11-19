@@ -4,6 +4,7 @@
 
 import AzaharCore
 import Foundation
+import UIKit
 
 /// Settings a game can override. A nil value means the game uses the global setting.
 struct GameOverrides: Codable, Equatable {
@@ -48,6 +49,8 @@ struct GameOverrides: Codable, Equatable {
     var syncSpeedToDisplay: Bool?
     var pacingBufferMs: Int?
     var displaySync: Bool?
+    /// RefreshRateOption raw value (0 Automatic, 60, 120).
+    var refreshRate: Int?
     var frameCap30: Bool?
     var frameCapHoldsGame: Bool?
     var shaderWaitMs: Int?
@@ -128,6 +131,10 @@ struct GameOverrides: Codable, Equatable {
         if let syncSpeedToDisplay { config.syncSpeedToDisplay = syncSpeedToDisplay }
         if let pacingBufferMs { config.pacingBufferMs = pacingBufferMs }
         if let displaySync { config.displaySync = displaySync }
+        if let refreshRate {
+            let screenMax = UIScreen.main.maximumFramesPerSecond
+            config.displayRefreshRate = refreshRate == 0 ? screenMax : min(refreshRate, screenMax)
+        }
         if let frameCap30 { config.frameCap30 = frameCap30 }
         if let frameCapHoldsGame { config.frameCapHoldsGame = frameCapHoldsGame }
         if let frameGenerationDisplayPaced {

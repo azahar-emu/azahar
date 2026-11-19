@@ -540,6 +540,7 @@ private:
     id<MTLEvent> fg_event = nil;
     std::atomic<u64> fg_event_value{0};
     f32 fg_cadence{1.0f}; ///< Swaps per new frame of the game, smoothed: 2 for a 30 FPS game
+    bool fg_hz_warned{};  ///< Logged that a 60 FPS game needs a 120 Hz display
     std::chrono::steady_clock::time_point fg_last_frame{};
     double fg_interval{};
     /// The pictures of the frames in color at full size, shown as the real frames.
@@ -1545,6 +1546,13 @@ bool RendererMetal::UseFrameGeneration(const Layout::FramebufferLayout& layout) 
     const QualityOptions& options = GetQualityOptions();
     const bool sixty_fps = mode >= 2 && options.frame_generation_display_paced &&
                            options.display_hz >= 100 && fg_cadence < 1.3f;
+    if (mode >= 2 && fg_cadence < 1.3f && options.display_hz < 100 && !fg_hz_warned) {
+        fg_hz_warned = true;
+        LOG_WARNING(Render, "Frame generation: the game runs at 60 FPS and the display at {} Hz, "
+                            "there is no refresh left for made frames. Set Display Refresh Rate "
+                            "to 120 Hz or Automatic (globally or for this game).",
+                    options.display_hz);
+    }
     const bool eligible = fg_interval > 0.0 && (thirty_fps || sixty_fps) && limit > 0.0 &&
                           limit <= 110.0;
     if (!eligible) {

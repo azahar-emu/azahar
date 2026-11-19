@@ -55,7 +55,9 @@ struct EmulationView: View {
                 updateButtonFade()
             }
         }
-        .onChange(of: settings.refreshRate) { RefreshRateController.shared.apply($0) }
+        .onChange(of: settings.refreshRate) { _ in
+            RefreshRateController.shared.apply(effectiveRefreshRate)
+        }
         .statusBarHidden()
         .persistentSystemOverlays(.hidden)
         // Without this iOS holds back touches near the screen edges until it knows they are not
@@ -112,6 +114,16 @@ struct EmulationView: View {
         } message: {
             Text(session.notice?.message ?? "")
         }
+    }
+
+    /// The game's own Display Refresh Rate if it has one, otherwise the global setting.
+    private var effectiveRefreshRate: RefreshRateOption {
+        if let game = session.currentGame,
+           let raw = GameOverridesStore.shared.overrides(for: game).refreshRate,
+           let option = RefreshRateOption(rawValue: raw) {
+            return option
+        }
+        return settings.refreshRate
     }
 
     var body: some View {
@@ -276,7 +288,7 @@ struct EmulationView: View {
         }
         .onAppear {
             controllerLayout.activate(gameID: session.currentGame?.programIDString)
-            RefreshRateController.shared.apply(settings.refreshRate)
+            RefreshRateController.shared.apply(effectiveRefreshRate)
         }
         .onDisappear {
             controllerLayout.activate(gameID: nil)
