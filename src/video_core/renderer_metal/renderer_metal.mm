@@ -541,6 +541,18 @@ private:
     std::atomic<u64> fg_event_value{0};
     f32 fg_cadence{1.0f}; ///< Swaps per new frame of the game, smoothed: 2 for a 30 FPS game
     bool fg_hz_warned{};  ///< Logged that a 60 FPS game needs a 120 Hz display
+    // Adaptive frame generation and pausing (AdaptFrameGeneration), on the emulation thread.
+    int fga_level{1};          ///< Index in ADAPTIVE_SIZES, starts at half
+    int fga_behind{};          ///< Seconds in a row the made frames came too late
+    int fga_ahead{};           ///< Seconds in a row with plenty of room
+    int fga_hold{};            ///< Seconds before the size may go up again
+    bool fga_paused{};
+    int fga_paused_seconds{};
+    int fga_light{};           ///< Seconds in a row the game's GPU time was well below the pause's
+    double fga_baseline_ms{};  ///< The game's GPU time per frame at the start of the pause
+    std::chrono::steady_clock::time_point fga_window{};
+    void AdaptFrameGeneration();
+    int FrameGenerationSize() const;
     std::chrono::steady_clock::time_point fg_last_frame{};
     double fg_interval{};
     /// The pictures of the frames in color at full size, shown as the real frames.
@@ -1370,6 +1382,124 @@ void RendererMetal::RenderToLayer(CAMetalLayer* target, const Layout::Framebuffe
 #endif
 }
 
+namespace {
+/// The sizes adaptive frame generation goes through, largest first (values of
+/// QualityOptions::frame_generation_size): three quarters, half, three eighths, a quarter.
+constexpr std::array<int, 4> ADAPTIVE_SIZES{4, 1, 2, 3};
+constexpr std::array<const char*, 5> SIZE_NAMES{"full", "half", "3/8", "quarter", "3/4"};
+} // namespace
+
+int RendererMetal::FrameGenerationSize() const {
+    const int chosen = GetQualityOptions().frame_generation_size;
+    if (chosen == 5) {
+        return ADAPTIVE_SIZES[std::clamp(fga_level, 0, static_cast<int>(ADAPTIVE_SIZES.size()) - 1)];
+    }
+    return std::clamp(chosen, 0, 4);
+}
+
+void RendererMetal::AdaptFrameGeneration() {
+    const QualityOptions& options = GetQualityOptions();
+    const bool adaptive = options.frame_generation_size == 5;
+    const bool pausing = options.frame_generation_pause;
+    if (!adaptive && !pausing) {
+        fga_paused = false;
+        return;
+    }
+    // Once a second.
+    const auto now = std::chrono::steady_clock::now();
+    if (fga_window.time_since_epoch().count() == 0) {
+        fga_window = now;
+        Stats().adapt_fg_ns.exchange(0);
+        Stats().adapt_fg_made.exchange(0);
+        Stats().adapt_fg_skipped.exchange(0);
+        Stats().adapt_gpu_ns.exchange(0);
+        Stats().adapt_frames.exchange(0);
+        return;
+    }
+    if (now - fga_window < std::chrono::seconds{1}) {
+        return;
+    }
+    fga_window = now;
+    const u64 fg_ns = Stats().adapt_fg_ns.exchange(0);
+    const u32 made = Stats().adapt_fg_made.exchange(0);
+    const u32 dropped = Stats().adapt_fg_skipped.exchange(0);
+    const u64 gpu_ns = Stats().adapt_gpu_ns.exchange(0);
+    const u32 frames = Stats().adapt_frames.exchange(0);
+    const double game_gpu_ms = frames > 0 ? static_cast<double>(gpu_ns) / 1e6 / frames : 0.0;
+    fga_hold = std::max(fga_hold - 1, 0);
+    const int smallest = static_cast<int>(ADAPTIVE_SIZES.size()) - 1;
+
+    if (fga_paused) {
+        // Back when the game's GPU work is well below what it was when the pause began (the
+        // scene got lighter), or after a while to try again.
+        fga_paused_seconds++;
+        if (fga_paused_seconds <= 2) {
+            fga_baseline_ms = std::max(fga_baseline_ms, game_gpu_ms);
+            return;
+        }
+        fga_light = game_gpu_ms > 0.0 && game_gpu_ms < fga_baseline_ms * 0.7 ? fga_light + 1 : 0;
+        if (fga_light >= 3 || fga_paused_seconds >= 30) {
+            LOG_INFO(Render,
+                     "Frame generation resumes ({}: the game's GPU time is {:.1f} ms a frame, "
+                     "{:.1f} ms when it paused)",
+                     fga_light >= 3 ? "the scene got lighter" : "trying again after 30 s",
+                     game_gpu_ms, fga_baseline_ms);
+            fga_paused = false;
+            fga_behind = 0;
+            fga_ahead = 0;
+            fga_light = 0;
+            fga_hold = 8;
+        }
+        return;
+    }
+    if (made < 5) {
+        // Not making frames now (a menu, a 60 FPS game in 30 FPS mode): nothing to judge.
+        fga_behind = 0;
+        fga_ahead = 0;
+        return;
+    }
+    // A made frame has half the time between the game's frames to reach the screen in time.
+    const double budget_ms = fg_interval > 0.0 ? fg_interval * 1000.0 / 2.0 : 16.7;
+    const double frame_ms = static_cast<double>(fg_ns) / 1e6 / made;
+    const bool behind = frame_ms > budget_ms * 0.8 || dropped >= 3;
+    const bool ahead = frame_ms < budget_ms * 0.45 && dropped == 0;
+    fga_behind = behind ? fga_behind + 1 : 0;
+    fga_ahead = ahead ? fga_ahead + 1 : 0;
+
+    if (fga_behind >= 2) {
+        fga_behind = 0;
+        fga_ahead = 0;
+        if (adaptive && fga_level < smallest) {
+            fga_level++;
+            fga_hold = 8;
+            LOG_INFO(Render,
+                     "Adaptive frame generation: made frames take {:.1f} ms of a {:.1f} ms "
+                     "budget ({} game frames dropped), smaller frames: {}",
+                     frame_ms, budget_ms, dropped, SIZE_NAMES[FrameGenerationSize()]);
+        } else if (pausing) {
+            fga_paused = true;
+            fga_paused_seconds = 0;
+            fga_baseline_ms = 0.0;
+            fga_light = 0;
+            LOG_INFO(Render,
+                     "Frame generation paused: made frames take {:.1f} ms of a {:.1f} ms budget "
+                     "({} game frames dropped) at the {} size; the game's own frames are shown "
+                     "until the scene gets lighter",
+                     frame_ms, budget_ms, dropped, SIZE_NAMES[FrameGenerationSize()]);
+        }
+        return;
+    }
+    if (adaptive && fga_ahead >= 6 && fga_hold == 0 && fga_level > 0) {
+        fga_ahead = 0;
+        fga_level--;
+        fga_hold = 8;
+        LOG_INFO(Render,
+                 "Adaptive frame generation: made frames take {:.1f} ms of a {:.1f} ms budget, "
+                 "larger frames: {}",
+                 frame_ms, budget_ms, SIZE_NAMES[FrameGenerationSize()]);
+    }
+}
+
 bool RendererMetal::UseFrameGeneration(const Layout::FramebufferLayout& layout) {
     const int mode = GetQualityOptions().frame_generation;
     if (mode <= 0 || !g_fg_hooks.prepare || !g_fg_hooks.texture || !g_fg_hooks.interpolate) {
@@ -1413,7 +1543,8 @@ bool RendererMetal::UseFrameGeneration(const Layout::FramebufferLayout& layout) 
         }
     }
 
-    const int size = std::clamp(GetQualityOptions().frame_generation_size, 0, 4);
+    AdaptFrameGeneration();
+    const int size = FrameGenerationSize();
     if (layout.width != fg_layout_width || layout.height != fg_layout_height ||
         screens.left != fg_screens.left || screens.top != fg_screens.top ||
         screens.right != fg_screens.right || screens.bottom != fg_screens.bottom ||
@@ -1557,6 +1688,11 @@ bool RendererMetal::UseFrameGeneration(const Layout::FramebufferLayout& layout) 
                           limit <= 110.0;
     if (!eligible) {
         // The frame is drawn the usual way and the next one starts over.
+        fg_prev = -1;
+        return false;
+    }
+    if (fga_paused) {
+        // Paused (frame generation fell behind even at its smallest size): the game's own frames.
         fg_prev = -1;
         return false;
     }
@@ -1986,6 +2122,7 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
             fg_failures.fetch_add(30, std::memory_order_relaxed);
         } else {
             Stats().fg_skipped.fetch_add(1, std::memory_order_relaxed);
+            Stats().adapt_fg_skipped.fetch_add(1, std::memory_order_relaxed);
             fg_prev = -1;
             return;
         }
@@ -2040,7 +2177,7 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     }
     if (make_between && fg_metalfx && fg_prev_color >= 0) {
         constexpr std::array<f32, 5> fx_scales{1.0f, 0.5f, 0.375f, 0.25f, 0.75f};
-        const f32 scale = fx_scales[std::clamp(GetQualityOptions().frame_generation_size, 0, 4)];
+        const f32 scale = fx_scales[FrameGenerationSize()];
         if (PrepareMetalFX(layout.width, layout.height, fg_area_width, fg_area_height, scale)) {
             if (fx_queue == nil) {
                 fx_queue = [instance.GetDevice() newCommandQueue];
@@ -2336,8 +2473,11 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
           if (gpu_seconds > 0.0) {
               Stats().fg_ns.fetch_add(static_cast<u64>(gpu_seconds * 1e9),
                                       std::memory_order_relaxed);
+              Stats().adapt_fg_ns.fetch_add(static_cast<u64>(gpu_seconds * 1e9),
+                                            std::memory_order_relaxed);
           }
           Stats().fg_made.fetch_add(1, std::memory_order_relaxed);
+          Stats().adapt_fg_made.fetch_add(1, std::memory_order_relaxed);
           failures->store(0, std::memory_order_relaxed);
           (*show)(true);
         }];
@@ -2356,11 +2496,12 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
                                                                       failures](bool ok) {
           if (ok) {
               const auto took = std::chrono::steady_clock::now() - start;
-              Stats().fg_ns.fetch_add(
-                  static_cast<u64>(
-                      std::chrono::duration_cast<std::chrono::nanoseconds>(took).count()),
-                  std::memory_order_relaxed);
+              const u64 took_ns = static_cast<u64>(
+                  std::chrono::duration_cast<std::chrono::nanoseconds>(took).count());
+              Stats().fg_ns.fetch_add(took_ns, std::memory_order_relaxed);
+              Stats().adapt_fg_ns.fetch_add(took_ns, std::memory_order_relaxed);
               Stats().fg_made.fetch_add(1, std::memory_order_relaxed);
+              Stats().adapt_fg_made.fetch_add(1, std::memory_order_relaxed);
               failures->store(0, std::memory_order_relaxed);
           } else {
               failures->fetch_add(1, std::memory_order_relaxed);
@@ -2771,6 +2912,7 @@ void RendererMetal::SwapBuffers() {
     scheduler.Flush();
     LimitFramesAheadOfGpu();
     Stats().frames.fetch_add(1, std::memory_order_relaxed);
+    Stats().adapt_frames.fetch_add(1, std::memory_order_relaxed);
 
     system.perf_stats->EndSwap();
     rasterizer.TickFrame();

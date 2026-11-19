@@ -163,9 +163,13 @@ struct QualityOptions {
     /// Frame generation: 0 off, 1 for games below 40 FPS only, 2 for every game.
     int frame_generation = 0;
     /// Size the frames are made at: 0 full, 1 half, 2 three eighths, 3 a quarter, 4 three quarters
-    /// of the screen.
+    /// of the screen, 5 adaptive (starts at half, goes smaller while the made frames come too
+    /// late and back up when there is room again).
     /// Smaller is faster (less work for the interpolation) and softer.
     int frame_generation_size = 1;
+    /// Frame generation pauses (the game's own frames are shown) while the made frames come too
+    /// late even at the smallest size it may use, and comes back when the scene gets lighter.
+    bool frame_generation_pause = false;
     /// Make frames for the top screen only; the bottom screen shows the game's own frames.
     bool frame_generation_top_only = false;
     /// Frames without frame generation go to the screen through the display link, and the

@@ -44,6 +44,7 @@ struct GameOverrides: Codable, Equatable {
     var frameGenerationFast: Bool?
     var frameGenerationSize: Int?
     var frameGenerationTopOnly: Bool?
+    var frameGenerationPause: Bool?
     var frameGenerationDisplayPaced: Bool?
     var frameGenerationMetalFX: Bool?
     var syncSpeedToDisplay: Bool?
@@ -128,6 +129,7 @@ struct GameOverrides: Codable, Equatable {
         if let frameGenerationFast { config.frameGenerationSize = frameGenerationFast ? 2 : 1 }
         if let frameGenerationSize { config.frameGenerationSize = frameGenerationSize }
         if let frameGenerationTopOnly { config.frameGenerationTopOnly = frameGenerationTopOnly }
+        if let frameGenerationPause { config.frameGenerationPause = frameGenerationPause }
         if let frameGenerationMetalFX { config.frameGenerationMetalFX = frameGenerationMetalFX }
         if let syncSpeedToDisplay { config.syncSpeedToDisplay = syncSpeedToDisplay }
         if let pacingBufferMs { config.pacingBufferMs = pacingBufferMs }

@@ -613,6 +613,7 @@ id<MTLCommandBuffer> Scheduler::CommandBuffer() {
           if (buffer.GPUEndTime > buffer.GPUStartTime) {
               const u64 ns = static_cast<u64>((buffer.GPUEndTime - buffer.GPUStartTime) * 1e9);
               Stats().gpu_ns.fetch_add(ns, std::memory_order_relaxed);
+              Stats().adapt_gpu_ns.fetch_add(ns, std::memory_order_relaxed);
               if (is_presentation) {
                   Stats().present_ns.fetch_add(ns, std::memory_order_relaxed);
               }

@@ -271,6 +271,10 @@ final class AppSettings: ObservableObject {
     @Published var frameGenerationSize: Int {
         didSet { save(frameGenerationSize, "frameGenerationSize") }
     }
+    /// Frame generation pauses while it falls behind and comes back when the scene is lighter.
+    @Published var frameGenerationPause: Bool {
+        didSet { save(frameGenerationPause, "frameGenerationPause") }
+    }
     @Published var frameGenerationTopOnly: Bool {
         didSet { save(frameGenerationTopOnly, "frameGenerationTopOnly") }
     }
@@ -500,6 +504,7 @@ final class AppSettings: ObservableObject {
         // Faster Frame Generation (3/8) from before became a size.
         frameGenerationSize = value("frameGenerationSize", value("frameGenerationFast", false) ? 2 : 1)
         frameGenerationTopOnly = value("frameGenerationTopOnly", false)
+        frameGenerationPause = value("frameGenerationPause", false)
         frameGenerationDisplayPaced = value("frameGenerationDisplayPaced", false)
         frameGenerationMetalFX = value("frameGenerationMetalFX", false)
         frameGenerationAllGames = value("frameGenerationAllGames", false)
@@ -662,6 +667,7 @@ final class AppSettings: ObservableObject {
             FrameGenerator.isSupported && frameGeneration > 0 ? (frameGenerationAllGames ? 2 : 1) : 0
         config.frameGenerationSize = frameGenerationSize
         config.frameGenerationTopOnly = frameGenerationTopOnly
+        config.frameGenerationPause = frameGenerationPause
         config.frameGenerationDisplayPaced = frameGenerationDisplayPaced
         config.frameGenerationMetalFX = frameGenerationMetalFX
         // The rate the display really runs at: the one chosen in the settings (never above what the

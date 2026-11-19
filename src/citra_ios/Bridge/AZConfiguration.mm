@@ -53,6 +53,7 @@
     config.frameGeneration = 0;
     config.frameGenerationSize = 1;
     config.frameGenerationTopOnly = NO;
+    config.frameGenerationPause = NO;
     config.frameGenerationDisplayPaced = NO;
     config.frameGenerationMetalFX = NO;
     config.displayRefreshRate = 60;

@@ -19,7 +19,7 @@ struct GameSettingsView: View {
         overrides.hardwareShaders ?? settings.hardwareShaders
     }
 
-    private static let sizeNames = ["Full", "Half", "3/8", "Quarter", "3/4"]
+    private static let sizeNames = ["Full", "Half", "3/8", "Quarter", "3/4", "Adaptive"]
 
     /// The size of the in-between frames; the older Faster Frame Generation override is 3/8.
     private var frameGenerationSize: Binding<Int?> {
@@ -101,7 +101,9 @@ struct GameSettingsView: View {
                     ["Off", "30 FPS Games", "All Games (120 Hz)"][$0]
                 }
                 OverridePicker("Frame Generation Size", value: frameGenerationSize,
-                               options: [0, 4, 1, 2, 3]) { Self.sizeNames[$0] }
+                               options: [5, 0, 4, 1, 2, 3]) { Self.sizeNames[$0] }
+                OverrideToggle("Frame Generation: Pause When Behind",
+                               value: $overrides.frameGenerationPause)
                 OverrideToggle("Frame Generation: Top Screen Only",
                                value: $overrides.frameGenerationTopOnly)
                 OverrideToggle("Frame Generation: Display-Driven Pacing",

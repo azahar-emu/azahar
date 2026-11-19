@@ -66,6 +66,9 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) NSInteger frameGenerationSize;
 /// Make frames for the top screen only.
 @property(nonatomic) BOOL frameGenerationTopOnly;
+/// Frame generation pauses while its frames come too late (even at the smallest adaptive size)
+/// and comes back when the scene gets lighter.
+@property(nonatomic) BOOL frameGenerationPause;
 /// Show the frames of frame generation from a display link at the display's refreshes (iOS 17).
 @property(nonatomic) BOOL frameGenerationDisplayPaced;
 /// Frame generation with MetalFX's frame interpolator instead of VideoToolbox's.

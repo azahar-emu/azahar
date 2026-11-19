@@ -712,7 +712,12 @@ struct GraphicsSettingsView: View {
         text += "is the size the in-between frames are made at (the real frames are always full "
         text += "size): Full is sharpest and slowest, each step down is less work and heat with "
         text += "softer in-between frames, for slower devices. It stays at the size you pick: if "
-        text += "the device can't make frames that size, frame generation stays off. Top Screen "
+        text += "the device can't make frames that size, frame generation stays off. Adaptive "
+        text += "starts at Half and goes down to Quarter while the in-between frames come too late "
+        text += "(heavy scenes such as water), then back up when there is room again. Pause When "
+        text += "Behind shows the game's own frames, a steady frame rate without in-between "
+        text += "frames, while they still come too late at the smallest size, and turns frame "
+        text += "generation back on when the scene gets lighter. Top Screen "
         text += "Only leaves "
         text += "the bottom screen at the game's own frame rate, which halves the work in most "
         text += "layouts. Display-Driven Pacing (iOS 17 or later, experimental) lets the display "
@@ -734,6 +739,7 @@ struct GraphicsSettingsView: View {
                     get: { settings.frameGeneration > 0 },
                     set: { settings.frameGeneration = $0 ? 1 : 0 }))
                 Picker("Frame Generation Size", selection: $settings.frameGenerationSize) {
+                    Text("Adaptive").tag(5)
                     Text("Full").tag(0)
                     Text("3/4").tag(4)
                     Text("Half").tag(1)
@@ -741,6 +747,8 @@ struct GraphicsSettingsView: View {
                     Text("Quarter").tag(3)
                 }
                 .disabled(settings.frameGeneration == 0)
+                Toggle("Pause When Behind", isOn: $settings.frameGenerationPause)
+                    .disabled(settings.frameGeneration == 0)
                 Toggle("Use MetalFX Interpolation (Experimental)",
                        isOn: $settings.frameGenerationMetalFX)
                     .disabled(settings.frameGeneration == 0)

@@ -49,6 +49,12 @@ struct GpuStats {
     std::atomic<u64> fg_ns{};      ///< GPU time of making frames (frame generation)
     std::atomic<u32> fg_made{};    ///< Frames made
     std::atomic<u32> fg_skipped{}; ///< Frames not made because the previous one was not done yet
+    // The same for adaptive frame generation, read once a second by the renderer itself.
+    std::atomic<u64> adapt_fg_ns{};
+    std::atomic<u32> adapt_fg_made{};
+    std::atomic<u32> adapt_fg_skipped{};
+    std::atomic<u64> adapt_gpu_ns{}; ///< GPU time of the game's command buffers
+    std::atomic<u32> adapt_frames{}; ///< Frames of the game drawn
     std::atomic<u64> cpu_ns{};     ///< CPU time of the emulation thread between presented frames
     std::atomic<u64> cpu_max_ns{}; ///< The longest of those since the last report
     std::atomic<u32> cpu_frames{};
