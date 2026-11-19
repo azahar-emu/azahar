@@ -551,6 +551,9 @@ private:
     int fga_light{};           ///< Seconds in a row the game's GPU time was well below the pause's
     double fga_baseline_ms{};  ///< The game's GPU time per frame at the start of the pause
     std::chrono::steady_clock::time_point fga_window{};
+    /// When each adaptive size was last left for being too slow: it is not tried again for a
+    /// while, so the size does not go back up into a scene that was already too heavy for it.
+    std::array<std::chrono::steady_clock::time_point, 4> fga_too_slow_at{};
     void AdaptFrameGeneration();
     int FrameGenerationSize() const;
     std::chrono::steady_clock::time_point fg_last_frame{};
@@ -1470,6 +1473,7 @@ void RendererMetal::AdaptFrameGeneration() {
         fga_behind = 0;
         fga_ahead = 0;
         if (adaptive && fga_level < smallest) {
+            fga_too_slow_at[fga_level] = now;
             fga_level++;
             fga_hold = 8;
             LOG_INFO(Render,
@@ -1489,7 +1493,10 @@ void RendererMetal::AdaptFrameGeneration() {
         }
         return;
     }
-    if (adaptive && fga_ahead >= 6 && fga_hold == 0 && fga_level > 0) {
+    // A size that was too slow within the last 30 seconds is not tried again yet.
+    constexpr auto RETRY_AFTER = std::chrono::seconds{30};
+    if (adaptive && fga_ahead >= 6 && fga_hold == 0 && fga_level > 0 &&
+        now - fga_too_slow_at[fga_level - 1] >= RETRY_AFTER) {
         fga_ahead = 0;
         fga_level--;
         fga_hold = 8;
