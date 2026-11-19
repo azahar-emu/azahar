@@ -181,7 +181,7 @@ private:
         constexpr u32 size = static_cast<u32>(sizeof...(values));
         static_assert(size >= 2);
         const std::array constituents{Constant(u32_id, values)...};
-        const Id type = size <= 4 ? uvec_ids.Get(size) : TypeArray(u32_id, ConstU32(size));
+        const Id type = size <= 4 ? u32vec_ids.Get(size) : TypeArray(u32_id, ConstU32(size));
         return ConstantComposite(type, constituents);
     }
 
@@ -195,7 +195,7 @@ private:
         constexpr u32 size = static_cast<u32>(sizeof...(values));
         static_assert(size >= 2);
         const std::array constituents{Constant(i32_id, values)...};
-        const Id type = size <= 4 ? ivec_ids.Get(size) : TypeArray(i32_id, ConstU32(size));
+        const Id type = size <= 4 ? i32vec_ids.Get(size) : TypeArray(i32_id, ConstU32(size));
         return ConstantComposite(type, constituents);
     }
 
@@ -209,7 +209,7 @@ private:
         constexpr u32 size = static_cast<u32>(sizeof...(values));
         static_assert(size >= 2);
         const std::array constituents{Constant(f32_id, values)...};
-        const Id type = size <= 4 ? vec_ids.Get(size) : TypeArray(f32_id, ConstU32(size));
+        const Id type = size <= 4 ? f32vec_ids.Get(size) : TypeArray(f32_id, ConstU32(size));
         return ConstantComposite(type, constituents);
     }
 
@@ -231,10 +231,10 @@ private:
     Id i32_id{};
     Id u32_id{};
 
-    VectorIds vec_ids{};
-    VectorIds ivec_ids{};
-    VectorIds uvec_ids{};
     VectorIds bvec_ids{};
+    VectorIds f32vec_ids{};
+    VectorIds i32vec_ids{};
+    VectorIds u32vec_ids{};
 
     Id image2d_id{};
     Id image_cube_id{};
