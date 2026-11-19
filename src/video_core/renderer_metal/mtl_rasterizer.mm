@@ -481,7 +481,6 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     // function only to discard pixels or to output the depth. Otherwise it is drawn without one:
     // the PICA keeps the lighting and texturing state of the draws before, and the GPU ran all of
     // it for every covered pixel only to throw the color away.
-    const auto& output_merger = regs.framebuffer.output_merger;
     PixelTraits traits{};
     traits.depth_stencil_only =
         !shadow_rendering &&
