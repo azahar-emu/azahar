@@ -45,6 +45,8 @@
     config.vertexFastMath = NO;
     config.texturePool = NO;
     config.hiddenSurfaceRemoval = NO;
+    config.drawOptimizations = YES;
+    config.gpuPassTiming = NO;
     config.textureCompression = 0;
     config.fastDepthReadback = NO;
     config.holdFramesForShaders = YES;

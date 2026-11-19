@@ -97,6 +97,11 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) BOOL texturePool;
 /// Depth mapped in the vertex shader so the GPU's hidden surface removal works (next game).
 @property(nonatomic) BOOL hiddenSurfaceRemoval;
+/// Depth/stencil-only draws without a fragment function, the scissor test as the GPU's scissor
+/// rectangle and no-op blending dropped. Off draws the way it was done before.
+@property(nonatomic) BOOL drawOptimizations;
+/// GPU timestamps of every render pass for the log (diagnostic, costs GPU time).
+@property(nonatomic) BOOL gpuPassTiming;
 /// GPU memory compression of textures: 0 off, 1 lossless, 2 lossy (next game).
 @property(nonatomic) NSInteger textureCompression;
 /// Small depth reads by the game get the previous frame's values instead of waiting (next game).

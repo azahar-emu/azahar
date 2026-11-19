@@ -301,6 +301,11 @@ final class AppSettings: ObservableObject {
     @Published var vertexFastMath: Bool { didSet { save(vertexFastMath, "vertexFastMath") } }
     @Published var texturePool: Bool { didSet { save(texturePool, "texturePool") } }
     @Published var fastDepthReadback: Bool { didSet { save(fastDepthReadback, "fastDepthReadback") } }
+    /// Draw-time optimizations (no fragment function for depth-only draws, hardware scissor,
+    /// no-op blending dropped).
+    @Published var drawOptimizations: Bool { didSet { save(drawOptimizations, "drawOptimizations") } }
+    /// GPU timestamps per render pass in the log (diagnostic).
+    @Published var gpuPassTiming: Bool { didSet { save(gpuPassTiming, "gpuPassTiming") } }
     @Published var hiddenSurfaceRemoval: Bool {
         didSet { save(hiddenSurfaceRemoval, "hiddenSurfaceRemoval") }
     }
@@ -512,6 +517,8 @@ final class AppSettings: ObservableObject {
         texturePool = value("texturePool", false)
         fastDepthReadback = value("fastDepthReadback", false)
         hiddenSurfaceRemoval = value("hiddenSurfaceRemoval", false)
+        drawOptimizations = value("drawOptimizations", true)
+        gpuPassTiming = value("gpuPassTiming", false)
         textureCompression = TextureCompressionOption(rawValue: value("textureCompression", 0)) ?? .off
         anisotropy = value("anisotropy", 4)
         diskShaderCache = value("diskShaderCache", true)
@@ -681,6 +688,8 @@ final class AppSettings: ObservableObject {
         config.texturePool = texturePool
         config.fastDepthReadback = fastDepthReadback
         config.hiddenSurfaceRemoval = hiddenSurfaceRemoval
+        config.drawOptimizations = drawOptimizations
+        config.gpuPassTiming = gpuPassTiming
         config.textureCompression = textureCompression.rawValue
         config.anisotropy = anisotropy
         config.diskShaderCache = diskShaderCache

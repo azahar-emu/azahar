@@ -321,6 +321,11 @@ struct GraphicsSettingsView: View {
         text += "Fast Depth Readback answers the small depth checks some games do every "
         text += "frame (Mario Kart 7's sun glare) with the previous frame's values instead "
         text += "of waiting for the GPU. "
+        text += "Draw Optimizations draws depth-only geometry (like shadow volumes) without a "
+        text += "pixel shader, does the scissor test with the GPU's own scissor and drops "
+        text += "blending that changes nothing; turn it off if a game shows glitches it did not "
+        text += "have before. GPU Pass Timing writes the GPU time of every render pass to the "
+        text += "log, a diagnostic that costs some GPU time: leave it off for playing. "
         text += "All of these apply the next time a game starts."
         return text
     }
@@ -380,6 +385,8 @@ struct GraphicsSettingsView: View {
                 Toggle("Fast Depth Readback", isOn: $settings.fastDepthReadback)
                 Toggle("Disable Right Eye Render", isOn: $settings.disableRightEyeRender)
                 Toggle("Hidden Surface Removal", isOn: $settings.hiddenSurfaceRemoval)
+                Toggle("Draw Optimizations", isOn: $settings.drawOptimizations)
+                Toggle("GPU Pass Timing (Diagnostic)", isOn: $settings.gpuPassTiming)
                 Picker("Texture Compression", selection: $settings.textureCompression) {
                     ForEach(TextureCompressionOption.allCases) { Text($0.title).tag($0) }
                 }

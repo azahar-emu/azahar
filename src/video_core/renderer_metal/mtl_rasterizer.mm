@@ -168,7 +168,8 @@ void RasterizerMetal::SyncFixedState(const Framebuffer& framebuffer, u64 fs_hash
                src == static_cast<u8>(MTLBlendFactorOne) &&
                dst == static_cast<u8>(MTLBlendFactorZero);
     };
-    if (key.blend_enable && keeps_source(key.rgb_op, key.src_rgb, key.dst_rgb) &&
+    if (GetQualityOptions().draw_optimizations && key.blend_enable &&
+        keeps_source(key.rgb_op, key.src_rgb, key.dst_rgb) &&
         keeps_source(key.alpha_op, key.src_alpha, key.dst_alpha)) {
         key.blend_enable = 0;
     }
@@ -509,12 +510,16 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
         output_merger.alpha_test.enable.Value() != 0 &&
         output_merger.alpha_test.func.Value() != Pica::FramebufferRegs::CompareFunc::Always;
     // Only the test that keeps the pixels outside the box is done in the fragment shader.
-    traits.scissor_test = regs.rasterizer.scissor_test.mode.Value() ==
-                          Pica::RasterizerRegs::ScissorMode::Exclude;
+    const bool optimize = GetQualityOptions().draw_optimizations;
+    traits.scissor_test =
+        optimize ? regs.rasterizer.scissor_test.mode.Value() ==
+                       Pica::RasterizerRegs::ScissorMode::Exclude
+                 : regs.rasterizer.scissor_test.mode.Value() !=
+                       Pica::RasterizerRegs::ScissorMode::Disabled;
     traits.lit = regs.lighting.disable.Value() == 0;
     traits.blended = key.blend_enable != 0;
     traits.blend_dropped = output_merger.alphablend_enable != 0 && key.blend_enable == 0;
-    traits.no_fragment = traits.depth_stencil_only && !traits.writes_depth &&
+    traits.no_fragment = optimize && traits.depth_stencil_only && !traits.writes_depth &&
                          !traits.alpha_test && !traits.scissor_test;
     NotePixelTraits(traits);
     PipelineCache::ShaderHandle fragment_used = fragment;
@@ -571,7 +576,8 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     // The PICA scissor test keeping the pixels inside the box is the GPU's own scissor
     // rectangle (the fragment shaders leave it out, see MetalFSConfig::hardware_scissor). A
     // discard in the fragment shader kept the GPU from skipping hidden pixels.
-    if (regs.rasterizer.scissor_test.mode.Value() == Pica::RasterizerRegs::ScissorMode::Include) {
+    if (GetQualityOptions().draw_optimizations &&
+        regs.rasterizer.scissor_test.mode.Value() == Pica::RasterizerRegs::ScissorMode::Include) {
         const s64 x1 = std::max<s64>(scissor_x, fs_data.scissor_x1);
         const s64 y1 = std::max<s64>(scissor_y, fs_data.scissor_y1);
         const s64 x2 = std::min<s64>(static_cast<s64>(scissor_x) + scissor_w, fs_data.scissor_x2);

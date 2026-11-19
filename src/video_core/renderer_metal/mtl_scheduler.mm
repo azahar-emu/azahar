@@ -17,6 +17,7 @@
 #include "common/settings.h"
 #include "video_core/renderer_metal/mtl_instance.h"
 #include "video_core/renderer_metal/mtl_scheduler.h"
+#include "video_core/renderer_metal/renderer_metal.h"
 #import <QuartzCore/QuartzCore.h>
 
 MICROPROFILE_DEFINE(Metal_WaitForGpu, "Metal", "Wait For GPU", MP_RGB(255, 0, 0));
@@ -574,7 +575,8 @@ id<MTLCommandBuffer> Scheduler::CommandBuffer() {
             command_buffer = [queue commandBuffer];
         }
         timing_batch.reset();
-        if (StatisticsEnabled() && PassTimingSupported(queue.device)) {
+        if (StatisticsEnabled() && GetQualityOptions().gpu_pass_timing &&
+            PassTimingSupported(queue.device)) {
             timing_batch = std::make_shared<PassTimingBatch>();
             timing_batch->samples = TakeSampleBuffer(queue.device);
         }

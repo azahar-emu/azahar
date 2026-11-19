@@ -122,6 +122,13 @@ struct QualityOptions {
     /// Map the depth in the vertex shader so fragment shaders do not write it, which keeps the
     /// hidden surface removal of Apple GPUs working (not for W-buffering).
     bool vertex_depth = false;
+    /// Draw-time optimizations: depth/stencil-only draws without a fragment function, the
+    /// scissor test inside the box as the GPU scissor rectangle, and blending that keeps the
+    /// source color drawn unblended. Off draws as before they existed.
+    bool draw_optimizations = true;
+    /// GPU timestamps for every render pass, for the GPU time per pass in the log. A diagnostic:
+    /// it can keep passes from overlapping on the GPU.
+    bool gpu_pass_timing = false;
     /// Texture combiners in half precision.
     bool fast_color = false;
     /// Fast versions of the math functions in fragment shaders, without fast math's assumptions

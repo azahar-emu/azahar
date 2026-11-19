@@ -121,6 +121,7 @@ struct GameSettingsView: View {
                 OverrideToggle("Custom Textures", value: $overrides.customTextures)
                 OverrideToggle("Preload Custom Textures", value: $overrides.preloadTextures)
                 OverrideToggle("Hidden Surface Removal", value: $overrides.hiddenSurfaceRemoval)
+                OverrideToggle("Draw Optimizations", value: $overrides.drawOptimizations)
                 OverridePicker("Texture Compression", value: $overrides.textureCompression,
                                options: TextureCompressionOption.allCases.map(\.rawValue)) {
                     TextureCompressionOption(rawValue: $0)?.title ?? "\($0)"
