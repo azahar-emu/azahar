@@ -113,6 +113,8 @@ struct PassStats {
     u32 px_blend_dropped = 0;
     u32 px_textures = 0, px_proctex = 0, px_cube = 0, px_projection = 0, px_fog = 0, px_bump = 0;
     u32 px_lights = 0;
+    // Partial clears drawn into a pass of the game's, and the ones that needed a pass of their own.
+    u32 rect_clears_merged = 0, rect_clears_alone = 0;
 };
 std::mutex g_pass_mutex;
 PassStats g_pass_stats;
@@ -148,6 +150,11 @@ std::vector<std::string> TakeRenderPassSummary(std::size_t max_lines) {
         stats.total, empty, stats.reopened, join(stats.reopened_after),
         stats.bytes / (1024 * 1024)));
     lines.push_back(fmt::format("ended by: {}", join(stats.end_reasons)));
+    if (stats.rect_clears_merged + stats.rect_clears_alone > 0) {
+        lines.push_back(fmt::format("partial clears: {} drawn in the game's passes, {} in a pass of "
+                                    "their own",
+                                    stats.rect_clears_merged, stats.rect_clears_alone));
+    }
     if (stats.hw_native + stats.hw_lit + stats.hw_other > 0) {
         lines.push_back(fmt::format(
             "hardware vertex draws: {} native ({} vertices), {} corner by corner with lighting "
@@ -628,7 +635,12 @@ id<MTLCommandBuffer> Scheduler::CommandBuffer() {
 }
 
 void Scheduler::AddPendingClear(const PendingClear& clear) {
-    // A newer clear of the same texture level replaces the older one.
+    // A newer clear of the whole texture level replaces the older ones (whole or partial). A
+    // partial clear is kept in order after them.
+    if (clear.partial) {
+        pending_clears.push_back(clear);
+        return;
+    }
     std::erase_if(pending_clears, [&](const PendingClear& other) {
         return other.texture == clear.texture && other.level == clear.level &&
                other.slice == clear.slice && other.has_stencil == clear.has_stencil;
@@ -658,6 +670,93 @@ void Scheduler::ClearDepthStencil(id<MTLTexture> texture, u32 level, bool stenci
                      .stencil = stencil_value});
 }
 
+void Scheduler::DrawRectClear(id<MTLRenderCommandEncoder> encoder, const PendingClear& clear,
+                              MTLPixelFormat color, MTLPixelFormat depth, MTLPixelFormat stencil,
+                              u32 pass_width, u32 pass_height, bool in_game_pass) {
+    if (!rect_clear_drawer) {
+        return;
+    }
+    // The render area of a pass is the overlap of its attachments, the scissor must stay in it.
+    PendingClear clamped = clear;
+    auto& r = clamped.rect;
+    r.left = std::min(r.left, pass_width);
+    r.right = std::min(r.right, pass_width);
+    r.bottom = std::min(r.bottom, pass_height);
+    r.top = std::min(r.top, pass_height);
+    if (r.left == r.right || r.bottom == r.top) {
+        return;
+    }
+    // The game's draws may have left culling and depth clamping on.
+    [encoder setCullMode:MTLCullModeNone];
+    [encoder setDepthClipMode:MTLDepthClipModeClip];
+    rect_clear_drawer(encoder, clamped, color, depth, stencil);
+    if (StatisticsEnabled()) {
+        std::scoped_lock lock{g_pass_mutex};
+        (in_game_pass ? g_pass_stats.rect_clears_merged : g_pass_stats.rect_clears_alone)++;
+    }
+}
+
+void Scheduler::ClearColorRect(id<MTLTexture> texture, u32 level, u32 slice,
+                               const Common::Rectangle<u32>& rect, MTLClearColor color) {
+    const PendingClear clear{.texture = texture,
+                             .level = level,
+                             .slice = slice,
+                             .color = color,
+                             .partial = true,
+                             .rect = rect};
+    // Into the pass that is rendering to it: no pass ends, and its draws before the clear stay
+    // before it.
+    if (render_encoder != nil && has_render_target && current_target.color == texture &&
+        current_target.color_level == level && current_target.color_slice == slice &&
+        pending_clears.empty()) {
+        DrawRectClear(render_encoder, clear, texture.pixelFormat,
+                      current_target.depth != nil ? current_target.depth.pixelFormat
+                                                  : MTLPixelFormatInvalid,
+                      current_target.depth != nil && current_target.has_stencil
+                          ? current_target.depth.pixelFormat
+                          : MTLPixelFormatInvalid,
+                      current_target.width, current_target.height);
+        // The rasterizer sets its state again before its next draw.
+        encoder_generation++;
+        return;
+    }
+    // The texture may be in use by the active encoder (sampled), end it so the clear is ordered
+    // after what was recorded.
+    end_reason = "a clear";
+    EndEncoding();
+    end_reason = nullptr;
+    AddPendingClear(clear);
+}
+
+void Scheduler::ClearDepthStencilRect(id<MTLTexture> texture, u32 level, bool stencil,
+                                      const Common::Rectangle<u32>& rect, double depth,
+                                      u32 stencil_value) {
+    const PendingClear clear{.texture = texture,
+                             .level = level,
+                             .is_depth = true,
+                             .has_stencil = stencil,
+                             .depth = depth,
+                             .stencil = stencil_value,
+                             .partial = true,
+                             .rect = rect};
+    if (render_encoder != nil && has_render_target && current_target.depth == texture &&
+        current_target.depth_level == level && (!stencil || current_target.has_stencil) &&
+        pending_clears.empty()) {
+        DrawRectClear(render_encoder, clear,
+                      current_target.color != nil ? current_target.color.pixelFormat
+                                                  : MTLPixelFormatInvalid,
+                      texture.pixelFormat,
+                      current_target.has_stencil ? texture.pixelFormat : MTLPixelFormatInvalid,
+                      current_target.width, current_target.height);
+        encoder_generation++;
+        return;
+    }
+    end_reason = "a clear";
+    EndEncoding();
+    end_reason = nullptr;
+    AddPendingClear(clear);
+}
+
 void Scheduler::FlushPendingClears() {
     if (pending_clears.empty()) {
         return;
@@ -666,6 +765,50 @@ void Scheduler::FlushPendingClears() {
     clears.swap(pending_clears);
     EndEncoding();
     for (const PendingClear& clear : clears) {
+        if (clear.partial) {
+            // A rectangle with nothing to take it over: a pass of its own that draws it.
+            MTLRenderPassDescriptor* desc = [MTLRenderPassDescriptor renderPassDescriptor];
+            const MTLPixelFormat format = clear.texture.pixelFormat;
+            if (clear.is_depth) {
+                desc.depthAttachment.texture = clear.texture;
+                desc.depthAttachment.level = clear.level;
+                desc.depthAttachment.loadAction = MTLLoadActionLoad;
+                desc.depthAttachment.storeAction = MTLStoreActionStore;
+                if (clear.has_stencil) {
+                    desc.stencilAttachment.texture = clear.texture;
+                    desc.stencilAttachment.level = clear.level;
+                    desc.stencilAttachment.loadAction = MTLLoadActionLoad;
+                    desc.stencilAttachment.storeAction = MTLStoreActionStore;
+                }
+                NoteDepthPass(clear.texture, clear.level, static_cast<u32>(clear.texture.width),
+                              static_cast<u32>(clear.texture.height), clear.has_stencil, false);
+            } else {
+                desc.colorAttachments[0].texture = clear.texture;
+                desc.colorAttachments[0].level = clear.level;
+                desc.colorAttachments[0].slice = clear.slice;
+                desc.colorAttachments[0].loadAction = MTLLoadActionLoad;
+                desc.colorAttachments[0].storeAction = MTLStoreActionStore;
+            }
+            render_encoder = [CommandBuffer() renderCommandEncoderWithDescriptor:desc];
+            Stats().render_passes.fetch_add(1, std::memory_order_relaxed);
+            pass_label = clear.is_depth ? "partial clear depth" : "partial clear color";
+            id<MTLTexture> sized = clear.texture;
+            BeginPassStats(static_cast<u32>(std::max<NSUInteger>(sized.width >> clear.level, 1)),
+                           static_cast<u32>(std::max<NSUInteger>(sized.height >> clear.level, 1)),
+                           !clear.is_depth, clear.is_depth, clear.has_stencil, false, nullptr);
+            DrawRectClear(render_encoder, clear, clear.is_depth ? MTLPixelFormatInvalid : format,
+                          clear.is_depth ? format : MTLPixelFormatInvalid,
+                          clear.is_depth && clear.has_stencil ? format : MTLPixelFormatInvalid,
+                          static_cast<u32>(std::max<NSUInteger>(sized.width >> clear.level, 1)),
+                          static_cast<u32>(std::max<NSUInteger>(sized.height >> clear.level, 1)),
+                          false);
+            has_render_target = false;
+            encoder_generation++;
+            end_reason = "a clear that no pass could take over";
+            EndEncoding();
+            end_reason = nullptr;
+            continue;
+        }
         MTLRenderPassDescriptor* desc = [MTLRenderPassDescriptor renderPassDescriptor];
         if (clear.is_depth) {
             desc.depthAttachment.texture = clear.texture;
@@ -728,9 +871,27 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
     // Clears of this pass's attachments become its load actions, the others happen first.
     std::optional<PendingClear> color_clear;
     std::optional<PendingClear> depth_clear;
+    std::vector<PendingClear> rect_clears;
     if (!pending_clears.empty()) {
         std::vector<PendingClear> others;
         for (const PendingClear& clear : pending_clears) {
+            if (clear.partial) {
+                // Rectangles of this pass's attachments are drawn at its start, in order.
+                const bool color_match = !clear.is_depth && target.color != nil &&
+                                         clear.texture == target.color &&
+                                         clear.level == target.color_level &&
+                                         clear.slice == target.color_slice;
+                const bool depth_match = clear.is_depth && target.depth != nil &&
+                                         clear.texture == target.depth &&
+                                         clear.level == target.depth_level &&
+                                         (!clear.has_stencil || target.has_stencil);
+                if (color_match || depth_match) {
+                    rect_clears.push_back(clear);
+                } else {
+                    others.push_back(clear);
+                }
+                continue;
+            }
             if (!clear.is_depth && target.color != nil && clear.texture == target.color &&
                 clear.level == target.color_level && clear.slice == target.color_slice) {
                 color_clear = clear;
@@ -800,6 +961,14 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
     BeginPassStats(target.width, target.height, target.color != nil, target.depth != nil,
                    target.has_stencil, true, &target);
     NamePassTiming();
+    for (const PendingClear& clear : rect_clears) {
+        DrawRectClear(render_encoder, clear,
+                      target.color != nil ? target.color.pixelFormat : MTLPixelFormatInvalid,
+                      target.depth != nil ? target.depth.pixelFormat : MTLPixelFormatInvalid,
+                      target.depth != nil && target.has_stencil ? target.depth.pixelFormat
+                                                                : MTLPixelFormatInvalid,
+                      std::max(target.width, 1u), std::max(target.height, 1u));
+    }
     current_target = target;
     has_render_target = true;
     encoder_generation++;

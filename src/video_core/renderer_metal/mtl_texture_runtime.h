@@ -70,8 +70,15 @@ public:
                      const Common::Rectangle<u32>& dst_rect, u32 res_scale);
 
     /// Returns (and caches) a utility pipeline using the provided fragment function.
+    /// `color_writes` false keeps the color attachment unchanged (a depth clear in a color pass).
     id<MTLRenderPipelineState> GetPipeline(std::string_view function, MTLPixelFormat color,
-                                           MTLPixelFormat depth, MTLPixelFormat stencil);
+                                           MTLPixelFormat depth, MTLPixelFormat stencil,
+                                           bool color_writes = true);
+
+    /// Draws a partial clear into a render pass with the given attachment formats (see
+    /// Scheduler::ClearColorRect), without touching the attachments it does not clear.
+    void DrawClear(id<MTLRenderCommandEncoder> encoder, const Scheduler::PendingClear& clear,
+                   MTLPixelFormat color, MTLPixelFormat depth, MTLPixelFormat stencil);
 
     /// Sets the viewport/scissor to the destination rectangle and returns source coordinates
     /// adjusted for flipped rectangles.
@@ -90,6 +97,7 @@ private:
     id<MTLSamplerState> nearest_sampler;
     id<MTLDepthStencilState> depth_write_state;
     id<MTLDepthStencilState> depth_stencil_write_state;
+    id<MTLDepthStencilState> no_depth_state; ///< Depth and stencil untouched
     std::unordered_map<std::string, id<MTLRenderPipelineState>> pipelines;
 };
 

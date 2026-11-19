@@ -14,6 +14,7 @@
 #include <utility>
 #include <cstdint>
 #include <vector>
+#include "common/math_util.h"
 #include "video_core/renderer_metal/mtl_common.h"
 
 namespace Metal {
@@ -167,6 +168,29 @@ public:
     Scheduler(const Scheduler&) = delete;
     Scheduler& operator=(const Scheduler&) = delete;
 
+    /// A clear of a whole texture level (done as the load action of the next pass on it), or of a
+    /// rectangle of it (`partial`, drawn as a quad at the start of a pass on it).
+    struct PendingClear {
+        id<MTLTexture> texture = nil;
+        u32 level = 0;
+        u32 slice = 0;
+        bool is_depth = false;
+        bool has_stencil = false;
+        MTLClearColor color{};
+        double depth = 0.0;
+        u32 stencil = 0;
+        bool partial = false;
+        Common::Rectangle<u32> rect{};
+    };
+    /// Draws a partial clear into a render pass with the given attachment formats (installed by
+    /// the texture runtime, which has the utility pipelines).
+    using RectClearDrawer =
+        std::function<void(id<MTLRenderCommandEncoder>, const PendingClear&, MTLPixelFormat color,
+                           MTLPixelFormat depth, MTLPixelFormat stencil)>;
+    void SetRectClearDrawer(RectClearDrawer drawer) {
+        rect_clear_drawer = std::move(drawer);
+    }
+
     /// Returns the command buffer currently being recorded, creating it if needed.
     id<MTLCommandBuffer> CommandBuffer();
 
@@ -214,6 +238,18 @@ public:
     void ClearColor(id<MTLTexture> texture, u32 level, u32 slice, MTLClearColor color);
     void ClearDepthStencil(id<MTLTexture> texture, u32 level, bool stencil, double depth,
                            u32 stencil_value);
+
+    /**
+     * Clears a rectangle of a texture level. Drawn into the active pass when it renders to that
+     * texture, otherwise at the start of the next pass that does, and only as a pass of its own
+     * when something else uses the texture first. Each pass loads and stores its attachments, so
+     * a clear on its own cost two whole round trips of the target.
+     */
+    void ClearColorRect(id<MTLTexture> texture, u32 level, u32 slice,
+                        const Common::Rectangle<u32>& rect, MTLClearColor color);
+    void ClearDepthStencilRect(id<MTLTexture> texture, u32 level, bool stencil,
+                               const Common::Rectangle<u32>& rect, double depth,
+                               u32 stencil_value);
 
     /// Names the next utility pass (BeginRendering with a descriptor) in the render pass
     /// statistics, so they say what asked for it. Utility passes draw their own quad, which is not
@@ -274,16 +310,6 @@ public:
 
 private:
     void PruneInFlight();
-    struct PendingClear {
-        id<MTLTexture> texture = nil;
-        u32 level = 0;
-        u32 slice = 0;
-        bool is_depth = false;
-        bool has_stencil = false;
-        MTLClearColor color{};
-        double depth = 0.0;
-        u32 stencil = 0;
-    };
     void AddPendingClear(const PendingClear& clear);
     /// Performs the clears that are waiting, each as a pass of its own.
     void FlushPendingClears();
@@ -330,6 +356,11 @@ private:
     u32 debug_group_depth{};
 
     std::vector<PendingClear> pending_clears;
+    RectClearDrawer rect_clear_drawer;
+    /// Draws a partial clear into the active encoder (with the formats of the current target).
+    void DrawRectClear(id<MTLRenderCommandEncoder> encoder, const PendingClear& clear,
+                       MTLPixelFormat color, MTLPixelFormat depth, MTLPixelFormat stencil,
+                       u32 pass_width, u32 pass_height, bool in_game_pass = true);
 
     // Render pass statistics.
     const char* end_reason = nullptr; ///< Why the active pass is about to end, null: its caller

@@ -138,14 +138,51 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_)
     ds_desc.frontFaceStencil = stencil_desc;
     ds_desc.backFaceStencil = stencil_desc;
     depth_stencil_write_state = [device newDepthStencilStateWithDescriptor:ds_desc];
+
+    // Leaves depth and stencil alone (a color clear drawn in a pass that has them).
+    no_depth_state = [device newDepthStencilStateWithDescriptor:[MTLDepthStencilDescriptor new]];
+}
+
+void BlitHelper::DrawClear(id<MTLRenderCommandEncoder> encoder,
+                           const Scheduler::PendingClear& clear, MTLPixelFormat color,
+                           MTLPixelFormat depth, MTLPixelFormat stencil) {
+    if (clear.is_depth) {
+        id<MTLRenderPipelineState> pipeline =
+            GetPipeline("clear_depth_fs", color, depth, stencil, false);
+        if (!pipeline) {
+            return;
+        }
+        [encoder setRenderPipelineState:pipeline];
+        [encoder setDepthStencilState:clear.has_stencil ? depth_stencil_write_state
+                                                        : depth_write_state];
+        [encoder setStencilReferenceValue:clear.stencil];
+        SetupRect(encoder, clear.texture, clear.level, clear.rect, clear.rect, 1, 1, 0.0f, {},
+                  static_cast<float>(clear.depth));
+    } else {
+        id<MTLRenderPipelineState> pipeline = GetPipeline("clear_color_fs", color, depth, stencil);
+        if (!pipeline) {
+            return;
+        }
+        [encoder setRenderPipelineState:pipeline];
+        [encoder setDepthStencilState:no_depth_state];
+        const Common::Vec4f value{static_cast<f32>(clear.color.red),
+                                  static_cast<f32>(clear.color.green),
+                                  static_cast<f32>(clear.color.blue),
+                                  static_cast<f32>(clear.color.alpha)};
+        SetupRect(encoder, clear.texture, clear.level, clear.rect, clear.rect, 1, 1, 0.0f, value,
+                  0.0f);
+    }
+    [encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
 }
 
 BlitHelper::~BlitHelper() = default;
 
 id<MTLRenderPipelineState> BlitHelper::GetPipeline(std::string_view function, MTLPixelFormat color,
-                                                   MTLPixelFormat depth, MTLPixelFormat stencil) {
-    const std::string key = fmt::format("{}:{}:{}:{}", function, static_cast<u64>(color),
-                                        static_cast<u64>(depth), static_cast<u64>(stencil));
+                                                   MTLPixelFormat depth, MTLPixelFormat stencil,
+                                                   bool color_writes) {
+    const std::string key =
+        fmt::format("{}:{}:{}:{}:{}", function, static_cast<u64>(color), static_cast<u64>(depth),
+                    static_cast<u64>(stencil), color_writes ? 1 : 0);
     if (const auto it = pipelines.find(key); it != pipelines.end()) {
         return it->second;
     }
@@ -167,7 +204,7 @@ id<MTLRenderPipelineState> BlitHelper::GetPipeline(std::string_view function, MT
     desc.colorAttachments[0].pixelFormat = color;
     desc.depthAttachmentPixelFormat = depth;
     desc.stencilAttachmentPixelFormat = stencil;
-    if (color == MTLPixelFormatInvalid) {
+    if (color == MTLPixelFormatInvalid || !color_writes) {
         desc.colorAttachments[0].writeMask = MTLColorWriteMaskNone;
     }
     desc.label = ToNSString(function);
@@ -425,9 +462,18 @@ TextureRuntime::TextureRuntime(const Instance& instance_, Scheduler& scheduler_)
     : instance{instance_}, scheduler{scheduler_}, blit_helper{instance_, scheduler_},
       texture_pool{GetQualityOptions().texture_pool},
       upload_buffer{instance_, scheduler_, UPLOAD_BUFFER_SIZE, "Upload buffer"},
-      download_buffer{instance_, scheduler_, DOWNLOAD_BUFFER_SIZE, "Download buffer", true} {}
+      download_buffer{instance_, scheduler_, DOWNLOAD_BUFFER_SIZE, "Download buffer", true} {
+    scheduler.SetRectClearDrawer([this](id<MTLRenderCommandEncoder> encoder,
+                                        const Scheduler::PendingClear& clear,
+                                        MTLPixelFormat color, MTLPixelFormat depth,
+                                        MTLPixelFormat stencil) {
+        blit_helper.DrawClear(encoder, clear, color, depth, stencil);
+    });
+}
 
-TextureRuntime::~TextureRuntime() = default;
+TextureRuntime::~TextureRuntime() {
+    scheduler.SetRectClearDrawer({});
+}
 
 VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
     StreamBuffer& buffer = upload ? upload_buffer : download_buffer;
@@ -525,12 +571,15 @@ bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
                             rect.GetWidth() >= level_width && rect.GetHeight() >= level_height;
 
     if (!full_clear) {
+        // Drawn into the pass that renders to the texture (now or next) instead of a pass of its
+        // own, see Scheduler::ClearColorRect.
         if (surface.IsDepth()) {
-            blit_helper.ClearDepthStencil(texture, clear.texture_level, surface.HasStencil(), rect,
-                                          clear.value.depth, clear.value.stencil);
+            scheduler.ClearDepthStencilRect(texture, clear.texture_level, surface.HasStencil(),
+                                            rect, clear.value.depth, clear.value.stencil);
         } else {
-            blit_helper.ClearColor(texture, clear.texture_level, clear.texture_layer, rect,
-                                   clear.value.color);
+            const auto& color = clear.value.color;
+            scheduler.ClearColorRect(texture, clear.texture_level, clear.texture_layer, rect,
+                                     MTLClearColorMake(color.x, color.y, color.z, color.w));
         }
         return true;
     }
