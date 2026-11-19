@@ -612,6 +612,8 @@ private:
 #if AZAHAR_HAS_METALFX
     /// Scales the made frame back up to the size of its area on the screen.
     UpscaleSlot fg_upscale{};
+    bool fg_upscale_tried{}; ///< fg_upscale was made (or refused) for the current setup
+    void PrepareFrameGenerationUpscaler();
     /// The same for the frames MetalFX frame interpolation makes at a smaller size.
     UpscaleSlot fx_upscale{};
 #endif
@@ -1624,7 +1626,10 @@ bool RendererMetal::UseFrameGeneration(const Layout::FramebufferLayout& layout) 
                 }
                 const char* scaling = ", stretched with plain filtering";
 #if AZAHAR_HAS_METALFX
-                if (fg_upscale.scaler != nil) {
+                if (fg_metalfx) {
+                    scaling = ", made by MetalFX frame interpolation (scaled up by its own "
+                              "MetalFX scaler)";
+                } else if (fg_upscale.scaler != nil) {
                     scaling = ", scaled up with MetalFX";
                 }
 #endif
@@ -1834,22 +1839,36 @@ bool RendererMetal::PrepareFrameGenerationResources() {
     }
 
 #if AZAHAR_HAS_METALFX
-    // The made frame is scaled up to its area on the screen with MetalFX, like the real picture
-    // can be. Without it (not supported, or refused) it is stretched with plain filtering.
+    // The upscaler of the VideoToolbox frames. MetalFX frame interpolation has its own (see
+    // PrepareMetalFX), so with it this one is only made when a frame falls back to VideoToolbox.
     fg_upscale = UpscaleSlot{};
-    if (MetalFXSupported(device)) {
-        UpscaleJob job;
-        job.in_width = fg_slot_width;
-        job.in_height = fg_slot_height;
-        job.out_width = UpscaledSize(job.in_width, static_cast<u32>(std::lround(fg_area_width)));
-        job.out_height = UpscaledSize(job.in_height, static_cast<u32>(std::lround(fg_area_height)));
-        if (!EnsureUpscaleSlot(fg_upscale, job)) {
-            fg_upscale = UpscaleSlot{};
-        }
+    fg_upscale_tried = false;
+    if (!fg_metalfx) {
+        PrepareFrameGenerationUpscaler();
     }
 #endif
     return true;
 }
+
+#if AZAHAR_HAS_METALFX
+void RendererMetal::PrepareFrameGenerationUpscaler() {
+    // The made frame is scaled up to its area on the screen with MetalFX, like the real picture
+    // can be. Without it (not supported, or refused) it is stretched with plain filtering.
+    fg_upscale_tried = true;
+    id<MTLDevice> device = instance.GetDevice();
+    if (!MetalFXSupported(device)) {
+        return;
+    }
+    UpscaleJob job;
+    job.in_width = fg_slot_width;
+    job.in_height = fg_slot_height;
+    job.out_width = UpscaledSize(job.in_width, static_cast<u32>(std::lround(fg_area_width)));
+    job.out_height = UpscaledSize(job.in_height, static_cast<u32>(std::lround(fg_area_height)));
+    if (!EnsureUpscaleSlot(fg_upscale, job)) {
+        fg_upscale = UpscaleSlot{};
+    }
+}
+#endif
 
 
 namespace {
@@ -2341,6 +2360,11 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
     id<MTLSamplerState> ycbcr_sampler = fg_sampler;
     const auto interpolate = g_fg_hooks.interpolate;
 #if AZAHAR_HAS_METALFX
+    // A VideoToolbox frame while MetalFX frame interpolation is chosen (it could not make this
+    // one): its upscaler is made the first time it is needed.
+    if (!use_fx && make_between && !fg_upscale_tried) {
+        PrepareFrameGenerationUpscaler();
+    }
     id<MTLFXSpatialScaler> scaler = fg_upscale.scaler;
     id<MTLTexture> scaler_input = fg_upscale.input;
     id<MTLTexture> scaler_output = fg_upscale.output;
