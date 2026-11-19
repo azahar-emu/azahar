@@ -1,6 +1,6 @@
 // Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Originally MIT-licensed code from The Pixellizer Group
 
@@ -91,6 +91,9 @@ public:
 
     void OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kernel);
     void OnProcessExit(Kernel::Process& process, Kernel::KernelSystem& kernel);
+
+    std::string GetPluginSDMCPath() const;
+
     ResultVal<Kernel::Handle> GetMemoryChangedHandle(Kernel::KernelSystem& kernel);
     void OnMemoryChanged(Kernel::Process& process, Kernel::KernelSystem& kernel);
 

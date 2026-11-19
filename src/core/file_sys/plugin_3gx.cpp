@@ -21,11 +21,14 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/file_backend.h"
 #include "core/file_sys/plugin_3gx.h"
 #include "core/file_sys/plugin_3gx_bootloader.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/vm_manager.h"
+#include "core/hle/service/fs/file.h"
 #include "core/loader/loader.h"
 
 static std::string ReadTextInfo(FileUtil::IOFile& file, std::size_t offset, std::size_t max_size) {
@@ -76,19 +79,38 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
         return Loader::ResultStatus::Error;
     }
 
-    // Load 3GX Header
-    std::vector<u8> header_data(sizeof(_3gx_Header));
-    if (file.ReadBytes(header_data.data(), sizeof(_3gx_Header)) != sizeof(_3gx_Header)) {
+    builtin_data_session = nullptr;
+
+    // Load 3GX Header. Version 3 is backwards compatible with version 2, which has no header size
+    // and no built-in data.
+    header = {};
+    constexpr std::size_t header_size_end = offsetof(_3gx_Header, reserved);
+    if (file.ReadBytes(&header, header_size_end) != header_size_end) {
         LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. File corrupted: {}",
                   plg_context.plugin_path);
         return Loader::ResultStatus::Error;
     }
 
-    std::memcpy(&header, header_data.data(), sizeof(_3gx_Header));
-
-    // Check magic value
-    if (std::memcmp(&header.magic, _3GX_magic, 8) != 0) {
+    std::size_t header_size;
+    if (std::memcmp(header.magic.data(), _3GX_magic, 8) == 0) {
+        header_size = header.header_size;
+        if (header_size < _3gx_v2_header_size) {
+            LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Invalid 3GX header: {}",
+                      plg_context.plugin_path);
+            return Loader::ResultStatus::Error;
+        }
+    } else if (std::memcmp(header.magic.data(), _3GX_magic_v2, 8) == 0) {
+        header_size = _3gx_v2_header_size;
+    } else {
         LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Outdated or invalid 3GX plugin: {}",
+                  plg_context.plugin_path);
+        return Loader::ResultStatus::Error;
+    }
+
+    // Fields of newer versions not in the header stay zero
+    header_size = std::min(header_size, sizeof(_3gx_Header));
+    if (!file.Seek(0, SEEK_SET) || file.ReadBytes(&header, header_size) != header_size) {
+        LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. File corrupted: {}",
                   plg_context.plugin_path);
         return Loader::ResultStatus::Error;
     }
@@ -176,6 +198,42 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Load(
         return Loader::ResultStatus::Error;
     }
 
+    // Open the built-in data as a subfile of the plugin. Its contents are not validated, the
+    // plugin is responsible for that.
+    if (header.builtin_data.offset != 0) {
+        const u64 builtin_data_end =
+            static_cast<u64>(header.builtin_data.offset) + header.builtin_data.size;
+        if (builtin_data_end > file.GetSize()) {
+            LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Invalid built-in data: {}",
+                      plg_context.plugin_path);
+            return Loader::ResultStatus::Error;
+        }
+
+        const FileSys::Path sdmc_path(plg_ldr.GetPluginSDMCPath());
+        FileSys::Mode mode{};
+        mode.read_flag.Assign(1);
+        std::unique_ptr<FileBackend> backend;
+        auto archive = ArchiveFactory_SDMC(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir))
+                           .Open(FileSys::Path(""), 0);
+        if (archive.Succeeded()) {
+            auto opened = (*archive)->OpenFile(sdmc_path, mode, 0);
+            if (opened.Succeeded()) {
+                backend = std::move(opened).Unwrap();
+            }
+        }
+        if (!backend) {
+            LOG_ERROR(Service_PLGLDR,
+                      "Failed to load 3GX plugin. Failed to open built-in data subfile: {}",
+                      plg_context.plugin_path);
+            return Loader::ResultStatus::Error;
+        }
+
+        auto plugin_file =
+            std::make_shared<Service::FS::File>(kernel, std::move(backend), sdmc_path);
+        builtin_data_session =
+            plugin_file->ConnectSubFile(header.builtin_data.offset, header.builtin_data.size);
+    }
+
     return Map(plg_context, process, kernel, plg_ldr);
 }
 
@@ -209,7 +267,22 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     const u32 bootloader_offset = exe_offset + exe_size;
     const u32 bootloader_size = bootloader_memory_size;
     const u32 heap_offset = bootloader_offset + bootloader_size;
+    if (heap_offset >= block_size) {
+        LOG_ERROR(Service_PLGLDR,
+                  "Failed to load 3GX plugin. Plugin is too big for its memory region: {}",
+                  plg_context.plugin_path);
+        return Loader::ResultStatus::Error;
+    }
     const u32 heap_size = block_size - heap_offset;
+
+    Kernel::Handle builtin_data_handle = 0;
+    if (builtin_data_session &&
+        process.handle_table.Create(&builtin_data_handle, builtin_data_session).IsError()) {
+        LOG_ERROR(Service_PLGLDR,
+                  "Failed to load 3GX plugin. Failed to create built-in data handle: {}",
+                  plg_context.plugin_path);
+        return Loader::ResultStatus::Error;
+    }
 
     // Allocate a block of memory for the plugin
     std::optional<u32> offset;
@@ -239,6 +312,9 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     if (!offset) {
         LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Not enough memory: {}",
                   plg_context.plugin_path);
+        if (builtin_data_handle != 0) {
+            process.handle_table.Close(builtin_data_handle);
+        }
         return Loader::ResultStatus::ErrorMemoryAllocationFailed;
     }
 
@@ -265,6 +341,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     plugin_header.plgldr_event = plg_context.plg_event;
     plugin_header.plgldr_reply = plg_context.plg_reply;
     plugin_header.is_default_plugin = plg_context.is_default_path;
+    plugin_header.builtin_data_file_handle = builtin_data_handle;
     if (plg_context.use_user_load_parameters) {
         std::memcpy(plugin_header.config, plg_context.user_load_parameters.config,
                     sizeof(PluginHeader::config));
