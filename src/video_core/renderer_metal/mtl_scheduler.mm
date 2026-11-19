@@ -111,6 +111,8 @@ struct PassStats {
     u32 px_draws = 0, px_depth_only = 0, px_no_fragment = 0, px_writes_depth = 0;
     u32 px_alpha_test = 0, px_scissor = 0, px_lit = 0, px_blended = 0, px_hsr_blocked = 0;
     u32 px_blend_dropped = 0;
+    u32 px_textures = 0, px_proctex = 0, px_cube = 0, px_projection = 0, px_fog = 0, px_bump = 0;
+    u32 px_lights = 0;
 };
 std::mutex g_pass_mutex;
 PassStats g_pass_stats;
@@ -163,6 +165,14 @@ std::vector<std::string> TakeRenderPassSummary(std::size_t max_lines) {
             stats.px_draws, stats.px_depth_only, stats.px_no_fragment, stats.px_writes_depth,
             stats.px_alpha_test, stats.px_scissor, stats.px_hsr_blocked, stats.px_lit,
             stats.px_blended, stats.px_blend_dropped));
+        const u32 color_draws = stats.px_draws - stats.px_depth_only;
+        lines.push_back(fmt::format(
+            "pixel shader work of {} color draws: {:.1f} textures and {:.1f} lights a draw on "
+            "average, {} procedural texture, {} cube map, {} projected texture, {} fog, {} bump "
+            "mapping",
+            color_draws, color_draws ? static_cast<double>(stats.px_textures) / color_draws : 0.0,
+            color_draws ? static_cast<double>(stats.px_lights) / color_draws : 0.0,
+            stats.px_proctex, stats.px_cube, stats.px_projection, stats.px_fog, stats.px_bump));
     }
     if (stats.depth_passes > 0) {
         lines.push_back(fmt::format(
@@ -453,6 +463,15 @@ void NotePixelTraits(const PixelTraits& traits) {
     std::scoped_lock lock{g_pass_mutex};
     PassStats& stats = g_pass_stats;
     stats.px_draws++;
+    if (!traits.depth_stencil_only) {
+        stats.px_textures += traits.textures;
+        stats.px_proctex += traits.proctex ? 1 : 0;
+        stats.px_cube += traits.cube_map ? 1 : 0;
+        stats.px_projection += traits.projection ? 1 : 0;
+        stats.px_fog += traits.fog ? 1 : 0;
+        stats.px_bump += traits.bump ? 1 : 0;
+        stats.px_lights += traits.lights;
+    }
     if (traits.depth_stencil_only) {
         stats.px_depth_only++;
         stats.px_no_fragment += traits.no_fragment ? 1 : 0;

@@ -69,6 +69,14 @@ struct PixelTraits {
     bool lit;
     bool blended;
     bool blend_dropped; ///< Blending was on but kept the source color, drawn without it
+    // What the pixel shader computes, to tell which effects are expensive in a scene.
+    u8 textures;      ///< Textures 0 to 2 sampled
+    bool proctex;     ///< Procedural texture (texture 3)
+    bool cube_map;    ///< Texture 0 is a cube map (environment reflections)
+    bool projection;  ///< Texture 0 is sampled with projection
+    bool fog;
+    bool bump;        ///< Normal or tangent mapping in the lighting
+    u8 lights;        ///< Lights of a lit draw
 };
 void NotePixelTraits(const PixelTraits& traits);
 

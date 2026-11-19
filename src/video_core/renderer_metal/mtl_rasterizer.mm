@@ -519,6 +519,22 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     traits.lit = regs.lighting.disable.Value() == 0;
     traits.blended = key.blend_enable != 0;
     traits.blend_dropped = output_merger.alphablend_enable != 0 && key.blend_enable == 0;
+    {
+        const auto& texturing = regs.texturing;
+        const auto& main = texturing.main_config;
+        traits.textures = static_cast<u8>(main.texture0_enable + main.texture1_enable +
+                                          main.texture2_enable);
+        traits.proctex = main.texture3_enable != 0;
+        const auto type0 = texturing.texture0.type.Value();
+        traits.cube_map = main.texture0_enable != 0 &&
+                          type0 == Pica::TexturingRegs::TextureConfig::TextureCube;
+        traits.projection = main.texture0_enable != 0 &&
+                            type0 == Pica::TexturingRegs::TextureConfig::Projection2D;
+        traits.fog = texturing.fog_mode.Value() != Pica::TexturingRegs::FogMode::None;
+        traits.bump = traits.lit && regs.lighting.config0.bump_mode.Value() !=
+                                        Pica::LightingRegs::LightingBumpMode::None;
+        traits.lights = traits.lit ? static_cast<u8>(regs.lighting.max_light_index + 1) : 0;
+    }
     traits.no_fragment = optimize && traits.depth_stencil_only && !traits.writes_depth &&
                          !traits.alpha_test && !traits.scissor_test;
     NotePixelTraits(traits);

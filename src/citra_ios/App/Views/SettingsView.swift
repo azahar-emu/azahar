@@ -324,8 +324,7 @@ struct GraphicsSettingsView: View {
         text += "Draw Optimizations draws depth-only geometry (like shadow volumes) without a "
         text += "pixel shader, does the scissor test with the GPU's own scissor and drops "
         text += "blending that changes nothing; turn it off if a game shows glitches it did not "
-        text += "have before. GPU Pass Timing writes the GPU time of every render pass to the "
-        text += "log, a diagnostic that costs some GPU time: leave it off for playing. "
+        text += "have before. "
         text += "All of these apply the next time a game starts."
         return text
     }
@@ -386,7 +385,6 @@ struct GraphicsSettingsView: View {
                 Toggle("Disable Right Eye Render", isOn: $settings.disableRightEyeRender)
                 Toggle("Hidden Surface Removal", isOn: $settings.hiddenSurfaceRemoval)
                 Toggle("Draw Optimizations", isOn: $settings.drawOptimizations)
-                Toggle("GPU Pass Timing (Diagnostic)", isOn: $settings.gpuPassTiming)
                 Picker("Texture Compression", selection: $settings.textureCompression) {
                     ForEach(TextureCompressionOption.allCases) { Text($0.title).tag($0) }
                 }
@@ -1228,6 +1226,8 @@ struct AboutView: View {
             .listRowBackground(LGRowBackground())
             Section {
                 Toggle("Write Log", isOn: $settings.loggingEnabled)
+                Toggle("GPU Pass Timing", isOn: $settings.gpuPassTiming)
+                    .disabled(!settings.loggingEnabled)
                 Button {
                     if let url = LogExporter.makeShareableLog() {
                         sharedLog = SharedFile(url: url)
@@ -1243,7 +1243,10 @@ struct AboutView: View {
                          + "file stays small even when the full log is huge. Write Log turns the "
                          + "log off (only critical errors are still written) and stops the "
                          + "statistics line and its counters, which saves a little work in the "
-                         + "emulator. It is off by default, so turn it on before you play a game you want a log of.")
+                         + "emulator. It is off by default, so turn it on before you play a game you want a log of. "
+                         + "GPU Pass Timing (with Write Log on) adds the GPU time of every kind of "
+                         + "render pass to the log. It costs GPU time and can cause stutter, so "
+                         + "only turn it on to measure something. Applies when a game starts.")
                 }
             }
             .listRowBackground(LGRowBackground())
