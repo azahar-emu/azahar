@@ -348,27 +348,28 @@ std::vector<std::string> TakePassTimingSummary(std::size_t max_lines) {
     };
 
     std::vector<std::pair<std::string, PassTiming>> sorted(timing.begin(), timing.end());
-    std::sort(sorted.begin(), sorted.end(),
-              [](const auto& a, const auto& b) { return a.second.whole > b.second.whole; });
-    u64 vertex = 0, fragment = 0, whole = 0;
+    // By the time the GPU spent in the pass's stages. From the start of the pass to its end includes
+    // the time it waited behind other passes, which says little about its own cost.
+    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
+        return a.second.vertex + a.second.fragment > b.second.vertex + b.second.fragment;
+    });
+    u64 vertex = 0, fragment = 0;
     for (const auto& [key, entry] : sorted) {
         vertex += entry.vertex;
         fragment += entry.fragment;
-        whole += entry.whole;
     }
     lines.push_back(fmt::format(
-        "{} {}: all passes {:.1f} ms (vertex stages {:.1f} ms, pixel stages {:.1f} ms; stages of "
-        "different passes overlap on the GPU, so the sum can exceed the frame's real GPU time), "
-        "GPU timer {:.2f} ns per tick",
-        frames > 0 ? "per frame over" : "per second,", frames > 0 ? fmt::format("{} frames", frames)
-                                                                  : std::string{"no frames"},
-        ms(whole), ms(vertex), ms(fragment), seconds_per_tick * 1e9));
+        "{} {}: {:.1f} ms in the stages of all passes (vertex {:.1f} ms, pixels {:.1f} ms; "
+        "stages of different passes can overlap on the GPU), GPU timer {:.2f} ns per tick",
+        frames > 0 ? "per frame over" : "per second,",
+        frames > 0 ? fmt::format("{} frames", frames) : std::string{"no frames"},
+        ms(vertex + fragment), ms(vertex), ms(fragment), seconds_per_tick * 1e9));
     for (std::size_t i = 0; i < sorted.size() && lines.size() < max_lines; i++) {
         const auto& [key, entry] = sorted[i];
         lines.push_back(fmt::format("{}: {:.1f} passes, {:.2f} ms (vertex {:.2f} ms, pixels "
-                                    "{:.2f} ms)",
-                                    key, entry.count / divide, ms(entry.whole), ms(entry.vertex),
-                                    ms(entry.fragment)));
+                                    "{:.2f} ms; {:.1f} ms from start to end with waiting)",
+                                    key, entry.count / divide, ms(entry.vertex + entry.fragment),
+                                    ms(entry.vertex), ms(entry.fragment), ms(entry.whole)));
     }
     return lines;
 }
