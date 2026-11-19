@@ -8,6 +8,7 @@
 #include <chrono>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -122,6 +123,9 @@ struct RenderTarget {
     }
 };
 
+/// The GPU timestamps of the render passes of one command buffer (Scheduler::AttachPassTiming).
+struct PassTimingBatch;
+
 /**
  * Records Metal commands on the GPU thread. Command buffers are identified by monotonically
  * increasing ticks which are used to know when resources (stream buffer regions, surfaces pending
@@ -207,6 +211,7 @@ public:
     /// Marks the command buffer being recorded as the presentation one for GpuStats::present_ns.
     void MarkPresentation() {
         presentation_tick = current_tick;
+        NotePassTimingFrame();
     }
 
     /// Commits the current command buffer and waits for all GPU work to complete.
@@ -257,6 +262,13 @@ private:
 
     void BeginPassStats(u32 width, u32 height, bool color, bool depth, bool stencil, bool game,
                         const RenderTarget* target);
+    /// Asks the GPU to time the pass about to begin with the descriptor (timestamps at the start
+    /// and end of its vertex and fragment stages). Returns false when it is not timed.
+    bool AttachPassTiming(MTLRenderPassDescriptor* descriptor);
+    /// Gives the pass timed last its name in the statistics (the pass key).
+    void NamePassTiming();
+    /// Counts a frame for the per-frame GPU times of TakePassTimingSummary.
+    static void NotePassTimingFrame();
     void EndPassStats();
     /// Notes a pass that renders to a depth texture (cleared or loaded) for the statistics of
     /// depth stores nothing needed again.
@@ -301,6 +313,9 @@ private:
     bool pass_open{};
     bool last_pass_was_target{};
     RenderTarget last_pass_target{};
+    /// The timestamps of the passes of the command buffer being recorded (AttachPassTiming).
+    std::shared_ptr<PassTimingBatch> timing_batch;
+    bool timing_attached{};
 };
 
 } // namespace Metal

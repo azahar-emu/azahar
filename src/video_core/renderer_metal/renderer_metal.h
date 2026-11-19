@@ -219,6 +219,11 @@ std::vector<std::string> TakeReadbackSummary(std::size_t max_lines);
 /// What the render passes of the last interval were, see mtl_scheduler.h.
 std::vector<std::string> TakeRenderPassSummary(std::size_t max_lines);
 
+/// How long the GPU spent on each kind of render pass over the last interval, per frame, from
+/// the GPU's own timestamps (see Scheduler::AttachPassTiming). Empty when the GPU cannot time
+/// passes.
+std::vector<std::string> TakePassTimingSummary(std::size_t max_lines);
+
 /// Whether MetalFX upscaling can be used on this device.
 bool IsUpscalingSupported();
 

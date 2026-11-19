@@ -1238,6 +1238,9 @@ const char* ThermalStateName() {
                 for (const std::string& line : Metal::TakeRenderPassSummary(16)) {
                     LOG_INFO(Frontend, "Render passes (per second): {}", line);
                 }
+                for (const std::string& line : Metal::TakePassTimingSummary(10)) {
+                    LOG_INFO(Frontend, "GPU time {}", line);
+                }
             }
             if (gpu.frames > 0) {
                 _gpuMs = gpu.gpu_ms;

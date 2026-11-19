@@ -7,6 +7,7 @@
 #include <optional>
 #include <chrono>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include "common/assert.h"
@@ -163,6 +164,211 @@ std::vector<std::string> TakeRenderPassSummary(std::size_t max_lines) {
         const auto& [key, entry] = sorted[i];
         lines.push_back(fmt::format("{}: x{}, {} draws, {} without draws", key, entry.count,
                                     entry.draws, entry.empty));
+    }
+    return lines;
+}
+
+// GPU time of the render passes, from timestamps the GPU writes at the start and end of the
+// vertex and fragment stages of each pass (counter sampling at stage boundaries).
+constexpr NSUInteger TIMED_PASSES_PER_BUFFER = 256;
+
+struct PassTimingBatch {
+    id<MTLCounterSampleBuffer> samples = nil;
+    /// The pass keys, pass i has the samples 4i to 4i+3.
+    std::vector<std::string> keys;
+};
+
+namespace {
+struct PassTiming {
+    u32 count = 0;
+    u64 vertex = 0;   ///< GPU timestamp ticks
+    u64 fragment = 0;
+    u64 whole = 0;    ///< From the start of the vertex stage to the end of the fragment stage
+};
+std::mutex g_timing_mutex;
+std::map<std::string, PassTiming> g_timing;              ///< Guarded by g_timing_mutex
+std::vector<id<MTLCounterSampleBuffer>> g_sample_pool;    ///< Guarded by g_timing_mutex
+std::atomic<u32> g_timing_frames{0};
+id<MTLDevice> g_timing_device = nil;
+id<MTLCounterSet> g_timestamp_set = nil;
+int g_timing_supported = -1; ///< GPU thread: -1 not checked yet, 0 no, 1 yes
+// Ticks of the GPU timestamps to seconds, measured against the CPU clock.
+double g_calibration_time = 0.0;
+MTLTimestamp g_calibration_ticks = 0;
+
+bool PassTimingSupported(id<MTLDevice> device) {
+    if (g_timing_supported >= 0) {
+        return g_timing_supported == 1;
+    }
+    g_timing_supported = 0;
+    if (![device supportsCounterSampling:MTLCounterSamplingPointAtStageBoundary]) {
+        LOG_INFO(Render, "GPU pass timing: this GPU cannot sample its timestamps at stage "
+                         "boundaries");
+        return false;
+    }
+    for (id<MTLCounterSet> set in device.counterSets) {
+        if ([set.name isEqualToString:MTLCommonCounterSetTimestamp]) {
+            g_timestamp_set = set;
+        }
+    }
+    if (g_timestamp_set == nil) {
+        LOG_INFO(Render, "GPU pass timing: no timestamp counters");
+        return false;
+    }
+    g_timing_device = device;
+    g_timing_supported = 1;
+    return true;
+}
+
+id<MTLCounterSampleBuffer> TakeSampleBuffer(id<MTLDevice> device) {
+    {
+        std::scoped_lock lock{g_timing_mutex};
+        if (!g_sample_pool.empty()) {
+            id<MTLCounterSampleBuffer> buffer = g_sample_pool.back();
+            g_sample_pool.pop_back();
+            return buffer;
+        }
+    }
+    MTLCounterSampleBufferDescriptor* desc = [MTLCounterSampleBufferDescriptor new];
+    desc.counterSet = g_timestamp_set;
+    desc.storageMode = MTLStorageModeShared;
+    desc.sampleCount = TIMED_PASSES_PER_BUFFER * 4;
+    NSError* error = nil;
+    id<MTLCounterSampleBuffer> buffer = [device newCounterSampleBufferWithDescriptor:desc
+                                                                                error:&error];
+    if (buffer == nil) {
+        LOG_WARNING(Render, "GPU pass timing: no sample buffer: {}",
+                    error ? [error.localizedDescription UTF8String] : "unknown error");
+        g_timing_supported = 0;
+    }
+    return buffer;
+}
+
+/// Reads the timestamps of a finished command buffer and gives its sample buffer back.
+void ResolvePassTiming(const std::shared_ptr<PassTimingBatch>& batch, bool completed) {
+    if (!batch || batch->samples == nil) {
+        return;
+    }
+    const NSUInteger passes = batch->keys.size();
+    if (completed && passes > 0) {
+        NSData* data = [batch->samples resolveCounterRange:NSMakeRange(0, passes * 4)];
+        if (data != nil && data.length >= passes * 4 * sizeof(MTLCounterResultTimestamp)) {
+            const auto* results = static_cast<const MTLCounterResultTimestamp*>(data.bytes);
+            std::scoped_lock lock{g_timing_mutex};
+            for (NSUInteger i = 0; i < passes; i++) {
+                const u64 vs = results[i * 4 + 0].timestamp;
+                const u64 ve = results[i * 4 + 1].timestamp;
+                const u64 fs = results[i * 4 + 2].timestamp;
+                const u64 fe = results[i * 4 + 3].timestamp;
+                const auto valid = [](u64 a, u64 b) {
+                    return a != MTLCounterErrorValue && b != MTLCounterErrorValue && a != 0 &&
+                           b >= a;
+                };
+                PassTiming& timing = g_timing[batch->keys[i]];
+                timing.count++;
+                if (valid(vs, ve)) {
+                    timing.vertex += ve - vs;
+                }
+                if (valid(fs, fe)) {
+                    timing.fragment += fe - fs;
+                }
+                const u64 start = vs != MTLCounterErrorValue && vs != 0 ? vs : fs;
+                if (valid(start, fe)) {
+                    timing.whole += fe - start;
+                }
+            }
+        }
+    }
+    std::scoped_lock lock{g_timing_mutex};
+    g_sample_pool.push_back(batch->samples);
+    batch->samples = nil;
+}
+} // namespace
+
+void Scheduler::NotePassTimingFrame() {
+    g_timing_frames.fetch_add(1, std::memory_order_relaxed);
+}
+
+bool Scheduler::AttachPassTiming(MTLRenderPassDescriptor* descriptor) {
+    timing_attached = false;
+    if (!StatisticsEnabled() || !timing_batch || timing_batch->samples == nil ||
+        timing_batch->keys.size() >= TIMED_PASSES_PER_BUFFER) {
+        return false;
+    }
+    const NSUInteger base = timing_batch->keys.size() * 4;
+    MTLRenderPassSampleBufferAttachmentDescriptor* attachment =
+        descriptor.sampleBufferAttachments[0];
+    attachment.sampleBuffer = timing_batch->samples;
+    attachment.startOfVertexSampleIndex = base + 0;
+    attachment.endOfVertexSampleIndex = base + 1;
+    attachment.startOfFragmentSampleIndex = base + 2;
+    attachment.endOfFragmentSampleIndex = base + 3;
+    timing_batch->keys.emplace_back("unnamed pass");
+    timing_attached = true;
+    return true;
+}
+
+void Scheduler::NamePassTiming() {
+    if (timing_attached && timing_batch && !timing_batch->keys.empty() && !pass_key.empty()) {
+        timing_batch->keys.back() = pass_key;
+    }
+    timing_attached = false;
+}
+
+std::vector<std::string> TakePassTimingSummary(std::size_t max_lines) {
+    std::map<std::string, PassTiming> timing;
+    {
+        std::scoped_lock lock{g_timing_mutex};
+        std::swap(timing, g_timing);
+    }
+    const u32 frames = g_timing_frames.exchange(0, std::memory_order_relaxed);
+    std::vector<std::string> lines;
+    if (timing.empty() || g_timing_device == nil) {
+        return lines;
+    }
+    // Seconds per tick of the GPU timestamps, from the GPU and CPU clocks read together now and
+    // at the first summary.
+    MTLTimestamp cpu_ticks = 0;
+    MTLTimestamp gpu_ticks = 0;
+    [g_timing_device sampleTimestamps:&cpu_ticks gpuTimestamp:&gpu_ticks];
+    const double now = CACurrentMediaTime();
+    if (g_calibration_ticks == 0 || gpu_ticks <= g_calibration_ticks) {
+        g_calibration_ticks = gpu_ticks;
+        g_calibration_time = now;
+        return lines;
+    }
+    if (now - g_calibration_time < 0.5) {
+        return lines;
+    }
+    const double seconds_per_tick =
+        (now - g_calibration_time) / static_cast<double>(gpu_ticks - g_calibration_ticks);
+    const double divide = frames > 0 ? frames : 1.0;
+    const auto ms = [&](u64 ticks) {
+        return static_cast<double>(ticks) * seconds_per_tick * 1000.0 / divide;
+    };
+
+    std::vector<std::pair<std::string, PassTiming>> sorted(timing.begin(), timing.end());
+    std::sort(sorted.begin(), sorted.end(),
+              [](const auto& a, const auto& b) { return a.second.whole > b.second.whole; });
+    u64 vertex = 0, fragment = 0, whole = 0;
+    for (const auto& [key, entry] : sorted) {
+        vertex += entry.vertex;
+        fragment += entry.fragment;
+        whole += entry.whole;
+    }
+    lines.push_back(fmt::format(
+        "{} {}: all passes {:.1f} ms (vertex stages {:.1f} ms, pixel stages {:.1f} ms; stages of "
+        "different passes overlap on the GPU, so the sum can exceed the frame's real GPU time), "
+        "GPU timer {:.2f} ns per tick",
+        frames > 0 ? "per frame over" : "per second,", frames > 0 ? fmt::format("{} frames", frames)
+                                                                  : std::string{"no frames"},
+        ms(whole), ms(vertex), ms(fragment), seconds_per_tick * 1e9));
+    for (std::size_t i = 0; i < sorted.size() && lines.size() < max_lines; i++) {
+        const auto& [key, entry] = sorted[i];
+        lines.push_back(fmt::format("{}: {:.1f} passes, {:.2f} ms (vertex {:.2f} ms, pixels "
+                                    "{:.2f} ms)",
+                                    key, entry.count / divide, ms(entry.whole), ms(entry.vertex),
+                                    ms(entry.fragment)));
     }
     return lines;
 }
@@ -329,6 +535,12 @@ id<MTLCommandBuffer> Scheduler::CommandBuffer() {
         @autoreleasepool {
             command_buffer = [queue commandBuffer];
         }
+        timing_batch.reset();
+        if (StatisticsEnabled() && PassTimingSupported(queue.device)) {
+            timing_batch = std::make_shared<PassTimingBatch>();
+            timing_batch->samples = TakeSampleBuffer(queue.device);
+        }
+        const std::shared_ptr<PassTimingBatch> batch = timing_batch;
         const u64 tick = current_tick;
         // The presentation gets a command buffer of its own, see RendererMetal::RenderToLayer.
         const bool is_presentation = tick == presentation_tick;
@@ -338,6 +550,7 @@ id<MTLCommandBuffer> Scheduler::CommandBuffer() {
               LOG_CRITICAL(Render, "Metal command buffer {} failed: {}", tick,
                            [buffer.error.localizedDescription UTF8String]);
           }
+          ResolvePassTiming(batch, buffer.status == MTLCommandBufferStatusCompleted);
           if (buffer.GPUEndTime > buffer.GPUStartTime) {
               const u64 ns = static_cast<u64>((buffer.GPUEndTime - buffer.GPUStartTime) * 1e9);
               Stats().gpu_ns.fetch_add(ns, std::memory_order_relaxed);
@@ -520,10 +733,13 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
         descriptor.defaultRasterSampleCount = 1;
     }
 
-    render_encoder = [CommandBuffer() renderCommandEncoderWithDescriptor:descriptor];
+    id<MTLCommandBuffer> buffer = CommandBuffer();
+    AttachPassTiming(descriptor);
+    render_encoder = [buffer renderCommandEncoderWithDescriptor:descriptor];
     Stats().render_passes.fetch_add(1, std::memory_order_relaxed);
     BeginPassStats(target.width, target.height, target.color != nil, target.depth != nil,
                    target.has_stencil, true, &target);
+    NamePassTiming();
     current_target = target;
     has_render_target = true;
     encoder_generation++;
@@ -535,7 +751,11 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(MTLRenderPassDescriptor* d
     EndEncoding();
     end_reason = nullptr;
     FlushPendingClears();
-    render_encoder = [CommandBuffer() renderCommandEncoderWithDescriptor:descriptor];
+    id<MTLCommandBuffer> buffer = CommandBuffer();
+    AttachPassTiming(descriptor);
+    render_encoder = [buffer renderCommandEncoderWithDescriptor:descriptor];
+    // The descriptor may be the caller's and used again: it must not keep the sample buffer.
+    descriptor.sampleBufferAttachments[0].sampleBuffer = nil;
     Stats().render_passes.fetch_add(1, std::memory_order_relaxed);
     {
         id<MTLTexture> color = descriptor.colorAttachments[0].texture;
@@ -545,6 +765,7 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(MTLRenderPassDescriptor* d
                        sized != nil ? static_cast<u32>(sized.height) : 0, color != nil,
                        depth != nil, descriptor.stencilAttachment.texture != nil, false, nullptr);
     }
+    NamePassTiming();
     has_render_target = false;
     encoder_generation++;
     return render_encoder;
