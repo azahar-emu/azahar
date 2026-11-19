@@ -117,6 +117,9 @@ private:
     StreamBuffer vertex_buffer;     ///< Vertex data of the software vertex path
     StreamBuffer texture_buffer;    ///< Proctex LUTs (float2 + float4)
     StreamBuffer texture_lf_buffer; ///< Lighting and fog LUTs (float2)
+    /// R16Float view of texture_lf_buffer with rows of 256 entries, for the lighting LUTs when
+    /// they are read through a texture (QualityOptions::lut_textures).
+    id<MTLTexture> lut_texture = nil;
 
     Pica::Shader::Generator::VSPicaUniformData vs_pica_data{};
 

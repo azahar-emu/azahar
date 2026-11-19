@@ -436,6 +436,11 @@ PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInt
     metal_config.half_interpolants = GetQualityOptions().half_interpolants;
     metal_config.fragment_quaternion_fix =
         fragment_quaternion_fix && fs_config.lighting.enable.Value() != 0;
+    metal_config.lut_texture =
+        GetQualityOptions().lut_textures && fs_config.lighting.enable.Value() != 0;
+    if (metal_config.lut_texture) {
+        hash = Common::HashCombine(hash, 0x1D7E'7E77'0000'0009ULL);
+    }
     // The rasterizer sets the scissor rectangle for the test keeping the inside of the box.
     metal_config.hardware_scissor = GetQualityOptions().draw_optimizations;
     if (metal_config.hardware_scissor) {

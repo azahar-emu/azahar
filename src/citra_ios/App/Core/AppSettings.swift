@@ -290,6 +290,9 @@ final class AppSettings: ObservableObject {
     }
     @Published var holdFramesForShaders: Bool { didSet { save(holdFramesForShaders, "holdFramesForShaders") } }
     @Published var fastLighting: Bool { didSet { save(fastLighting, "fastLighting") } }
+    @Published var fastLightingLookups: Bool {
+        didSet { save(fastLightingLookups, "fastLightingLookups") }
+    }
     @Published var fastColor: Bool { didSet { save(fastColor, "fastColor") } }
     @Published var loggingEnabled: Bool {
         didSet {
@@ -511,6 +514,7 @@ final class AppSettings: ObservableObject {
         shaderWaitMs = value("shaderWaitMs", 2)
         fastShaderMath = value("fastShaderMath", false)
         fastLighting = value("fastLighting", false)
+        fastLightingLookups = value("fastLightingLookups", false)
         fastColor = value("fastColor", false)
         loggingEnabled = value("loggingEnabled", false)
         fastMathFunctions = value("fastMathFunctions", false)
@@ -683,6 +687,7 @@ final class AppSettings: ObservableObject {
         config.pacingBufferMs = pacingBufferMs
         config.fastShaderMath = fastShaderMath
         config.fastLighting = fastLighting
+        config.fastLightingLookups = fastLightingLookups
         config.fastColor = fastColor
         config.loggingEnabled = loggingEnabled
         config.fastMathFunctions = fastMathFunctions

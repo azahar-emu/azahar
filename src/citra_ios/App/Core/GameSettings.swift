@@ -23,6 +23,7 @@ struct GameOverrides: Codable, Equatable {
     var anisotropy: Int?
     var fastShaderMath: Bool?
     var fastLighting: Bool?
+    var fastLightingLookups: Bool?
     var fastColor: Bool?
     var fastMathFunctions: Bool?
     var halfInterpolants: Bool?
@@ -106,6 +107,7 @@ struct GameOverrides: Codable, Equatable {
         if let anisotropy { config.anisotropy = anisotropy }
         if let fastShaderMath { config.fastShaderMath = fastShaderMath }
         if let fastLighting { config.fastLighting = fastLighting }
+        if let fastLightingLookups { config.fastLightingLookups = fastLightingLookups }
         if let fastColor { config.fastColor = fastColor }
         if let fastMathFunctions { config.fastMathFunctions = fastMathFunctions }
         if let halfInterpolants { config.halfInterpolants = halfInterpolants }

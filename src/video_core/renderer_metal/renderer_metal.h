@@ -119,6 +119,8 @@ struct QualityOptions {
     /// Fragment lighting in half precision with fast normalization. Faster on Apple GPUs, the
     /// lighting can come out very slightly different (lookup table positions are less exact).
     bool fast_lighting = false;
+    /// Lighting lookup tables read through a filtered texture, see MetalFSConfig::lut_texture.
+    bool lut_textures = false;
     /// Map the depth in the vertex shader so fragment shaders do not write it, which keeps the
     /// hidden surface removal of Apple GPUs working (not for W-buffering).
     bool vertex_depth = false;

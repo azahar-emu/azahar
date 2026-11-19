@@ -250,6 +250,7 @@ public:
         write_fragment_depth = metal.has_depth_attachment && !config.framebuffer.shadow_rendering &&
                                !metal.vertex_depth;
         quaternion_fix = metal.fragment_quaternion_fix && config.lighting.enable.Value() != 0;
+        lut_texture = metal.lut_texture && config.lighting.enable.Value() != 0;
     }
 
     std::string Generate() {
@@ -336,6 +337,9 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
         members.emplace_back(metal.half_luts ? "const device half2*" : "const device float2*", "lut_lf");
         members.emplace_back("const device float2*", "lut_rg");
         members.emplace_back("const device float4*", "lut_rgba");
+        if (lut_texture) {
+            members.emplace_back("texture2d<half>", "lut_tex");
+        }
 
         const auto texture0_type = config.texture.texture0_type.Value();
         if (UsesTextureUnit(0)) {
@@ -438,6 +442,9 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
                     fmt::format(",\n    sampler samp_normal [[sampler({})]]", +FS_SAMPLER_NORMAL);
             } else if (name == "dest_color") {
                 out += ",\n    float4 dest_color [[color(0)]]";
+            } else if (name == "lut_tex") {
+                out += fmt::format(",\n    texture2d<half> lut_tex [[texture({})]]",
+                                   +FS_TEXTURE_LIGHTING_LUT);
             }
         }
         if (config.framebuffer.shadow_rendering) {
@@ -531,6 +538,25 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
             return;
         }
 
+        if (lut_texture) {
+            // One filtered sample: texel i holds entry i, so x = position * 256 + 0.5 blends entry
+            // floor(position * 256) with the next one by the fraction, like value + diff * delta.
+            // The signed order is the row after: entries -128..127 as 128..255, 0..127.
+            out += R"(
+    float LookupLightingLUTUnsigned(int lut_index, float pos) {
+        constexpr sampler lut_sampler(coord::pixel, filter::linear, address::clamp_to_edge);
+        const float row = float(fs.lighting_lut_offset[lut_index >> 2][lut_index & 3]) + 0.5f;
+        return float(lut_tex.sample(lut_sampler, float2(pos * 256.0f + 0.5f, row)).x);
+    }
+
+    float LookupLightingLUTSigned(int lut_index, float pos) {
+        constexpr sampler lut_sampler(coord::pixel, filter::linear, address::clamp_to_edge);
+        const float row = float(fs.lighting_lut_offset[lut_index >> 2][lut_index & 3]) + 1.5f;
+        return float(lut_tex.sample(lut_sampler, float2(pos * 128.0f + 128.5f, row)).x);
+    }
+)";
+            return;
+        }
         out += R"(
     float LookupLightingLUT(int lut_index, int index, float delta) {
         float2 entry = float2(lut_lf[fs.lighting_lut_offset[lut_index >> 2][lut_index & 3] + index]);
@@ -1988,6 +2014,8 @@ private:
     bool write_fragment_depth{};
     /// The lighting quaternion is corrected per triangle here, see MetalFSConfig.
     bool quaternion_fix = false;
+    /// The lighting LUTs are read through a filtered texture, see MetalFSConfig::lut_texture.
+    bool lut_texture = false;
 };
 
 } // Anonymous namespace

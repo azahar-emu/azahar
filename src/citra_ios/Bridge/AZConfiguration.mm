@@ -35,6 +35,7 @@
     config.pacingBufferMs = 0;
     config.fastShaderMath = NO;
     config.fastLighting = NO;
+    config.fastLightingLookups = NO;
     config.fastColor = NO;
     config.loggingEnabled = NO;
     config.fastMathFunctions = NO;

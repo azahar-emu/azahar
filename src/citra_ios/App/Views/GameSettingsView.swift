@@ -71,6 +71,7 @@ struct GameSettingsView: View {
                                options: [1, 2, 4, 8, 16]) { $0 == 1 ? "Off" : "\($0)x" }
                 OverrideToggle("Fast Shader Math", value: $overrides.fastShaderMath)
                 OverrideToggle("Fast Lighting Math", value: $overrides.fastLighting)
+                OverrideToggle("Fast Lighting Lookups", value: $overrides.fastLightingLookups)
                 OverrideToggle("Fast Color Math", value: $overrides.fastColor)
                 OverrideToggle("Fast Math Functions", value: $overrides.fastMathFunctions)
                 OverrideToggle("Half Precision Colors Between Stages", value: $overrides.halfInterpolants)

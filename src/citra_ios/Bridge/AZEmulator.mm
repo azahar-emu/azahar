@@ -530,6 +530,7 @@ const char* ThermalStateName() {
     Metal::QualityOptions quality;
     quality.fast_math = configuration.fastShaderMath;
     quality.fast_lighting = configuration.fastLighting;
+    quality.lut_textures = configuration.fastLightingLookups;
     quality.fast_color = configuration.fastColor;
     quality.fast_functions = configuration.fastMathFunctions;
     quality.half_interpolants = configuration.halfInterpolants;

@@ -624,6 +624,9 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
         [encoder setVertexBuffer:vertex_buffer.Handle()
                           offset:0
                          atIndex:MSL::VS_BUFFER_VERTEX_BASE];
+        if (lut_texture != nil) {
+            [encoder setFragmentTexture:lut_texture atIndex:MSL::FS_TEXTURE_LIGHTING_LUT];
+        }
     }
 
     // Only send what changed since the previous draw on this encoder.
@@ -901,16 +904,41 @@ void RasterizerMetal::BindTextureCube(const Pica::TexturingRegs::FullTextureConf
 }
 
 void RasterizerMetal::SyncAndUploadLUTsLF() {
-    constexpr std::size_t max_size =
-        sizeof(Common::Vec2f) * 256 * Pica::LightingRegs::NumLightingSampler +
+    using Pica::Shader::Generator::MSL::LIGHTING_LUT_ROW_BYTES;
+    const bool rows = GetQualityOptions().lut_textures;
+    // Lighting LUTs as rows of the texture view: a row in table order and one in signed order.
+    const std::size_t max_size =
+        (rows ? 2 * LIGHTING_LUT_ROW_BYTES : sizeof(Common::Vec2f) * 256) *
+            Pica::LightingRegs::NumLightingSampler +
         sizeof(Common::Vec2f) * 128; // fog
+
+    if (rows && lut_texture == nil) {
+        id<MTLBuffer> handle = texture_lf_buffer.Handle();
+        MTLTextureDescriptor* desc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatR16Float
+                                                               width:256
+                                                              height:std::min<NSUInteger>(
+                                                                         handle.length /
+                                                                             LIGHTING_LUT_ROW_BYTES,
+                                                                         16384)
+                                                           mipmapped:NO];
+        desc.usage = MTLTextureUsageShaderRead;
+        desc.resourceOptions = handle.resourceOptions;
+        lut_texture = [handle newTextureWithDescriptor:desc
+                                                offset:0
+                                           bytesPerRow:LIGHTING_LUT_ROW_BYTES];
+        if (lut_texture == nil) {
+            LOG_ERROR(Render, "Unable to make the lighting LUT texture");
+        }
+    }
 
     if (!pica.lighting.lut_dirty && !pica.fog.lut_dirty) {
         return;
     }
 
     std::size_t bytes_used = 0;
-    auto [buffer, offset, invalidate] = texture_lf_buffer.Map(max_size, sizeof(Common::Vec4f));
+    auto [buffer, offset, invalidate] = texture_lf_buffer.Map(
+        max_size, rows ? LIGHTING_LUT_ROW_BYTES : sizeof(Common::Vec4f));
 
     if (invalidate) {
         pica.lighting.lut_dirty = pica.lighting.LutAllDirty;
@@ -940,6 +968,19 @@ void RasterizerMetal::SyncAndUploadLUTsLF() {
         pica.lighting.lut_dirty &= ~(1 << index);
 
         const auto& source_lut = pica.lighting.luts[index];
+        if (rows) {
+            // Values only, the texture filtering blends neighbours: entry order, then signed order
+            // (-128..-1 then 0..127).
+            auto* values = reinterpret_cast<_Float16*>(buffer + bytes_used);
+            for (u32 i = 0; i < 256; i++) {
+                values[i] = static_cast<_Float16>(source_lut[i].ToFloat());
+                values[256 + i] = static_cast<_Float16>(source_lut[(i + 128) % 256].ToFloat());
+            }
+            fs_data.lighting_lut_offset[index / 4][index % 4] =
+                static_cast<int>((offset + bytes_used) / LIGHTING_LUT_ROW_BYTES);
+            bytes_used += 2 * LIGHTING_LUT_ROW_BYTES;
+            continue;
+        }
         for (u32 i = 0; i < source_lut.size(); i++) {
             write(i, source_lut[i].ToFloat(), source_lut[i].DiffToFloat());
         }

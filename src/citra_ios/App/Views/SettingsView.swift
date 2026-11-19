@@ -290,6 +290,9 @@ struct GraphicsSettingsView: View {
         text += "Fast Shader Math can cause small graphical differences in some games. "
         text += "Fast Lighting Math computes lighting in half precision, which helps games "
         text += "with a lot of lighting (Luigi's Mansion) and can shift highlights slightly. "
+        text += "Fast Lighting Lookups reads the lighting tables with the GPU's texture "
+        text += "filtering, one step per lookup instead of several; the ends of the tables are "
+        text += "held instead of extended, which can change the brightest highlights a little. "
         text += "Fast Math Functions uses faster versions of functions like normalize and "
         text += "pow (iOS 18), without the NaN assumptions of Fast Shader Math; it can be on "
         text += "together with it. Half Precision Colors Between "
@@ -370,6 +373,7 @@ struct GraphicsSettingsView: View {
                 }
                 Toggle("Fast Shader Math", isOn: $settings.fastShaderMath)
                 Toggle("Fast Lighting Math", isOn: $settings.fastLighting)
+                Toggle("Fast Lighting Lookups", isOn: $settings.fastLightingLookups)
                 Toggle("Fast Color Math", isOn: $settings.fastColor)
                 Toggle("Fast Math Functions", isOn: $settings.fastMathFunctions)
                 Toggle("Half Precision Colors Between Stages", isOn: $settings.halfInterpolants)

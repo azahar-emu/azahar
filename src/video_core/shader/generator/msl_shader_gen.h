@@ -53,7 +53,11 @@ enum FSTexture : u32 {
     FS_TEXTURE_2 = 7,
     FS_TEXTURE_NORMAL = 8,
     FS_TEXTURE_SHADOW_BUFFER = 9,
+    FS_TEXTURE_LIGHTING_LUT = 10, ///< R16Float view of the lighting LUT rows (lut_texture)
 };
+
+/// Bytes of one row of the lighting LUT texture: 256 half values.
+constexpr u32 LIGHTING_LUT_ROW_BYTES = 256 * 2;
 
 /// Fragment stage sampler indices.
 enum FSSampler : u32 {
@@ -101,6 +105,11 @@ struct MetalFSConfig {
     /// The scissor test that keeps the pixels inside the box is the GPU's scissor rectangle
     /// (set by the rasterizer), the shader only does the one keeping the pixels outside it.
     bool hardware_scissor = false;
+    /// The lighting lookup tables are read through a texture with hardware linear filtering
+    /// (FS_TEXTURE_LIGHTING_LUT, one row per table and one more in signed order), one sample per
+    /// lookup instead of a load and the interpolation in the shader. fs.lighting_lut_offset holds
+    /// the row of each table. The ends of a table are clamped instead of extrapolated.
+    bool lut_texture = false;
 };
 
 /// MSL of FixQuaternion(float4 interpolated, float3 barycentric), which corrects opposite

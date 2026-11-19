@@ -79,6 +79,8 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) NSInteger shaderWaitMs;
 /// Fragment lighting in half precision with fast normalization (applies to the next game).
 @property(nonatomic) BOOL fastLighting;
+/// The lighting lookup tables are read with the GPU's texture filtering (one sample a lookup).
+@property(nonatomic) BOOL fastLightingLookups;
 /// Texture combiners in half precision (applies to the next game).
 @property(nonatomic) BOOL fastColor;
 /// The emulator log is written (off: critical errors only).
