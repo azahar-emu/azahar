@@ -109,6 +109,7 @@ struct PassStats {
     // Pixel shader traits of the draws of the game (NotePixelTraits).
     u32 px_draws = 0, px_depth_only = 0, px_no_fragment = 0, px_writes_depth = 0;
     u32 px_alpha_test = 0, px_scissor = 0, px_lit = 0, px_blended = 0, px_hsr_blocked = 0;
+    u32 px_blend_dropped = 0;
 };
 std::mutex g_pass_mutex;
 PassStats g_pass_stats;
@@ -155,11 +156,12 @@ std::vector<std::string> TakeRenderPassSummary(std::size_t max_lines) {
         lines.push_back(fmt::format(
             "pixel shaders of {} draws: {} only write depth/stencil ({} of them with no pixel "
             "shader at all); of the others {} write depth themselves, {} alpha test, {} scissor "
-            "test (each keeps the GPU from skipping hidden pixels: {} draws in all), {} lit, {} "
-            "blended",
+            "test outside a box (each keeps the GPU from skipping hidden pixels: {} draws in "
+            "all), {} lit, {} blended ({} more had blending on that kept their own color and "
+            "were drawn without it)",
             stats.px_draws, stats.px_depth_only, stats.px_no_fragment, stats.px_writes_depth,
             stats.px_alpha_test, stats.px_scissor, stats.px_hsr_blocked, stats.px_lit,
-            stats.px_blended));
+            stats.px_blended, stats.px_blend_dropped));
     }
     if (stats.depth_passes > 0) {
         lines.push_back(fmt::format(
@@ -462,6 +464,7 @@ void NotePixelTraits(const PixelTraits& traits) {
         (traits.writes_depth || traits.alpha_test || traits.scissor_test) ? 1 : 0;
     stats.px_lit += traits.lit ? 1 : 0;
     stats.px_blended += traits.blended ? 1 : 0;
+    stats.px_blend_dropped += traits.blend_dropped ? 1 : 0;
 }
 
 void Scheduler::NoteDepthPass(id<MTLTexture> texture, u32 level, u32 width, u32 height,

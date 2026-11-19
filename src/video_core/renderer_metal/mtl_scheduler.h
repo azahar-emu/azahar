@@ -68,6 +68,7 @@ struct PixelTraits {
     bool scissor_test;       ///< The fragment shader may discard (scissor test)
     bool lit;
     bool blended;
+    bool blend_dropped; ///< Blending was on but kept the source color, drawn without it
 };
 void NotePixelTraits(const PixelTraits& traits);
 

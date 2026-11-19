@@ -1321,7 +1321,8 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
 
     void WriteScissor() {
         const auto scissor_mode = config.framebuffer.scissor_test_mode.Value();
-        if (scissor_mode == RasterizerRegs::ScissorMode::Disabled) {
+        if (scissor_mode == RasterizerRegs::ScissorMode::Disabled ||
+            (scissor_mode == RasterizerRegs::ScissorMode::Include && metal.hardware_scissor)) {
             return;
         }
 

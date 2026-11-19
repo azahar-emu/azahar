@@ -36,7 +36,7 @@ namespace {
 
 /// Disk cache file layout: a CacheHeader followed by records (RecordHeader + payload).
 constexpr u32 CACHE_MAGIC = 0x434C544D; // "MTLC"
-constexpr u32 CACHE_VERSION = 2; // 2: vertex shaders take VSDepth
+constexpr u32 CACHE_VERSION = 3; // 2: vertex shaders take VSDepth, 3: hardware scissor
 
 struct CacheHeader {
     u32 magic;
@@ -436,6 +436,9 @@ PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInt
     metal_config.half_interpolants = GetQualityOptions().half_interpolants;
     metal_config.fragment_quaternion_fix =
         fragment_quaternion_fix && fs_config.lighting.enable.Value() != 0;
+    // The rasterizer sets the scissor rectangle for the test keeping the inside of the box.
+    metal_config.hardware_scissor = true;
+    hash = Common::HashCombine(hash, 0x5C15'5012'0000'0008ULL);
     if (metal_config.fragment_quaternion_fix) {
         hash = Common::HashCombine(hash, 0x9A7E'0F1C'0000'0007ULL);
     }

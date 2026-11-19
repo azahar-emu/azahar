@@ -98,6 +98,9 @@ struct MetalFSConfig {
     /// (QUATERNION_FIX_MSL), so the vertex shaders can share vertices between triangles. Needs
     /// barycentric coordinates. Only used when lighting is enabled.
     bool fragment_quaternion_fix = false;
+    /// The scissor test that keeps the pixels inside the box is the GPU's scissor rectangle
+    /// (set by the rasterizer), the shader only does the one keeping the pixels outside it.
+    bool hardware_scissor = false;
 };
 
 /// MSL of FixQuaternion(float4 interpolated, float3 barycentric), which corrects opposite

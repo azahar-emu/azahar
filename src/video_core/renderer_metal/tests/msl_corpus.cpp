@@ -291,6 +291,7 @@ int main(int argc, char** argv) {
         metal_config.vertex_depth = metal_config.has_depth_attachment && (i % 6) < 3;
         // The per-triangle quaternion correction in the fragment shader.
         metal_config.fragment_quaternion_fix = (i % 8) < 4;
+        metal_config.hardware_scissor = (i % 3) != 1;
 
         Write(out_dir, "fs_random_" + std::to_string(i) + ".metal",
               MSL::GenerateFragmentShader(config, user, profile, metal_config));
