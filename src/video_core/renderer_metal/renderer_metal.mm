@@ -612,6 +612,8 @@ private:
 #if AZAHAR_HAS_METALFX
     /// Scales the made frame back up to the size of its area on the screen.
     UpscaleSlot fg_upscale{};
+    /// The same for the frames MetalFX frame interpolation makes at a smaller size.
+    UpscaleSlot fx_upscale{};
 #endif
     id<MTLComputePipelineState> fg_to_ycbcr = nil;   ///< Color picture to the slot's planes
     id<MTLRenderPipelineState> fg_from_ycbcr = nil;  ///< Slot planes onto the screen
@@ -1892,6 +1894,9 @@ bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 area
     fx_small_color = {};
     fx_small_out = nil;
     fx_full_out = nil;
+#if AZAHAR_HAS_METALFX
+    fx_upscale = UpscaleSlot{};
+#endif
     fx_layout_width = layout_width;
     fx_layout_height = layout_height;
     fx_scale = scale;
@@ -2014,6 +2019,20 @@ bool RendererMetal::PrepareMetalFX(u32 layout_width, u32 layout_height, f32 area
         if (fx_small_color[0] == nil || fx_small_color[1] == nil || fx_small_out == nil) {
             return false;
         }
+#if AZAHAR_HAS_METALFX
+        // The made frame is scaled up to its area with MetalFX, like the one VideoToolbox
+        // makes. Without it (refused) it is stretched with plain filtering.
+        if (MetalFXSupported(device)) {
+            UpscaleJob job;
+            job.in_width = width;
+            job.in_height = height;
+            job.out_width = UpscaledSize(width, static_cast<u32>(std::lround(area_width)));
+            job.out_height = UpscaledSize(height, static_cast<u32>(std::lround(area_height)));
+            if (!EnsureUpscaleSlot(fx_upscale, job)) {
+                fx_upscale = UpscaleSlot{};
+            }
+        }
+#endif
     }
     if (fx_small_out == nil) {
         MTLTextureDescriptor* full_desc =
@@ -2228,6 +2247,21 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
             }
             const double delta = std::clamp(fg_interval, 0.012, 0.1);
             use_fx = EncodeMetalFX(fx_buffer, in_current, in_previous, out, delta);
+            id<MTLTexture> made_source = shrink ? fx_small_out : fx_full_out;
+#if AZAHAR_HAS_METALFX
+            if (use_fx && shrink && fx_upscale.scaler != nil) {
+                // The small made frame scaled up to its area with MetalFX.
+                id<MTLBlitCommandEncoder> copy = [fx_buffer blitCommandEncoder];
+                [copy copyFromTexture:fx_small_out toTexture:fx_upscale.input];
+                [copy endEncoding];
+                fx_upscale.scaler.colorTexture = fx_upscale.input;
+                fx_upscale.scaler.outputTexture = fx_upscale.output;
+                fx_upscale.scaler.inputContentWidth = fx_upscale.in_width;
+                fx_upscale.scaler.inputContentHeight = fx_upscale.in_height;
+                [fx_upscale.scaler encodeToCommandBuffer:fx_buffer];
+                made_source = fx_upscale.output;
+            }
+#endif
             if (use_fx) {
                 // The made picture is the real one with the interpolated one over the area of
                 // the screens that frame generation covers (only the top screen with "Top Screen
@@ -2242,8 +2276,8 @@ void RendererMetal::RenderGenerated(CAMetalLayer* target,
                 const f32 full_height = static_cast<f32>(layout.height);
                 EncodeFullscreen(compose, present_pipeline, present_samplers[0], current,
                                  full_width, full_height);
-                EncodeRect(compose, present_pipeline, present_samplers[0],
-                           shrink ? fx_small_out : fx_full_out, full_width, full_height,
+                EncodeRect(compose, present_pipeline, present_samplers[0], made_source,
+                           full_width, full_height,
                            fg_area_x, fg_area_y, fg_area_width, fg_area_height, 0.0f, 0.0f, 1.0f,
                            1.0f);
                 [compose endEncoding];
