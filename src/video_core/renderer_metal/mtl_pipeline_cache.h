@@ -11,6 +11,8 @@
 #include <span>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 #include "common/common_funcs.h"
 #include "common/file_util.h"
 #include "common/hash.h"
@@ -195,6 +197,12 @@ private:
     std::mutex archive_mutex;
     id<MTLBinaryArchive> binary_archive = nil;
     std::atomic<bool> archive_dirty{};
+    /// The pipelines added to the archive this session, in order, to rebuild it without the one
+    /// a save fails on ("pipeline no. N").
+    std::vector<MTLRenderPipelineDescriptor*> archived_descs;
+    std::vector<PipelineKey> archived_keys;
+    /// Pipelines a save failed on, never added again.
+    std::unordered_set<u64> archive_excluded;
     u32 frames_since_save{};
     /// Microseconds this frame spent waiting for pipelines to build (see GetPipeline).
     u32 frame_wait_us{};
