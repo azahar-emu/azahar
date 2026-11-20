@@ -252,6 +252,11 @@ jobs:
         run: |
           cd C:\vcpkg
           git checkout 5087d22fd76fe1844ca492866055dea3c34e7f52
+          # dav1d 1.5.2 fails to build with newer MSVC, use 1.5.5.
+          # Remove once we update to a newer commit.
+          git fetch --depth 1 origin 74f5ea45ca78988784b810ad9bbb148ea7ff76d8
+          git checkout FETCH_HEAD -- ports/dav1d
+          # =====================================================
           .\bootstrap-vcpkg.bat -disableMetrics
       - name: Build FFmpeg (MSVC)
         if: ${{ matrix.target == 'msvc' }}
