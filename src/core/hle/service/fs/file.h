@@ -1,6 +1,6 @@
-// Copyright 2018-2024 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -52,6 +52,10 @@ public:
 
     /// Creates a new session to this File and returns the ClientSession part of the connection.
     std::shared_ptr<Kernel::ClientSession> Connect();
+
+    /// Creates a new session to a subfile of this File, as OpenSubFile does, and returns the
+    /// ClientSession part of the connection.
+    std::shared_ptr<Kernel::ClientSession> ConnectSubFile(u64 offset, u64 size);
 
     // Returns the start offset of an open file represented by the input session, opened with
     // OpenSubFile.

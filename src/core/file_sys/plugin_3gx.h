@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <array>
 #include <span>
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -34,6 +35,10 @@ enum class ResultStatus;
 
 namespace FileUtil {
 class IOFile;
+}
+
+namespace Kernel {
+class ClientSession;
 }
 
 namespace FileSys {
@@ -54,15 +59,20 @@ public:
         u32_le exe_size; // Include sizeof(PluginHeader) + .text + .rodata + .data + .bss (0x1000
                          // aligned too)
         u32_le is_default_plugin;
-        u32_le plgldr_event; ///< Used for synchronization, unused in citra
-        u32_le plgldr_reply; ///< Used for synchronization, unused in citra
-        u32_le reserved[24];
+        u32_le plgldr_event;  ///< Used for synchronization, unused in citra
+        u32_le plgldr_reply;  ///< Used for synchronization, unused in citra
+        u8 notify_home_event; ///< Unused in Azahar
+        u8 padding[7];
+        u64_le wait_for_reply_timeout;   ///< Unused in Azahar
+        u32_le builtin_data_file_handle; ///< FS file handle of the built-in data, or 0
+        u32_le reserved[19];
         u32_le config[32];
     };
 
     static_assert(sizeof(PluginHeader) == 0x100, "Invalid plugin header size");
 
-    static constexpr const char* _3GX_magic = "3GX$0002";
+    static constexpr const char* _3GX_magic = "3GX$0003";
+    static constexpr const char* _3GX_magic_v2 = "3GX$0002";
     static constexpr u32 _3GX_exe_load_addr = 0x07000000;
     static constexpr u32 _3GX_heap_load_addr = 0x06000000;
     static constexpr u32 _3GX_fb_size = 0xA9000;
@@ -128,15 +138,27 @@ private:
         u32_le swap_load_func_offset; // NOP terminated
     };
 
+    struct _3gx_BuiltInData {
+        u32_le offset;
+        u32_le size;
+    };
+
     struct _3gx_Header {
-        u64_le magic;
+        std::array<char, 8> magic;
         u32_le version;
-        u32_le reserved;
+        u16_le header_size; ///< Version 3 and later only
+        u16_le reserved;
         _3gx_Infos infos;
         _3gx_Executable executable;
         _3gx_Targets targets;
         _3gx_Symtable symtable;
+        _3gx_BuiltInData builtin_data; ///< Version 3 and later only
     };
+
+    // Version 2 headers have no header size, and end before the built-in data
+    static constexpr std::size_t _3gx_v2_header_size = 0x94;
+    static_assert(sizeof(_3gx_Header) == _3gx_v2_header_size + sizeof(_3gx_BuiltInData),
+                  "Invalid 3GX header size");
 
     _3gx_Header header;
 
@@ -152,5 +174,7 @@ private:
 
     std::vector<u32> exe_load_func;
     u32_le exe_load_args[4];
+
+    std::shared_ptr<Kernel::ClientSession> builtin_data_session;
 };
 } // namespace FileSys

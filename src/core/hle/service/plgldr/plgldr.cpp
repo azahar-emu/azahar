@@ -40,7 +40,7 @@ SERVICE_CONSTRUCT_IMPL(Service::PLGLDR::PLG_LDR)
 
 namespace Service::PLGLDR {
 
-static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 2);
+static const Kernel::CoreVersion plgldr_version = Kernel::CoreVersion(1, 0, 3);
 
 PLG_LDR::PLG_LDR(Core::System& system_) : ServiceFramework{"plg:ldr", 1}, system(system_) {
     static const FunctionInfo functions[] = {
@@ -277,11 +277,7 @@ void PLG_LDR::GetArbiter(Kernel::HLERequestContext& ctx) {
     rb.Push(Kernel::ResultNotImplemented);
 }
 
-void PLG_LDR::GetPluginPath(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    auto path = rp.PopMappedBuffer();
-
-    // Same behaviour as strncpy
+std::string PLG_LDR::GetPluginSDMCPath() const {
     std::string root_sd = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
     std::string plugin_path = plgldr_context.plugin_path;
     auto it = plugin_path.find(root_sd);
@@ -291,7 +287,14 @@ void PLG_LDR::GetPluginPath(Kernel::HLERequestContext& ctx) {
     std::replace(plugin_path.begin(), plugin_path.end(), '\\', '/');
     if (plugin_path.empty() || plugin_path[0] != '/')
         plugin_path = "/" + plugin_path;
+    return plugin_path;
+}
 
+void PLG_LDR::GetPluginPath(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto path = rp.PopMappedBuffer();
+
+    const std::string plugin_path = GetPluginSDMCPath();
     path.Write(plugin_path.c_str(), 0, std::min(path.GetSize(), plugin_path.length() + 1));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);

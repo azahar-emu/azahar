@@ -463,6 +463,19 @@ std::shared_ptr<Kernel::ClientSession> File::Connect() {
     return client;
 }
 
+std::shared_ptr<Kernel::ClientSession> File::ConnectSubFile(u64 offset, u64 size) {
+    auto [server, client] = kernel.CreateSessionPair(GetName());
+    ClientConnected(server);
+
+    FileSessionSlot* slot = GetSessionData(std::move(server));
+    slot->priority = 0;
+    slot->offset = offset;
+    slot->size = size;
+    slot->subfile = true;
+
+    return client;
+}
+
 std::size_t File::GetSessionFileOffset(std::shared_ptr<Kernel::ServerSession> session) {
     const FileSessionSlot* slot = GetSessionData(std::move(session));
     ASSERT(slot);
