@@ -1336,7 +1336,10 @@ bool RasterizerCache<T>::ValidateByReinterpretation(Surface& surface, SurfacePar
     const u32 size = boost::icl::length(interval);
 
     ForEachSurfaceInRegion(addr, size, [&](auto, auto& cached_surface) {
-        if (cached_surface.pixel_format == PixelFormat::Invalid) {
+        // Ignore fills that later writes have fully replaced within the interval
+        if (cached_surface.pixel_format == PixelFormat::Invalid &&
+            !boost::icl::contains(cached_surface.invalid_regions,
+                                  interval & cached_surface.GetInterval())) {
             has_invalid = true;
             return true;
         }
