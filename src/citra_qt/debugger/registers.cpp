@@ -1,6 +1,6 @@
-// Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <QTreeWidgetItem>
 #include "citra_qt/debugger/registers.h"
@@ -10,7 +10,8 @@
 #include "ui_registers.h"
 
 RegistersWidget::RegistersWidget(const Core::System& system_, QWidget* parent)
-    : QDockWidget(parent), cpu_regs_ui(std::make_unique<Ui::ARMRegisters>()), system{system_} {
+    : QDockWidget(tr("Registers"), parent), cpu_regs_ui(std::make_unique<Ui::ARMRegisters>()),
+      system{system_} {
     cpu_regs_ui->setupUi(this);
 
     tree = cpu_regs_ui->treeWidget;
