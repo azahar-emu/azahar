@@ -926,6 +926,10 @@ void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_lo
     const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix);
     if (contents.size() < sizeof(CacheHeader) ||
         std::memcmp(contents.data(), &expected, sizeof(CacheHeader)) != 0) {
+        LOG_INFO(Render, "Shader cache of {:016X}: {} ({} bytes), starting a new one", title_id,
+                 contents.empty() ? "no file"
+                                  : "made by another build or with other settings",
+                 contents.size());
         return;
     }
 
@@ -938,6 +942,9 @@ void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_lo
         std::memcpy(&header, contents.data() + offset, sizeof(header));
         offset += sizeof(header);
         if (offset + header.size > contents.size()) {
+            LOG_INFO(Render, "Shader cache of {:016X}: the record at byte {} of {} is cut off "
+                             "(the app stopped while writing it), reading stops there",
+                     title_id, offset - sizeof(header), contents.size());
             break;
         }
         const std::span<const u8> payload{contents.data() + offset, header.size};
@@ -995,8 +1002,11 @@ void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_lo
     }
 
     const std::size_t total = to_build.size();
-    LOG_INFO(Render, "Building {} cached pipelines of {:016X} ({} fragment and {} vertex programs)",
-             total, title_id, fragment_shaders.size(), vertex_shaders.size());
+    LOG_INFO(Render,
+             "Building {} cached pipelines of {:016X} ({} fragment and {} vertex programs, {} "
+             "pipeline records in a {} byte file)",
+             total, title_id, fragment_shaders.size(), vertex_shaders.size(), keys.size(),
+             contents.size());
     if (total == 0) {
         return;
     }
