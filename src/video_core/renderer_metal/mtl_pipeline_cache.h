@@ -190,6 +190,8 @@ private:
     // Only accessed from the GPU thread.
     std::unordered_map<u64, ShaderHandle> fragment_shaders;
     std::unordered_map<u64, ShaderHandle> vertex_shaders;
+    /// The bool uniforms each vertex program tests (MSL::BoolUniformsTested), by program hash.
+    std::unordered_map<u64, u32> program_bool_masks;
     std::unordered_map<u64, std::shared_ptr<Pipeline>> pipelines;
     std::unordered_map<u64, id<MTLDepthStencilState>> depth_stencil_states;
 

@@ -21,6 +21,13 @@ using RegGetter = std::function<std::string(u32)>;
 std::string DecompileProgram(const Pica::ProgramCode& program_code,
                              const Pica::SwizzleData& swizzle_data, u32 main_offset,
                              const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
-                             bool sanitize_mul);
+                             bool sanitize_mul, u32 fixed_bools_mask = 0, u32 fixed_bools = 0);
+
+/**
+ * The bool uniforms the program's flow control tests (jmpu, callu, ifu), as a bit mask. The
+ * program can be made for given values of them (DecompileProgram's fixed_bools), which are
+ * constant for a draw: the compiler then drops the paths not taken.
+ */
+u32 BoolUniformsTested(const Pica::ProgramCode& program_code);
 
 } // namespace Pica::Shader::Generator::MSL

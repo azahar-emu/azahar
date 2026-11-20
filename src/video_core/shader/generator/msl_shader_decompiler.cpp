@@ -272,10 +272,11 @@ public:
     MSLGenerator(const std::set<Subroutine>& subroutines, const ProgramCode& program_code,
                   const SwizzleData& swizzle_data, u32 main_offset,
                   const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
-                  bool sanitize_mul)
+                  bool sanitize_mul, u32 fixed_bools_mask, u32 fixed_bools)
         : subroutines(subroutines), program_code(program_code), swizzle_data(swizzle_data),
           main_offset(main_offset), inputreg_getter(inputreg_getter),
-          outputreg_getter(outputreg_getter), sanitize_mul(sanitize_mul) {
+          outputreg_getter(outputreg_getter), sanitize_mul(sanitize_mul),
+          fixed_bools_mask(fixed_bools_mask), fixed_bools(fixed_bools) {
 
         Generate();
     }
@@ -364,6 +365,12 @@ private:
 
     /// Generates code representing a bool uniform
     std::string GetUniformBool(u32 index, bool invert_test = false) const {
+        // A bool uniform the shader was made for (see DecompileProgram): a constant, so the
+        // compiler drops the branch not taken, and the loads only it needed.
+        if ((fixed_bools_mask >> index) & 1u) {
+            const bool value = ((fixed_bools >> index) & 1u) != 0;
+            return value != invert_test ? "true" : "false";
+        }
         return fmt::format("(uniforms->b & {}u) {} 0u", 1 << index, invert_test ? "==" : "!=");
     }
 
@@ -941,18 +948,39 @@ private:
     const RegGetter& inputreg_getter;
     const RegGetter& outputreg_getter;
     const bool sanitize_mul;
+    u32 fixed_bools_mask;
+    u32 fixed_bools;
 
     ShaderWriter shader;
 };
 
+u32 BoolUniformsTested(const ProgramCode& program_code) {
+    u32 mask = 0;
+    for (const u32 word : program_code) {
+        const Instruction instr = {word};
+        switch (instr.opcode.Value().EffectiveOpCode()) {
+        case OpCode::Id::JMPU:
+        case OpCode::Id::CALLU:
+        case OpCode::Id::IFU:
+            mask |= 1u << instr.flow_control.bool_uniform_id;
+            break;
+        default:
+            break;
+        }
+    }
+    return mask;
+}
+
 std::string DecompileProgram(const ProgramCode& program_code, const SwizzleData& swizzle_data,
                              u32 main_offset, const RegGetter& inputreg_getter,
-                             const RegGetter& outputreg_getter, bool sanitize_mul) {
+                             const RegGetter& outputreg_getter, bool sanitize_mul,
+                             u32 fixed_bools_mask, u32 fixed_bools) {
 
     try {
         auto subroutines = ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines();
         MSLGenerator generator(subroutines, program_code, swizzle_data, main_offset,
-                                inputreg_getter, outputreg_getter, sanitize_mul);
+                                inputreg_getter, outputreg_getter, sanitize_mul, fixed_bools_mask,
+                                fixed_bools);
         return generator.MoveShaderCode();
     } catch (const DecompileFail& exception) {
         LOG_INFO(HW_GPU, "Shader decompilation failed: {}", exception.what());

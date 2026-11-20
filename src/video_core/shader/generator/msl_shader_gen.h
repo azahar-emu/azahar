@@ -190,7 +190,8 @@ static_assert(sizeof(VSVertexLayout) == 544, "VSVertexLayout must match the MSL 
 std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSConfig& config,
                                  bool use_clip_planes, bool sanitize_mul,
                                  bool half_interpolants = false,
-                                 bool fragment_quaternion_fix = false);
+                                 bool fragment_quaternion_fix = false, u32 fixed_bools_mask = 0,
+                                 u32 fixed_bools = 0);
 
 /// Returns the vertex shader used by the software (CPU) vertex processing path.
 std::string GenerateTrivialVertexShader(bool use_clip_planes, bool half_interpolants = false);

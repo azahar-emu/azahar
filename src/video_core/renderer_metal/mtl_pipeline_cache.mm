@@ -23,6 +23,7 @@
 #include "video_core/renderer_metal/mtl_instance.h"
 #include "video_core/renderer_metal/mtl_pipeline_cache.h"
 #include "video_core/renderer_metal/renderer_metal.h"
+#include "video_core/shader/generator/msl_shader_decompiler.h"
 #include "video_core/shader/generator/msl_shader_gen.h"
 #include "video_core/shader/generator/shader_gen.h"
 
@@ -491,6 +492,27 @@ PipelineCache::ShaderHandle PipelineCache::UseVertexShader(const Pica::RegsInter
                                    static_cast<u64>(sanitize_mul),
                                    static_cast<u64>(half_interpolants),
                                    static_cast<u64>(fragment_quaternion_fix));
+    // The program is made for the values of the bool uniforms its flow control tests, which do
+    // not change within a draw (with Draw Optimizations): its branches are then constants for
+    // the compiler. Big programs that handle many cases with them (Luigi's Mansion's run every
+    // path through a jump table) become a straight line, without the loads they do not need.
+    u32 bools_mask = 0;
+    u32 bools = 0;
+    if (GetQualityOptions().draw_optimizations) {
+        auto [it, inserted] = program_bool_masks.try_emplace(config.state.program_hash, 0u);
+        if (inserted) {
+            it->second = MSL::BoolUniformsTested(setup.GetProgramCode());
+        }
+        bools_mask = it->second;
+        for (u32 i = 0; i < 16; i++) {
+            if (setup.uniforms.b[i]) {
+                bools |= 1u << i;
+            }
+        }
+        bools &= bools_mask;
+        hash = Common::HashCombine(hash, 0xB001'5BEC'0000'0000ULL | bools_mask,
+                                   static_cast<u64>(bools));
+    }
     hash = hash == 0 ? 1 : hash;
     if (const auto it = vertex_shaders.find(hash); it != vertex_shaders.end()) {
         const ShaderHandle& shader = it->second;
@@ -499,8 +521,9 @@ PipelineCache::ShaderHandle PipelineCache::UseVertexShader(const Pica::RegsInter
     }
 
     Common::FrameCost::Scope frame_cost{Common::FrameCost::Kind::ShaderBuild};
-    std::string source = MSL::GenerateVertexShader(setup, config, use_clip_planes, sanitize_mul,
-                                                   half_interpolants, fragment_quaternion_fix);
+    std::string source =
+        MSL::GenerateVertexShader(setup, config, use_clip_planes, sanitize_mul, half_interpolants,
+                                  fragment_quaternion_fix, bools_mask, bools);
     auto shader = MakeShader(hash, true, std::move(source));
     if (shader->source.empty()) {
         LOG_INFO(Render, "Vertex shader {:016x} cannot be translated, using the CPU for it",

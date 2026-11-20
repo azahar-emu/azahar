@@ -16,6 +16,7 @@
 #include "video_core/pica/regs_internal.h"
 #include "video_core/pica/shader_setup.h"
 #include "video_core/renderer_metal/mtl_utility_shaders.h"
+#include "video_core/shader/generator/msl_shader_decompiler.h"
 #include "video_core/shader/generator/msl_shader_gen.h"
 
 using namespace Pica::Shader;
@@ -233,8 +234,11 @@ std::string RandomVertexShader(std::mt19937& rng, int index) {
         attribute.map_w.Assign(static_cast<Pica::RasterizerRegs::VSOutputAttributes::Semantic>(pick()));
     }
 
+    // Half of them made for fixed values of the bool uniforms they test.
+    const u32 bools_mask = index % 2 == 0 ? MSL::BoolUniformsTested(setup->GetProgramCode()) : 0u;
     return MSL::GenerateVertexShader(*setup, config, index % 3 != 0, index % 4 != 0, index % 5 < 2,
-                                     index % 7 < 3);
+                                     index % 7 < 3, bools_mask,
+                                     static_cast<u32>(rng()) & bools_mask);
 }
 
 } // Anonymous namespace

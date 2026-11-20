@@ -2201,7 +2201,8 @@ static uint FetchVertexIndex(constant VertexLayout& layout, device const uchar* 
 
 std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSConfig& config,
                                  bool use_clip_planes, bool sanitize_mul, bool half_interpolants,
-                                 bool fragment_quaternion_fix) {
+                                 bool fragment_quaternion_fix, u32 fixed_bools_mask,
+                                 u32 fixed_bools) {
     using VSOutputAttributes = Pica::RasterizerRegs::VSOutputAttributes;
     const auto& state = config.state;
 
@@ -2221,7 +2222,8 @@ std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSCon
 
     const std::string program_source =
         DecompileProgram(setup.GetProgramCode(), setup.GetSwizzleData(), state.main_offset,
-                         get_input_reg, get_output_reg, sanitize_mul);
+                         get_input_reg, get_output_reg, sanitize_mul, fixed_bools_mask,
+                         fixed_bools);
     if (program_source.empty()) {
         return "";
     }
