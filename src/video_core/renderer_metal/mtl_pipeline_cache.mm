@@ -557,10 +557,14 @@ void PipelineCache::BuildPipeline(Pipeline& pipeline) {
 
             // Look the GPU binary up in the archive first. The archive is only touched with the
             // mutex held, building a pipeline that is not in it happens without.
-            // Pipelines without a fragment function are kept out of the archive: serializing one
-            // fails ("expecting 'fragment' stage") and takes every other pipeline down with it.
-            // They have no fragment program to compile and build quickly anyway.
-            const bool archivable = !key.no_fragment;
+            // Pipelines that write no color are kept out of the archive: one without a fragment
+            // function, or whose fragment stage Metal drops because nothing it outputs is written
+            // (color writes off, shadow passes), makes serializing fail ("expecting 'fragment'
+            // stage in pipeline no. N") and takes every other pipeline down with it. Seen in every
+            // game, the archive was never saved. They are few and build quickly.
+            const bool archivable = !key.no_fragment &&
+                                    key.color_format != static_cast<u32>(MTLPixelFormatInvalid) &&
+                                    key.write_mask != static_cast<u8>(MTLColorWriteMaskNone);
             {
                 std::scoped_lock lock{archive_mutex};
                 if (binary_archive != nil && archivable) {
