@@ -256,6 +256,8 @@ jobs:
           # Remove once we update to a newer commit.
           git fetch --depth 1 origin 74f5ea45ca78988784b810ad9bbb148ea7ff76d8
           git checkout FETCH_HEAD -- ports/dav1d
+          # code.videolan.org rejects the "//" this port's trailing slash produces in download URLs
+          (Get-Content ports\x264\portfile.cmake) -replace 'GITLAB_URL https://code.videolan.org/', 'GITLAB_URL https://code.videolan.org' | Set-Content ports\x264\portfile.cmake
           # =====================================================
           .\bootstrap-vcpkg.bat -disableMetrics
       - name: Build FFmpeg (MSVC)
