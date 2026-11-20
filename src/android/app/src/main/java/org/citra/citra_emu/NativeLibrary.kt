@@ -861,13 +861,22 @@ object NativeLibrary {
         }
     }
 
+    // Native code calls this on every file operation; resolving the URI can make a binder call.
+    @Volatile
+    private var cachedUserDirectory: Pair<String, String>? = null
+
     @Keep
     @JvmStatic
     fun getUserDirectory(): String {
         val preferences: SharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        val userDirectoryUri = preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
-        return getNativePath(userDirectoryUri)
+        val uriString = preferences.getString("CITRA_DIRECTORY", "")!!
+        cachedUserDirectory?.let { (cachedUri, path) -> if (cachedUri == uriString) return path }
+        val path = getNativePath(uriString.toUri())
+        if (path.isNotEmpty()) {
+            cachedUserDirectory = uriString to path
+        }
+        return path
     }
 
     @Keep
