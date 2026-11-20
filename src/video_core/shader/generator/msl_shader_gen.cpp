@@ -1400,6 +1400,7 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
                "        float3 half_vector = float3(0.0f);\n"
                "        float dot_product = 0.0f;\n"
                "        float clamp_highlights = 1.0f;\n"
+               "        float light_atten = 1.0f;\n"
                "        float geo_factor = 1.0f;\n";
 
         // Compute fragment normals and tangents
@@ -1609,6 +1610,40 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
                                          static_cast<u32>(sampler), index);
             }
 
+            // The light's attenuation once (it was looked up twice, for the diffuse and the
+            // specular sum), and nothing more for a light that does not reach this pixel: a game
+            // with many local lights (Luigi's Mansion has 8) did all of their lookups everywhere.
+            const bool attenuated = dist_atten != "1.0f" || spot_atten != "1.0f";
+            if (attenuated) {
+                out += fmt::format("        light_atten = {} * {};\n", dist_atten, spot_atten);
+                dist_atten = "light_atten";
+                spot_atten = "1.0f";
+            }
+            // Fresnel (it does not depend on the attenuation).
+            // Note: only the last entry in the light slots applies the Fresnel factor
+            if (light_index == lighting.src_num - 1 && lighting.lut_fr.enable &&
+                LightingRegs::IsLightingSamplerSupported(lighting.config,
+                                                         LightingRegs::LightingSampler::Fresnel)) {
+                // Lookup fresnel LUT value
+                std::string value =
+                    get_lut_value(LightingRegs::LightingSampler::Fresnel, light_config.num,
+                                  lighting.lut_fr.type, lighting.lut_fr.abs_input);
+                value = fmt::format("({} * {})", FloatLiteral(lighting.lut_fr.GetScale()), value);
+
+                // Enabled for diffuse lighting alpha component
+                if (lighting.enable_primary_alpha) {
+                    out += fmt::format("        diffuse_sum.a = {};\n", value);
+                }
+
+                // Enabled for the specular lighting alpha component
+                if (lighting.enable_secondary_alpha) {
+                    out += fmt::format("        specular_sum.a = {};\n", value);
+                }
+            }
+            if (attenuated) {
+                out += "        if (light_atten != 0.0f) {\n";
+            }
+
             if (light_config.geometric_factor_0 || light_config.geometric_factor_1) {
                 out += "        geo_factor = dot(half_vector, half_vector);\n"
                        "        geo_factor = geo_factor == 0.0f ? 0.0f : min("
@@ -1672,28 +1707,6 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
                 specular_1 = fmt::format("({} * geo_factor)", specular_1);
             }
 
-            // Fresnel
-            // Note: only the last entry in the light slots applies the Fresnel factor
-            if (light_index == lighting.src_num - 1 && lighting.lut_fr.enable &&
-                LightingRegs::IsLightingSamplerSupported(lighting.config,
-                                                         LightingRegs::LightingSampler::Fresnel)) {
-                // Lookup fresnel LUT value
-                std::string value =
-                    get_lut_value(LightingRegs::LightingSampler::Fresnel, light_config.num,
-                                  lighting.lut_fr.type, lighting.lut_fr.abs_input);
-                value = fmt::format("({} * {})", FloatLiteral(lighting.lut_fr.GetScale()), value);
-
-                // Enabled for diffuse lighting alpha component
-                if (lighting.enable_primary_alpha) {
-                    out += fmt::format("        diffuse_sum.a = {};\n", value);
-                }
-
-                // Enabled for the specular lighting alpha component
-                if (lighting.enable_secondary_alpha) {
-                    out += fmt::format("        specular_sum.a = {};\n", value);
-                }
-            }
-
             const bool shadow_primary_enable =
                 lighting.shadow_primary && light_config.shadow_enable;
             const bool shadow_secondary_enable =
@@ -1710,6 +1723,9 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
             out += fmt::format(
                 "        specular_sum.rgb += ({} + {}) * clamp_highlights * {} * {}{};\n",
                 specular_0, specular_1, dist_atten, spot_atten, shadow_secondary);
+            if (attenuated) {
+                out += "        }\n";
+            }
         }
 
         // Apply shadow attenuation to alpha components if enabled

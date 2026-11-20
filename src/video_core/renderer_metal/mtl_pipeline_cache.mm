@@ -745,6 +745,8 @@ void PipelineCache::DumpShaders() {
     const std::string dir = fmt::format("{}shader_dump/{:016X}/",
                                         FileUtil::GetUserPath(FileUtil::UserPath::UserDir),
                                         title_id);
+    // Only the current ones: the ranking changes as the game goes on.
+    FileUtil::DeleteDirRecursively(dir);
     FileUtil::CreateFullPath(dir);
     std::string index = fmt::format(
         "Most used shaders of {:016X} since the game started (vertex programs by vertices "
