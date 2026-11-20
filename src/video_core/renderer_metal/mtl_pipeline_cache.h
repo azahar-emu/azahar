@@ -203,6 +203,9 @@ private:
     std::vector<PipelineKey> archived_keys;
     /// Pipelines a save failed on, never added again.
     std::unordered_set<u64> archive_excluded;
+    /// The archive holds pipelines from the file it was loaded from, numbered before the ones
+    /// added this session (see SaveBinaryArchive).
+    bool archive_from_file{};
     u32 frames_since_save{};
     /// Microseconds this frame spent waiting for pipelines to build (see GetPipeline).
     u32 frame_wait_us{};

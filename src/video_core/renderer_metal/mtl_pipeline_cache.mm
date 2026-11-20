@@ -797,6 +797,9 @@ void PipelineCache::OpenDiskCache(u64 title_id_) {
         }
         std::scoped_lock lock{archive_mutex};
         binary_archive = archive;
+        archive_from_file = archive != nil && desc.url != nil;
+        archived_descs.clear();
+        archived_keys.clear();
         archive_dirty.store(false, std::memory_order_relaxed);
     }
 }
@@ -817,41 +820,20 @@ void PipelineCache::SaveBinaryArchive() {
     bool saved = serialize(&error);
     // A pipeline the archive cannot pack fails every save ("expecting 'fragment' stage in
     // pipeline no. N"). Rebuild the archive without the pipeline it names, a few times at most.
-    for (int attempt = 0; !saved && attempt < 4; attempt++) {
-        const std::string message = error ? [error.localizedDescription UTF8String] : "";
-        const auto at = message.find("pipeline no. '");
-        if (at == std::string::npos) {
-            break;
-        }
-        const std::size_t index = std::strtoul(message.c_str() + at + 14, nullptr, 10);
-        if (index >= archived_keys.size()) {
-            LOG_WARNING(Render, "Metal binary archive: pipeline {} is not one of the {} added "
-                                "this session",
-                        index, archived_keys.size());
-            break;
-        }
-        const PipelineKey& bad = archived_keys[index];
-        LOG_WARNING(Render,
-                    "Metal binary archive: cannot pack pipeline {} of {} (color format {}, write "
-                    "mask {:x}, blend {}, depth format {}, stencil format {}, vertex program "
-                    "{:016x}, fragment program {:016x}); leaving it out",
-                    index, archived_keys.size(), bad.color_format, bad.write_mask,
-                    bad.blend_enable, bad.depth_format, bad.stencil_format, bad.vs_hash,
-                    bad.fs_hash);
-        archive_excluded.insert(bad.Hash());
-        archived_keys.erase(archived_keys.begin() + index);
-        archived_descs.erase(archived_descs.begin() + index);
-        // A fresh archive with the others.
+    // The pipelines of the file the archive was loaded from come first in that numbering, so the
+    // archive is first rebuilt from this session's pipelines alone.
+    const auto rebuild = [&](std::size_t skip) {
         MTLBinaryArchiveDescriptor* desc = [MTLBinaryArchiveDescriptor new];
         id<MTLBinaryArchive> fresh = [instance.GetDevice() newBinaryArchiveWithDescriptor:desc
                                                                                     error:nil];
         if (fresh == nil) {
-            break;
+            return false;
         }
         std::vector<MTLRenderPipelineDescriptor*> kept_descs;
         std::vector<PipelineKey> kept_keys;
         for (std::size_t i = 0; i < archived_descs.size(); i++) {
-            if ([fresh addRenderPipelineFunctionsWithDescriptor:archived_descs[i] error:nil]) {
+            if (i != skip &&
+                [fresh addRenderPipelineFunctionsWithDescriptor:archived_descs[i] error:nil]) {
                 kept_descs.push_back(archived_descs[i]);
                 kept_keys.push_back(archived_keys[i]);
             }
@@ -859,6 +841,43 @@ void PipelineCache::SaveBinaryArchive() {
         binary_archive = fresh;
         archived_descs = std::move(kept_descs);
         archived_keys = std::move(kept_keys);
+        archive_from_file = false;
+        return true;
+    };
+    for (int attempt = 0; !saved && attempt < 6; attempt++) {
+        const std::string message = error ? [error.localizedDescription UTF8String] : "";
+        const auto at = message.find("pipeline no. '");
+        if (at == std::string::npos) {
+            break;
+        }
+        const std::size_t index = std::strtoul(message.c_str() + at + 14, nullptr, 10);
+        if (archive_from_file) {
+            LOG_WARNING(Render, "Metal binary archive: cannot pack pipeline {}, starting it again "
+                                "from the {} pipelines made this session",
+                        index, archived_keys.size());
+            if (!rebuild(static_cast<std::size_t>(-1))) {
+                break;
+            }
+        } else {
+            if (index >= archived_keys.size()) {
+                LOG_WARNING(Render, "Metal binary archive: pipeline {} is not one of the {} added "
+                                    "this session",
+                            index, archived_keys.size());
+                break;
+            }
+            const PipelineKey bad = archived_keys[index];
+            LOG_WARNING(Render,
+                        "Metal binary archive: cannot pack pipeline {} of {} (color format {}, "
+                        "write mask {:x}, blend {}, depth format {}, stencil format {}, vertex "
+                        "program {:016x}, fragment program {:016x}); leaving it out",
+                        index, archived_keys.size(), bad.color_format, bad.write_mask,
+                        bad.blend_enable, bad.depth_format, bad.stencil_format, bad.vs_hash,
+                        bad.fs_hash);
+            archive_excluded.insert(bad.Hash());
+            if (!rebuild(index)) {
+                break;
+            }
+        }
         error = nil;
         saved = serialize(&error);
     }
