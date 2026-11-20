@@ -549,6 +549,9 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     // small draws (fullscreen passes, UI quads) wait: skipping them is much more visible.
     const u32 draw_vertices =
         hw_draw ? regs.pipeline.num_vertices : static_cast<u32>(vertex_batch.size());
+    if (GetQualityOptions().dump_shaders) {
+        pipeline_cache.NoteShaderUse(vertex, fragment_used, draw_vertices);
+    }
     id<MTLRenderPipelineState> pipeline =
         pipeline_cache.GetPipeline(key, vertex, fragment_used, draw_vertices <= 6);
     if (pipeline == nil) {

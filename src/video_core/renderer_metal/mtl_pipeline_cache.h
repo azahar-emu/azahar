@@ -148,6 +148,11 @@ public:
     /// Called once per emulated frame, saves the binary archive from time to time.
     void TickFrame();
 
+    /// Counts a draw with these programs, for the shader dump (QualityOptions::dump_shaders):
+    /// the most used vertex programs (by vertices) and fragment programs (by draws) are written
+    /// to the shader_dump folder every 10 seconds or so.
+    void NoteShaderUse(const ShaderHandle& vertex, const ShaderHandle& fragment, u32 vertices);
+
     /// Number of fragment programs generated so far.
     std::size_t NumPrograms() const {
         return fragment_shaders.size();
@@ -210,6 +215,17 @@ private:
     u32 frames_since_save{};
     /// Microseconds this frame spent waiting for pipelines to build (see GetPipeline).
     u32 frame_wait_us{};
+
+    // Shader dump (GPU thread only).
+    struct ShaderUse {
+        ShaderHandle shader;
+        u64 draws{};
+        u64 vertices{};
+    };
+    std::unordered_map<u64, ShaderUse> vertex_use;
+    std::unordered_map<u64, ShaderUse> fragment_use;
+    u32 frames_since_dump{};
+    void DumpShaders();
 
     // Declared last so the workers stop before the rest is destroyed.
     std::unique_ptr<Common::ThreadWorker> workers;

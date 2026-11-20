@@ -542,6 +542,7 @@ const char* ThermalStateName() {
     quality.vertex_depth = configuration.hiddenSurfaceRemoval;
     quality.draw_optimizations = configuration.drawOptimizations;
     quality.gpu_pass_timing = configuration.gpuPassTiming;
+    quality.dump_shaders = configuration.dumpShaders;
     quality.texture_compression = static_cast<Metal::TextureCompression>(
         std::clamp<NSInteger>(configuration.textureCompression, 0, 2));
     quality.async_depth_readback = configuration.fastDepthReadback;

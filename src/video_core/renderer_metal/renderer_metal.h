@@ -131,6 +131,9 @@ struct QualityOptions {
     /// GPU timestamps for every render pass, for the GPU time per pass in the log. A diagnostic:
     /// it can keep passes from overlapping on the GPU.
     bool gpu_pass_timing = false;
+    /// Keeps the MSL source of the programs and writes the most used ones to
+    /// shader_dump/<title id>/ every 10 seconds or so, to study the generated code.
+    bool dump_shaders = false;
     /// Texture combiners in half precision.
     bool fast_color = false;
     /// Fast versions of the math functions in fragment shaders, without fast math's assumptions

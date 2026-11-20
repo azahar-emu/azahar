@@ -313,6 +313,8 @@ final class AppSettings: ObservableObject {
     @Published var drawOptimizations: Bool { didSet { save(drawOptimizations, "drawOptimizations") } }
     /// GPU timestamps per render pass in the log (diagnostic).
     @Published var gpuPassTiming: Bool { didSet { save(gpuPassTiming, "gpuPassTiming") } }
+    /// Writes the most used shaders to Azahar/shader_dump (diagnostic).
+    @Published var dumpShaders: Bool { didSet { save(dumpShaders, "dumpShaders") } }
     @Published var hiddenSurfaceRemoval: Bool {
         didSet { save(hiddenSurfaceRemoval, "hiddenSurfaceRemoval") }
     }
@@ -528,6 +530,7 @@ final class AppSettings: ObservableObject {
         hiddenSurfaceRemoval = value("hiddenSurfaceRemoval", false)
         drawOptimizations = value("drawOptimizations", true)
         gpuPassTiming = value("gpuPassTiming", false)
+        dumpShaders = value("dumpShaders", false)
         textureCompression = TextureCompressionOption(rawValue: value("textureCompression", 0)) ?? .off
         anisotropy = value("anisotropy", 4)
         diskShaderCache = value("diskShaderCache", true)
@@ -701,6 +704,7 @@ final class AppSettings: ObservableObject {
         config.hiddenSurfaceRemoval = hiddenSurfaceRemoval
         config.drawOptimizations = drawOptimizations
         config.gpuPassTiming = gpuPassTiming
+        config.dumpShaders = dumpShaders
         config.textureCompression = textureCompression.rawValue
         config.anisotropy = anisotropy
         config.diskShaderCache = diskShaderCache

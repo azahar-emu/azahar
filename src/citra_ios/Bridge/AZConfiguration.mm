@@ -48,6 +48,7 @@
     config.hiddenSurfaceRemoval = NO;
     config.drawOptimizations = YES;
     config.gpuPassTiming = NO;
+    config.dumpShaders = NO;
     config.textureCompression = 0;
     config.fastDepthReadback = NO;
     config.holdFramesForShaders = YES;

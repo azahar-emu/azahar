@@ -405,7 +405,10 @@ void PipelineCache::CompileShader(Shader& shader) {
             }
         }
         shader.function = function;
-        shader.source = {};
+        // Kept for the shader dump.
+        if (!GetQualityOptions().dump_shaders) {
+            shader.source = {};
+        }
         shader.failed.store(function == nil, std::memory_order_relaxed);
         shader.compiled.store(true, std::memory_order_release);
     });
@@ -696,8 +699,70 @@ void PipelineCache::QueryBlendEmulation(const Pica::RegsInternal& regs, bool& rg
     alpha_emulation = framebuffer_config.requested_alpha_blend.RequiresMinMaxEmulation();
 }
 
+void PipelineCache::NoteShaderUse(const ShaderHandle& vertex, const ShaderHandle& fragment,
+                                  u32 vertices) {
+    if (vertex) {
+        ShaderUse& use = vertex_use[vertex->hash];
+        use.shader = vertex;
+        use.draws++;
+        use.vertices += vertices;
+    }
+    if (fragment) {
+        ShaderUse& use = fragment_use[fragment->hash];
+        use.shader = fragment;
+        use.draws++;
+        use.vertices += vertices;
+    }
+}
+
+void PipelineCache::DumpShaders() {
+    if (title_id == 0 || (vertex_use.empty() && fragment_use.empty())) {
+        return;
+    }
+    const std::string dir = fmt::format("{}shader_dump/{:016X}/",
+                                        FileUtil::GetUserPath(FileUtil::UserPath::UserDir),
+                                        title_id);
+    FileUtil::CreateFullPath(dir);
+    std::string index = fmt::format(
+        "Most used shaders of {:016X} since the game started (vertex programs by vertices "
+        "drawn, fragment programs by draws). Written again every 10 seconds or so.\n\n",
+        title_id);
+    const auto dump = [&](std::unordered_map<u64, ShaderUse>& uses, std::string_view kind,
+                          bool by_vertices) {
+        std::vector<const ShaderUse*> sorted;
+        for (const auto& [hash, use] : uses) {
+            sorted.push_back(&use);
+        }
+        std::sort(sorted.begin(), sorted.end(), [&](const ShaderUse* a, const ShaderUse* b) {
+            return by_vertices ? a->vertices > b->vertices : a->draws > b->draws;
+        });
+        constexpr std::size_t COUNT = 8;
+        for (std::size_t i = 0; i < sorted.size() && i < COUNT; i++) {
+            const ShaderUse& use = *sorted[i];
+            const std::string name = fmt::format("{}_{:02}_{:016x}.metal", kind, i + 1,
+                                                 use.shader->hash);
+            index += fmt::format("{}: {} draws, {} vertices{}\n", name, use.draws, use.vertices,
+                                 use.shader->source.empty() ? " (source not kept)" : "");
+            if (!use.shader->source.empty()) {
+                FileUtil::WriteStringToFile(
+                    true, dir + name,
+                    fmt::format("// {} draws, {} vertices since the game started\n{}",
+                                use.draws, use.vertices, use.shader->source));
+            }
+        }
+        index += "\n";
+    };
+    dump(vertex_use, "vs", true);
+    dump(fragment_use, "fs", false);
+    FileUtil::WriteStringToFile(true, dir + "index.txt", index);
+}
+
 void PipelineCache::TickFrame() {
     frame_wait_us = 0;
+    if (GetQualityOptions().dump_shaders && ++frames_since_dump >= 600) {
+        frames_since_dump = 0;
+        DumpShaders();
+    }
     // Save new pipeline binaries every minute or so, in the background, so they are not lost if
     // iOS terminates the app.
     constexpr u32 SAVE_INTERVAL_FRAMES = 3600;

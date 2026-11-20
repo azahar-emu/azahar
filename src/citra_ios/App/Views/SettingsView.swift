@@ -1242,6 +1242,7 @@ struct AboutView: View {
                 Toggle("Write Log", isOn: $settings.loggingEnabled)
                 Toggle("GPU Pass Timing", isOn: $settings.gpuPassTiming)
                     .disabled(!settings.loggingEnabled)
+                Toggle("Save Shaders for Analysis", isOn: $settings.dumpShaders)
                 Button {
                     if let url = LogExporter.makeShareableLog() {
                         sharedLog = SharedFile(url: url)
@@ -1260,7 +1261,10 @@ struct AboutView: View {
                          + "emulator. It is off by default, so turn it on before you play a game you want a log of. "
                          + "GPU Pass Timing (with Write Log on) adds the GPU time of every kind of "
                          + "render pass to the log. It costs GPU time and can cause stutter, so "
-                         + "only turn it on to measure something. Applies when a game starts.")
+                         + "only turn it on to measure something. Save Shaders for Analysis writes "
+                         + "the game's most used shaders to Files › Azahar › shader_dump › (game "
+                         + "ID) every 10 seconds or so, with an index.txt of how often each is "
+                         + "used; leave it off for playing. Both apply when a game starts.")
                 }
             }
             .listRowBackground(LGRowBackground())

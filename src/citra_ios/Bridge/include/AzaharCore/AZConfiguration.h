@@ -107,6 +107,8 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) BOOL drawOptimizations;
 /// GPU timestamps of every render pass for the log (diagnostic, costs GPU time).
 @property(nonatomic) BOOL gpuPassTiming;
+/// Writes the most used shaders of the game to Azahar/shader_dump (diagnostic).
+@property(nonatomic) BOOL dumpShaders;
 /// GPU memory compression of textures: 0 off, 1 lossless, 2 lossy (next game).
 @property(nonatomic) NSInteger textureCompression;
 /// Small depth reads by the game get the previous frame's values instead of waiting (next game).
