@@ -357,10 +357,12 @@ private:
 
     std::vector<PendingClear> pending_clears;
     RectClearDrawer rect_clear_drawer;
+    void NoteWholeClearInPass();
     /// Draws a partial clear into the active encoder (with the formats of the current target).
     void DrawRectClear(id<MTLRenderCommandEncoder> encoder, const PendingClear& clear,
                        MTLPixelFormat color, MTLPixelFormat depth, MTLPixelFormat stencil,
-                       u32 pass_width, u32 pass_height, bool in_game_pass = true);
+                       u32 pass_width, u32 pass_height, bool in_game_pass = true,
+                       bool counted = true);
 
     // Render pass statistics.
     const char* end_reason = nullptr; ///< Why the active pass is about to end, null: its caller
