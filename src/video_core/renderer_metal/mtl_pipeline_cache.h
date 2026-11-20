@@ -197,15 +197,16 @@ private:
     std::mutex archive_mutex;
     id<MTLBinaryArchive> binary_archive = nil;
     std::atomic<bool> archive_dirty{};
-    /// The pipelines added to the archive this session, in order, to rebuild it without the one
-    /// a save fails on ("pipeline no. N").
+    /// Every pipeline made this session that can be archived, in order: each save writes a new
+    /// archive with all of them (see SaveBinaryArchive).
     std::vector<MTLRenderPipelineDescriptor*> archived_descs;
     std::vector<PipelineKey> archived_keys;
     /// Pipelines a save failed on, never added again.
     std::unordered_set<u64> archive_excluded;
-    /// The archive holds pipelines from the file it was loaded from, numbered before the ones
-    /// added this session (see SaveBinaryArchive).
-    bool archive_from_file{};
+    /// Saving the archive works (it is turned off after a save that cannot be made to work).
+    bool archive_enabled{};
+    /// One save at a time (SaveBinaryArchive builds the new archive without archive_mutex).
+    std::mutex archive_save_mutex;
     u32 frames_since_save{};
     /// Microseconds this frame spent waiting for pipelines to build (see GetPipeline).
     u32 frame_wait_us{};

@@ -580,29 +580,25 @@ void PipelineCache::BuildPipeline(Pipeline& pipeline) {
                 }
             }
 
+            const bool from_archive = state != nil;
             if (state == nil) {
                 state = [device newRenderPipelineStateWithDescriptor:desc error:&error];
                 if (state == nil) {
                     LOG_CRITICAL(Render, "Failed to create Metal pipeline: {}",
                                  error ? [error.localizedDescription UTF8String]
                                        : "unknown error");
-                } else {
-                    std::scoped_lock lock{archive_mutex};
-                    if (binary_archive != nil && archivable &&
-                        !archive_excluded.contains(key_hash)) {
-                        NSError* archive_error = nil;
-                        if ([binary_archive addRenderPipelineFunctionsWithDescriptor:desc
-                                                                               error:&archive_error]) {
-                            archive_dirty.store(true, std::memory_order_relaxed);
-                            archived_descs.push_back(desc);
-                            archived_keys.push_back(key);
-                        } else {
-                            LOG_DEBUG(Render, "Unable to add a pipeline to the binary archive: {}",
-                                      archive_error
-                                          ? [archive_error.localizedDescription UTF8String]
-                                          : "unknown error");
-                        }
-                    }
+                }
+            }
+            // Every pipeline of this session goes into the next archive that is saved (the ones
+            // found in the loaded archive too, it is replaced). Nothing is added to an archive
+            // that was loaded or saved: a pipeline added after that could not be packed ("expecting
+            // 'fragment' stage in pipeline no. N", always the first one added since).
+            if (state != nil && archivable && !archive_excluded.contains(key_hash)) {
+                std::scoped_lock lock{archive_mutex};
+                archived_descs.push_back(desc);
+                archived_keys.push_back(key);
+                if (!from_archive) {
+                    archive_dirty.store(true, std::memory_order_relaxed);
                 }
             }
             pipeline.state = state;
@@ -797,7 +793,7 @@ void PipelineCache::OpenDiskCache(u64 title_id_) {
         }
         std::scoped_lock lock{archive_mutex};
         binary_archive = archive;
-        archive_from_file = archive != nil && desc.url != nil;
+        archive_enabled = archive != nil;
         archived_descs.clear();
         archived_keys.clear();
         archive_dirty.store(false, std::memory_order_relaxed);
@@ -805,98 +801,92 @@ void PipelineCache::OpenDiskCache(u64 title_id_) {
 }
 
 void PipelineCache::SaveBinaryArchive() {
-    std::scoped_lock lock{archive_mutex};
-    if (binary_archive == nil || !archive_dirty.load(std::memory_order_relaxed)) {
-        return;
+    // One save at a time; the pipeline builds only wait for the short copy of the list.
+    std::scoped_lock save_lock{archive_save_mutex};
+    std::vector<MTLRenderPipelineDescriptor*> descs;
+    std::vector<PipelineKey> keys;
+    {
+        std::scoped_lock lock{archive_mutex};
+        if (!archive_enabled || !archive_dirty.load(std::memory_order_relaxed)) {
+            return;
+        }
+        archive_dirty.store(false, std::memory_order_relaxed);
+        descs = archived_descs;
+        keys = archived_keys;
     }
-    // Write next to the file the archive may have been loaded from, then replace it.
+    // A new archive with every pipeline of this session, written next to the file and then
+    // replacing it. The loaded one is only used to find binaries, never added to.
     const std::string path = CachePath("binarchive");
     const std::string temp_path = path + ".tmp";
-    const auto serialize = [&](NSError** error) {
-        return [binary_archive serializeToURL:[NSURL fileURLWithPath:ToNSString(temp_path)]
-                                        error:error];
-    };
-    NSError* error = nil;
-    bool saved = serialize(&error);
-    // A pipeline the archive cannot pack fails every save ("expecting 'fragment' stage in
-    // pipeline no. N"). Rebuild the archive without the pipeline it names, a few times at most.
-    // The pipelines of the file the archive was loaded from come first in that numbering, so the
-    // archive is first rebuilt from this session's pipelines alone.
-    const auto rebuild = [&](std::size_t skip) {
+    id<MTLDevice> device = instance.GetDevice();
+    const auto build_and_save = [&](NSError** error) {
         MTLBinaryArchiveDescriptor* desc = [MTLBinaryArchiveDescriptor new];
-        id<MTLBinaryArchive> fresh = [instance.GetDevice() newBinaryArchiveWithDescriptor:desc
-                                                                                    error:nil];
+        id<MTLBinaryArchive> fresh = [device newBinaryArchiveWithDescriptor:desc error:error];
         if (fresh == nil) {
             return false;
         }
-        std::vector<MTLRenderPipelineDescriptor*> kept_descs;
-        std::vector<PipelineKey> kept_keys;
-        for (std::size_t i = 0; i < archived_descs.size(); i++) {
-            if (i != skip &&
-                [fresh addRenderPipelineFunctionsWithDescriptor:archived_descs[i] error:nil]) {
-                kept_descs.push_back(archived_descs[i]);
-                kept_keys.push_back(archived_keys[i]);
-            }
+        for (MTLRenderPipelineDescriptor* pipeline_desc : descs) {
+            [fresh addRenderPipelineFunctionsWithDescriptor:pipeline_desc error:nil];
         }
-        binary_archive = fresh;
-        archived_descs = std::move(kept_descs);
-        archived_keys = std::move(kept_keys);
-        archive_from_file = false;
-        return true;
+        return static_cast<bool>([fresh serializeToURL:[NSURL fileURLWithPath:ToNSString(temp_path)]
+                                                 error:error]);
     };
-    for (int attempt = 0; !saved && attempt < 6; attempt++) {
-        const std::string message = error ? [error.localizedDescription UTF8String] : "";
-        const auto at = message.find("pipeline no. '");
-        if (at == std::string::npos) {
-            break;
-        }
-        const std::size_t index = std::strtoul(message.c_str() + at + 14, nullptr, 10);
-        if (archive_from_file) {
-            LOG_WARNING(Render, "Metal binary archive: cannot pack pipeline {}, starting it again "
-                                "from the {} pipelines made this session",
-                        index, archived_keys.size());
-            if (!rebuild(static_cast<std::size_t>(-1))) {
+    NSError* error = nil;
+    bool saved = false;
+    @autoreleasepool {
+        saved = build_and_save(&error);
+        // A pipeline the archive cannot pack: left out (for good) and saved again, a few times.
+        for (int attempt = 0; !saved && attempt < 4; attempt++) {
+            const std::string message = error ? [error.localizedDescription UTF8String] : "";
+            const auto at = message.find("pipeline no. '");
+            if (at == std::string::npos) {
                 break;
             }
-        } else {
-            if (index >= archived_keys.size()) {
-                LOG_WARNING(Render, "Metal binary archive: pipeline {} is not one of the {} added "
-                                    "this session",
-                            index, archived_keys.size());
+            const std::size_t index = std::strtoul(message.c_str() + at + 14, nullptr, 10);
+            if (index >= keys.size()) {
                 break;
             }
-            const PipelineKey bad = archived_keys[index];
+            const PipelineKey bad = keys[index];
             LOG_WARNING(Render,
                         "Metal binary archive: cannot pack pipeline {} of {} (color format {}, "
                         "write mask {:x}, blend {}, depth format {}, stencil format {}, vertex "
                         "program {:016x}, fragment program {:016x}); leaving it out",
-                        index, archived_keys.size(), bad.color_format, bad.write_mask,
-                        bad.blend_enable, bad.depth_format, bad.stencil_format, bad.vs_hash,
-                        bad.fs_hash);
-            archive_excluded.insert(bad.Hash());
-            if (!rebuild(index)) {
-                break;
+                        index, keys.size(), bad.color_format, bad.write_mask, bad.blend_enable,
+                        bad.depth_format, bad.stencil_format, bad.vs_hash, bad.fs_hash);
+            keys.erase(keys.begin() + index);
+            descs.erase(descs.begin() + index);
+            {
+                std::scoped_lock lock{archive_mutex};
+                archive_excluded.insert(bad.Hash());
+                const auto it = std::find_if(archived_keys.begin(), archived_keys.end(),
+                                             [&](const PipelineKey& k) {
+                                                 return std::memcmp(&k, &bad, sizeof(k)) == 0;
+                                             });
+                if (it != archived_keys.end()) {
+                    archived_descs.erase(archived_descs.begin() + (it - archived_keys.begin()));
+                    archived_keys.erase(it);
+                }
             }
+            error = nil;
+            saved = build_and_save(&error);
         }
-        error = nil;
-        saved = serialize(&error);
     }
     if (saved) {
         FileUtil::Delete(path);
         FileUtil::Rename(temp_path, path);
-        archive_dirty.store(false, std::memory_order_relaxed);
+        LOG_INFO(Render, "Saved the Metal binary archive ({} pipelines)", descs.size());
         return;
     }
-    // Still failing: stop collecting binaries instead of retrying forever, and drop the file so
-    // the next session starts clean.
+    // Still failing: stop saving instead of retrying forever, and drop the file so the next
+    // session starts clean. The loaded archive stays for finding binaries.
     LOG_WARNING(Render, "Unable to save the Metal binary archive, disabling it: {}",
                 error ? [error.localizedDescription UTF8String] : "unknown error");
     FileUtil::Delete(temp_path);
     FileUtil::Delete(path);
-    binary_archive = nil;
+    std::scoped_lock lock{archive_mutex};
+    archive_enabled = false;
     archived_descs.clear();
     archived_keys.clear();
-    archive_dirty.store(false, std::memory_order_relaxed);
 }
 
 void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_loading,
