@@ -557,9 +557,13 @@ void PipelineCache::BuildPipeline(Pipeline& pipeline) {
 
             // Look the GPU binary up in the archive first. The archive is only touched with the
             // mutex held, building a pipeline that is not in it happens without.
+            // Pipelines without a fragment function are kept out of the archive: serializing one
+            // fails ("expecting 'fragment' stage") and takes every other pipeline down with it.
+            // They have no fragment program to compile and build quickly anyway.
+            const bool archivable = !key.no_fragment;
             {
                 std::scoped_lock lock{archive_mutex};
-                if (binary_archive != nil) {
+                if (binary_archive != nil && archivable) {
                     desc.binaryArchives = @[ binary_archive ];
                     state = [device newRenderPipelineStateWithDescriptor:desc
                                                                  options:
@@ -578,7 +582,7 @@ void PipelineCache::BuildPipeline(Pipeline& pipeline) {
                                        : "unknown error");
                 } else {
                     std::scoped_lock lock{archive_mutex};
-                    if (binary_archive != nil) {
+                    if (binary_archive != nil && archivable) {
                         NSError* archive_error = nil;
                         if ([binary_archive addRenderPipelineFunctionsWithDescriptor:desc
                                                                                error:&archive_error]) {
