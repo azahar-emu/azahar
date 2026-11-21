@@ -86,6 +86,11 @@ struct DisplayPacer {
     double last_log = 0.0;
     /// Draws a frame over the whole drawable.
     std::function<void(id<MTLRenderCommandEncoder>, const Frame&)> draw;
+    /// Frames that have to be waiting before showing starts (the frame generation buffer: 2
+    /// keeps one frame in hand, so a frame handed over a little late still makes its refresh).
+    /// After a refresh found nothing to show it fills up again first.
+    u32 min_waiting = 1;
+    bool primed = false;
 };
 } // namespace Metal
 
@@ -107,8 +112,9 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
     Metal::DisplayPacer::Frame next;
     {
         std::scoped_lock lock{p->mutex};
-        // Behind (the game or the interpolation hitched): keep only the newest pair.
-        while (p->waiting.size() > 2) {
+        // Behind (the game or the interpolation hitched): keep only the newest pair (plus the one
+        // the buffer holds).
+        while (p->waiting.size() > 1 + p->min_waiting) {
             p->waiting.pop_front();
         }
         p->refreshes++;
@@ -136,8 +142,12 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
         if (due && p->waiting.empty() && p->shown_at > 0.0 && !p->missed_this_frame) {
             p->not_ready++;
             p->missed_this_frame = true;
+            p->primed = false;
         }
-        if (p->waiting.empty() || !due) {
+        if (!p->primed) {
+            p->primed = p->waiting.size() >= p->min_waiting;
+        }
+        if (p->waiting.empty() || !due || !p->primed) {
             return; // The frame on screen stays for this refresh
         }
         p->queued_sum += static_cast<double>(p->waiting.size());
@@ -554,6 +564,12 @@ private:
     /// When each adaptive size was last left for being too slow: it is not tried again for a
     /// while, so the size does not go back up into a scene that was already too heavy for it.
     std::array<std::chrono::steady_clock::time_point, 4> fga_too_slow_at{};
+    // Checking that a smaller size made the frames faster (see AdaptFrameGeneration).
+    int fga_checking{};          ///< Seconds left before comparing
+    double fga_before_ms{};      ///< Time of a made frame before going smaller
+    int fga_before_level{};      ///< The size before going smaller
+    int fga_floor_level{};       ///< No smaller than this until fga_floor_until
+    std::chrono::steady_clock::time_point fga_floor_until{};
     void AdaptFrameGeneration();
     int FrameGenerationSize() const;
     std::chrono::steady_clock::time_point fg_last_frame{};
@@ -1468,16 +1484,48 @@ void RendererMetal::AdaptFrameGeneration() {
     // A made frame has half the time between the game's frames to reach the screen in time.
     const double budget_ms = fg_interval > 0.0 ? fg_interval * 1000.0 / 2.0 : 16.7;
     const double frame_ms = static_cast<double>(fg_ns) / 1e6 / made;
-    const bool behind = frame_ms > budget_ms * 0.8 || dropped >= 3;
+    // Dropped frames alone (a hitch of the emulation, JIT compiling) are not the size's fault: only
+    // when the made frames also take a good part of their time.
+    const bool behind =
+        frame_ms > budget_ms * 0.8 || (dropped >= 3 && frame_ms > budget_ms * 0.6);
     const bool ahead = frame_ms < budget_ms * 0.45 && dropped == 0;
     fga_behind = behind ? fga_behind + 1 : 0;
     fga_ahead = ahead ? fga_ahead + 1 : 0;
 
+    // A smaller size has to make the frames faster: some interpolators cost about the same at any
+    // size (MetalFX's frame interpolation took 6.1 ms at half and 5 ms at a quarter), and then a
+    // smaller size only made the picture softer. Three seconds after going smaller the time is
+    // compared with the one before; without a clear gain the size goes back and stays at least
+    // that large for a minute.
+    if (fga_checking > 0 && adaptive) {
+        if (--fga_checking == 0 && frame_ms > fga_before_ms * 0.85) {
+            LOG_INFO(Render,
+                     "Adaptive frame generation: the {} size did not make frames faster ({:.1f} "
+                     "ms, {:.1f} ms before), back to {}",
+                     SIZE_NAMES[FrameGenerationSize()], frame_ms, fga_before_ms,
+                     SIZE_NAMES[ADAPTIVE_SIZES[fga_before_level]]);
+            fga_level = fga_before_level;
+            fga_floor_level = fga_before_level;
+            fga_floor_until = now + std::chrono::seconds{60};
+            fga_hold = 8;
+            fga_behind = 0;
+            fga_ahead = 0;
+            return;
+        }
+    }
+    const bool floor_active = now < fga_floor_until;
+
     if (fga_behind >= 2) {
         fga_behind = 0;
         fga_ahead = 0;
-        if (adaptive && fga_level < smallest) {
+        if (adaptive && fga_checking > 0) {
+            return; // The last change is still being checked.
+        }
+        if (adaptive && fga_level < smallest && !(floor_active && fga_level >= fga_floor_level)) {
             fga_too_slow_at[fga_level] = now;
+            fga_before_ms = frame_ms;
+            fga_before_level = fga_level;
+            fga_checking = 3;
             fga_level++;
             fga_hold = 8;
             LOG_INFO(Render,
@@ -2745,6 +2793,10 @@ bool RendererMetal::StartPacer(CAMetalLayer* layer) {
         auto pacer = std::make_shared<DisplayPacer>();
         pacer->command_queue = instance.GetCommandQueue();
         pacer->present_queue = [instance.GetDevice() newCommandQueue];
+        pacer->min_waiting =
+            GetQualityOptions().frame_generation > 0 && GetQualityOptions().frame_generation_buffer
+                ? 2u
+                : 1u;
         id<MTLRenderPipelineState> pipeline = present_pipeline;
         id<MTLSamplerState> sampler = present_samplers[0];
         pacer->draw = [pipeline, sampler](id<MTLRenderCommandEncoder> encoder,

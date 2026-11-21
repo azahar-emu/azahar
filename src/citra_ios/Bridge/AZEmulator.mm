@@ -552,6 +552,7 @@ const char* ThermalStateName() {
     quality.frame_generation_size = static_cast<int>(configuration.frameGenerationSize);
     quality.frame_generation_top_only = configuration.frameGenerationTopOnly;
     quality.frame_generation_pause = configuration.frameGenerationPause;
+    quality.frame_generation_buffer = configuration.frameGenerationBuffer;
     // With display sync the display link owns the layer, so frame generation goes through it too.
     quality.display_sync = configuration.displaySync;
     quality.frame_cap = configuration.displaySync && configuration.frameCap30 ? 2 : 0;

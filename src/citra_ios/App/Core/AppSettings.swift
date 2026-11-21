@@ -275,6 +275,10 @@ final class AppSettings: ObservableObject {
     @Published var frameGenerationPause: Bool {
         didSet { save(frameGenerationPause, "frameGenerationPause") }
     }
+    /// One more frame kept waiting before frames are shown (steadier, a refresh more latency).
+    @Published var frameGenerationBuffer: Bool {
+        didSet { save(frameGenerationBuffer, "frameGenerationBuffer") }
+    }
     @Published var frameGenerationTopOnly: Bool {
         didSet { save(frameGenerationTopOnly, "frameGenerationTopOnly") }
     }
@@ -510,6 +514,7 @@ final class AppSettings: ObservableObject {
         frameGenerationSize = value("frameGenerationSize", value("frameGenerationFast", false) ? 2 : 1)
         frameGenerationTopOnly = value("frameGenerationTopOnly", false)
         frameGenerationPause = value("frameGenerationPause", false)
+        frameGenerationBuffer = value("frameGenerationBuffer", false)
         frameGenerationDisplayPaced = value("frameGenerationDisplayPaced", false)
         frameGenerationMetalFX = value("frameGenerationMetalFX", false)
         frameGenerationAllGames = value("frameGenerationAllGames", false)
@@ -675,6 +680,7 @@ final class AppSettings: ObservableObject {
         config.frameGenerationSize = frameGenerationSize
         config.frameGenerationTopOnly = frameGenerationTopOnly
         config.frameGenerationPause = frameGenerationPause
+        config.frameGenerationBuffer = frameGenerationBuffer
         config.frameGenerationDisplayPaced = frameGenerationDisplayPaced
         config.frameGenerationMetalFX = frameGenerationMetalFX
         // The rate the display really runs at: the one chosen in the settings (never above what the

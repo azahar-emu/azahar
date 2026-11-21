@@ -175,6 +175,9 @@ struct QualityOptions {
     /// Frame generation pauses (the game's own frames are shown) while the made frames come too
     /// late even at the smallest size it may use, and comes back when the scene gets lighter.
     bool frame_generation_pause = false;
+    /// The display link keeps one more frame waiting before it shows them, so a frame that comes
+    /// a little late still makes its refresh (steadier, one refresh more latency).
+    bool frame_generation_buffer = false;
     /// Make frames for the top screen only; the bottom screen shows the game's own frames.
     bool frame_generation_top_only = false;
     /// Frames without frame generation go to the screen through the display link, and the

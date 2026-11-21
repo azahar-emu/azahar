@@ -105,6 +105,8 @@ struct GameSettingsView: View {
                                options: [5, 0, 4, 1, 2, 3]) { Self.sizeNames[$0] }
                 OverrideToggle("Frame Generation: Pause When Behind",
                                value: $overrides.frameGenerationPause)
+                OverrideToggle("Frame Generation: Buffer",
+                               value: $overrides.frameGenerationBuffer)
                 OverrideToggle("Frame Generation: Top Screen Only",
                                value: $overrides.frameGenerationTopOnly)
                 OverrideToggle("Frame Generation: Display-Driven Pacing",

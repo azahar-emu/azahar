@@ -720,7 +720,11 @@ struct GraphicsSettingsView: View {
         text += "the device can't make frames that size, frame generation stays off. Adaptive "
         text += "starts at Half and goes down to Quarter while the in-between frames come too late "
         text += "(heavy scenes such as water), then back up when there is room again (a size "
-        text += "that was too slow is not tried again for 30 seconds). Pause When "
+        text += "that was too slow is not tried again for 30 seconds, and a smaller size that "
+        text += "does not make the frames faster is undone). Frame Buffer keeps one more frame "
+        text += "waiting before showing them, so a frame that comes a little late still makes "
+        text += "its refresh: a steadier frame rate (most noticeable at 120 Hz) for one refresh "
+        text += "more input latency. Pause When "
         text += "Behind shows the game's own frames, a steady frame rate without in-between "
         text += "frames, while they still come too late at the smallest size, and turns frame "
         text += "generation back on when the scene gets lighter. Top Screen "
@@ -754,6 +758,8 @@ struct GraphicsSettingsView: View {
                 }
                 .disabled(settings.frameGeneration == 0)
                 Toggle("Pause When Behind", isOn: $settings.frameGenerationPause)
+                    .disabled(settings.frameGeneration == 0)
+                Toggle("Frame Buffer", isOn: $settings.frameGenerationBuffer)
                     .disabled(settings.frameGeneration == 0)
                 Toggle("Use MetalFX Interpolation (Experimental)",
                        isOn: $settings.frameGenerationMetalFX)
