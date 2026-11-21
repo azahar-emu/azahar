@@ -52,9 +52,6 @@
 [submodule "libyuv"]
 	path = externals/libyuv
 	url = https://github.com/lemenkov/libyuv.git
-[submodule "sdl2"]
-	path = externals/sdl2/SDL
-	url = https://github.com/libsdl-org/SDL
 [submodule "dds-ktx"]
 	path = externals/dds-ktx
 	url = https://github.com/septag/dds-ktx
@@ -106,3 +103,9 @@
 [submodule "microtar"]
 	path = externals/microtar
 	url = https://github.com/azahar-emu/microtar
+[submodule "externals/sdl2/sdl3"]
+	path = externals/sdl2/sdl3
+	url = https://github.com/libsdl-org/SDL
+[submodule "externals/sdl2/sdl2-compat"]
+	path = externals/sdl2/sdl2-compat
+	url = https://github.com/libsdl-org/sdl2-compat
