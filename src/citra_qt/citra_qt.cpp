@@ -3786,6 +3786,27 @@ void GMainWindow::OnExtractBundle() {
 
 #ifdef ENABLE_FFMPEG
 void GMainWindow::OnStartVideoDumping() {
+    if (Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Vulkan) {
+        QMessageBox::critical(
+            this, QStringLiteral("Azahar"),
+            tr("Video dumping is not yet supported when using the Vulkan renderer.")
+#ifdef __APPLE__
+                + QStringLiteral("\n") +
+                tr("Because of this, using video dumping on macOS is not currently possible.")
+#endif
+        );
+        ui->action_Dump_Video->setChecked(false);
+        return;
+    }
+
+    if (Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Software) {
+        QMessageBox::critical(
+            this, QStringLiteral("Azahar"),
+            tr("Video dumping is not yet supported when using the Software renderer."));
+        ui->action_Dump_Video->setChecked(false);
+        return;
+    }
+
     DumpingDialog dialog(this, system);
     if (dialog.exec() != QDialog::DialogCode::Accepted) {
         ui->action_Dump_Video->setChecked(false);
