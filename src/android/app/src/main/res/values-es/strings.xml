@@ -22,10 +22,13 @@
     <string name="driver_already_installed">Driver ya instalado</string>
     <string name="custom_driver_not_supported">Drivers personalizados no soportados</string>
     <string name="custom_driver_not_supported_description">La carga de drivers personalizados no está soportada en este dispositivo.\n¡Compruebe esta opción otra vez en el futuro para ver si ya está soportada!</string>
+    <string name="custom_driver_non_adreno_warning">Detectada GPU que no es Adreno</string>
+    <string name="custom_driver_non_adreno_warning_description">La mayoría de los controladores personalizados están diseñados para GPU Qualcomm Adreno, instala únicamente un controlador creado para tu GPU. Si un controlador no puede cargarse, Azahar recurrirá al controlador del sistema. Si las aplicaciones se cierran inesperadamente, selecciona \"Controlador de GPU del sistema\".</string>
     <string name="share_log_not_found">No se encontró ningún archivo de registro</string>
     <string name="select_games_folder">Seleccionar Directorio de Aplicaciones</string>
     <string name="select_games_folder_description">Permite que Azahar rellene la lista de aplicaciones</string>
     <string name="about">Acerca de</string>
+    <string name="citra_description">Un emulador de 3DS de código abierto.\nLicenciado bajo GPLv3 o cualquier versión posterior.</string>
     <string name="about_description">Versión de compilación, créditos y más</string>
     <string name="games_dir_selected">Directorio de aplicaciones seleccionado</string>
     <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>
@@ -69,6 +72,8 @@
     <string name="done">Hecho</string>
     <string name="done_description">¡Todo listo!\n¡Disfruta del emulador!</string>
     <string name="text_continue">Continuar</string>
+    <string name="notifications_permission">Notificaciones</string>
+    <string name="notifications_permission_description">Concede el permiso de notificaciones con el botón de debajo.</string>
     <string name="give_permission">Conceder permiso</string>
     <string name="notification_warning">¿Saltarse la concesión del permiso de notificaciones?</string>
     <string name="notification_warning_description">Azahar no podrá notificarte sobre información importante.</string>
@@ -79,6 +84,9 @@
     <string name="microphone_permission_description">Concede el permiso de micrófono debajo para emular el micrófono de la 3DS.</string>
     <string name="filesystem_permission">Sistema de archivos</string>
     <string name="filesystem_permission_description">Concede el permiso de sistema de archivos abajo para permitir que Azahar almacene archivos.</string>
+    <string name="lan_permission">Acceso a Red Local</string>
+    <string name="lan_permission_description">Otorga acceso a la red local para conectar a una consol 3DS real y otras funcionalidades.</string>
+    <string name="lan_warning_description">Azahar requiere permiso para acceder a la red local a fin de conectarse a sistemas 3DS reales para la configuración del sistema y otras funcionalidades.</string>
     <string name="permission_denied">Permiso denegado</string>
     <string name="add_games_warning">¿Saltarse la selección de la carpeta de aplicaciones?</string>
     <string name="add_games_warning_description">Nada se mostrará en la lista de aplicaciones si no se selecciona una carpeta.</string>
@@ -86,6 +94,7 @@
     <string name="select_emulator_data_folders">Carpetas de datos</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Seleccionar carpetas de datos<br/>(Carpeta de usuario es necesaria)]]></string>
     <string name="permissions_description">Concede permisos opcionales para usar funciones  específicas del emulador</string>
+    <string name="missing_permissions">Faltan Permisos</string>
     <string name="warning_help">Ayuda</string>
     <string name="warning_skip">Saltar</string>
     <string name="warning_cancel">Cancelar</string>
@@ -101,6 +110,8 @@
     <string name="invalid_selection">Selección no válida</string>
     <string name="invalid_user_directory">La selección del directorio de usuario no es válida.\nVuelve a seleccionar el directorio de usuario, asegurándote de navegar hasta él desde la raíz del almacenamiento del dispositivo.</string>
     <string name="filesystem_permission_lost">Azahar ha perdido el permiso para administrar archivos en este dispositivo. Esto puede ocurrir después de alguna actualización de la aplicación o de Android. Vuelve a conceder este permiso en la siguiente pantalla para seguir usando la aplicación.</string>
+    <string name="lan_permission_lost">Azahar ha perdido el permiso para acceder a la red local. Esto puede ocurrir tras algunas actualizaciones de la aplicación o de Android. Por favor, vuelve a conceder este permiso en la siguiente pantalla para seguir utilizando la aplicación.</string>
+    <string name="lan_permission_manual">Por favor, concede el permiso de \"Dispositivos cercanos\".</string>
     <string name="set_up_theme_settings">Configuración de tema</string>
     <string name="setup_theme_settings_description">Configura tus preferencias de tema de Azahar.</string>
     <string name="setup_set_theme">Establecer tema</string>
@@ -119,6 +130,8 @@
     <string name="auto_map_image_description">Botones de 3DS con el botón A resaltado</string>
     <string name="controller_clear_all">Limpiar Todas las Asignaciones</string>
     <string name="controller_clear_all_confirm">Esto eliminará todas los asignaciones del mando actual.</string>
+    <string name="controller_reset_all">Restablecer todo a global</string>
+    <string name="controller_reset_all_confirm">Esto reiniciará todas las asignaciones a las globales.</string>
     <string name="controller_circlepad">Pad Circular</string>
     <string name="controller_c">Palanca C</string>
     <string name="controller_hotkeys">Teclas de atajo</string>
@@ -149,6 +162,8 @@
     <string name="button_combo">Botón Combo</string>
     <string name="input_message_analog_only">¡Este control debe asignarse a un stick analógico del mando o a un eje del Pad de Control!</string>
     <string name="input_message_button_only">¡Este control debe asignarse a un botón del mando!</string>
+    <string name="turbo_toggle_hotkey">Turbo (Alternar)</string>
+    <string name="turbo_hold_hotkey">Turbo (Mantener)</string>
     <string name="turbo_enabled_toast">Velocidad Turbo Activada</string>
     <string name="turbo_disabled_toast">Velocidad Turbo Desactivada</string>
     <string name="combo_button_settings">Configurar Botón Combo</string>
@@ -222,6 +237,8 @@
     <string name="async_fs_operations">Operaciones de sistema de archivos asíncronas</string>
     <string name="async_fs_operations_description">Permite que los accesos al sistema de archivos emulado sean asíncronos. Reduce considerablemente el tartamudeo relacionado con el sistema de archivos, pero puede aumentar ligeramente los tiempos de carga.</string>
 
+    <string name="per_app_settings_unsupported">Configuración por Aplicación no soportada</string>
+    <string name="per_app_settings_unsupported_description">Esta aplicación no admite ajustes específicos por aplicación, tal vez porque se trata de una aplicación homebrew.</string>
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>
     <string name="outer_left_camera">Cámara izquierda externa</string>
@@ -260,6 +277,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="texture_sampling_description">Sobreescribe el filtro de muestreo usado en juegos. Puede ser útil en ciertos casos con juegos con bajo rendimiento al subir la resolución. Si no estás seguro, pónlo en Controlado por Juego</string>
     <string name="use_skip_duplicate_frames">Omitir Fotogramas Duplicados</string>
     <string name="use_skip_duplicate_frames_description">Omite la presentación de fotogramas que no son únicos. Además, permite que las herramientas externas de generación de fotogramas funcionen correctamente con juegos a 30 fps.</string>
+    <string name="use_limit_frames_ahead_of_gpu">Limitar fotogramas por delante de la GPU</string>
+    <string name="use_limit_frames_ahead_of_gpu_description">Limita cuántos fotogramas puede adelantarse el hilo de emulación respecto a la GPU. Su activación puede reducir la latencia de entrada, pero podría disminuir el rendimiento.</string>
     <string name="shaders_accurate_mul">Multiplicación Precisa</string>
     <string name="shaders_accurate_mul_description">Usa multiplicaciones más precisas en los sombreados de hardware, que podrían arreglar ciertos bugs gráficos. Cuando se active, el rendimiento se reducirá.</string>
     <string name="asynchronous_gpu">Activar Emulación Asíncrona de la GPU</string>
@@ -345,6 +364,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- Debug settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Usa el compilador Just-In-Time (JIT) para la emulación de la CPU. Cuando se active, el rendimiento mejorará notablemente.</string>
+    <string name="use_fastinterp">Usar intérprete rápido</string>
+    <string name="use_fastinterp_description">Cuando JIT esté deshabilitado, utiliza el intérprete rápido en lugar del intérprete antiguo. Reinicio requerido.</string>
     <string name="hw_shaders">Activar Sombreador de Hardware</string>
     <string name="hw_shaders_description">Usa el hardware para emular los sombreadores de 3DS. Cuando se active, el rendimiento mejorará notablemente.</string>
     <string name="cpu_clock_speed">Velocidad de reloj de la CPU</string>
@@ -400,10 +421,15 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="off">Apagado</string>
     <string name="install">Instalar</string>
     <string name="delete">Eliminar</string>
+    <string name="reset_all_settings">Reiniciar Toda la Configuración</string>
+    <string name="reset_all_settings_description">Toda la configuración avanzada será reiniciada a su valor de fábrica, incluida la configuración por aplicación. No podrá deshacerse.</string>
     <string name="settings_reset">Configuración reiniciada</string>
+    <string name="reset_settings_to_global">Reiniciar configuración de aplicación</string>
+    <string name="reset_settings_to_global_description">Todos los ajustes personalizados de esta aplicación se restablecerán al valor global. Esta acción no se puede deshacer.</string>
     <string name="select_rtc_date">Seleccionar fecha RTC</string>
     <string name="select_rtc_time">Seleccionar hora RTC</string>
     <string name="reset_setting_confirmation">¿Quiere reiniciar esta configuración a su valor por defecto?</string>
+    <string name="reset_setting_global_confirmation">¿Quiere reiniciar esta configuración a su valor global?</string>
     <string name="setting_not_editable">No puedes editarlo ahora</string>
     <string name="setting_disabled">Configuración deshabilitada</string>
     <string name="setting_disabled_description_incompatible_setting">Esta opción está desactivada actualmente porque otra configuración no tiene el valor adecuado.</string>
@@ -437,6 +463,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error cargando la aplicación</string>
     <string name="loader_error_invalid_format">Formato de aplicación inválido</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[El formato de la aplicación no está soportado.<br>Por favor asegúrate de usar uno de los formatos compatibles:<ul><li>Imagenes de cartucho: <b>.cci/.zcci/.bcci/.3ds</b></li><li>Archivos instalables: <b>.cia/.zcia/.bcia</b></li><li>Títulos Homebrew <b>.3dsx/.z3dsx</b></li><li>Contenedores NCCH: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>Archivos ELF: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Modo de sistema no válido</string>
     <string name="loader_error_invalid_system_mode_description">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
     <string name="loader_error_applying_patches">Error al aplicar parches</string>
@@ -466,6 +493,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="core_error_savestate_build_mismatch">Incompatibilidad de versión del estado guardado</string>
     <string name="core_error_shutdown_requested">Se solicitó el cierre</string>
     <string name="core_error_unknown">Error desconocido</string>
+    <string name="core_error_shader_cache_crash">Crash de caché de sombreadores</string>
+
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Pulsa Atrás para acceder al menú.</string>
     <string name="emulation_save_state">Guardar Estado</string>
@@ -553,6 +582,10 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Cargar</string>
     <string name="menu_emulation_amiibo_remove">Quitar</string>
+    <string name="application_settings">Configuración por Aplicación</string>
+    <string name="global_settings">Configuración Global</string>
+    <string name="use_global">Personalizado: Mantén pulsado para restablecer a la configuración global.</string>
+    <string name="editing_global_when_customized">Nota: Hay una configuración personalizada activa para esto, pero estás editando la configuración global.</string>
     <string name="select_amiibo">Seleccionar archivo de Amiibo</string>
     <string name="amiibo_load_error">Error al cargar el Amiibo</string>
     <string name="amiibo_load_error_message">Durante la carga del archivo del Amiibo, ocurrió un error. Por favor, asegúrese de que el archivo es el correcto.</string>
@@ -608,11 +641,14 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="cia_file_not_found">Falló la instalación. No se encontró el archvo CIA.</string>
     <string name="system_archive_general">Un archivo de sistema</string>
     <string name="save_load_error">Error de guardado/carga</string>
+    <string name="savestate_error_message"><![CDATA[El estado de guardado no se pudo crear o restablecer.<br/><br/>%1$s]]></string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
     <string name="unsupported_encrypted">Aplicación cifrada no soportada</string>
     <string name="invalid_system_mode">Modo de sistema no válido</string>
     <string name="invalid_system_mode_message">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
+    <string name="shader_cache_crash">Crash de Caché de Sombreadores</string>
+    <string name="shader_cache_crash_message"><![CDATA[Azahar se cerró de forma inesperada la última vez que generó la caché de sombreadores de Vulkan para el título actual. Es posible que el controlador gráfico haya fallado al procesar uno de los sombreadores almacenados en caché, continuar podría provocar un nuevo fallo.<br/><br/>Para reiniciar la caché, mantén pulsada la aplicación en la lista de aplicaciones, selecciona <b>Borrar Caché de Sombreador</b>y  después <b>Vulkan</b>.]]></string>
     <string name="savestate_build_mismatch_message"><![CDATA[No se pudo cargar el estado guardado porque se creó con una versión diferente de Azahar:<br/><b>Azahar %1$s</b>.<br/><br/>Por favor lee nuestro blog <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">entendiendo estados guardados</a> para más información.<br/><br/>Para recuperar tu progreso, vuelve a la versión <b>Azahar %1$s</b>, carga este estado guardado y utiliza la función de guardado integrada de la aplicación emulada.]]></string>
 
     <!-- Disk Shader Cache -->
@@ -774,6 +810,11 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="anaglyph">Anáglifo</string>
     <string name="interlaced">Entrelazado</string>
     <string name="reverse_interlaced">Entrelazado inverso</string>
+
+    <!-- Texture filters -->
+    <string name="anime4k">Anime4K (solo OpenGL)</string>
+    <string name="incompatible_texture_filter">Filtro de textura no compatible</string>
+    <string name="incompatible_texture_filter_description">El filtro de texturas seleccionado (Anime4K) no es compatible con el renderizador Vulkan.\nEl filtro de texturas se establecerá en Ninguno.</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Controlado por Juego</string>
