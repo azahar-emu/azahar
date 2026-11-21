@@ -559,8 +559,8 @@ private:
     int fga_hold{};            ///< Seconds before the size may go up again
     bool fga_paused{};
     int fga_paused_seconds{};
-    int fga_light{};           ///< Seconds in a row the game's GPU time was well below the pause's
-    double fga_baseline_ms{};  ///< The game's GPU time per frame at the start of the pause
+    int fga_pause_length{};    ///< Seconds this pause lasts
+    std::chrono::steady_clock::time_point fga_resumed_at{}; ///< When the last pause ended
     std::chrono::steady_clock::time_point fga_window{};
     /// When each adaptive size was last left for being too slow: it is not tried again for a
     /// while, so the size does not go back up into a scene that was already too heavy for it.
@@ -1453,25 +1453,19 @@ void RendererMetal::AdaptFrameGeneration() {
     const int smallest = static_cast<int>(ADAPTIVE_SIZES.size()) - 1;
 
     if (fga_paused) {
-        // Back when the game's GPU work is well below what it was when the pause began (the
-        // scene got lighter), or after a while to try again.
-        fga_paused_seconds++;
-        if (fga_paused_seconds <= 2) {
-            fga_baseline_ms = std::max(fga_baseline_ms, game_gpu_ms);
-            return;
-        }
-        fga_light = game_gpu_ms > 0.0 && game_gpu_ms < fga_baseline_ms * 0.7 ? fga_light + 1 : 0;
-        if (fga_light >= 3 || fga_paused_seconds >= 30) {
+        // Tried again after a few seconds. The game's GPU time cannot tell when the scene got
+        // lighter: with less work the GPU runs at a lower clock, and the same frames take longer
+        // (7.7 ms a frame while paused, 2.8 ms the second after frame generation came back).
+        if (++fga_paused_seconds >= fga_pause_length) {
             LOG_INFO(Render,
-                     "Frame generation resumes ({}: the game's GPU time is {:.1f} ms a frame, "
-                     "{:.1f} ms when it paused)",
-                     fga_light >= 3 ? "the scene got lighter" : "trying again after 30 s",
-                     game_gpu_ms, fga_baseline_ms);
+                     "Frame generation resumes after {} s (the game's GPU time while paused: "
+                     "{:.1f} ms a frame)",
+                     fga_paused_seconds, game_gpu_ms);
             fga_paused = false;
+            fga_resumed_at = now;
             fga_behind = 0;
             fga_losing = 0;
             fga_ahead = 0;
-            fga_light = 0;
             fga_hold = 8;
         }
         return;
@@ -1488,7 +1482,7 @@ void RendererMetal::AdaptFrameGeneration() {
     const double frame_ms = static_cast<double>(fg_ns) / 1e6 / made;
     // Dropped frames alone (a hitch of the emulation, JIT compiling) are not the size's fault: only
     // when the made frames also take a good part of their time.
-    const bool losing = dropped >= 3 && frame_ms > budget_ms * 0.6;
+    const bool losing = dropped >= 4 && frame_ms > budget_ms * 0.6;
     // A smaller size is worth trying already when the made frames come close to their time.
     const bool behind = frame_ms > budget_ms * 0.8 || losing;
     const bool ahead = frame_ms < budget_ms * 0.45 && dropped == 0;
@@ -1543,15 +1537,19 @@ void RendererMetal::AdaptFrameGeneration() {
                      "budget ({} game frames dropped), smaller frames: {}",
                      frame_ms, budget_ms, dropped, SIZE_NAMES[FrameGenerationSize()]);
         } else if (pausing) {
+            // Short pauses: a slowdown is often a moment (a hitch of the game with the GPU
+            // clocking down behind it), and a pause lowers the GPU's clock further. Pausing
+            // again soon after coming back makes the next pause twice as long, up to 30 s.
+            const bool again = fga_resumed_at.time_since_epoch().count() != 0 &&
+                               now - fga_resumed_at < std::chrono::seconds{20};
+            fga_pause_length = again ? std::min(fga_pause_length * 2, 30) : 5;
             fga_paused = true;
             fga_paused_seconds = 0;
-            fga_baseline_ms = 0.0;
-            fga_light = 0;
             LOG_INFO(Render,
-                     "Frame generation paused: made frames take {:.1f} ms of a {:.1f} ms budget "
-                     "({} game frames dropped) at the {} size; the game's own frames are shown "
-                     "until the scene gets lighter",
-                     frame_ms, budget_ms, dropped, SIZE_NAMES[FrameGenerationSize()]);
+                     "Frame generation paused for {} s: made frames take {:.1f} ms of a {:.1f} ms "
+                     "budget ({} game frames dropped) at the {} size",
+                     fga_pause_length, frame_ms, budget_ms, dropped,
+                     SIZE_NAMES[FrameGenerationSize()]);
         }
         return;
     }
