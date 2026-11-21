@@ -579,6 +579,12 @@ if (USE_SYSTEM_BOOST)
     find_package(Boost 1.70.0 COMPONENTS container locale serialization iostreams REQUIRED)
 endif()
 
+# GNU unique symbols keep a libretro core from ever being unloaded, so a frontend
+# that loads it again for the next game would run that game in the last one's state
+if (ENABLE_LIBRETRO AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-gnu-unique>)
+endif()
+
 enable_testing()
 add_subdirectory(externals)
 
