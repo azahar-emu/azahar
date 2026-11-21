@@ -1,6 +1,6 @@
-// Copyright 2015 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -47,6 +47,10 @@ public:
         GLenum mode;       // GL_CULL_FACE_MODE
         GLenum front_face; // GL_FRONT_FACE
     } cull;
+
+    struct {
+        GLboolean sample_shading; // GL_SAMPLE_SHADING
+    } multisample;
 
     struct {
         bool test_enabled;    // GL_DEPTH_TEST

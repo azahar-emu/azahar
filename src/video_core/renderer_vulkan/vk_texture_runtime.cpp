@@ -993,6 +993,21 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
             BlitScale(blit, true);
         }
     }
+
+    if (sample_count != 1) {
+        ASSERT_MSG(handles[Type::MultiSampled], "Multisampled allocation missing during upload");
+
+        const VideoCore::TextureBlit blit = {
+            .src_level = upload.texture_level,
+            .dst_level = upload.texture_level,
+            .src_rect = upload.texture_rect,
+            .dst_rect = upload.texture_rect * res_scale,
+        };
+        if ((type != SurfaceType::Color && type != SurfaceType::Texture) ||
+            !runtime.blit_helper.Filter(*this, blit)) {
+            runtime.blit_helper.BlitMultisample(*this, blit);
+        }
+    }
 }
 
 void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {

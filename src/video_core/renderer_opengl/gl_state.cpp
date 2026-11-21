@@ -1,6 +1,6 @@
-// Copyright 2015 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/common_types.h"
 #include "video_core/renderer_opengl/gl_state.h"
@@ -15,6 +15,8 @@ OpenGLState::OpenGLState() {
     cull.enabled = false;
     cull.mode = GL_BACK;
     cull.front_face = GL_CCW;
+
+    multisample.sample_shading = GL_FALSE;
 
     depth.test_enabled = false;
     depth.test_func = GL_LESS;
@@ -108,6 +110,15 @@ void OpenGLState::Apply() const {
 
     if (cull.front_face != cur_state.cull.front_face) {
         glFrontFace(cull.front_face);
+    }
+
+    // Multisampleing
+    if (multisample.sample_shading != cur_state.multisample.sample_shading) {
+        if (multisample.sample_shading) {
+            glEnable(GL_SAMPLE_SHADING);
+        } else {
+            glDisable(GL_SAMPLE_SHADING);
+        }
     }
 
     // Depth test
