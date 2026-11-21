@@ -553,7 +553,8 @@ private:
     bool fg_hz_warned{};  ///< Logged that a 60 FPS game needs a 120 Hz display
     // Adaptive frame generation and pausing (AdaptFrameGeneration), on the emulation thread.
     int fga_level{1};          ///< Index in ADAPTIVE_SIZES, starts at half
-    int fga_behind{};          ///< Seconds in a row the made frames came too late
+    int fga_behind{};          ///< Seconds in a row the made frames took most of their time
+    int fga_losing{};          ///< Seconds in a row frames were actually lost (not made in time)
     int fga_ahead{};           ///< Seconds in a row with plenty of room
     int fga_hold{};            ///< Seconds before the size may go up again
     bool fga_paused{};
@@ -568,8 +569,7 @@ private:
     int fga_checking{};          ///< Seconds left before comparing
     double fga_before_ms{};      ///< Time of a made frame before going smaller
     int fga_before_level{};      ///< The size before going smaller
-    int fga_floor_level{};       ///< No smaller than this until fga_floor_until
-    std::chrono::steady_clock::time_point fga_floor_until{};
+    int fga_floor_level{3};      ///< No smaller than this: a smaller size did not help
     void AdaptFrameGeneration();
     int FrameGenerationSize() const;
     std::chrono::steady_clock::time_point fg_last_frame{};
@@ -1469,6 +1469,7 @@ void RendererMetal::AdaptFrameGeneration() {
                      game_gpu_ms, fga_baseline_ms);
             fga_paused = false;
             fga_behind = 0;
+            fga_losing = 0;
             fga_ahead = 0;
             fga_light = 0;
             fga_hold = 8;
@@ -1478,6 +1479,7 @@ void RendererMetal::AdaptFrameGeneration() {
     if (made < 5) {
         // Not making frames now (a menu, a 60 FPS game in 30 FPS mode): nothing to judge.
         fga_behind = 0;
+        fga_losing = 0;
         fga_ahead = 0;
         return;
     }
@@ -1486,17 +1488,20 @@ void RendererMetal::AdaptFrameGeneration() {
     const double frame_ms = static_cast<double>(fg_ns) / 1e6 / made;
     // Dropped frames alone (a hitch of the emulation, JIT compiling) are not the size's fault: only
     // when the made frames also take a good part of their time.
-    const bool behind =
-        frame_ms > budget_ms * 0.8 || (dropped >= 3 && frame_ms > budget_ms * 0.6);
+    const bool losing = dropped >= 3 && frame_ms > budget_ms * 0.6;
+    // A smaller size is worth trying already when the made frames come close to their time.
+    const bool behind = frame_ms > budget_ms * 0.8 || losing;
     const bool ahead = frame_ms < budget_ms * 0.45 && dropped == 0;
     fga_behind = behind ? fga_behind + 1 : 0;
+    fga_losing = losing ? fga_losing + 1 : 0;
     fga_ahead = ahead ? fga_ahead + 1 : 0;
 
     // A smaller size has to make the frames faster: some interpolators cost about the same at any
     // size (MetalFX's frame interpolation took 6.1 ms at half and 5 ms at a quarter), and then a
     // smaller size only made the picture softer. Three seconds after going smaller the time is
     // compared with the one before; without a clear gain the size goes back and stays at least
-    // that large for a minute.
+    // that large: the interpolator's cost does not change during a session, so trying again
+    // later only blurred the picture for a few more seconds each time.
     if (fga_checking > 0 && adaptive) {
         if (--fga_checking == 0 && frame_ms > fga_before_ms * 0.85) {
             LOG_INFO(Render,
@@ -1505,23 +1510,28 @@ void RendererMetal::AdaptFrameGeneration() {
                      SIZE_NAMES[FrameGenerationSize()], frame_ms, fga_before_ms,
                      SIZE_NAMES[ADAPTIVE_SIZES[fga_before_level]]);
             fga_level = fga_before_level;
-            fga_floor_level = fga_before_level;
-            fga_floor_until = now + std::chrono::seconds{60};
+            fga_floor_level = std::min(fga_floor_level, fga_before_level);
             fga_hold = 8;
             fga_behind = 0;
+            fga_losing = 0;
             fga_ahead = 0;
             return;
         }
     }
-    const bool floor_active = now < fga_floor_until;
+    const bool can_shrink = adaptive && fga_level < std::min(smallest, fga_floor_level);
 
-    if (fga_behind >= 2) {
+    // Going smaller when the made frames come close to their time; pausing only when frames are
+    // actually lost and no smaller size helps. Made frames at 85% of their time but all on the
+    // screen are better than the game's own frames alone (a race of Mario Kart 7 paused three
+    // times at 7.0 ms of 8.3 ms with no more than one frame lost a second).
+    if (fga_behind >= 2 && (can_shrink || fga_losing >= 2)) {
         fga_behind = 0;
+        fga_losing = 0;
         fga_ahead = 0;
         if (adaptive && fga_checking > 0) {
             return; // The last change is still being checked.
         }
-        if (adaptive && fga_level < smallest && !(floor_active && fga_level >= fga_floor_level)) {
+        if (can_shrink) {
             fga_too_slow_at[fga_level] = now;
             fga_before_ms = frame_ms;
             fga_before_level = fga_level;
