@@ -102,6 +102,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         enabled_exts, available_exts, VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
     const bool has_index_type_uint8 = AddExtensionIfAvailable(
         enabled_exts, available_exts, VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
+    const bool has_robustness2 =
+        AddExtensionIfAvailable(enabled_exts, available_exts, VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
 
     // These are beneficial but blacklisted on some platforms due to driver bugs
     // For now, let the Instance class handle these decisions
@@ -199,6 +201,15 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT};
     if (has_index_type_uint8) {
         enable_supported_features(index_type_uint8_features);
+    }
+
+    VkPhysicalDeviceRobustness2FeaturesEXT robustness2_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT};
+    if (has_robustness2) {
+        enable_supported_features(robustness2_features);
+        // Instance::CreateDevice() enables only nullDescriptor
+        robustness2_features.robustBufferAccess2 = VK_FALSE;
+        robustness2_features.robustImageAccess2 = VK_FALSE;
     }
 
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
