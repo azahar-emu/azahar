@@ -115,12 +115,24 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     const bool has_fragment_shader_interlock = AddExtensionIfAvailable(
         enabled_exts, available_exts, VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME);
 
-    // These are beneficial but blacklisted on some platforms due to driver bugs
-    // For now, let the Instance class handle these decisions
+    // Keep VK_EXT_extended_dynamic_state off where Instance::CreateDevice() blacklists it
+    PFN_vkGetPhysicalDeviceProperties2 vkGetPhysicalDeviceProperties2 =
+        (PFN_vkGetPhysicalDeviceProperties2)get_instance_proc_addr(
+            instance, "vkGetPhysicalDeviceProperties2");
+    VkPhysicalDeviceDriverProperties driver_properties{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES};
+    VkPhysicalDeviceProperties2 properties{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    properties.pNext = &driver_properties;
+    vkGetPhysicalDeviceProperties2(gpu, &properties);
+    const bool has_extended_dynamic_state =
+        driver_properties.driverID != VK_DRIVER_ID_QUALCOMM_PROPRIETARY &&
+        driver_properties.driverID != VK_DRIVER_ID_ARM_PROPRIETARY &&
+        AddExtensionIfAvailable(enabled_exts, available_exts,
+                                VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
+
+    // Timeline semaphores stay off: MasterSemaphoreLibRetro uses fences instead
     // AddExtensionIfAvailable(enabled_exts, available_exts,
     // VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
-    // AddExtensionIfAvailable(enabled_exts, available_exts,
-    // VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
 
     // Merge frontend's required features with our baseline
     VkPhysicalDeviceFeatures merged_features{};
@@ -245,6 +257,12 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         // Instance::CreateDevice() enables only fragmentShaderPixelInterlock
         interlock_features.fragmentShaderSampleInterlock = VK_FALSE;
         interlock_features.fragmentShaderShadingRateInterlock = VK_FALSE;
+    }
+
+    VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extended_dynamic_state_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT};
+    if (has_extended_dynamic_state) {
+        enable_supported_features(extended_dynamic_state_features);
     }
 
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
