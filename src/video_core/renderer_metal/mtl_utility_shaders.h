@@ -268,6 +268,27 @@ fragment float4 present_fs(PresentVOut in [[stage_in]], texture2d<float> screen 
             // Contrast adaptive sharpening (AMD FidelityFX CAS, MIT): sharpens where the picture
             // is soft and leaves strong edges alone, so there are fewer halos than with the
             // unsharp mask. The amount (0.015 per percent) maps to its strength 0 to 1.
+            //
+            // After AMD FidelityFX CAS (https://github.com/GPUOpen-Effects/FidelityFX-CAS):
+            // Copyright (c) 2017-2019 Advanced Micro Devices, Inc. All rights reserved.
+            //
+            // Permission is hereby granted, free of charge, to any person obtaining a copy
+            // of this software and associated documentation files (the "Software"), to deal
+            // in the Software without restriction, including without limitation the rights
+            // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+            // copies of the Software, and to permit persons to whom the Software is
+            // furnished to do so, subject to the following conditions:
+            //
+            // The above copyright notice and this permission notice shall be included in all
+            // copies or substantial portions of the Software.
+            //
+            // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+            // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+            // SOFTWARE.
             half3 mn = min(min(min(left, right), min(up, down)), center);
             half3 mx = max(max(max(left, right), max(up, down)), center);
             half3 amp = sqrt(clamp(min(mn, half(2.0f) - mx) / max(mx, half(0.001f)), half(0.0f),
@@ -442,7 +463,30 @@ fragment float4 filter_bicubic_fs(BlitVOut in [[stage_in]], texture2d<float> tex
     return texture_bicubic(tex, smp, in.uv);
 }
 
-// ---- ScaleForce (from https://github.com/BreadFish64/ScaleFish/tree/master/scale_force, MIT)
+// ---- ScaleForce (from https://github.com/BreadFish64/ScaleFish/tree/master/scale_force)
+//
+// MIT License
+//
+// Copyright (c) 2020 BreadFish64
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 
 static float4 sf_color_dist(float4 A, float4 B, float4 C, float4 D, float4 cc) {
     // https://en.wikipedia.org/wiki/YCbCr#ITU-R_BT.2020_conversion
@@ -503,7 +547,31 @@ fragment float4 filter_scale_force_fs(BlitVOut in [[stage_in]], texture2d<float>
     return texture_bicubic(tex, smp, in.uv - final_offset);
 }
 
-// ---- Anime4K refinement (MIT, bloc97). Like the Vulkan backend, the red channel stands in for
+// ---- Anime4K refinement (from https://github.com/bloc97/Anime4K)
+//
+// MIT License
+//
+// Copyright (c) 2019 bloc97
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+// Like the Vulkan backend, the red channel stands in for
 // the luminance texture.
 
 #define A4K_TAP(x, y) tex.sample(smp, in.uv, level(0.0f), int2(x, y))

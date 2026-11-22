@@ -1,8 +1,10 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 // Metal Shading Language port of the GLSL PICA shader decompiler (glsl_shader_decompiler.cpp).
+// That file is licensed under GPLv2 or any later version; this port is taken under GPLv3 or any
+// later version, as that license allows.
 // The control flow analysis is identical. The generated code is meant to be placed inside a
 // struct: MSL has no mutable program scope variables, so the registers are struct members and the
 // subroutines member functions. The float uniforms are reached through the `uniforms` pointer.

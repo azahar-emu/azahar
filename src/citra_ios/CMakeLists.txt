@@ -222,3 +222,98 @@ if (AZAHAR_IOS_JIT_HELPER)
 endif()
 
 target_link_libraries(azahar_ios PRIVATE azahar_ios_bridge "-lc++")
+
+# ---------------------------------------------------------------------------------------------
+# Licenses.txt: the license of Azahar and of every third-party component built into the app,
+# shown in Settings › About › Licenses. Each entry is a line "@@@ name", a line saying what the
+# license is and where the code comes from, then the full text. The texts are read from the
+# components' own license files at configure time, so they always match the code that is built.
+# ---------------------------------------------------------------------------------------------
+set(AZAHAR_LICENSES_FILE "${CMAKE_CURRENT_BINARY_DIR}/Licenses.txt")
+file(WRITE "${AZAHAR_LICENSES_FILE}" "")
+
+function(azahar_license name summary path)
+    set(full "${PROJECT_SOURCE_DIR}/${path}")
+    if (NOT EXISTS "${full}")
+        message(WARNING "Licenses.txt: ${path} not found, ${name} left out")
+        return()
+    endif()
+    file(READ "${full}" text)
+    string(STRIP "${text}" text)
+    file(APPEND "${AZAHAR_LICENSES_FILE}" "@@@ ${name}\n${summary}\n${text}\n")
+endfunction()
+
+# For code whose license is only named in its source files (an SPDX tag or "MIT License" with a
+# copyright line), the standard MIT text with that copyright line.
+set(AZAHAR_MIT_TEXT [=[Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.]=])
+function(azahar_license_mit name summary copyright)
+    file(APPEND "${AZAHAR_LICENSES_FILE}"
+        "@@@ ${name}\n${summary}\nCopyright (c) ${copyright}\n\n${AZAHAR_MIT_TEXT}\n")
+endfunction()
+
+azahar_license("Azahar" "GPL-3.0-or-later. The source code of this app: https://github.com/JMillz269/Azahar-iOS"
+    "LICENSE.txt")
+azahar_license("Azahar (parts under GPLv2 or later)"
+    "GPL-2.0-or-later. Older files of Azahar and Citra are licensed under the GPLv2 or any later version"
+    "misc/licenses/gplv2.txt")
+azahar_license("Boost" "BSL-1.0, https://www.boost.org" "externals/boost/LICENSE_1_0.txt")
+azahar_license("Crypto++" "BSL-1.0, https://cryptopp.com" "externals/cryptopp/LICENSE")
+azahar_license("dynarmic" "0BSD, https://github.com/azahar-emu/dynarmic" "externals/dynarmic/LICENSE.txt")
+azahar_license("mcl" "MIT, https://github.com/azahar-emu/mcl (part of dynarmic)"
+    "externals/dynarmic/externals/mcl/LICENSE")
+azahar_license("robin-map" "MIT, https://github.com/Tessil/robin-map (part of dynarmic)"
+    "externals/dynarmic/externals/robin-map/LICENSE")
+azahar_license("oaknut" "MIT, https://github.com/merryhime/oaknut" "externals/oaknut/LICENSE")
+azahar_license("ENet" "MIT, http://enet.bespin.org" "externals/enet/LICENSE")
+azahar_license("FAAD2" "GPL-2.0-or-later, https://github.com/knik0/faad2" "externals/faad2/faad2/COPYING")
+azahar_license("{fmt}" "MIT, https://github.com/fmtlib/fmt" "externals/fmt/LICENSE")
+azahar_license("inih" "BSD-3-Clause, https://github.com/benhoyt/inih" "externals/inih/inih/LICENSE.txt")
+azahar_license("LibreSSL" "OpenSSL, SSLeay, ISC and other licenses, https://www.libressl.org"
+    "externals/libressl/COPYING")
+azahar_license("LodePNG" "Zlib, https://github.com/lvandeve/lodepng" "externals/lodepng/lodepng/LICENSE")
+azahar_license("microtar" "MIT, https://github.com/rxi/microtar" "externals/microtar/LICENSE")
+azahar_license("nihstro" "BSD-3-Clause, https://github.com/neobrain/nihstro" "externals/nihstro/license.txt")
+azahar_license("OpenAL Soft" "LGPL-2.0-or-later, https://openal-soft.org" "externals/openal-soft/COPYING")
+azahar_license("SoundTouch" "LGPL-2.1, https://www.surina.net/soundtouch" "externals/soundtouch/COPYING.TXT")
+azahar_license("Teakra" "MIT, https://github.com/wwylele/teakra" "externals/teakra/LICENSE")
+azahar_license("xxHash" "BSD-2-Clause, https://github.com/Cyan4973/xxHash" "externals/xxHash/LICENSE")
+azahar_license("Zstandard" "BSD-3-Clause, https://github.com/facebook/zstd" "externals/zstd/LICENSE")
+azahar_license("dds-ktx" "BSD-2-Clause, https://github.com/septag/dds-ktx" "externals/dds-ktx/LICENSE")
+azahar_license_mit("JSON for Modern C++" "MIT, https://github.com/nlohmann/json"
+    "2013-2022 Niels Lohmann")
+azahar_license_mit("cpp-httplib" "MIT, https://github.com/yhirose/cpp-httplib" "2023 Yuji Hirose")
+azahar_license_mit("Anime4K (texture filter)" "MIT, https://github.com/bloc97/Anime4K" "2019 bloc97")
+azahar_license_mit("ScaleForce (texture filter)"
+    "MIT, https://github.com/BreadFish64/ScaleFish/tree/master/scale_force" "2020 BreadFish64")
+azahar_license_mit("FidelityFX CAS (sharpening)" "MIT, https://github.com/GPUOpen-Effects/FidelityFX-CAS"
+    "2017-2019 Advanced Micro Devices, Inc. All rights reserved.")
+
+# idevice and the Rust crates linked into the JIT helper, collected by .ci/build-idevice.sh.
+if (AZAHAR_IOS_JIT_HELPER AND EXISTS "${AZAHAR_IDEVICE_DIR}/lib/libidevice_ffi.a")
+    if (EXISTS "${AZAHAR_IDEVICE_DIR}/licenses.txt")
+        file(READ "${AZAHAR_IDEVICE_DIR}/licenses.txt" idevice_licenses)
+        file(APPEND "${AZAHAR_LICENSES_FILE}" "${idevice_licenses}")
+    else()
+        message(WARNING "Licenses.txt: ${AZAHAR_IDEVICE_DIR}/licenses.txt not found, the licenses "
+                        "of idevice and its crates are left out")
+    endif()
+endif()
+
+target_sources(azahar_ios PRIVATE "${AZAHAR_LICENSES_FILE}")
+set_source_files_properties("${AZAHAR_LICENSES_FILE}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)

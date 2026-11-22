@@ -113,3 +113,20 @@ Next:
 - [ ] Anaglyph/interlaced 3D modes, the cursor overlay, and secondary display (AirPlay) output
 - [ ] Save states, cheats, CIA installation, amiibo and the system keyboard applet in the UI
 - [ ] Customizable on-screen controller layout
+
+## License
+
+Azahar, and this iOS port with it, is licensed under the GNU General Public License, version 3
+or any later version (see [LICENSE.txt](../../LICENSE.txt)). Older files of Azahar and Citra are
+licensed under the GPLv2 or any later version (see
+[misc/licenses/gplv2.txt](../../misc/licenses/gplv2.txt)); each file's header says which applies.
+
+The app also contains third-party code under its own licenses: the libraries in `externals`, the
+Rust crates of the idevice library linked into the JIT helper, and the texture filters and the
+sharpening of the Metal renderer (Anime4K, ScaleForce and FidelityFX CAS, MIT). Their license
+texts are bundled into the app as `Licenses.txt` and shown in Settings › About › Licenses. The
+list is made by `src/citra_ios/CMakeLists.txt` from the components' own license files, and by
+`.ci/collect-rust-licenses.py` for the crates.
+
+Anyone who is given a build of the app is entitled to its complete corresponding source code
+under the GPL; the source of this port is at https://github.com/JMillz269/Azahar-iOS.

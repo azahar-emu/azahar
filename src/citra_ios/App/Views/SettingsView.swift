@@ -1277,10 +1277,13 @@ struct AboutView: View {
             .listRowBackground(LGRowBackground())
             Section {
                 Text("Azahar is an open-source Nintendo 3DS emulator based on Citra. This iOS "
-                     + "port uses a native Metal renderer. Azahar is licensed under the GPLv2. "
+                     + "port uses a native Metal renderer. Azahar is free software, licensed under "
+                     + "the GNU General Public License, version 3 or any later version. "
                      + "Only use games and system files dumped from hardware you own.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                Link("Source Code", destination: URL(string: "https://github.com/JMillz269/Azahar-iOS")!)
+                NavigationLink("Licenses") { LicensesView() }
             }
             .listRowBackground(LGRowBackground())
         }
@@ -1621,5 +1624,114 @@ struct AppColorsSettingsView: View {
         }
         .navigationTitle("App Colors")
         .lgSettingsStyle()
+    }
+}
+
+// MARK: - Licenses
+
+/// One component in Licenses.txt, which src/citra_ios/CMakeLists.txt builds from the license
+/// files of Azahar and of every third-party component in the app.
+struct LicenseEntry: Identifiable {
+    let id: Int
+    let name: String
+    let summary: String
+    let text: String
+}
+
+enum LicenseList {
+    /// The entries of Licenses.txt: a line "@@@ name", a line with the license and where the code
+    /// comes from, then the text.
+    static let entries: [LicenseEntry] = {
+        guard let url = Bundle.main.url(forResource: "Licenses", withExtension: "txt"),
+              let content = try? String(contentsOf: url, encoding: .utf8)
+        else { return [] }
+        var result: [LicenseEntry] = []
+        var name: String?
+        var summary: String?
+        var lines: [Substring] = []
+        func finish() {
+            if let name {
+                result.append(LicenseEntry(id: result.count, name: name, summary: summary ?? "",
+                                           text: lines.joined(separator: "\n")))
+            }
+        }
+        for line in content.split(separator: "\n", omittingEmptySubsequences: false) {
+            if line.hasPrefix("@@@ ") {
+                finish()
+                name = String(line.dropFirst(4))
+                summary = nil
+                lines = []
+            } else if name != nil && summary == nil {
+                summary = String(line)
+            } else {
+                lines.append(line)
+            }
+        }
+        finish()
+        return result
+    }()
+}
+
+/// The licenses of Azahar and of the third-party code built into the app.
+struct LicensesView: View {
+    private let entries = LicenseList.entries
+
+    var body: some View {
+        Form {
+            Section {
+                Text("Azahar is free software: you can redistribute it and/or modify it under the "
+                     + "terms of the GNU General Public License as published by the Free Software "
+                     + "Foundation, either version 3 of the License, or (at your option) any later "
+                     + "version. It is distributed WITHOUT ANY WARRANTY. The app also contains the "
+                     + "third-party components below, each under its own license.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            .listRowBackground(LGRowBackground())
+            Section {
+                if entries.isEmpty {
+                    Text("The license texts are missing from this build.")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(entries) { entry in
+                    NavigationLink {
+                        LicenseTextView(entry: entry)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(entry.name)
+                            Text(entry.summary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                    }
+                }
+            }
+            .listRowBackground(LGRowBackground())
+        }
+        .navigationTitle("Licenses")
+        .lgSettingsStyle()
+    }
+}
+
+/// The full text of one license.
+struct LicenseTextView: View {
+    let entry: LicenseEntry
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(entry.summary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Text(entry.text)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+        }
+        .navigationTitle(entry.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

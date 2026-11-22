@@ -46,4 +46,9 @@ mkdir -p "$OUT/lib" "$OUT/include"
 cp "$WORK/target/$TARGET/release/libidevice_ffi.a" "$OUT/lib/"
 cp "$WORK/ffi/idevice.h" "$OUT/include/"
 printf 'module idevice {\n    header "idevice.h"\n    export *\n}\n' > "$OUT/include/module.modulemap"
+
+# The license texts of idevice and of every crate linked into it, shown in the app's Licenses
+# screen (src/citra_ios/CMakeLists.txt adds them to the app's Licenses.txt).
+python3 "$(dirname "$0")/collect-rust-licenses.py" "$WORK" idevice-ffi "$TARGET" "$FEATURES" \
+    "$OUT/licenses.txt" || echo "warning: the license texts of the idevice crates were not collected"
 ls -la "$OUT/lib" "$OUT/include"
