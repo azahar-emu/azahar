@@ -18,10 +18,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.preference.PreferenceManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ActivitySettingsBinding
@@ -221,14 +219,6 @@ class SettingsActivity :
         } else {
             // This function deletes the main config file AND any other config files
             // that will store per-game settings and reloads from the default.
-            val controllerKeys =
-                CitraSettings.buttonKeys + CitraSettings.circlePadKeys + CitraSettings.cStickKeys +
-                    CitraSettings.dPadAxisKeys + CitraSettings.dPadButtonKeys +
-                    CitraSettings.triggerKeys
-            val editor =
-                PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
-            controllerKeys.forEach { editor.remove(it) }
-            editor.apply()
 
             SettingsFile.deleteAndResetSettingsFile()
             SettingsFile.deletePerAppSettingsDirectory()
@@ -248,11 +238,8 @@ class SettingsActivity :
 
         // sync all settings to the new blank file(s)
         CitraSettings.activeSettings.clearAll()
-        editingSettings.clearAll()
-        SettingsFile.loadSettings(CitraSettings.activeSettings)
-        editingSettings.mergeSettings(CitraSettings.activeSettings)
+        SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
         NativeLibrary.reloadSettings()
-
         showToastMessage(getString(R.string.settings_reset), true)
         presenter.applyChangedSettings()
         finish()

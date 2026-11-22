@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 import android.databinding.tool.ext.capitalizeUS
 import de.undercouch.gradle.tasks.download.Download
@@ -28,7 +28,7 @@ val downloadedJniLibsPath = "${layout.buildDirectory.get().asFile.path}/download
 android {
     namespace = "org.citra.citra_emu"
 
-    compileSdkVersion = "android-35"
+    compileSdkVersion = "android-37"
     ndkVersion = "27.3.13750724"
 
     compileOptions {

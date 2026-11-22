@@ -1,6 +1,6 @@
 // Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <array>
 #include <QCloseEvent>
@@ -76,7 +76,8 @@ void CalibrationConfigurationDialog::UpdateButtonText(const QString& text) {
 }
 
 constexpr std::array<std::pair<const char*, const char*>, 3> MotionProviders = {{
-    {"motion_emu", QT_TRANSLATE_NOOP("ConfigureMotionTouch", "Mouse (Right Click)")},
+    {"motion_emu", QT_TRANSLATE_NOOP("ConfigureMotionTouch",
+                                     "Mouse (Right Click for Tilt, Middle Click for Look)")},
     {"cemuhookudp", "CemuhookUDP"},
     {"sdl", "SDL"},
 }};

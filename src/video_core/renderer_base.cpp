@@ -30,6 +30,10 @@ u32 RendererBase::GetResolutionScaleFactor() {
                              : render_window.GetFramebufferLayout().GetScalingRatio();
 }
 
+u8 RendererBase::GetSampleCount() const {
+    return Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
+}
+
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
     const auto update_layout = [is_portrait_mode](Frontend::EmuWindow& window) {
         const Layout::FramebufferLayout& layout = window.GetFramebufferLayout();
@@ -47,6 +51,17 @@ void RendererBase::EndFrame() {
     system.perf_stats->EndSystemFrame();
 
     render_window.PollEvents();
+
+    // Wait for the GPU to finish and to be at most one game frame behind.
+    // Below 60 FPS a guest frame spans several VBlanks, and its GPU work may still run while the
+    // next one is emulated.
+    const u64 game_frames = system.perf_stats->GetGameFrameCount();
+    if (game_frames != limited_game_frames) {
+        limited_game_frames = game_frames;
+        if (Settings::values.use_limit_frames_ahead_of_gpu.GetValue()) {
+            LimitFramesAheadOfGpu();
+        }
+    }
 
     system.frame_limiter.DoFrameLimiting(system.CoreTiming().GetGlobalTimeUs());
 

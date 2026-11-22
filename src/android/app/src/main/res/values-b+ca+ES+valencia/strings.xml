@@ -69,12 +69,9 @@
     <string name="done">Fet</string>
     <string name="done_description">Ja estàs a punt.\nDisfruta utilitzant l\'emulador!</string>
     <string name="text_continue">Continuar</string>
-    <string name="notifications">Notificacions</string>
-    <string name="notifications_description">Concedeix el permís de notificacions amb el següent botó.</string>
     <string name="give_permission">Concedir permís</string>
     <string name="notification_warning">Saltar-se la concessió del permís de notificacions?</string>
     <string name="notification_warning_description">Azahar no et podrà notificar sobre informació important.</string>
-    <string name="filesystem_permission_warning">Falten permisos</string>
     <string name="filesystem_permission_warning_description">Azahar necessita permís per a administrar fitxers en este dispositiu per a poder emmagatzemar i administrar les dades d\'usuari de 3DS.\n\nPer favor, atorgue el permís abans de continuar.</string>
     <string name="camera_permission">Càmera</string>
     <string name="camera_permission_description">Concedix el permís de càmera per a emular la càmera de la 3DS.</string>

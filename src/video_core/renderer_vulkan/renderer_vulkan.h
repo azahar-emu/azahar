@@ -92,7 +92,7 @@ private:
                                      const Pica::FramebufferConfig& framebuffer);
     void ConfigureRenderPipeline();
     void PrepareRendertarget();
-    void LimitFramesAheadOfGpu();
+    void LimitFramesAheadOfGpu() override;
     void RenderScreenshot();
     void RenderScreenshotWithStagingCopy();
     bool TryRenderScreenshotWithHostMemory();
@@ -154,7 +154,7 @@ private:
     bool isSecondaryWindow;
     bool secondaryWindowEnabled;
     bool screenRendered;
-    u64 previous_frame_tick{};
+    u64 previous_game_frame_tick{};
 };
 
 } // namespace Vulkan

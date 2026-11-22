@@ -2,6 +2,7 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
+#include <iostream>
 #include <QActionGroup>
 #include <QApplication>
 #include <QDir>
@@ -20,6 +21,7 @@
 #include <QMessageBox>
 #include <QModelIndex>
 #include <QPainter>
+#include <QScreen>
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include <QStyledItemDelegate>
@@ -44,11 +46,74 @@
 #include "core/hle/service/fs/archive.h"
 #include "qcursor.h"
 
+// On Mac OS X, the Return key does not trigger the activation signal for some reason. Fix it.
+void GameListTreeView::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Return) {
+        const QModelIndex idx = currentIndex();
+        if (idx.isValid()) {
+            emit activated(idx);
+            return;
+        }
+    }
+    QTreeView::keyPressEvent(event);
+}
+
+void GameListTreeView::setFocusFromKeyboard() {
+    setFocus(Qt::TabFocusReason);
+    // if something is selected, we are good to go
+    if (selectionModel()->hasSelection())
+        return;
+
+    // if something is indexed but not selected, we want to select that
+    QModelIndex target = currentIndex();
+
+    // ...unless it is not visible in which case we want to select the first fully visible game
+    const QRect viewport_rect = viewport()->rect();
+    const bool current_target_visible =
+        target.isValid() && target.parent().isValid() && viewport_rect.contains(visualRect(target));
+    if (!current_target_visible) {
+        target = indexAt(viewport_rect.topLeft());
+        if (!viewport_rect.contains(visualRect(target)))
+            target = indexBelow(target);
+        while (target.isValid() && !target.parent().isValid()) {
+            target = indexBelow(target);
+        }
+    }
+    // ... unless there are no such games, in which case we just select the first game
+    if (!target.isValid()) {
+        for (int i = 0; i < model()->rowCount(); i++) {
+            const QModelIndex folder = model()->index(i, 0);
+            if (model()->rowCount(folder) > 0) {
+                target = model()->index(0, 0, folder);
+                break;
+            }
+        }
+    }
+
+    if (target.isValid()) {
+        setCurrentIndex(target);
+        selectionModel()->select(target,
+                                 QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        scrollTo(target);
+    }
+}
+
 GameListSearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist, QObject* parent)
     : QObject(parent), gamelist{gamelist} {}
 
 // EventFilter in order to process systemkeys while editing the searchfield
 bool GameListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
+    // Up/Down/Tab: hand focus to the tree view, selecting a game if need be
+    if (event->type() == QEvent::KeyPress) {
+        const auto* press = static_cast<QKeyEvent*>(event);
+        if (press->key() == Qt::Key_Up || press->key() == Qt::Key_Down ||
+            press->key() == Qt::Key_Tab) {
+            gamelist->tree_view->setFocusFromKeyboard();
+            return true; // consume so the line edit doesn't also handle it
+        }
+        return QObject::eventFilter(obj, event);
+    }
+
     // If it isn't a KeyRelease event then continue with standard event processing
     if (event->type() != QEvent::KeyRelease)
         return QObject::eventFilter(obj, event);
@@ -347,7 +412,7 @@ GameList::GameList(PlayTime::PlayTimeManager& play_time_manager_, GMainWindow* p
 
     this->main_window = parent;
     layout = new QVBoxLayout;
-    tree_view = new QTreeView;
+    tree_view = new GameListTreeView;
     search_field = new GameListSearchField(this);
     item_model = new QStandardItemModel(tree_view);
     tree_view->setModel(item_model);
@@ -363,7 +428,6 @@ GameList::GameList(PlayTime::PlayTimeManager& play_time_manager_, GMainWindow* p
     tree_view->setStyleSheet(QStringLiteral("QTreeView{ border: none; }"));
     tree_view->setItemDelegateForColumn(0, new CartridgeIconDelegate(tree_view));
     tree_view->header()->setContextMenuPolicy(Qt::CustomContextMenu);
-
     UpdateColumnVisibility();
 
     item_model->insertColumns(0, COLUMN_COUNT);
@@ -521,6 +585,16 @@ void GameList::DonePopulating(const QStringList& watch_list) {
     emit PopulatingCompleted();
 }
 
+// Creating a pop-up on a secondary screen that has a different DPI causes the pop-up to appear
+// in the wrong position. So first set the screen the menu should appear in before creatig it, so
+// that it uses the correct DPI.
+static void ExecContextMenu(QMenu& menu, const QPoint& global_pos) {
+    if (QScreen* screen = QGuiApplication::screenAt(global_pos)) {
+        menu.setScreen(screen);
+    }
+    menu.exec(global_pos);
+}
+
 void GameList::PopupContextMenu(const QPoint& menu_location) {
     QModelIndex item = tree_view->indexAt(menu_location);
     if (!item.isValid())
@@ -553,7 +627,7 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
         break;
     }
 
-    context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
+    ExecContextMenu(context_menu, tree_view->viewport()->mapToGlobal(menu_location));
 }
 
 void GameList::PopupHeaderContextMenu(const QPoint& menu_location) {
@@ -582,7 +656,7 @@ void GameList::PopupHeaderContextMenu(const QPoint& menu_location) {
         });
     }
 
-    context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
+    ExecContextMenu(context_menu, tree_view->viewport()->mapToGlobal(menu_location));
 }
 
 void GameList::UpdateColumnVisibility() {

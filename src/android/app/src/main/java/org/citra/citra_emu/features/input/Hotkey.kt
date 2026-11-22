@@ -2,7 +2,7 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
-package org.citra.citra_emu.features.hotkeys
+package org.citra.citra_emu.features.input
 
 enum class Hotkey(val button: Int) {
     SWAP_SCREEN(10001),

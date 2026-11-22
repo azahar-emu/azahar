@@ -58,7 +58,7 @@ private:
     void InitOpenGLObjects();
     void ReloadShader(Settings::StereoRenderOption render_3d);
     void PrepareRendertarget();
-    void LimitFramesAheadOfGpu();
+    void LimitFramesAheadOfGpu() override;
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
                          std::unique_ptr<Frontend::TextureMailbox>& mailbox, bool flipped);
@@ -113,9 +113,7 @@ private:
     GLuint attrib_tex_coord;
 
     FrameDumperOpenGL frame_dumper;
-    bool isSecondaryWindow;
-    bool secondaryWindowEnabled;
-    GLsync previous_frame_fence{};
+    GLsync previous_game_frame_fence{};
 };
 
 } // namespace OpenGL

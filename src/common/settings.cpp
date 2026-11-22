@@ -104,10 +104,13 @@ void LogSettings() {
     log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
     log_setting("Renderer_UseResolutionFactor", values.resolution_factor.GetValue());
+    log_setting("Renderer_SampleCount", values.antialiasing.GetValue());
     log_setting("Renderer_UseIntegerScaling", values.use_integer_scaling.GetValue());
     log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
     log_setting("Renderer_VSyncNew", values.use_vsync.GetValue());
     log_setting("Renderer_SkipDuplicateFrames", values.use_skip_duplicate_frames.GetValue());
+    log_setting("Renderer_UseLimitFramesAheadOfGPU",
+                values.use_limit_frames_ahead_of_gpu.GetValue());
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
@@ -223,7 +226,9 @@ void RestoreGlobalState(bool is_powered_on) {
     values.shaders_accurate_mul.SetGlobal(true);
     values.use_vsync.SetGlobal(true);
     values.use_skip_duplicate_frames.SetGlobal(true);
+    values.use_limit_frames_ahead_of_gpu.SetGlobal(true);
     values.resolution_factor.SetGlobal(true);
+    values.antialiasing.SetGlobal(true);
     values.use_integer_scaling.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);

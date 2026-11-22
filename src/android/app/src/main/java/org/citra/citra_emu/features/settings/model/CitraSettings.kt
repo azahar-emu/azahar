@@ -5,7 +5,8 @@
 package org.citra.citra_emu.features.settings.model
 
 import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.R
+import org.citra.citra_emu.features.input.Input
+import org.citra.citra_emu.features.input.InputMappingManager
 
 class CitraSettings {
     private val globalValues = HashMap<String, Any>()
@@ -15,6 +16,9 @@ class CitraSettings {
 
     fun isPerApp(): Boolean = (gameId != null && gameId != "")
 
+    /**
+     * Returns the value of a setting. It prioritizes the override, then the global setting, the the default.
+     */
     fun <T> get(setting: AbstractSetting<T>): T {
         @Suppress("UNCHECKED_CAST")
         return (
@@ -24,17 +28,39 @@ class CitraSettings {
             ) as T
     }
 
-    fun <T> getGlobal(setting: AbstractSetting<T>): T {
+    /** Returns the global value, or the default value if it does not exist. */
+    fun <T> getGlobalOrDefault(setting: AbstractSetting<T>): T {
         @Suppress("UNCHECKED_CAST")
         return (globalValues[setting.key] ?: setting.defaultValue) as T
     }
 
-    fun <T> setGlobal(setting: AbstractSetting<T>, value: T) {
-        globalValues[setting.key] = value as Any
+    /** Returns the global value or null if the setting does not exist. */
+    fun <T> getGlobalOrNull(setting: AbstractSetting<T>): T? {
+        @Suppress("UNCHECKED_CAST")
+        return (globalValues[setting.key]) as T?
     }
 
-    fun <T> setOverride(setting: AbstractSetting<T>, value: T) {
-        perAppOverrides[setting.key] = value as Any
+    fun <T> setGlobal(setting: AbstractSetting<T>, value: T?) {
+        if (value == null) {
+            globalValues.remove(setting.key)
+        } else {
+            globalValues[setting.key] = value as Any
+        }
+        if (this == activeSettings && !hasOverride(setting) && setting is InputMappingSetting) {
+            InputMappingManager.rebind(setting, value as Input?)
+        }
+    }
+
+    fun <T> setOverride(setting: AbstractSetting<T>, value: T?) {
+        if (value == null) {
+            // interpret as clear
+            perAppOverrides.remove(setting.key)
+        } else {
+            perAppOverrides[setting.key] = value as Any
+        }
+        if (this == activeSettings && setting is InputMappingSetting) {
+            InputMappingManager.rebind(setting, value as Input?)
+        }
     }
 
     /**
@@ -58,24 +84,41 @@ class CitraSettings {
         if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
     }
 
-    /** Merge the globals from other into the current settings. Merge per-game if game id is the same. */
+    /**
+     * Replace the global values in the current settings with those from the argument.
+     * Do the same for per-app settings if they are the same gameID.
+     */
     fun mergeSettings(other: CitraSettings) {
+        // clear the globals, the incoming one should replace, including cleared values
+        globalValues.clear()
         other.globalValues.forEach { (key, value) ->
             globalValues[key] = value
         }
 
-        if (gameId != other.gameId) {
-            return
+        if (gameId == other.gameId) {
+            perAppOverrides.clear()
+            other.perAppOverrides.forEach { (key, value) ->
+                perAppOverrides[key] = value
+            }
         }
 
-        perAppOverrides.clear()
-        other.perAppOverrides.forEach { (key, value) ->
-            perAppOverrides[key] = value
+        if (this == activeSettings) {
+            InputMappingManager.rebuild()
         }
     }
 
     fun <T> clearOverride(setting: AbstractSetting<T>) {
         perAppOverrides.remove(setting.key)
+        if (this == activeSettings && setting is InputMappingSetting) {
+            InputMappingManager.rebind(setting, get(setting) as Input?)
+        }
+    }
+
+    fun <T> clearGlobal(setting: AbstractSetting<T>) {
+        globalValues.remove(setting.key)
+        if (this == activeSettings && setting is InputMappingSetting) {
+            InputMappingManager.rebind(setting, get(setting) as Input?)
+        }
     }
 
     fun hasOverride(setting: AbstractSetting<*>): Boolean = perAppOverrides.containsKey(setting.key)
@@ -87,15 +130,21 @@ class CitraSettings {
     fun clearAll() {
         globalValues.clear()
         perAppOverrides.clear()
+        if (this == activeSettings) {
+            InputMappingManager.clear()
+        }
     }
 
     fun changeToGlobalContext() {
-        perAppOverrides.clear()
         gameId = null
+        clearAllOverrides()
     }
 
     fun clearAllOverrides() {
         perAppOverrides.clear()
+        if (this == activeSettings) {
+            InputMappingManager.rebuild()
+        }
     }
 
     companion object {
@@ -115,121 +164,6 @@ class CitraSettings {
         const val SECTION_PERFORMANCE_OVERLAY = "Performance Overlay"
         const val SECTION_STORAGE = "Storage"
         const val SECTION_MISC = "Miscellaneous"
-
-        const val KEY_BUTTON_A = "button_a"
-        const val KEY_BUTTON_B = "button_b"
-        const val KEY_BUTTON_X = "button_x"
-        const val KEY_BUTTON_Y = "button_y"
-        const val KEY_BUTTON_SELECT = "button_select"
-        const val KEY_BUTTON_START = "button_start"
-        const val KEY_BUTTON_HOME = "button_home"
-        const val KEY_BUTTON_UP = "button_up"
-        const val KEY_BUTTON_DOWN = "button_down"
-        const val KEY_BUTTON_LEFT = "button_left"
-        const val KEY_BUTTON_RIGHT = "button_right"
-        const val KEY_BUTTON_L = "button_l"
-        const val KEY_BUTTON_R = "button_r"
-        const val KEY_BUTTON_ZL = "button_zl"
-        const val KEY_BUTTON_ZR = "button_zr"
-        const val KEY_CIRCLEPAD_AXIS_VERTICAL = "circlepad_axis_vertical"
-        const val KEY_CIRCLEPAD_AXIS_HORIZONTAL = "circlepad_axis_horizontal"
-        const val KEY_CSTICK_AXIS_VERTICAL = "cstick_axis_vertical"
-        const val KEY_CSTICK_AXIS_HORIZONTAL = "cstick_axis_horizontal"
-        const val KEY_DPAD_AXIS_VERTICAL = "dpad_axis_vertical"
-        const val KEY_DPAD_AXIS_HORIZONTAL = "dpad_axis_horizontal"
-        const val HOTKEY_ENABLE = "hotkey_enable"
-        const val HOTKEY_SCREEN_SWAP = "hotkey_screen_swap"
-        const val HOTKEY_CYCLE_LAYOUT = "hotkey_toggle_layout"
-        const val HOTKEY_CLOSE_GAME = "hotkey_close_game"
-        const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
-        const val HOTKEY_QUICKSAVE = "hotkey_quickload"
-        const val HOTKEY_QUICKLOAD = "hotkey_quickpause"
-        const val HOTKEY_BUTTON_COMBO = "hotkey_button_combo"
-        const val HOTKEY_TURBO_TOGGLE = "hotkey_turbo_limit"
-        const val HOTKEY_TURBO_HOLD = "hotkey_turbo_hold"
-
-        val buttonKeys = listOf(
-            KEY_BUTTON_A,
-            KEY_BUTTON_B,
-            KEY_BUTTON_X,
-            KEY_BUTTON_Y,
-            KEY_BUTTON_SELECT,
-            KEY_BUTTON_START,
-            KEY_BUTTON_HOME
-        )
-        val buttonTitles = listOf(
-            R.string.button_a,
-            R.string.button_b,
-            R.string.button_x,
-            R.string.button_y,
-            R.string.button_select,
-            R.string.button_start,
-            R.string.button_home
-        )
-        val circlePadKeys = listOf(
-            KEY_CIRCLEPAD_AXIS_VERTICAL,
-            KEY_CIRCLEPAD_AXIS_HORIZONTAL
-        )
-        val cStickKeys = listOf(
-            KEY_CSTICK_AXIS_VERTICAL,
-            KEY_CSTICK_AXIS_HORIZONTAL
-        )
-        val dPadAxisKeys = listOf(
-            KEY_DPAD_AXIS_VERTICAL,
-            KEY_DPAD_AXIS_HORIZONTAL
-        )
-        val dPadButtonKeys = listOf(
-            KEY_BUTTON_UP,
-            KEY_BUTTON_DOWN,
-            KEY_BUTTON_LEFT,
-            KEY_BUTTON_RIGHT
-        )
-        val axisTitles = listOf(
-            R.string.controller_axis_vertical,
-            R.string.controller_axis_horizontal
-        )
-        val dPadTitles = listOf(
-            R.string.direction_up,
-            R.string.direction_down,
-            R.string.direction_left,
-            R.string.direction_right
-        )
-        val triggerKeys = listOf(
-            KEY_BUTTON_L,
-            KEY_BUTTON_R,
-            KEY_BUTTON_ZL,
-            KEY_BUTTON_ZR
-        )
-        val triggerTitles = listOf(
-            R.string.button_l,
-            R.string.button_r,
-            R.string.button_zl,
-            R.string.button_zr
-        )
-        val hotKeys = listOf(
-            HOTKEY_ENABLE,
-            HOTKEY_SCREEN_SWAP,
-            HOTKEY_CYCLE_LAYOUT,
-            HOTKEY_CLOSE_GAME,
-            HOTKEY_PAUSE_OR_RESUME,
-            HOTKEY_QUICKSAVE,
-            HOTKEY_QUICKLOAD,
-            HOTKEY_TURBO_TOGGLE,
-            HOTKEY_TURBO_HOLD,
-            HOTKEY_BUTTON_COMBO
-        )
-        val hotkeyTitles = listOf(
-            R.string.controller_hotkey_enable_button,
-            R.string.emulation_swap_screens,
-            R.string.emulation_cycle_landscape_layouts,
-            R.string.emulation_close_game,
-            R.string.emulation_toggle_pause,
-            R.string.emulation_quicksave,
-            R.string.emulation_quickload,
-            R.string.turbo_limit_hotkey,
-            R.string.turbo_hold_hotkey,
-            R.string.button_combo
-        )
 
         // TODO: Move these in with the other setting keys in GenerateSettingKeys.cmake
         const val PREF_FIRST_APP_LAUNCH = "FirstApplicationLaunch"
@@ -260,6 +194,7 @@ class CitraSettings {
             }
             defaultsSynced = true
         }
+
         var defaultsSynced: Boolean = false
     }
 }

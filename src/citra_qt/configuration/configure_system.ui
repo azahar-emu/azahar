@@ -536,22 +536,22 @@ installed applications.</string>
                 </item>
                 <item>
                  <property name="text">
-                  <string>25%</string>
+                  <string notr="true">25%</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>50%</string>
+                  <string notr="true">50%</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>75%</string>
+                  <string notr="true">75%</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>100%</string>
+                  <string notr="true">100%</string>
                  </property>
                 </item>
                </widget>

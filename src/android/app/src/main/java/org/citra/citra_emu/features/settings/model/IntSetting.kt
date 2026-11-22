@@ -4,6 +4,8 @@
 
 package org.citra.citra_emu.features.settings.model
 
+import org.citra.citra_emu.display.PortraitScreenLayout
+import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.features.settings.SettingKeys
 
 enum class IntSetting(
@@ -25,7 +27,11 @@ enum class IntSetting(
     CARDBOARD_SCREEN_SIZE(SettingKeys.cardboard_screen_size(), CitraSettings.SECTION_LAYOUT, 85),
     CARDBOARD_X_SHIFT(SettingKeys.cardboard_x_shift(), CitraSettings.SECTION_LAYOUT, 0),
     CARDBOARD_Y_SHIFT(SettingKeys.cardboard_y_shift(), CitraSettings.SECTION_LAYOUT, 0),
-    SCREEN_LAYOUT(SettingKeys.layout_option(), CitraSettings.SECTION_LAYOUT, 0),
+    SCREEN_LAYOUT(
+        SettingKeys.layout_option(),
+        CitraSettings.SECTION_LAYOUT,
+        ScreenLayout.LARGE_SCREEN.int
+    ),
     SMALL_SCREEN_POSITION(SettingKeys.small_screen_position(), CitraSettings.SECTION_LAYOUT, 0),
     LANDSCAPE_TOP_X(SettingKeys.custom_top_x(), CitraSettings.SECTION_LAYOUT, 0),
     LANDSCAPE_TOP_Y(SettingKeys.custom_top_y(), CitraSettings.SECTION_LAYOUT, 0),
@@ -36,7 +42,11 @@ enum class IntSetting(
     LANDSCAPE_BOTTOM_WIDTH(SettingKeys.custom_bottom_width(), CitraSettings.SECTION_LAYOUT, 640),
     LANDSCAPE_BOTTOM_HEIGHT(SettingKeys.custom_bottom_height(), CitraSettings.SECTION_LAYOUT, 480),
     SCREEN_GAP(SettingKeys.screen_gap(), CitraSettings.SECTION_LAYOUT, 0),
-    PORTRAIT_SCREEN_LAYOUT(SettingKeys.portrait_layout_option(), CitraSettings.SECTION_LAYOUT, 0),
+    PORTRAIT_SCREEN_LAYOUT(
+        SettingKeys.portrait_layout_option(),
+        CitraSettings.SECTION_LAYOUT,
+        PortraitScreenLayout.TOP_FULL_WIDTH.int
+    ),
     SECONDARY_DISPLAY_LAYOUT(
         SettingKeys.secondary_display_layout(),
         CitraSettings.SECTION_LAYOUT,

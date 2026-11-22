@@ -1,9 +1,10 @@
-// Copyright 2017 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <mutex>
 #include <thread>
 #include <tuple>
@@ -34,7 +35,19 @@ public:
 
     void BeginTilt(int x, int y) {
         mouse_origin = Common::MakeVec(x, y);
+        std::lock_guard guard{tilt_mutex};
+        look_direction = Common::MakeVec(0.0f, 0.0f);
+        look_mode = false;
+        is_looking = false;
         is_tilting = true;
+    }
+
+    void BeginLook(int x, int y) {
+        look_origin = Common::MakeVec(x, y);
+        std::lock_guard guard{tilt_mutex};
+        previous_look_direction = look_direction;
+        look_mode = true;
+        is_looking = true;
     }
 
     void Tilt(int x, int y) {
@@ -51,10 +64,23 @@ public:
         }
     }
 
+    void Look(int x, int y) {
+        if (is_looking) {
+            const auto mouse_move = (Common::MakeVec(x, y) - look_origin).Cast<float>();
+            std::lock_guard guard{tilt_mutex};
+            look_direction = previous_look_direction + mouse_move;
+        }
+    }
+
     void EndTilt() {
         std::lock_guard guard{tilt_mutex};
         tilt_angle = 0;
         is_tilting = false;
+    }
+
+    void EndLook() {
+        std::lock_guard guard{tilt_mutex};
+        is_looking = false;
     }
 
     std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() {
@@ -68,13 +94,18 @@ private:
     const float sensitivity;
 
     Common::Vec2<int> mouse_origin;
+    Common::Vec2<int> look_origin;
 
     std::mutex tilt_mutex;
     Common::Vec2<float> tilt_direction;
+    Common::Vec2<float> look_direction = Common::MakeVec(0.0f, 0.0f);
+    Common::Vec2<float> previous_look_direction = Common::MakeVec(0.0f, 0.0f);
     float tilt_angle = 0;
     float tilt_clamp = 90;
 
     bool is_tilting = false;
+    bool is_looking = false;
+    bool look_mode = false;
 
     Common::Event shutdown_event;
 
@@ -87,7 +118,7 @@ private:
 
     void MotionEmuThread() {
         auto update_time = std::chrono::steady_clock::now();
-        Common::Quaternion<float> q = Common::MakeQuaternion(Common::Vec3<float>(), 0);
+        Common::Quaternion<float> q = {{0.0f, 0.0f, 0.0f}, 1.0f};
         Common::Quaternion<float> old_q;
 
         while (!shutdown_event.WaitUntil(update_time)) {
@@ -97,9 +128,23 @@ private:
             {
                 std::lock_guard guard{tilt_mutex};
 
-                // Find the quaternion describing current 3DS tilting
-                q = Common::MakeQuaternion(
-                    Common::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x), tilt_angle);
+                if (!look_mode) {
+                    // Find the quaternion describing current 3DS tilting
+                    q = Common::MakeQuaternion(
+                        Common::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x), tilt_angle);
+                } else {
+                    // Find the quaternion describing current 3DS looking
+                    float p =
+                        -1.0f * ((Common::PI * 0.25f) +
+                                 Common::PI * (-look_direction.y * sensitivity * 100.0f) / 360.0f);
+                    float y = Common::PI * (-look_direction.x * sensitivity * 100.0f) / 360.0f;
+                    float qw = std::cos(p) * std::cos(y);
+                    float qx = std::sin(p) * std::cos(y);
+                    float qy = std::cos(p) * std::sin(y);
+                    float qz = -1.0f * std::sin(p) * std::sin(y);
+
+                    q = {Common::MakeVec(qx, qy, qz), qw};
+                }
             }
 
             auto inv_q = q.Inverse();
@@ -158,15 +203,33 @@ void MotionEmu::BeginTilt(int x, int y) {
     }
 }
 
+void MotionEmu::BeginLook(int x, int y) {
+    if (auto ptr = current_device.lock()) {
+        ptr->BeginLook(x, y);
+    }
+}
+
 void MotionEmu::Tilt(int x, int y) {
     if (auto ptr = current_device.lock()) {
         ptr->Tilt(x, y);
     }
 }
 
+void MotionEmu::Look(int x, int y) {
+    if (auto ptr = current_device.lock()) {
+        ptr->Look(x, y);
+    }
+}
+
 void MotionEmu::EndTilt() {
     if (auto ptr = current_device.lock()) {
         ptr->EndTilt();
+    }
+}
+
+void MotionEmu::EndLook() {
+    if (auto ptr = current_device.lock()) {
+        ptr->EndLook();
     }
 }
 

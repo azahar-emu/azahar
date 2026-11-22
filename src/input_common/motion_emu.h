@@ -1,6 +1,6 @@
-// Copyright 2017 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -21,7 +21,7 @@ public:
     std::unique_ptr<Input::MotionDevice> Create(const Common::ParamPackage& params) override;
 
     /**
-     * Signals that a motion sensor tilt has begun.
+     * Signals that a motion sensor tilt has begun. This also leaves look mode.
      * @param x the x-coordinate of the cursor
      * @param y the y-coordinate of the cursor
      */
@@ -38,6 +38,27 @@ public:
      * Signals that a motion sensor tilt has ended.
      */
     void EndTilt();
+
+    /**
+     * Signals that a motion sensor look has begun. The device is held upright and the cursor
+     * movement rotates it in pitch and yaw, continuing from the previous look orientation.
+     * @param x the x-coordinate of the cursor
+     * @param y the y-coordinate of the cursor
+     */
+    void BeginLook(int x, int y);
+
+    /**
+     * Signals that a motion sensor look is occurring.
+     * @param x the x-coordinate of the cursor
+     * @param y the y-coordinate of the cursor
+     */
+    void Look(int x, int y);
+
+    /**
+     * Signals that a motion sensor look has ended. The look orientation is kept until the next
+     * tilt begins.
+     */
+    void EndLook();
 
 private:
     std::weak_ptr<MotionEmuDevice> current_device;

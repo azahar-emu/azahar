@@ -1,6 +1,6 @@
 // Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -40,6 +40,7 @@ private:
     ConfigurationShared::CheckState use_disk_shader_cache;
     ConfigurationShared::CheckState use_vsync;
     ConfigurationShared::CheckState use_skip_duplicate_frames;
+    ConfigurationShared::CheckState use_limit_frames_ahead_of_gpu;
     ConfigurationShared::CheckState use_display_refresh_rate_detection;
     ConfigurationShared::CheckState async_shader_compilation;
     ConfigurationShared::CheckState async_presentation;

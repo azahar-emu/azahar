@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>559</height>
+    <width>479</width>
+    <height>614</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -135,11 +135,11 @@
       </item>
       <item>
        <widget class="QCheckBox" name="disable_spirv_optimizer">
-        <property name="text">
-         <string>Disable GLSL -> SPIR-V optimizer</string>
-        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disables the SPIR-V optimization pass, reducing stuttering considerably while barely affecting performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Disable GLSL -&gt; SPIR-V optimizer</string>
         </property>
        </widget>
       </item>
@@ -325,6 +325,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="toggle_limit_frames_ahead_of_gpu">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Limits how many frames ahead of the GPU the emulation thread can be. Enabling can decrease input latency, but may reduce performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Limit frames ahead of GPU</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="toggle_display_refresh_rate_detection">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When enabled, this setting detects when the refresh rate of the screen is below that of the 3DS, and when it is, disables VSync automatically to avoid emulation speed being forced below 100%.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -335,83 +345,83 @@
        </widget>
       </item>
       <item>
-        <widget class="QWidget" name="delay_render_layout" native="true">
-          <layout class="QHBoxLayout" name="delay_render_layout_inner">
-            <property name="leftMargin">
-              <number>0</number>
+       <widget class="QWidget" name="delay_render_layout" native="true">
+        <layout class="QHBoxLayout" name="delay_render_layout_inner">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="delay_render_combo">
+           <item>
+            <property name="text">
+             <string>Use global</string>
             </property>
-            <property name="topMargin">
-              <number>0</number>
+           </item>
+           <item>
+            <property name="text">
+             <string>Use per-application</string>
             </property>
-            <property name="rightMargin">
-              <number>0</number>
-            </property>
-            <property name="bottomMargin">
-              <number>0</number>
-            </property>
-            <item>
-              <widget class="QComboBox" name="delay_render_combo">
-                <item>
-                  <property name="text">
-                    <string>Use global</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>Use per-application</string>
-                  </property>
-                </item>
-              </widget>
-            </item>
-            <item>
-              <widget class="QLabel" name="label_delay_render">
-                <property name="text">
-                  <string>Delay Application Render Thread</string>
-                </property>
-                <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays the emulated application render thread the specified amount of milliseconds every time it submits render commands to the GPU.&lt;/p&gt;&lt;p&gt;Adjust this feature in the (very few) dynamic framerate applications to fix performance issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QSlider" name="delay_render_slider">
-                <property name="minimum">
-                  <number>0</number>
-                </property>
-                <property name="maximum">
-                  <number>65000</number>
-                </property>
-                <property name="singleStep">
-                  <number>100</number>
-                </property>
-                <property name="pageStep">
-                  <number>250</number>
-                </property>
-                <property name="value">
-                  <number>0</number>
-                </property>
-                <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="tickPosition">
-                  <enum>QSlider::TicksBelow</enum>
-                </property>
-              </widget>
-            </item>
-            <item>
-              <widget class="QLabel" name="delay_render_display_label">
-                <property name="text">
-                  <string/>
-                </property>
-                <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-              </widget>
-            </item>
-          </layout>
-        </widget>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_delay_render">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays the emulated application render thread the specified amount of milliseconds every time it submits render commands to the GPU.&lt;/p&gt;&lt;p&gt;Adjust this feature in the (very few) dynamic framerate applications to fix performance issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Delay Application Render Thread</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="delay_render_slider">
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>65000</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+           <property name="pageStep">
+            <number>250</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="tickPosition">
+            <enum>QSlider::TicksBelow</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="delay_render_display_label">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </item>
-     <item>
+      <item>
        <widget class="QCheckBox" name="simulate_3ds_gpu_timings">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays GPU completion events based on measurements taken from real hardware, so that games have more realistic GPU time measurements. Helps stabilize dynamic FPS games. Disabling this feature may improve performance in some rare cases at the cost of stability.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

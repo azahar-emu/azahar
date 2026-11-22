@@ -69,12 +69,9 @@
     <string name="done">Pronto</string>
     <string name="done_description">Tudo certo.\nAproveite o emulador!</string>
     <string name="text_continue">Continuar</string>
-    <string name="notifications">Notificações</string>
-    <string name="notifications_description">Conceda a permissão de notificação com o botão abaixo.</string>
     <string name="give_permission">Conceder permissão</string>
     <string name="notification_warning">Ignorar solicitação de permissão de notificação?</string>
     <string name="notification_warning_description">O Azahar não poderá te notificar de informações importantes.</string>
-    <string name="filesystem_permission_warning">Permissões Ausentes</string>
     <string name="filesystem_permission_warning_description">O Azahar requer permissão para gerenciar arquivos neste dispositivo a fim de armazenar e gerenciar seus dados.\n\nPor favor, conceda a permissão de \'Sistema de Arquivos\' antes de continuar.</string>
     <string name="camera_permission">Câmera</string>
     <string name="camera_permission_description">Conceda acesso a câmera abaixo para emular a câmera do 3DS.</string>

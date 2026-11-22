@@ -75,6 +75,22 @@ public:
 
     bool IsPersonal() const;
 
+    u32 GetConsoleID() const {
+        return ticket_body.console_id;
+    }
+    u32 GetSignatureType() const {
+        return signature_type;
+    }
+    const std::vector<u8>& GetSignature() const {
+        return ticket_signature;
+    }
+    u8 GetFormatVersion() const {
+        return ticket_body.version;
+    }
+    std::string GetIssuer() const;
+
+    std::vector<u8> GetSignedData() const;
+
     bool HasRights(u16 index) {
         return content_index.HasRights(index);
     }

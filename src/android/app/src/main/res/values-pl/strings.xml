@@ -59,12 +59,9 @@
     <string name="done">Gotowe</string>
     <string name="done_description">Wszystko jest już gotowe.\nŻyczymy miłego korzystania z emulatora!</string>
     <string name="text_continue">Kontynuuj</string>
-    <string name="notifications">Powiadomienia</string>
-    <string name="notifications_description">Zezwól na powiadomienia naciskając przycisk poniżej.</string>
     <string name="give_permission">Udzielenie zgody</string>
     <string name="notification_warning">Pominąć udzielanie zgody na powiadomienie?</string>
     <string name="notification_warning_description">Azahar nie będzie w stanie powiadomić cię o ważnych informacjach.</string>
-    <string name="filesystem_permission_warning">Brak uprawnień</string>
     <string name="filesystem_permission_warning_description">Azahar wymaga uprawnień do zarządzania plikami na tym urządzeniu w celu przechowywania i zarządzania swoimi danymi. \n\nPrzed kontynuowaniem należy przyznać uprawnienia „System plików”.</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">Udziel poniższych uprawnień kamery, aby emulować kamerę 3DS.</string>

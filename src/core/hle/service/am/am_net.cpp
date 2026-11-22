@@ -1,6 +1,6 @@
-// Copyright 2014-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include "common/archives.h"
 #include "core/hle/service/am/am_net.h"
@@ -104,8 +104,8 @@ AM_NET::AM_NET(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "a
         {0x0816, &AM_NET::Sign, "Sign"},
         {0x0817, nullptr, "Verify"},
         {0x0818, &AM_NET::GetDeviceCert, "GetDeviceCert"},
-        {0x0819, nullptr, "ImportCertificates"},
-        {0x081A, nullptr, "ImportCertificate"},
+        {0x0819, &AM_NET::ImportCertificates, "ImportCertificates"},
+        {0x081A, &AM_NET::ImportCertificate, "ImportCertificate"},
         {0x081B, &AM_NET::CommitImportTitlesAndUpdateFirmwareAuto, "CommitImportTitlesAndUpdateFirmwareAuto"},
         {0x081C, &AM_NET::DeleteTicketId, "DeleteTicketId"},
         {0x081D, &AM_NET::GetNumTicketIds, "GetNumTicketIds"},

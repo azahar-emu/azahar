@@ -55,11 +55,8 @@
     <string name="done">Завершено</string>
     <string name="done_description">Всё готово.\nПриятной игры!</string>
     <string name="text_continue">Продолжить</string>
-    <string name="notifications">Уведомления</string>
-    <string name="notifications_description">С помощью кнопки внизу предоставьте разрешение для уведомлений.</string>
     <string name="give_permission">Предоставить разрешение</string>
     <string name="notification_warning">Пропустить выдачу разрешения для уведомлений?</string>
-    <string name="filesystem_permission_warning">Недостающие разрешения</string>
     <string name="camera_permission">Камера</string>
     <string name="camera_permission_description">С помощью кнопки внизу предоставьте разрешение для эмуляции камеры 3DS.</string>
     <string name="microphone_permission">Микрофон</string>

@@ -48,10 +48,12 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
+import org.citra.citra_emu.features.input.GamepadHelper
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
+import org.citra.citra_emu.fragments.GrantMissingLanPermissionFragment
 import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
 import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
 import org.citra.citra_emu.utils.BuildUtil
@@ -97,7 +99,8 @@ class MainActivity :
             !CitraDirectoryUtils.needToUpdateManually()
         ) {
             // load the global settings from the config file at program launch
-            SettingsFile.loadSettings(CitraSettings.activeSettings)
+            SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
+            GamepadHelper.migrateGamepadSharedPrefsToActiveSettings()
         }
 
         ThemeUtil.themeChangeListener(this)
@@ -289,12 +292,30 @@ class MainActivity :
                 }
             }
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+            if (supportFragmentManager.findFragmentByTag(GrantMissingLanPermissionFragment.TAG) ==
+                null
+            ) {
+                fun requestMissingLanPermission() = GrantMissingLanPermissionFragment.newInstance()
+                    .show(supportFragmentManager, GrantMissingLanPermissionFragment.TAG)
+
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_LOCAL_NETWORK
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestMissingLanPermission()
+                }
+            }
+        }
     }
 
     fun finishSetup(navController: NavController) {
         navController.navigate(R.id.action_firstTimeSetupFragment_to_gamesFragment)
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
-        SettingsFile.loadSettings(CitraSettings.activeSettings)
+        SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
+        GamepadHelper.migrateGamepadSharedPrefsToActiveSettings()
     }
 
     private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {

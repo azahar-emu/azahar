@@ -62,12 +62,9 @@
     <string name="done">Bitti</string>
     <string name="done_description">Her şey hazır! \nEmülatörü güle güle kullanın!</string>
     <string name="text_continue">Devam et</string>
-    <string name="notifications">Bildirimler</string>
-    <string name="notifications_description">Aşağıdaki buton ile bildirim izni verin.</string>
     <string name="give_permission">İzin ver</string>
     <string name="notification_warning">Bildirim izni vermeyi geçmek istediğinizden emin misiniz?</string>
     <string name="notification_warning_description">Azahar sizi önemli bilgiler hakkında bilgilendiremeyecek.</string>
-    <string name="filesystem_permission_warning">İzinler eksik</string>
     <string name="filesystem_permission_warning_description">Azahar çalışması için gerekli olan dosyaları oluşturabilmek ve yönetebilmek için dosya izinleri gerektiriyor. \n\nLütfen devam etmeden önce dosya yönetimi izinlerinin sağlandığından emin olun.</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">3DS kamera emülasyonu için aşağıdaki izni verin.</string>

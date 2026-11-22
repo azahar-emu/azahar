@@ -49,8 +49,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="step_complete">Voltooid!</string>
     <string name="done">Klaar!</string>
     <string name="text_continue">Doorgaan</string>
-    <string name="notifications">notificaties</string>
-    <string name="notifications_description">Verleen de meldingsrechten met de onderstaande knop.</string>
     <string name="give_permission">Toestemming geven</string>
     <string name="notification_warning">Het verlenen van toestemming voor meldingen overslaan?</string>
     <string name="notification_warning_description">Azahar kan je niet op de hoogte stellen van belangrijke informatie.</string>

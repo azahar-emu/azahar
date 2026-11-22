@@ -120,6 +120,29 @@ enum class AudioEmulation : u32 {
     LLEMultithreaded = 2,
 };
 
+enum class AntiAliasingMethod : u32 {
+    None = 0,
+    MSAAx2 = 1,
+    MSAAx4 = 2,
+    MSAAx8 = 3,
+    MSAAx16 = 4,
+};
+
+static inline u8 GetAntiAliasingSampleCount(AntiAliasingMethod antialiasing_method) {
+    switch (antialiasing_method) {
+    case AntiAliasingMethod::MSAAx2:
+        return 2;
+    case AntiAliasingMethod::MSAAx4:
+        return 4;
+    case AntiAliasingMethod::MSAAx8:
+        return 8;
+    case AntiAliasingMethod::MSAAx16:
+        return 16;
+    default:
+        return 1;
+    }
+}
+
 enum class TextureFilter : u32 {
     NoFilter = 0,
     Anime4K = 1,
@@ -551,6 +574,8 @@ struct Values {
     SwitchableSetting<bool> async_presentation{true, Keys::async_presentation};
     SwitchableSetting<bool> use_hw_shader{true, Keys::use_hw_shader};
     SwitchableSetting<bool> use_disk_shader_cache{true, Keys::use_disk_shader_cache};
+    SwitchableSetting<bool> use_limit_frames_ahead_of_gpu{false,
+                                                          Keys::use_limit_frames_ahead_of_gpu};
     SwitchableSetting<bool> use_skip_duplicate_frames{false, Keys::use_skip_duplicate_frames};
     SwitchableSetting<bool> shaders_accurate_mul{true, Keys::shaders_accurate_mul};
 #ifdef ANDROID // TODO: Fuck this -OS
@@ -562,6 +587,7 @@ struct Values {
         true, Keys::use_display_refresh_rate_detection};
     Setting<bool> use_shader_jit{true, Keys::use_shader_jit};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 18, Keys::resolution_factor};
+    SwitchableSetting<AntiAliasingMethod> antialiasing{AntiAliasingMethod::None, "antialiasing"};
     SwitchableSetting<bool> use_integer_scaling{false, Keys::use_integer_scaling};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, Keys::frame_limit};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};

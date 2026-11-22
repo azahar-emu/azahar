@@ -18,6 +18,7 @@ import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.FloatSetting
+import org.citra.citra_emu.features.settings.model.InputMappingSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.StringSetting
@@ -39,7 +40,8 @@ object SettingsFile {
             IntSetting.values().toList() +
             FloatSetting.values().toList() +
             StringSetting.values().toList() +
-            IntListSetting.values().toList()
+            IntListSetting.values().toList() +
+            InputMappingSetting.values().toList()
     }
 
     private fun findSettingByKey(key: String): AbstractSetting<*>? =
@@ -74,6 +76,8 @@ object SettingsFile {
                     val pair = parseLineToKeyValuePair(line) ?: continue
                     val (key, rawValue) = pair
                     val descriptor = findSettingByKey(key) ?: continue
+                    // ignore empty strings, do not load them at all
+                    if (rawValue.isEmpty()) continue
                     loadSettingInto(settings, descriptor, rawValue, isCustomGame)
                 }
             }
@@ -97,16 +101,20 @@ object SettingsFile {
     /**
      * Load global settings from the config file into the settings instance
      */
-    fun loadSettings(settings: CitraSettings, view: SettingsActivityView? = null) {
+    fun loadGlobalSettings(settings: CitraSettings, view: SettingsActivityView? = null) {
         readFile(getSettingsFile(FILE_NAME_CONFIG), settings, false, view)
     }
 
     /**
-     * Load global settings AND custom settings into the settings instance, sets gameId
+     * Load custom settings into the settings instance, sets gameId. Does not
+     * touch the global settings, so load them first if you need to.
      */
-    fun loadSettings(settings: CitraSettings, gameId: String, view: SettingsActivityView? = null) {
+    fun loadCustomSettings(
+        settings: CitraSettings,
+        gameId: String,
+        view: SettingsActivityView? = null
+    ) {
         settings.gameId = gameId
-        loadSettings(settings, view)
         val file = findPerAppSettingsFile(gameId) ?: return
         readFile(file, settings, true, view)
     }
@@ -120,6 +128,8 @@ object SettingsFile {
         rawValue: String,
         isCustomGame: Boolean
     ) {
+        // empty strings should be left null regardless of setting interpretation
+        if (rawValue.isEmpty()) return
         val value = setting.valueFromString(rawValue) ?: return
         if (isCustomGame) {
             settings.setOverride(setting, value)
@@ -145,7 +155,7 @@ object SettingsFile {
             inputStream!!.close()
 
             for (setting in allSettings) {
-                val value = settings.getGlobal(setting) ?: continue
+                val value = settings.getGlobalOrNull(setting)
                 writeSettingToWini(writer, setting, value)
             }
 
@@ -191,6 +201,10 @@ object SettingsFile {
         if (!settings.isPerApp()) {
             return
         }
+        if (settings.getAllOverrides().isEmpty()) {
+            deletePerAppFile(settings.gameId)
+            return
+        }
         val ini = getOrCreatePerAppSettingsFile(settings.gameId!!)
         try {
             val context: Context = CitraApplication.appContext
@@ -222,21 +236,21 @@ object SettingsFile {
         } else {
             // Currently global, save to global file
             val ini = getSettingsFile(FILE_NAME_CONFIG)
-            writeSingleSettingToFile(ini, setting, settings.getGlobal(setting))
+            writeSingleSettingToFile(ini, setting, settings.getGlobalOrNull(setting))
         }
     }
 
     private fun <T> writeSingleSettingToFile(
         ini: DocumentFile,
         setting: AbstractSetting<T>,
-        value: T
+        value: T?
     ) {
         try {
             val context = CitraApplication.appContext
             val inputStream = context.contentResolver.openInputStream(ini.uri)
             val writer = if (inputStream != null) Wini(inputStream) else Wini()
             inputStream?.close()
-            writeSettingToWini(writer, setting, value as Any)
+            writeSettingToWini(writer, setting, value as Any?)
             val outputStream = context.contentResolver.openOutputStream(ini.uri, "wt")
             writer.store(outputStream)
             outputStream!!.flush()
@@ -246,10 +260,14 @@ object SettingsFile {
         }
     }
 
-    private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any) {
-        @Suppress("UNCHECKED_CAST")
-        val typedValue = value as T
-        writer.put(descriptor.section, descriptor.key, descriptor.valueToString(typedValue))
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any?) {
+        val printValue = if (value == null) {
+            ""
+        } else {
+            descriptor.valueToString(value as T)
+        }
+        writer.put(descriptor.section, descriptor.key, printValue)
     }
 
     private fun parseLineToKeyValuePair(line: String): Pair<String, String>? {
@@ -257,7 +275,7 @@ object SettingsFile {
         if (splitLine.size != 2) return null
         val key = splitLine[0].trim()
         val value = splitLine[1].trim()
-        if (value.isEmpty()) return null
+        if (findSettingByKey(key) !is InputMappingSetting && value.isEmpty()) return null
         return Pair(key, value)
     }
 

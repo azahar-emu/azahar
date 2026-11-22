@@ -165,21 +165,17 @@ Type Config::GetSettingFromKey(const std::string& group, const std::string& key,
 }
 
 void Config::ReadValues() {
-    // Controls
+    // Controls - Always use the default_buttons and default_analogs on the native side, don't
+    // actually read the INI file. It is only used by Kotlin, which will correctly dispatch
+    // the codes as needed.
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
-        std::string default_param = InputManager::GenerateButtonParamPackage(default_buttons[i]);
-        Settings::values.current_input_profile.buttons[i] = GetSettingFromKey<std::string>(
-            "Controls", Settings::NativeButton::mapping[i], default_param);
-        if (Settings::values.current_input_profile.buttons[i].empty())
-            Settings::values.current_input_profile.buttons[i] = default_param;
+        Settings::values.current_input_profile.buttons[i] =
+            InputManager::GenerateButtonParamPackage(default_buttons[i]);
     }
 
     for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
-        std::string default_param = InputManager::GenerateAnalogParamPackage(default_analogs[i]);
-        Settings::values.current_input_profile.analogs[i] = GetSettingFromKey<std::string>(
-            "Controls", Settings::NativeAnalog::mapping[i], default_param);
-        if (Settings::values.current_input_profile.analogs[i].empty())
-            Settings::values.current_input_profile.analogs[i] = default_param;
+        Settings::values.current_input_profile.analogs[i] =
+            InputManager::GenerateAnalogParamPackage(default_analogs[i]);
     }
 
     Settings::values.current_input_profile.motion_device = GetSettingFromKey<std::string>(
@@ -210,8 +206,10 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.use_hw_shader);
     ReadSetting("Renderer", Settings::values.use_shader_jit);
     ReadSetting("Renderer", Settings::values.resolution_factor);
+    ReadSetting("Renderer", Settings::values.antialiasing);
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync);
+    ReadSetting("Renderer", Settings::values.use_limit_frames_ahead_of_gpu);
     ReadSetting("Renderer", Settings::values.use_skip_duplicate_frames);
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);

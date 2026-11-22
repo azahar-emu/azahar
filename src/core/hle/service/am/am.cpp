@@ -38,6 +38,7 @@
 #include "core/hle/service/am/am_net.h"
 #include "core/hle/service/am/am_sys.h"
 #include "core/hle/service/am/am_u.h"
+#include "core/hle/service/am/trust_chain.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hw/aes/key.h"
@@ -115,6 +116,12 @@ static bool HasOversizedContent(const FileSys::TitleMetadata& tmd) {
 class CIAFile::DecryptionState {
 public:
     std::vector<CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption> content;
+};
+
+class CIAFile::VerificationState {
+public:
+    // Hash of each content as received, after the title key decryption.
+    std::vector<CryptoPP::SHA256> content_hash;
 };
 
 NCCHCryptoFile::NCCHCryptoFile(const std::string& out_file, bool encrypted_content) {
@@ -359,6 +366,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
             // This file has no encryption
             size_t to_write = length;
             file->WriteBytes(buffer, to_write);
+            RegisterExheader(written, buffer, to_write);
             written += to_write;
             buffer += to_write;
             length -= to_write;
@@ -367,6 +375,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                 // Not inside a crypto region
                 size_t to_write = std::min(length, reg->offset - written);
                 file->WriteBytes(buffer, to_write);
+                RegisterExheader(written, buffer, to_write);
                 written += to_write;
                 buffer += to_write;
                 length -= to_write;
@@ -401,6 +410,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                     }
                     d.ProcessData(temp.data(), buffer, to_write);
                     file->WriteBytes(temp.data(), to_write);
+                    RegisterExheader(written, temp.data(), to_write);
 
                     if (reg->type == CryptoRegion::EXEFS_HDR) {
                         if (exefs_header_written != sizeof(ExeFs_Header)) {
@@ -430,6 +440,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                     }
                 } else {
                     file->WriteBytes(buffer, to_write);
+                    RegisterExheader(written, buffer, to_write);
                 }
                 written += to_write;
                 buffer += to_write;
@@ -439,23 +450,44 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
     }
 }
 
-void AuthorizeCIAFileDecryption(CIAFile* cia_file, Kernel::HLERequestContext& ctx) {
+void NCCHCryptoFile::RegisterExheader(std::size_t offset, const u8* data, std::size_t length) {
+    constexpr std::size_t start = sizeof(NCCH_Header);
+    constexpr std::size_t end = start + sizeof(ExHeader_Header);
+    if (offset >= end || offset + length <= start) {
+        return;
+    }
+    if (exheader.empty()) {
+        exheader.resize(sizeof(ExHeader_Header));
+    }
+    const std::size_t from = std::max(offset, start);
+    const std::size_t to = std::min(offset + length, end);
+    std::memcpy(exheader.data() + (from - start), data + (from - offset), to - from);
+}
+
+static bool IsCallerAuthorizedToDecrypt(Kernel::HLERequestContext& ctx) {
     u64 caller_tid = ctx.ClientThread()->owner_process.lock()->codeset->program_id;
-    if (Common::Hacks::hack_manager.GetHackAllowMode(
-            Common::Hacks::HackType::DECRYPTION_AUTHORIZED, caller_tid,
-            Common::Hacks::HackAllowMode::DISALLOW) == Common::Hacks::HackAllowMode::ALLOW) {
+    return Common::Hacks::hack_manager.GetHackAllowMode(
+               Common::Hacks::HackType::DECRYPTION_AUTHORIZED, caller_tid,
+               Common::Hacks::HackAllowMode::DISALLOW) == Common::Hacks::HackAllowMode::ALLOW;
+}
+
+void AuthorizeCIAFileDecryption(CIAFile* cia_file, Kernel::HLERequestContext& ctx) {
+    if (IsCallerAuthorizedToDecrypt(ctx)) {
         LOG_INFO(Service_AM, "Authorized encrypted CIA installation.");
         cia_file->decryption_authorized = true;
+        cia_file->do_signature_checks = true;
     }
 }
 
 void CIAFile::AuthorizeDecryptionFromHLE() {
     decryption_authorized = true;
+    do_signature_checks = true;
 }
 
 CIAFile::CIAFile(Core::System& system_, Service::FS::MediaType media_type, bool from_cdn_)
     : system(system_), from_cdn(from_cdn_), decryption_authorized(false), media_type(media_type),
-      decryption_state(std::make_unique<DecryptionState>()) {
+      decryption_state(std::make_unique<DecryptionState>()),
+      verification_state(std::make_unique<VerificationState>()) {
     // If data is being installing from CDN, provide a fake header to the container so that
     // it's not uninitialized.
     if (from_cdn) {
@@ -493,7 +525,25 @@ CIAFile::InstallResult CIAFile::WriteTicket() {
         return res;
     }
 
-    const auto& ticket = container.GetTicket();
+    auto& ticket = container.GetTicket();
+    if (do_signature_checks) {
+        // Personalized tickets are only valid on the console they were issued to.
+        if (ticket.GetConsoleID() != 0) {
+            if (!ticket.IsPersonal()) {
+                res.result = ResultConsoleIDMismatch;
+                return res;
+            }
+            if (ticket.DoTitlekeyFixup() != Loader::ResultStatus::Success) {
+                res.result = ResultVerificationFailed;
+                return res;
+            }
+        }
+        res.result = VerifyTicket(ticket);
+        if (res.result.IsError()) {
+            LOG_ERROR(Service_AM, "Ticket of the CIA does not verify.");
+            return res;
+        }
+    }
     const auto ticket_path = GetTicketPath(ticket.GetTitleID(), ticket.GetTicketID());
 
     // Create ticket folder if it does not exist
@@ -518,7 +568,8 @@ CIAFile::InstallResult CIAFile::WriteTicket() {
 CIAFile::PreparedTitleMetadata CIAFile::PrepareTitleMetadata(Service::FS::MediaType media_type,
                                                              bool is_update,
                                                              std::span<const u8> tmd_data,
-                                                             std::size_t offset) {
+                                                             std::size_t offset,
+                                                             bool do_signature_checks) {
     PreparedTitleMetadata prepared{};
     InstallResult& res = prepared.install_result;
     res.type = InstallResult::Type::TMD;
@@ -533,6 +584,14 @@ CIAFile::PreparedTitleMetadata CIAFile::PrepareTitleMetadata(Service::FS::MediaT
 
     FileSys::TitleMetadata& tmd = prepared.tmd;
     tmd.Print();
+
+    if (do_signature_checks) {
+        res.result = VerifyTitleMetadata(tmd);
+        if (res.result.IsError()) {
+            LOG_ERROR(Service_AM, "Title metadata does not verify.");
+            return prepared;
+        }
+    }
 
     if (HasOversizedContent(tmd)) {
         // TODO: Correct result code.
@@ -572,9 +631,19 @@ CIAFile::PreparedTitleMetadata CIAFile::PrepareTitleMetadata(Service::FS::MediaT
 
 CIAFile::PreparedTitleMetadata CIAFile::PrepareAdditionalContent(Service::FS::MediaType media_type,
                                                                  bool is_update,
-                                                                 FileSys::TitleMetadata tmd) {
+                                                                 FileSys::TitleMetadata tmd,
+                                                                 bool do_signature_checks) {
     PreparedTitleMetadata prepared{};
     prepared.install_result.type = InstallResult::Type::TMD;
+    // On hardware, the TMD is checked again when each content is imported, so an installed
+    // TMD is checked too when contents are added to it.
+    if (do_signature_checks) {
+        prepared.install_result.result = VerifyTitleMetadata(tmd);
+        if (prepared.install_result.result.IsError()) {
+            LOG_ERROR(Service_AM, "Installed title metadata does not verify.");
+            return prepared;
+        }
+    }
     if (HasOversizedContent(tmd)) {
         // TODO: Correct result code.
         prepared.install_result.result = {ErrCodes::InvalidCIAHeader, ErrorModule::AM,
@@ -609,7 +678,8 @@ void CIAFile::PrepareContentPaths(Service::FS::MediaType media_type,
 
 CIAFile::InstallResult CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data,
                                                    std::size_t offset) {
-    return ApplyTitleMetadata(PrepareTitleMetadata(media_type, is_update, tmd_data, offset));
+    return ApplyTitleMetadata(
+        PrepareTitleMetadata(media_type, is_update, tmd_data, offset, do_signature_checks));
 }
 
 CIAFile::InstallResult CIAFile::ApplyTitleMetadata(PreparedTitleMetadata&& prepared) {
@@ -686,6 +756,10 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
                 decryption_state->content[i].ProcessData(temp.data(), temp.data(), temp.size());
             }
 
+            if (do_signature_checks && i < verification_state->content_hash.size()) {
+                verification_state->content_hash[i].Update(temp.data(), temp.size());
+            }
+
             file.Write(temp.data(), temp.size());
             if (file.IsError()) {
                 // This can never happen in real HW
@@ -701,6 +775,16 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             content_written[i] += available_to_write;
             LOG_DEBUG(Service_AM, "Wrote {} to content {}, total {}", available_to_write, i,
                       content_written[i]);
+
+            // The am module finishes each content as soon as all of it is written.
+            if (do_signature_checks && content_written[i] == size) {
+                const Result verify_result = VerifyContent(static_cast<u16>(i));
+                if (verify_result.IsError()) {
+                    current_content_install_result.result = verify_result;
+                    install_results.push_back(current_content_install_result);
+                    return verify_result;
+                }
+            }
         }
     }
 
@@ -766,6 +850,21 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
     // buffered before trying to parse.
     if (data.size() >= container.GetContentOffset() &&
         install_state != CIAInstallState::TMDLoaded) {
+        // Only store the certificates when we have to do signature checks, in any other
+        // case the certificate would be invalid anyways and nothing would use it.
+        if (do_signature_checks) {
+            const u64 cert_offset = container.GetCertificateOffset();
+            const u64 cert_size = container.GetCertificateSize();
+            if (cert_offset > data.size() || cert_size > data.size() - cert_offset) {
+                return Result(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
+                              ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+            }
+            const Result cert_result =
+                ImportCertificates(std::span<const u8>(data).subspan(cert_offset, cert_size));
+            if (cert_result.IsError()) {
+                return cert_result;
+            }
+        }
         InstallResult result = WriteTicket();
         install_results.push_back(result);
         if (result.result.IsError()) {
@@ -804,6 +903,15 @@ Result CIAFile::ApplyContentPreparation(PreparedTitleMetadata&& prepared) {
     current_content_file.reset();
     current_content_index = -1;
     content_file_paths = std::move(prepared.content_paths);
+
+    if (do_signature_checks) {
+        if (container.GetTicket().GetTitleID() != tmd.GetTitleID()) {
+            LOG_ERROR(Service_AM, "Ticket and title metadata are for different titles.");
+            return ResultESInvalidArgument;
+        }
+        verification_state->content_hash.clear();
+        verification_state->content_hash.resize(content_count);
+    }
 
     if (tmd.HasEncryptedContent(from_cdn ? nullptr : container.GetHeader())) {
         if (!decryption_authorized) {
@@ -938,6 +1046,10 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
         decryption_state->content[content_index].ProcessData(temp.data(), temp.data(), temp.size());
     }
 
+    if (do_signature_checks && content_index < verification_state->content_hash.size()) {
+        verification_state->content_hash[content_index].Update(temp.data(), temp.size());
+    }
+
     file.Write(temp.data(), temp.size());
     if (file.IsError()) {
         // This can never happen in real HW
@@ -953,6 +1065,46 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
               content_written[content_index]);
 
     return temp.size();
+}
+
+Result CIAFile::VerifyContent(u16 content_index) {
+    const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
+    if (content_index >= content_written.size() ||
+        content_index >= verification_state->content_hash.size()) {
+        verification_failed = true;
+        return ResultESInvalidArgument;
+    }
+    if (content_written[content_index] != tmd.GetContentSizeByIndex(content_index)) {
+        LOG_ERROR(Service_AM, "Content {} has the wrong size", content_index);
+        verification_failed = true;
+        return ResultESInvalidArgument;
+    }
+    std::array<u8, CryptoPP::SHA256::DIGESTSIZE> digest;
+    verification_state->content_hash[content_index].Final(digest.data());
+    if (digest != tmd.GetContentHashByIndex(content_index)) {
+        LOG_ERROR(Service_AM, "Content {} hash does not match the title metadata", content_index);
+        verification_failed = true;
+        return ResultVerificationFailed;
+    }
+
+    // Skip checks for TWL titles.
+    constexpr u64 TwlTitleIdHigh = 0x12;
+    if ((tmd.GetTitleID() >> 46) == TwlTitleIdHigh) {
+        return ResultSuccess;
+    }
+
+    if (current_content_index != content_index || !current_content_file ||
+        current_content_file->is_not_ncch || !current_content_file->header_parsed) {
+        LOG_ERROR(Service_AM, "Content {} is not an NCCH", content_index);
+        verification_failed = true;
+        return ResultInvalidNCCH;
+    }
+    const Result ncch_result =
+        VerifyNCCHSignature(current_content_file->ncch_header, current_content_file->exheader);
+    if (ncch_result.IsError()) {
+        verification_failed = true;
+    }
+    return ncch_result;
 }
 
 u64 CIAFile::GetSize() const {
@@ -976,7 +1128,7 @@ bool CIAFile::Close() {
 
     bool complete;
 
-    if (is_cancel) {
+    if (is_cancel || verification_failed) {
         complete = false;
     } else {
         complete =
@@ -1085,12 +1237,24 @@ bool TicketFile::Close() {
 
 void TicketFile::Flush() const {}
 
-ResultVal<std::pair<u64, u64>> TicketFile::Commit(std::span<const u8> ticket_data) {
+ResultVal<std::pair<u64, u64>> TicketFile::Commit(std::span<const u8> ticket_data,
+                                                  bool do_signature_checks) {
     FileSys::Ticket ticket;
     if (ticket.Load(ticket_data, 0) == Loader::ResultStatus::Success) {
+        // Personalized tickets are only valid on the console they were issued to.
+        if (do_signature_checks && ticket.GetConsoleID() != 0 && !ticket.IsPersonal()) {
+            return ResultConsoleIDMismatch;
+        }
         if (ticket.DoTitlekeyFixup() != Loader::ResultStatus::Success) {
             LOG_ERROR(Service_AM, "Failed to do ticket title key fixup");
             return ResultUnknown;
+        }
+        if (do_signature_checks) {
+            const Result verify_result = VerifyTicket(ticket);
+            if (verify_result.IsError()) {
+                LOG_ERROR(Service_AM, "Ticket does not verify");
+                return verify_result;
+            }
         }
 
         const auto ticket_path = GetTicketPath(ticket.GetTitleID(), ticket.GetTicketID());
@@ -4307,6 +4471,7 @@ void Module::Interface::EndImportTicket(Kernel::HLERequestContext& ctx) {
     if (ticket_file.Succeeded()) {
         struct AsyncData {
             std::vector<u8> ticket_data;
+            bool do_signature_checks;
 
             Result res{0};
         };
@@ -4314,10 +4479,12 @@ void Module::Interface::EndImportTicket(Kernel::HLERequestContext& ctx) {
         // The ticket file can still be written to or closed while the ticket is being
         // installed, so work on a copy of its data.
         async_data->ticket_data = ticket_file.Unwrap()->GetData();
+        async_data->do_signature_checks = IsCallerAuthorizedToDecrypt(ctx);
 
         ctx.RunAsync(
             [this, async_data](Kernel::HLERequestContext& ctx) {
-                auto commit_result = TicketFile::Commit(async_data->ticket_data);
+                auto commit_result =
+                    TicketFile::Commit(async_data->ticket_data, async_data->do_signature_checks);
                 if (commit_result.Failed()) {
                     async_data->res = commit_result.Code();
                     return 0;
@@ -4361,20 +4528,35 @@ void Module::Interface::BeginImportTitle(Kernel::HLERequestContext& ctx) {
         std::make_shared<CurrentImportingTitle>(Core::System::GetInstance(), title_id, media_type);
 
     std::scoped_lock lock(am->am_lists_mutex);
-    auto entries = am->am_ticket_list.find(title_id);
-    if (entries == am->am_ticket_list.end()) {
-        // Ticket is not installed
-        rb.Push(ResultUnknown);
-        return;
+    const bool do_signature_checks = IsCallerAuthorizedToDecrypt(ctx);
+    std::optional<FileSys::Ticket> ticket;
+    Result check_result = ResultUnknown;
+    const auto range = am->am_ticket_list.equal_range(title_id);
+    for (auto it = range.first; it != range.second && !ticket; it++) {
+        FileSys::Ticket candidate;
+        if (candidate.Load(title_id, it->second) != Loader::ResultStatus::Success) {
+            continue;
+        }
+        if (do_signature_checks) {
+            // On hardware, the ticket is checked again whenever it is used. A title can
+            // have several tickets (for example, one installed earlier from a CIA), so
+            // here we iterate all tickets and use the one that verifies.
+            check_result = VerifyTicket(candidate);
+            if (check_result.IsError()) {
+                LOG_WARNING(Service_AM, "Installed ticket {:016X} of {:016X} does not verify",
+                            it->second, title_id);
+                continue;
+            }
+        }
+        ticket = std::move(candidate);
     }
-    FileSys::Ticket ticket;
-    if (ticket.Load(title_id, (*entries).second) != Loader::ResultStatus::Success) {
-        // Ticket failed to load
-        rb.Push(ResultUnknown);
+    if (!ticket) {
+        // No valid ticket is installed
+        rb.Push(do_signature_checks ? check_result : ResultUnknown);
         return;
     }
 
-    Result res = am->importing_title->cia_file.ProvideTicket(ticket);
+    Result res = am->importing_title->cia_file.ProvideTicket(*ticket);
     if (res.IsError()) {
         // Failed to load ticket
         rb.Push(res);
@@ -4537,6 +4719,7 @@ void Module::Interface::EndImportTmd(Kernel::HLERequestContext& ctx) {
             bool is_update;
             std::vector<u8> tmd_data;
             [[maybe_unused]] bool create_context;
+            bool do_signature_checks;
 
             CIAFile::PreparedTitleMetadata prepared;
         };
@@ -4546,6 +4729,7 @@ void Module::Interface::EndImportTmd(Kernel::HLERequestContext& ctx) {
         async_data->is_update = am->importing_title->cia_file.IsUpdate();
         async_data->tmd_data = tmd_file.Unwrap()->GetData();
         async_data->create_context = create_context;
+        async_data->do_signature_checks = am->importing_title->cia_file.SignatureChecksEnabed();
 
         // Saving the TMD and preparing the content folders is done asynchronously, as it
         // involves host file system operations. The importing title is only modified in the
@@ -4555,7 +4739,8 @@ void Module::Interface::EndImportTmd(Kernel::HLERequestContext& ctx) {
         ctx.RunAsync(
             [async_data](Kernel::HLERequestContext& ctx) {
                 async_data->prepared = CIAFile::PrepareTitleMetadata(
-                    async_data->media_type, async_data->is_update, async_data->tmd_data, 0);
+                    async_data->media_type, async_data->is_update, async_data->tmd_data, 0,
+                    async_data->do_signature_checks);
                 return 0;
             },
             [this, async_data](Kernel::HLERequestContext& ctx) {
@@ -4640,6 +4825,7 @@ void Module::Interface::CreateImportContentContexts(Kernel::HLERequestContext& c
         u64 title_id;
         bool is_update;
         bool load_tmd;
+        bool do_signature_checks;
 
         std::optional<CIAFile::PreparedTitleMetadata> prepared;
         Result res{0};
@@ -4661,6 +4847,7 @@ void Module::Interface::CreateImportContentContexts(Kernel::HLERequestContext& c
     async_data->title_id = am->importing_title->title_id;
     async_data->is_update = am->importing_title->cia_file.IsUpdate();
     async_data->load_tmd = !am->importing_title->tmd_provided;
+    async_data->do_signature_checks = am->importing_title->cia_file.SignatureChecksEnabed();
     if (async_data->load_tmd) {
         async_data->importing_title->tmd_import_pending = true;
     }
@@ -4680,7 +4867,8 @@ void Module::Interface::CreateImportContentContexts(Kernel::HLERequestContext& c
                     return 0;
                 }
                 async_data->prepared = CIAFile::PrepareAdditionalContent(
-                    async_data->media_type, async_data->is_update, std::move(tmd));
+                    async_data->media_type, async_data->is_update, std::move(tmd),
+                    async_data->do_signature_checks);
             }
             return 0;
         },
@@ -4887,6 +5075,20 @@ void Module::Interface::EndImportContent(Kernel::HLERequestContext& ctx) {
         return;
     }
 
+    auto& cia_file = am->importing_title->cia_file;
+    if (cia_file.SignatureChecksEnabed()) {
+        const Result verify_result = cia_file.VerifyContent(content_file.Unwrap()->GetIndex());
+        if (verify_result.IsError()) {
+            if (auto context = content_file.Unwrap()->GetImportContext()) {
+                context->state = ImportTitleContextState::DELETING;
+            }
+            content_file.Unwrap()->Cancel(am->importing_title->media_type,
+                                          am->importing_title->title_id);
+            rb.Push(verify_result);
+            return;
+        }
+    }
+
     if (auto context = content_file.Unwrap()->GetImportContext()) {
         context->state = ImportTitleContextState::WAITING_FOR_COMMIT;
     }
@@ -5026,6 +5228,45 @@ void Module::Interface::GetDeviceCert(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(ResultSuccess);
     rb.Push(0);
+    rb.PushMappedBuffer(buffer);
+}
+
+void Module::Interface::ImportCertificates(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    std::array<u32, 4> sizes;
+    for (auto& size : sizes) {
+        size = rp.Pop<u32>();
+    }
+    std::vector<u8> data;
+    std::array<Kernel::MappedBuffer*, 4> buffers;
+    for (std::size_t i = 0; i < buffers.size(); i++) {
+        buffers[i] = &rp.PopMappedBuffer();
+        const std::size_t size = std::min<std::size_t>(sizes[i], buffers[i]->GetSize());
+        const std::size_t start = data.size();
+        data.resize(start + size);
+        buffers[i]->Read(data.data() + start, 0, size);
+    }
+
+    LOG_DEBUG(Service_AM, "sizes={:#x} {:#x} {:#x} {:#x}", sizes[0], sizes[1], sizes[2], sizes[3]);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 8);
+    rb.Push(Service::AM::ImportCertificates(data));
+    for (auto* buffer : buffers) {
+        rb.PushMappedBuffer(*buffer);
+    }
+}
+
+void Module::Interface::ImportCertificate(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 size = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+    std::vector<u8> data(std::min<std::size_t>(size, buffer.GetSize()));
+    buffer.Read(data.data(), 0, data.size());
+
+    LOG_DEBUG(Service_AM, "size={:#x}", size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(Service::AM::ImportCertificates(data));
     rb.PushMappedBuffer(buffer);
 }
 
@@ -5510,6 +5751,7 @@ bool Module::IsTitleImportPending(u64 title_id) const {
 
 Module::Module(Core::System& _system) : system(_system) {
     FileUtil::CreateFullPath(GetTicketDirectory());
+    EnsureDefaultCertificates();
     bundle_cia_handler = std::make_unique<BundleCIAHandler>();
     system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }

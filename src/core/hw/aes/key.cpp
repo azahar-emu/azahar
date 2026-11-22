@@ -1,10 +1,12 @@
 // Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <sstream>
+#include <string_view>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <cryptopp/aes.h>
@@ -287,30 +289,68 @@ void LoadPresetKeys() {
     }
 }
 
+std::string GetBuiltInKeys() {
+#ifdef ENABLE_BUILTIN_KEYBLOB
+    // The key data is encrypted in the source to prevent easy access to it for unintended
+    // purposes.
+    std::vector<u8> kiv(16);
+    std::string s(default_keys_enc_size, ' ');
+    CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption(kiv.data(), kiv.size(), kiv.data())
+        .ProcessData(reinterpret_cast<u8*>(s.data()), default_keys_enc, s.size());
+    return s;
+#else
+    return "";
+#endif // ENABLE_BUILTIN_KEYBLOB
+}
+
+#ifndef ENABLE_DEVELOPER_OPTIONS
+// A few keys are protected from being replaced by the keys.txt in release builds.
+// If you want to experiment with custom keys compile with ENABLE_DEVELOPER_OPTIONS
+// so that these keys can be replaced by keys.txt
+constexpr std::array<std::string_view, 6> ProtectedKeys = {
+    "esRootExp", "esRootMod", "accessDescExp", "accessDescMod", "ncchCfaExp", "ncchCfaMod",
+};
+
+std::string RemoveProtectedKeys(const std::string& keys_file) {
+    static bool logged = false;
+    std::string result;
+    std::istringstream stream(keys_file);
+    std::string line;
+    while (std::getline(stream, line)) {
+        const std::string_view name = std::string_view(line).substr(0, line.find('='));
+        if (std::find(ProtectedKeys.begin(), ProtectedKeys.end(), name) != ProtectedKeys.end()) {
+            if (!logged) {
+                LOG_WARNING(HW, "Ignoring {} from the keys file", name);
+            }
+            continue;
+        }
+        result += line + '\n';
+    }
+    logged = true;
+    return result;
+}
+#endif // ENABLE_DEVELOPER_OPTIONS
+
 } // namespace
 
 std::istringstream GetKeysStream() {
+    std::string keys = GetBuiltInKeys();
+
     const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + KEYS_FILE;
     FileUtil::CreateFullPath(filepath); // Create path if not already created
 
     boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
     FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
-    std::istringstream ret;
     if (file.is_open()) {
-        return std::istringstream(std::string(std::istreambuf_iterator<char>(file), {}));
-    } else {
-#ifdef ENABLE_BUILTIN_KEYBLOB
-        // The key data is encrypted in the source to prevent easy access to it for unintended
-        // purposes.
-        std::vector<u8> kiv(16);
-        std::string s(default_keys_enc_size, ' ');
-        CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption(kiv.data(), kiv.size(), kiv.data())
-            .ProcessData(reinterpret_cast<u8*>(s.data()), default_keys_enc, s.size());
-        return std::istringstream(s);
-#else
-        return std::istringstream("");
-#endif // ENABLE_BUILTIN_KEYBLOB
+        std::string file_keys(std::istreambuf_iterator<char>(file), {});
+
+#ifndef ENABLE_DEVELOPER_OPTIONS
+        file_keys = RemoveProtectedKeys(file_keys);
+#endif // ENABLE_DEVELOPER_OPTIONS
+
+        keys += "\n:\n" + file_keys;
     }
+    return std::istringstream(keys);
 }
 
 void InitKeys(bool force) {

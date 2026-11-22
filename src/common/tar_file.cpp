@@ -9,7 +9,9 @@
 #include <tuple>
 #include <unordered_set>
 #include <vector>
+#include "common/common_paths.h"
 #include "common/file_derived.h"
+#include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/tar_file.h"
 
@@ -172,6 +174,10 @@ const std::vector<TarArchive::TarFileInfo>& TarArchive::GetFileList() {
     return impl->GetFileList();
 }
 
+std::unique_ptr<FileUtil::IOFileBase> TarArchive::OpenSubFile(const TarFileInfo& file_info) {
+    return impl->OpenSubFile(file_info.name);
+}
+
 std::unique_ptr<FileUtil::IOFileBase> TarArchive::OpenSubFile(const std::string& filename) {
     return impl->OpenSubFile(filename);
 }
@@ -291,6 +297,74 @@ bool TarArchive::CreateTarFile(const std::string& out_file_name,
 
     mtar_finalize(&tar);
     mtar_close(&tar);
+    return true;
+}
+
+bool TarArchive::ExtractTarFile(const std::string& output_folder, const std::string& input_tar,
+                                std::function<ProgressCallback>&& progress_callback) {
+    TarArchive archive(input_tar);
+    if (!archive.IsGood()) {
+        LOG_ERROR(Common_Filesystem, "Cannot open TarArchive {}", input_tar);
+        return false;
+    }
+
+    auto file_infos = archive.GetFileList();
+    std::size_t tot_files = file_infos.size();
+    std::size_t curr_file = 0;
+
+    float single_file_prog = 1 / (float)tot_files;
+
+    std::vector<u8> work_buf(0x10000);
+    for (const auto& in_path : file_infos) {
+        std::string file_name = in_path.name;
+
+        // Sanitize the path
+        for (char& c : file_name) {
+            const u8 uc = static_cast<u8>(c);
+            if (uc < 0x20 || uc == 0x7F ||
+                std::string_view("/\\:*?\"<>|").find(c) != std::string_view::npos) {
+                c = '_';
+            }
+        }
+
+        auto input_file = archive.OpenSubFile(in_path);
+        if (!input_file->IsGood()) {
+            LOG_ERROR(Common_Filesystem, "Cannot open subfile {}", in_path.name);
+            return false;
+        }
+
+        std::string output_file_path = SanitizePath(output_folder + DIR_SEP_CHR + file_name);
+        FileUtil::IOFile output_file(output_file_path, "wb");
+        if (!output_file.IsOpen()) {
+            LOG_ERROR(Common_Filesystem, "Cannot open output file {}", output_file_path);
+            return false;
+        }
+
+        size_t file_size = input_file->GetSize();
+
+        size_t remaining = file_size;
+        while (remaining) {
+            size_t read = input_file->ReadBytes(
+                work_buf.data(), (remaining > work_buf.size()) ? work_buf.size() : remaining);
+
+            if (!input_file->IsGood()) {
+                LOG_ERROR(Common_Filesystem, "Cannot read from input file {}", in_path.name);
+                return false;
+            }
+
+            if (output_file.WriteBytes(work_buf.data(), read) != read) {
+                LOG_ERROR(Common_Filesystem, "Cannot write to output file {}", output_file_path);
+            }
+            remaining -= read;
+
+            float curr_prog = (single_file_prog * curr_file) +
+                              single_file_prog * (1.f - ((float)remaining / (float)file_size));
+
+            progress_callback((size_t)(curr_prog * 1000), 1000);
+        }
+        curr_file++;
+    }
+
     return true;
 }
 
