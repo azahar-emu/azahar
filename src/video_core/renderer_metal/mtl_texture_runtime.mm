@@ -943,6 +943,8 @@ id<MTLTexture> Surface::CreateTexture(u32 tex_width, u32 tex_height, MTLPixelFor
     TexturePool& pool = runtime->GetTexturePool();
     if (pool.Enabled()) {
         if (id<MTLTexture> reused = pool.Acquire(TexturePool::KeyOf(desc))) {
+            // Its multisampled copy (MSAA) has the pixels of the surface that had it before.
+            scheduler->NoteWritten(reused);
             return reused;
         }
     }
@@ -966,6 +968,7 @@ id<MTLTexture> Surface::CopyTexture() {
                              src.pixelFormat, "copy");
     }
     [scheduler->BlitEncoder() copyFromTexture:src toTexture:copy];
+    scheduler->NoteWritten(copy);
     Stats().feedback_copies.fetch_add(1, std::memory_order_relaxed);
     return copy;
 }
@@ -992,6 +995,8 @@ id<MTLTexture> Surface::ReplaceWithFullUsage(Type type) {
         CreateTexture(static_cast<u32>(texture.width), static_cast<u32>(texture.height),
                       texture.pixelFormat, "full usage", true);
     [scheduler->BlitEncoder() copyFromTexture:texture toTexture:replacement];
+    // The replacement may come from the texture pool with a multisampled copy of other pixels.
+    scheduler->NoteWritten(replacement);
     textures[type] = replacement;
     textures[Type::Copy] = nil;
     storage_view = nil;
