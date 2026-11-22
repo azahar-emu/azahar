@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#23735A"/>
+      <stop offset="0.6" stop-color="#14503E"/>
+      <stop offset="1" stop-color="#0A2E24"/>
+    </radialGradient>
+    <linearGradient id="drop" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFD978"/>
+      <stop offset="0.55" stop-color="#F7A93B"/>
+      <stop offset="1" stop-color="#E9772A"/>
+    </linearGradient>
+    <radialGradient id="petal" cx="50%" cy="85%" r="90%">
+      <stop offset="0" stop-color="#FFF6E3"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </radialGradient>
+    <radialGradient id="heart" cx="45%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#FFF3A6"/>
+      <stop offset="1" stop-color="#F2B630"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#04150F" flood-opacity="0.55"/>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#B4561A" flood-opacity="0.45"/>
+    </filter>
+    <clipPath id="dropclip">
+      <path id="dropshape" d="M512 132 C 596 252, 768 424, 768 616 A 256 256 0 1 1 256 616 C 256 424, 428 252, 512 132 Z"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <path d="M512 132 C 596 252, 768 424, 768 616 A 256 256 0 1 1 256 616 C 256 424, 428 252, 512 132 Z"
+        fill="url(#drop)" filter="url(#shadow)"/>
+  <g clip-path="url(#dropclip)">
+    <ellipse cx="420" cy="430" rx="54" ry="150" transform="rotate(28 420 430)" fill="#FFFFFF" opacity="0.32"/>
+  </g>
+  <g filter="url(#soft)">
+    <g fill="url(#petal)">
+      <path d="M512 640 C 458 606, 440 528, 470 486 C 488 462, 536 462, 554 486 C 584 528, 566 606, 512 640 Z" transform="rotate(0 512 632)"/>
+      <path d="M512 640 C 458 606, 440 528, 470 486 C 488 462, 536 462, 554 486 C 584 528, 566 606, 512 640 Z" transform="rotate(72 512 632)"/>
+      <path d="M512 640 C 458 606, 440 528, 470 486 C 488 462, 536 462, 554 486 C 584 528, 566 606, 512 640 Z" transform="rotate(144 512 632)"/>
+      <path d="M512 640 C 458 606, 440 528, 470 486 C 488 462, 536 462, 554 486 C 584 528, 566 606, 512 640 Z" transform="rotate(216 512 632)"/>
+      <path d="M512 640 C 458 606, 440 528, 470 486 C 488 462, 536 462, 554 486 C 584 528, 566 606, 512 640 Z" transform="rotate(288 512 632)"/>
+    </g>
+    <circle cx="512" cy="632" r="40" fill="url(#heart)"/>
+  </g>
+  <g fill="#E58A1F">
+    <circle cx="512" cy="604" r="7"/>
+    <circle cx="539" cy="623" r="7"/>
+    <circle cx="529" cy="655" r="7"/>
+    <circle cx="495" cy="655" r="7"/>
+    <circle cx="485" cy="623" r="7"/>
+  </g>
+</svg>
