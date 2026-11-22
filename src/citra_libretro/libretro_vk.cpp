@@ -100,6 +100,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
     const bool has_custom_border_color = AddExtensionIfAvailable(
         enabled_exts, available_exts, VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
+    const bool has_index_type_uint8 = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
 
     // These are beneficial but blacklisted on some platforms due to driver bugs
     // For now, let the Instance class handle these decisions
@@ -178,6 +180,25 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         custom_border_color_features.customBorderColorWithoutFormat = VK_TRUE;
         custom_border_color_features.pNext = enabled_features.pNext;
         enabled_features.pNext = &custom_border_color_features;
+    }
+
+    // Instance::CreateDevice() in src/video_core/renderer_vulkan/vk_instance.cpp uses these
+    // features when the GPU supports them, except on drivers it blacklists
+    PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2 =
+        (PFN_vkGetPhysicalDeviceFeatures2)get_instance_proc_addr(instance,
+                                                                 "vkGetPhysicalDeviceFeatures2");
+    const auto enable_supported_features = [&](auto& extension_features) {
+        VkPhysicalDeviceFeatures2 supported_features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+        supported_features.pNext = &extension_features;
+        vkGetPhysicalDeviceFeatures2(gpu, &supported_features);
+        extension_features.pNext = enabled_features.pNext;
+        enabled_features.pNext = &extension_features;
+    };
+
+    VkPhysicalDeviceIndexTypeUint8FeaturesEXT index_type_uint8_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT};
+    if (has_index_type_uint8) {
+        enable_supported_features(index_type_uint8_features);
     }
 
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
