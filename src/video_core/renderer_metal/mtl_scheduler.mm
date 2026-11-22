@@ -830,15 +830,19 @@ void Scheduler::FlushPendingClears() {
         // resolves it into the texture, so the copy stays up to date and is not refreshed from
         // the cleared texture before the next pass (games clear their buffers every frame).
         // Not for a depth-only clear of a copy that is out of date: its stencil would stay old.
+        // A rectangle is drawn into the copy the same way when the copy is up to date (it is
+        // loaded): Majora's Mask clears part of its depth buffer like that every frame, and the
+        // refresh it caused cost about 2 ms of GPU time a frame.
         MsaaTexture* msaa = nullptr;
-        if (!clear.partial && clear.level == 0 && clear.slice == 0) {
+        if (clear.level == 0 && clear.slice == 0) {
             const auto it =
                 msaa_textures.find(reinterpret_cast<std::uintptr_t>((__bridge void*)clear.texture));
             if (it != msaa_textures.end() && it->second.msaa != nil) {
                 id<MTLTexture> owner = it->second.owner;
-                const bool clears_all = !clear.is_depth || clear.has_stencil ||
-                                        clear.texture.pixelFormat !=
-                                            MTLPixelFormatDepth32Float_Stencil8;
+                const bool clears_all = !clear.partial &&
+                                        (!clear.is_depth || clear.has_stencil ||
+                                         clear.texture.pixelFormat !=
+                                             MTLPixelFormatDepth32Float_Stencil8);
                 if (owner == clear.texture && (clears_all || it->second.valid)) {
                     msaa = &it->second;
                     msaa->valid = true;
@@ -873,10 +877,37 @@ void Scheduler::FlushPendingClears() {
                 desc.colorAttachments[0].loadAction = MTLLoadActionLoad;
                 desc.colorAttachments[0].storeAction = MTLStoreActionStore;
             }
+            if (msaa != nullptr) {
+                // Into the up to date multisampled copy, resolved into the texture.
+                if (clear.is_depth) {
+                    desc.depthAttachment.texture = msaa->msaa;
+                    desc.depthAttachment.level = 0;
+                    desc.depthAttachment.resolveTexture = clear.texture;
+                    desc.depthAttachment.depthResolveFilter =
+                        MTLMultisampleDepthResolveFilterSample0;
+                    desc.depthAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+                    if (clear.has_stencil) {
+                        desc.stencilAttachment.texture = msaa->msaa;
+                        desc.stencilAttachment.level = 0;
+                        desc.stencilAttachment.resolveTexture = clear.texture;
+                        desc.stencilAttachment.stencilResolveFilter =
+                            MTLMultisampleStencilResolveFilterSample0;
+                        desc.stencilAttachment.storeAction =
+                            MTLStoreActionStoreAndMultisampleResolve;
+                    }
+                } else {
+                    desc.colorAttachments[0].texture = msaa->msaa;
+                    desc.colorAttachments[0].level = 0;
+                    desc.colorAttachments[0].slice = 0;
+                    desc.colorAttachments[0].resolveTexture = clear.texture;
+                    desc.colorAttachments[0].storeAction =
+                        MTLStoreActionStoreAndMultisampleResolve;
+                }
+            }
             render_encoder = [CommandBuffer() renderCommandEncoderWithDescriptor:desc];
             Stats().render_passes.fetch_add(1, std::memory_order_relaxed);
             pass_label = clear.is_depth ? "partial clear depth" : "partial clear color";
-            pass_samples = 1;
+            pass_samples = msaa != nullptr ? static_cast<u32>(msaa->msaa.sampleCount) : 1;
             id<MTLTexture> sized = clear.texture;
             BeginPassStats(static_cast<u32>(std::max<NSUInteger>(sized.width >> clear.level, 1)),
                            static_cast<u32>(std::max<NSUInteger>(sized.height >> clear.level, 1)),
