@@ -93,6 +93,10 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts,
+                            VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts,
+                            VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts,
                             VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts,
                             VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
@@ -145,6 +149,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         merged_features.samplerAnisotropy = VK_TRUE;
     if (device_features.fragmentStoresAndAtomics)
         merged_features.fragmentStoresAndAtomics = VK_TRUE;
+    if (device_features.shaderStorageImageMultisample)
+        merged_features.shaderStorageImageMultisample = VK_TRUE;
     if (device_features.shaderClipDistance)
         merged_features.shaderClipDistance = VK_TRUE;
 
