@@ -336,8 +336,9 @@ public:
     void Download(const VideoCore::BufferTextureCopy& download,
                   const VideoCore::StagingData& staging);
 
-    /// Scales up the surface to match the new resolution scale.
-    void ScaleUp(u32 new_scale);
+    /// Scales up the surface to match the new resolution scale. The Metal backend does not do
+    /// MSAA (Settings::values.antialiasing stays off on iOS), so the sample count is always 1.
+    void ScaleUp(u32 new_scale, u8 new_sample_count = 1);
 
     /// Returns the bpp of the internal surface format
     u32 GetInternalBytesPerPixel() const;

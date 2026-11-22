@@ -524,6 +524,10 @@ const char* ThermalStateName() {
     values.resolution_factor = static_cast<u32>(configuration.resolutionFactor);
     values.filter_mode = configuration.linearFiltering;
     values.texture_filter = static_cast<Settings::TextureFilter>(configuration.textureFilter);
+    // Upstream's MSAA has no Metal implementation, and the Metal renderer limits how far the
+    // emulation runs ahead of the GPU itself (WaitForPreviousFrame), so both stay off.
+    values.antialiasing = Settings::AntiAliasingMethod::None;
+    values.use_limit_frames_ahead_of_gpu = false;
     // Frame generation needs to know which frames are new, so it skips the repeated ones.
     values.use_skip_duplicate_frames =
         configuration.skipDuplicateFrames || configuration.frameGeneration > 0;

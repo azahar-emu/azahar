@@ -437,7 +437,9 @@ private:
                                 u32 screen_id_r, float x, float y, float w, float h,
                                 Layout::DisplayOrientation orientation);
     void SetOpacity(id<MTLRenderCommandEncoder> encoder, float alpha);
-    void LimitFramesAheadOfGpu();
+    /// Waits for the GPU work of the previous frame (at most one frame in flight). Not
+    /// RendererBase::LimitFramesAheadOfGpu: that one runs only with upstream's optional setting.
+    void WaitForPreviousFrame();
     void DrawQuad(id<MTLRenderCommandEncoder> encoder,
                   const std::array<ScreenRectVertex, 4>& vertices, id<MTLTexture> texture,
                   const PresentUniforms& uniforms);
@@ -2945,7 +2947,7 @@ void RendererMetal::RenderScreenshot() {
     }
 }
 
-void RendererMetal::LimitFramesAheadOfGpu() {
+void RendererMetal::WaitForPreviousFrame() {
     if (previous_frame_tick != 0) {
         scheduler.Wait(previous_frame_tick);
     }
@@ -3035,7 +3037,7 @@ void RendererMetal::SwapBuffers() {
     }
 
     scheduler.Flush();
-    LimitFramesAheadOfGpu();
+    WaitForPreviousFrame();
     Stats().frames.fetch_add(1, std::memory_order_relaxed);
     Stats().adapt_frames.fetch_add(1, std::memory_order_relaxed);
 
