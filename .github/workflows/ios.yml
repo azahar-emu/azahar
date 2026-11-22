@@ -83,6 +83,8 @@ jobs:
   ios:
     runs-on: macos-latest
     needs: msl-validation
+    permissions:
+      contents: write # to attach the IPA to the release of a tag
     env:
       BUILD_DIR: build/ios
     steps:
@@ -94,6 +96,10 @@ jobs:
         run: |
           sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)"
           xcodebuild -version
+      # The library of the built-in JIT helper. A failure is reported but does not stop the build:
+      # the app is then built with a helper that says the library is missing.
+      - name: Build the idevice library (JIT helper)
+        run: ./.ci/build-idevice.sh build/idevice-out || echo "::warning::idevice library not built, the JIT helper will not work"
       - name: Configure
         run: ./.ci/ios.sh configure
       - name: Build
@@ -105,3 +111,16 @@ jobs:
         with:
           name: ios-unsigned-ipa
           path: artifacts/
+      # A tag (made by publishing a release, or pushed) gets its IPA attached to the release of
+      # that tag, named with the version. Without a release yet, a draft one is made for it.
+      - name: Attach the IPA to the release
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cp artifacts/Neroli-unsigned.ipa "artifacts/Neroli-$TAG.ipa"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --draft --title "Neroli $TAG" --notes "Release notes to follow."
+          fi
+          gh release upload "$TAG" "artifacts/Neroli-$TAG.ipa" --clobber
