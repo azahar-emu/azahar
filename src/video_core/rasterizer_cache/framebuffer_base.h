@@ -1,4 +1,4 @@
-// Copyright 2023-2025 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the misc/licenses/gplv2.txt file included.
 
@@ -72,7 +72,8 @@ public:
         const u32 height = surfaces_rect.GetHeight() / res_scale;
 
         // Determine the draw rectangle (render area + scissor)
-        Common::Rectangle viewport_rect = regs.GetViewportRect();
+        Common::Rectangle viewport_rect =
+            regs.GetViewportRect(surfaces_rect.GetWidth() / res_scale, height);
         if (flip_rect) {
             viewport_rect = viewport_rect.VerticalMirror(height);
         }

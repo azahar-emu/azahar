@@ -45,15 +45,26 @@ struct RasterizerRegs {
                 f24::FromRaw(clip_coef[3])};
     }
 
-    Common::Rectangle<s32> GetViewportRect() const {
+    /// The corner has ten bits per axis. Past 511 it is a negative offset only while that leaves
+    /// part of the viewport on the framebuffer; otherwise it is a position in the upper half of
+    /// a framebuffer taller or wider than 512.
+    static s32 ViewportOrigin(s32 corner, s32 size, u32 framebuffer_size) {
+        const s32 wrapped = corner + 1024;
+        const bool outside = corner + size <= 0;
+        return outside && wrapped < static_cast<s32>(framebuffer_size) ? wrapped : corner;
+    }
+
+    Common::Rectangle<s32> GetViewportRect(u32 framebuffer_width, u32 framebuffer_height) const {
+        // These registers hold half-width and half-height, so must be multiplied by 2
+        const s32 width = static_cast<s32>(f24::FromRaw(viewport_size_x).ToFloat32() * 2);
+        const s32 height = static_cast<s32>(f24::FromRaw(viewport_size_y).ToFloat32() * 2);
+        const s32 x = ViewportOrigin(viewport_corner.x, width, framebuffer_width);
+        const s32 y = ViewportOrigin(viewport_corner.y, height, framebuffer_height);
         return {
-            // These registers hold half-width and half-height, so must be multiplied by 2
-            viewport_corner.x,  // left
-            viewport_corner.y + // top
-                static_cast<s32>(f24::FromRaw(viewport_size_y).ToFloat32() * 2),
-            viewport_corner.x + // right
-                static_cast<s32>(f24::FromRaw(viewport_size_x).ToFloat32() * 2),
-            viewport_corner.y // bottom
+            x,          // left
+            y + height, // top
+            x + width,  // right
+            y,          // bottom
         };
     }
 

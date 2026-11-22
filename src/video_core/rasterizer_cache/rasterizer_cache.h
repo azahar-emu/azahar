@@ -724,7 +724,8 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
 
     const s32 framebuffer_width = config.GetWidth();
     const s32 framebuffer_height = config.GetHeight();
-    const auto viewport_rect = regs.rasterizer.GetViewportRect();
+    const auto viewport_rect =
+        regs.rasterizer.GetViewportRect(config.GetWidth(), config.GetHeight());
     const Common::Rectangle<u32> viewport_clamped = {
         static_cast<u32>(std::clamp(viewport_rect.left, 0, framebuffer_width)),
         static_cast<u32>(std::clamp(viewport_rect.top, 0, framebuffer_height)),
