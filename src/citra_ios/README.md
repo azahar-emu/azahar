@@ -57,7 +57,7 @@ compiles every shader the Metal backend can generate with Apple's offline Metal 
   the first time Neroli starts), so you can copy `sysdata`, `nand` and `sdmc` over from a desktop
   install.
 - Supported formats: `.3ds/.cci`, `.cxi`, `.3dsx`, `.app`, `.elf/.axf` and their compressed
-  `.z*` variants. CIA installation is not exposed in the UI yet.
+  `.z*` variants. `.cia` files (games, updates and DLC) are installed to the virtual SD card.
 
 ### JIT
 
@@ -98,23 +98,20 @@ Implementation notes:
 - **Custom border colors** are emulated in the fragment shader, because Metal samplers only
   support a fixed set of border colors.
 
-### Status and roadmap
+### Status
 
-Working in this first version:
+Beyond the base renderer (every fragment pipeline feature, resolution scaling, custom textures and
+all screen layouts and 3D modes), the backend now has:
 
-- [x] Software vertex shading plus hardware rasterization, covering all fragment pipeline features
-- [x] Resolution scaling and custom textures (RGBA8, ASTC, and BCn where the GPU supports it)
-- [x] Presentation with every screen layout, including mono and side-by-side 3D modes
-
-Next:
-
-- [ ] Hardware vertex shaders: an MSL backend for the PICA shader decompiler, and quaternion
-      fix-up without geometry shaders
-- [ ] Persistent pipeline cache (`MTLBinaryArchive`) and asynchronous shader compilation
-- [ ] Texture filters (Anime4K, xBRZ, …) as Metal compute passes
-- [ ] Anaglyph/interlaced 3D modes, the cursor overlay, and secondary display (AirPlay) output
-- [ ] Save states, cheats, CIA installation, amiibo and the system keyboard applet in the UI
-- [ ] Customizable on-screen controller layout
+- Hardware vertex shaders through an MSL backend of the PICA shader decompiler, with the
+  quaternion fix-up done in the fragment shader instead of a geometry shader
+- A per-game disk shader cache, a Metal binary archive and asynchronous pipeline compilation
+- Texture filters, MetalFX upscaling, sharpening and post-processing shaders
+- Frame generation (VideoToolbox or MetalFX frame interpolation) with display-driven pacing
+- Tile-based GPU optimizations: hidden surface removal, depth-only pipelines, hardware scissor and
+  clears drawn inside the game's render passes
+- External display output, and save states, cheats, CIA installation, amiibo and the system
+  applets in the UI
 
 ## License
 
