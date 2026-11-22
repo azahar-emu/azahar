@@ -3148,6 +3148,7 @@ FrameStats TakeFrameStats() {
     const u32 skipped = stats.skipped.exchange(0);
     const u32 render_passes = stats.render_passes.exchange(0);
     const u32 msaa_refreshes = stats.msaa_refreshes.exchange(0);
+    const u32 msaa_plain_passes = stats.msaa_plain_passes.exchange(0);
     const u32 blit_passes = stats.blit_passes.exchange(0);
     const u32 feedback_copies = stats.feedback_copies.exchange(0);
     const u64 drawable_ns = stats.drawable_ns.exchange(0);
@@ -3194,6 +3195,7 @@ FrameStats TakeFrameStats() {
         result.skipped = static_cast<double>(skipped) / frames;
         result.render_passes = static_cast<double>(render_passes) / frames;
         result.msaa_refreshes = static_cast<double>(msaa_refreshes) / frames;
+        result.msaa_plain_passes = static_cast<double>(msaa_plain_passes) / frames;
         result.blit_passes = static_cast<double>(blit_passes) / frames;
         result.feedback_copies = static_cast<double>(feedback_copies) / frames;
         result.drawable_ms = static_cast<double>(drawable_ns) / 1e6 / frames;

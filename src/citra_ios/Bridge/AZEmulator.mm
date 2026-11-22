@@ -1278,8 +1278,9 @@ const char* ThermalStateName() {
                          ThermalStateName(),
                          NSProcessInfo.processInfo.lowPowerModeEnabled ? ", low power mode" : "",
                          Settings::values.antialiasing.GetValue() != Settings::AntiAliasingMethod::None
-                             ? fmt::format(", MSAA on ({:.1f} refreshes of multisampled copies)",
-                                           gpu.msaa_refreshes)
+                             ? fmt::format(", MSAA on ({:.1f} refreshes of multisampled copies, "
+                                           "{:.1f} passes without MSAA into their textures)",
+                                           gpu.msaa_refreshes, gpu.msaa_plain_passes)
                              : std::string{});
                 if (gpu.fg_made > 0 || gpu.fg_skipped > 0) {
                     LOG_INFO(Frontend,

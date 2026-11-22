@@ -989,6 +989,19 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
         }
         pass_label = label;
     }
+    // A pass drawn straight into a texture (no MSAA for it: a mip level, a cube face, a surface
+    // the cache gave no sample count) leaves its multisampled copy behind: refreshed before the
+    // next multisampled pass loads it, or that pass would resolve the old copy over this drawing.
+    bool plain_into_msaa = false;
+    if (color_msaa == nil) {
+        plain_into_msaa |= NoteWritten(target.color);
+    }
+    if (depth_msaa == nil) {
+        plain_into_msaa |= NoteWritten(target.depth);
+    }
+    if (plain_into_msaa && StatisticsEnabled()) {
+        Stats().msaa_plain_passes.fetch_add(1, std::memory_order_relaxed);
+    }
 
     MTLRenderPassDescriptor* descriptor = [MTLRenderPassDescriptor renderPassDescriptor];
     if (target.color != nil) {
@@ -1130,6 +1143,11 @@ id<MTLTexture> Scheduler::MsaaFor(id<MTLTexture> texture, id<MTLTexture> stencil
         desc.storageMode = MTLStorageModePrivate;
         desc.usage = MTLTextureUsageRenderTarget;
         entry.msaa = [queue.device newTextureWithDescriptor:desc];
+        if (entry.msaa == nil) {
+            LOG_ERROR(Render, "Could not create a {}x{} multisampled copy ({} samples, format {})",
+                      texture.width, texture.height, samples,
+                      static_cast<u32>(texture.pixelFormat));
+        }
         entry.msaa.label = is_depth ? @"MSAA depth" : @"MSAA color";
         entry.owner = texture;
         entry.valid = false;
@@ -1152,15 +1170,17 @@ id<MTLTexture> Scheduler::MsaaFor(id<MTLTexture> texture, id<MTLTexture> stencil
     return entry.msaa;
 }
 
-void Scheduler::NoteWritten(id<MTLTexture> texture) {
+bool Scheduler::NoteWritten(id<MTLTexture> texture) {
     if (msaa_textures.empty() || texture == nil) {
-        return;
+        return false;
     }
     id<MTLTexture> base = texture.parentTexture != nil ? texture.parentTexture : texture;
     const auto it = msaa_textures.find(reinterpret_cast<std::uintptr_t>((__bridge void*)base));
-    if (it != msaa_textures.end()) {
-        it->second.valid = false;
+    if (it == msaa_textures.end()) {
+        return false;
     }
+    it->second.valid = false;
+    return true;
 }
 
 void Scheduler::SweepMsaaTextures() {

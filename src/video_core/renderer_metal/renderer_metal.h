@@ -212,6 +212,7 @@ struct FrameStats {
     double skipped = 0.0;  ///< Draws skipped while their pipeline was being built
     double render_passes = 0.0;   ///< Render passes (each loads and stores its attachments)
     double msaa_refreshes = 0.0;  ///< Multisampled copies refreshed (MSAA), each an extra pass
+    double msaa_plain_passes = 0.0; ///< Game passes without MSAA into textures that have a copy
     double blit_passes = 0.0;     ///< Blit passes (copies, uploads), each splits a render pass
     double feedback_copies = 0.0; ///< Copies of a render target that is also sampled
     double drawable_ms = 0.0;     ///< Time waiting for the layer to hand out a drawable
