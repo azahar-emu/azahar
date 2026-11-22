@@ -137,6 +137,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     // Request features we want, gated by actual device support
     if (device_features.geometryShader)
         merged_features.geometryShader = VK_TRUE;
+    if (device_features.sampleRateShading)
+        merged_features.sampleRateShading = VK_TRUE;
     if (device_features.logicOp)
         merged_features.logicOp = VK_TRUE;
     if (device_features.samplerAnisotropy)
