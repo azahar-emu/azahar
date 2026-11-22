@@ -112,6 +112,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         enabled_exts, available_exts, VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);
     const bool has_fragment_shader_barycentric = AddExtensionIfAvailable(
         enabled_exts, available_exts, VK_KHR_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME);
+    const bool has_fragment_shader_interlock = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME);
 
     // These are beneficial but blacklisted on some platforms due to driver bugs
     // For now, let the Instance class handle these decisions
@@ -234,6 +236,15 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR};
     if (has_fragment_shader_barycentric) {
         enable_supported_features(barycentric_features);
+    }
+
+    VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT interlock_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT};
+    if (has_fragment_shader_interlock) {
+        enable_supported_features(interlock_features);
+        // Instance::CreateDevice() enables only fragmentShaderPixelInterlock
+        interlock_features.fragmentShaderSampleInterlock = VK_FALSE;
+        interlock_features.fragmentShaderShadingRateInterlock = VK_FALSE;
     }
 
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
