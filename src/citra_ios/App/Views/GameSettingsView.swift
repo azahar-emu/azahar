@@ -44,6 +44,8 @@ struct GameSettingsView: View {
                                options: TextureFilterOption.allCases.map(\.rawValue)) {
                     TextureFilterOption(rawValue: $0)?.title ?? "\($0)"
                 }
+                OverridePicker("Anti-Aliasing (MSAA)", value: $overrides.antiAliasing,
+                               options: Array(0...3)) { GraphicsSettingsView.antiAliasingName($0) }
                 OverridePicker("MetalFX Upscaling", value: $overrides.upscaling,
                                options: UpscalingOption.allCases.map(\.rawValue)) {
                     UpscalingOption(rawValue: $0)?.title ?? "\($0)"
@@ -87,6 +89,7 @@ struct GameSettingsView: View {
                 OverrideToggle("Texture Pool", value: $overrides.texturePool)
                 OverrideToggle("Realtime Audio", value: $overrides.realtimeAudio)
                 OverrideToggle("Fast Depth Readback", value: $overrides.fastDepthReadback)
+                OverrideToggle("Wait for GPU Each Frame", value: $overrides.waitForGPU)
                 OverrideToggle("Async Shader Compilation", value: $overrides.asyncShaders)
                 OverrideToggle("Deterministic Async Operations", value: $overrides.deterministicAsync)
                 OverrideToggle("Hold Frame While Shaders Build", value: $overrides.holdFramesForShaders)

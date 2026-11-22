@@ -494,6 +494,7 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
         key.write_mask = static_cast<u8>(MTLColorWriteMaskNone);
         key.blend_enable = 0;
     }
+    key.samples = target.samples > 1 ? static_cast<u8>(target.samples) : 0;
     key.vs_hash = PipelineCache::HashOf(vertex);
 
     // A draw that writes no color (stencil shadow volumes, depth pre-passes) needs its fragment
@@ -743,6 +744,8 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     bind_sampler(MSL::FS_TEXTURE_2, MSL::FS_SAMPLER_2);
     if (shadow_rendering) {
         id<MTLTexture> shadow_buffer = framebuffer->ShadowBuffer();
+        // Written by the shader, not through a multisampled pass (MSAA).
+        scheduler.NoteWritten(shadow_buffer);
         if (shadow_buffer != cache.shadow_buffer) {
             [encoder setFragmentTexture:shadow_buffer atIndex:MSL::FS_TEXTURE_SHADOW_BUFFER];
             cache.shadow_buffer = shadow_buffer;

@@ -315,6 +315,9 @@ final class AppSettings: ObservableObject {
     /// Draw-time optimizations (no fragment function for depth-only draws, hardware scissor,
     /// no-op blending dropped).
     @Published var drawOptimizations: Bool { didSet { save(drawOptimizations, "drawOptimizations") } }
+    /// MSAA: 0 off, 1 2x, 2 4x, 3 8x.
+    @Published var antiAliasing: Int { didSet { save(antiAliasing, "antiAliasing") } }
+    @Published var waitForGPU: Bool { didSet { save(waitForGPU, "waitForGPU") } }
     /// GPU timestamps per render pass in the log (diagnostic).
     @Published var gpuPassTiming: Bool { didSet { save(gpuPassTiming, "gpuPassTiming") } }
     /// Writes the most used shaders to Neroli/shader_dump (diagnostic).
@@ -534,6 +537,8 @@ final class AppSettings: ObservableObject {
         fastDepthReadback = value("fastDepthReadback", false)
         hiddenSurfaceRemoval = value("hiddenSurfaceRemoval", false)
         drawOptimizations = value("drawOptimizations", true)
+        antiAliasing = value("antiAliasing", 0)
+        waitForGPU = value("waitForGPU", true)
         gpuPassTiming = value("gpuPassTiming", false)
         dumpShaders = value("dumpShaders", false)
         textureCompression = TextureCompressionOption(rawValue: value("textureCompression", 0)) ?? .off
@@ -709,6 +714,8 @@ final class AppSettings: ObservableObject {
         config.fastDepthReadback = fastDepthReadback
         config.hiddenSurfaceRemoval = hiddenSurfaceRemoval
         config.drawOptimizations = drawOptimizations
+        config.antiAliasing = antiAliasing
+        config.waitForGPU = waitForGPU
         config.gpuPassTiming = gpuPassTiming
         config.dumpShaders = dumpShaders
         config.textureCompression = textureCompression.rawValue

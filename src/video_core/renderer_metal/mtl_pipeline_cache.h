@@ -47,7 +47,10 @@ struct PipelineKey {
     u8 write_mask; ///< MTLColorWriteMask
     /// 1: no fragment function, the draw only writes depth and stencil (fs_hash is 0).
     u8 no_fragment;
-    u8 pad[3];
+    /// MSAA samples of the pass (RenderTarget::samples), 0 without MSAA so the keys of pipelines
+    /// cached before MSAA existed stay the same.
+    u8 samples;
+    u8 pad[2];
 
     u64 Hash() const noexcept {
         return Common::ComputeHash64(this, sizeof(PipelineKey));

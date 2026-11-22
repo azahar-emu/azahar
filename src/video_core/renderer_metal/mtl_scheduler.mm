@@ -750,7 +750,7 @@ void Scheduler::DrawRectClear(id<MTLRenderCommandEncoder> encoder, const Pending
     // The game's draws may have left culling and depth clamping on.
     [encoder setCullMode:MTLCullModeNone];
     [encoder setDepthClipMode:MTLDepthClipModeClip];
-    rect_clear_drawer(encoder, clamped, color, depth, stencil);
+    rect_clear_drawer(encoder, clamped, color, depth, stencil, pass_samples);
     if (counted && StatisticsEnabled()) {
         std::scoped_lock lock{g_pass_mutex};
         (in_game_pass ? g_pass_stats.rect_clears_merged : g_pass_stats.rect_clears_alone)++;
@@ -826,6 +826,8 @@ void Scheduler::FlushPendingClears() {
     clears.swap(pending_clears);
     EndEncoding();
     for (const PendingClear& clear : clears) {
+        // Drawn into the texture itself, outside of any multisampled pass.
+        NoteWritten(clear.texture);
         if (clear.partial) {
             // A rectangle with nothing to take it over: a pass of its own that draws it.
             MTLRenderPassDescriptor* desc = [MTLRenderPassDescriptor renderPassDescriptor];
@@ -853,6 +855,7 @@ void Scheduler::FlushPendingClears() {
             render_encoder = [CommandBuffer() renderCommandEncoderWithDescriptor:desc];
             Stats().render_passes.fetch_add(1, std::memory_order_relaxed);
             pass_label = clear.is_depth ? "partial clear depth" : "partial clear color";
+            pass_samples = 1;
             id<MTLTexture> sized = clear.texture;
             BeginPassStats(static_cast<u32>(std::max<NSUInteger>(sized.width >> clear.level, 1)),
                            static_cast<u32>(std::max<NSUInteger>(sized.height >> clear.level, 1)),
@@ -968,6 +971,25 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
         FlushPendingClears();
     }
 
+    // MSAA: the pass draws into multisampled copies of its attachments, which it loads, stores
+    // and resolves into the attachments at its end. A copy that is out of date (its texture was
+    // written another way since) is refreshed first, in passes of its own.
+    id<MTLTexture> color_msaa = nil;
+    id<MTLTexture> depth_msaa = nil;
+    if (target.samples > 1) {
+        const char* label = pass_label;
+        if (target.color != nil) {
+            color_msaa = MsaaFor(target.color, nil, target.samples, false, color_clear.has_value());
+        }
+        if (target.depth != nil) {
+            const bool clears_all =
+                depth_clear.has_value() && (!target.has_stencil || depth_clear->has_stencil);
+            depth_msaa =
+                MsaaFor(target.depth, target.stencil_view, target.samples, true, clears_all);
+        }
+        pass_label = label;
+    }
+
     MTLRenderPassDescriptor* descriptor = [MTLRenderPassDescriptor renderPassDescriptor];
     if (target.color != nil) {
         MTLRenderPassColorAttachmentDescriptor* color = descriptor.colorAttachments[0];
@@ -980,6 +1002,15 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
             color.loadAction = MTLLoadActionClear;
             color.clearColor = color_clear->color;
         }
+        if (color_msaa != nil) {
+            color.texture = color_msaa;
+            color.level = 0;
+            color.slice = 0;
+            color.resolveTexture = target.color;
+            color.resolveLevel = target.color_level;
+            color.resolveSlice = target.color_slice;
+            color.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+        }
     }
     if (target.depth != nil) {
         MTLRenderPassDepthAttachmentDescriptor* depth = descriptor.depthAttachment;
@@ -991,6 +1022,14 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
             depth.loadAction = MTLLoadActionClear;
             depth.clearDepth = depth_clear->depth;
         }
+        if (depth_msaa != nil) {
+            depth.texture = depth_msaa;
+            depth.level = 0;
+            depth.resolveTexture = target.depth;
+            depth.resolveLevel = target.depth_level;
+            depth.depthResolveFilter = MTLMultisampleDepthResolveFilterSample0;
+            depth.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+        }
         if (target.has_stencil) {
             MTLRenderPassStencilAttachmentDescriptor* stencil = descriptor.stencilAttachment;
             stencil.texture = target.depth;
@@ -1000,6 +1039,14 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
             if (depth_clear && depth_clear->has_stencil) {
                 stencil.loadAction = MTLLoadActionClear;
                 stencil.clearStencil = depth_clear->stencil;
+            }
+            if (depth_msaa != nil) {
+                stencil.texture = depth_msaa;
+                stencil.level = 0;
+                stencil.resolveTexture = target.depth;
+                stencil.resolveLevel = target.depth_level;
+                stencil.stencilResolveFilter = MTLMultisampleStencilResolveFilterSample0;
+                stencil.storeAction = MTLStoreActionStoreAndMultisampleResolve;
             }
         }
     }
@@ -1022,6 +1069,7 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
     BeginPassStats(target.width, target.height, target.color != nil, target.depth != nil,
                    target.has_stencil, true, &target);
     NamePassTiming();
+    pass_samples = color_msaa != nil || depth_msaa != nil ? target.samples : 1;
     for (const PendingClear& clear : rect_clears) {
         DrawRectClear(render_encoder, clear,
                       target.color != nil ? target.color.pixelFormat : MTLPixelFormatInvalid,
@@ -1041,6 +1089,10 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(MTLRenderPassDescriptor* d
     EndEncoding();
     end_reason = nullptr;
     FlushPendingClears();
+    // Its attachments are drawn into directly, not through a multisampled copy.
+    NoteWritten(descriptor.colorAttachments[0].texture);
+    NoteWritten(descriptor.depthAttachment.texture);
+    pass_samples = 1;
     id<MTLCommandBuffer> buffer = CommandBuffer();
     AttachPassTiming(descriptor);
     render_encoder = [buffer renderCommandEncoderWithDescriptor:descriptor];
@@ -1059,6 +1111,60 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(MTLRenderPassDescriptor* d
     has_render_target = false;
     encoder_generation++;
     return render_encoder;
+}
+
+id<MTLTexture> Scheduler::MsaaFor(id<MTLTexture> texture, id<MTLTexture> stencil_view,
+                                  u32 samples, bool is_depth, bool will_clear) {
+    const auto key = reinterpret_cast<std::uintptr_t>((__bridge void*)texture);
+    MsaaTexture& entry = msaa_textures[key];
+    id<MTLTexture> owner = entry.owner;
+    if (owner != texture || entry.msaa == nil || entry.msaa.sampleCount != samples ||
+        entry.msaa.width != texture.width || entry.msaa.height != texture.height ||
+        entry.msaa.pixelFormat != texture.pixelFormat) {
+        MTLTextureDescriptor* desc = [MTLTextureDescriptor new];
+        desc.textureType = MTLTextureType2DMultisample;
+        desc.pixelFormat = texture.pixelFormat;
+        desc.width = texture.width;
+        desc.height = texture.height;
+        desc.sampleCount = samples;
+        desc.storageMode = MTLStorageModePrivate;
+        desc.usage = MTLTextureUsageRenderTarget;
+        entry.msaa = [queue.device newTextureWithDescriptor:desc];
+        entry.msaa.label = is_depth ? @"MSAA depth" : @"MSAA color";
+        entry.owner = texture;
+        entry.valid = false;
+    }
+    if (!entry.valid && !will_clear && entry.msaa != nil && msaa_refresher) {
+        // A stencil view made of an earlier texture of the surface is of no use.
+        id<MTLTexture> view = stencil_view != nil && stencil_view.parentTexture == texture
+                                  ? stencil_view
+                                  : nil;
+        msaa_refresher(texture, view, entry.msaa, is_depth);
+        end_reason = "refreshing a multisampled copy";
+        EndEncoding();
+        end_reason = nullptr;
+        if (StatisticsEnabled()) {
+            Stats().msaa_refreshes.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+    // The pass that asked keeps it up to date from now on.
+    entry.valid = true;
+    return entry.msaa;
+}
+
+void Scheduler::NoteWritten(id<MTLTexture> texture) {
+    if (msaa_textures.empty() || texture == nil) {
+        return;
+    }
+    id<MTLTexture> base = texture.parentTexture != nil ? texture.parentTexture : texture;
+    const auto it = msaa_textures.find(reinterpret_cast<std::uintptr_t>((__bridge void*)base));
+    if (it != msaa_textures.end()) {
+        it->second.valid = false;
+    }
+}
+
+void Scheduler::SweepMsaaTextures() {
+    std::erase_if(msaa_textures, [](const auto& pair) { return pair.second.owner == nil; });
 }
 
 void Scheduler::EndEncoding() {

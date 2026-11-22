@@ -562,7 +562,7 @@ void PipelineCache::BuildPipeline(Pipeline& pipeline) {
             }
             // Hardware vertex shaders fetch their inputs themselves.
             desc.inputPrimitiveTopology = MTLPrimitiveTopologyClassTriangle;
-            desc.rasterSampleCount = 1;
+            desc.rasterSampleCount = std::max<NSUInteger>(key.samples, 1);
 
             MTLRenderPipelineColorAttachmentDescriptor* color = desc.colorAttachments[0];
             color.pixelFormat = static_cast<MTLPixelFormat>(key.color_format);

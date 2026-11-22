@@ -68,8 +68,24 @@ public:
         return astc_support;
     }
 
+    /**
+     * The MSAA sample count to render with for the requested one: the largest the device supports
+     * that is not above it, or 1. MSAA needs stencil export (the multisampled copy of a depth
+     * buffer is refreshed from the depth buffer with a shader that writes the stencil too).
+     */
+    u32 MsaaSamples(u32 requested) const {
+        for (u32 samples = 8; samples >= 2; samples /= 2) {
+            if (samples <= requested && samples <= max_msaa_samples) {
+                return samples;
+            }
+        }
+        return 1;
+    }
+
 private:
     void CreateFormatTable();
+
+    u32 max_msaa_samples{1};
 
 private:
     id<MTLDevice> device;

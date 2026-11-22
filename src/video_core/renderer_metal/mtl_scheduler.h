@@ -32,6 +32,7 @@ struct GpuStats {
     std::atomic<u32> skipped{};    ///< Draws skipped because their pipeline was not built yet
     std::atomic<u32> frames{};     ///< Presented frames
     std::atomic<u32> render_passes{}; ///< Render encoders, each loads and stores its attachments
+    std::atomic<u32> msaa_refreshes{}; ///< Multisampled copies refreshed from their texture
     std::atomic<u32> blit_passes{};   ///< Blit encoders, each one splits the render pass around it
     std::atomic<u32> feedback_copies{}; ///< Copies of a render target sampled while drawn to
     std::atomic<u64> drawable_ns{};   ///< Time spent waiting for a drawable from the layer
@@ -143,12 +144,17 @@ struct RenderTarget {
     /// Render area size, the intersection of the attachment sizes.
     u32 width = 0;
     u32 height = 0;
+    /// MSAA samples. Above 1 the pass draws into multisampled copies of the attachments (kept by
+    /// the scheduler, see Scheduler::MsaaTexture) and resolves them into `color` and `depth`.
+    u32 samples = 1;
+    /// A stencil view of `depth`, to refresh its multisampled copy (MSAA only).
+    id<MTLTexture> stencil_view = nil;
 
     bool operator==(const RenderTarget& other) const noexcept {
         return color == other.color && color_level == other.color_level &&
                color_slice == other.color_slice && depth == other.depth &&
                depth_level == other.depth_level && has_stencil == other.has_stencil &&
-               width == other.width && height == other.height;
+               width == other.width && height == other.height && samples == other.samples;
     }
 };
 
@@ -186,10 +192,28 @@ public:
     /// the texture runtime, which has the utility pipelines).
     using RectClearDrawer =
         std::function<void(id<MTLRenderCommandEncoder>, const PendingClear&, MTLPixelFormat color,
-                           MTLPixelFormat depth, MTLPixelFormat stencil)>;
+                           MTLPixelFormat depth, MTLPixelFormat stencil, u32 samples)>;
     void SetRectClearDrawer(RectClearDrawer drawer) {
         rect_clear_drawer = std::move(drawer);
     }
+
+    /// Copies a texture (and, for depth, its stencil through `stencil_view`) into its
+    /// multisampled copy, every sample taking the pixel's value (installed by the texture runtime).
+    using MsaaRefresher = std::function<void(id<MTLTexture> resolved, id<MTLTexture> stencil_view,
+                                             id<MTLTexture> msaa, bool is_depth)>;
+    void SetMsaaRefresher(MsaaRefresher refresher) {
+        msaa_refresher = std::move(refresher);
+    }
+
+    /**
+     * Notes that a texture was written outside of a multisampled pass (an upload, a copy, a blit,
+     * a clear of its own, shadow rendering): its multisampled copy, if it has one, no longer has
+     * its contents and is refreshed from it before the next pass loads it.
+     */
+    void NoteWritten(id<MTLTexture> texture);
+
+    /// Drops the multisampled copies of textures that no longer exist. Once a frame.
+    void SweepMsaaTextures();
 
     /// Returns the command buffer currently being recorded, creating it if needed.
     id<MTLCommandBuffer> CommandBuffer();
@@ -357,6 +381,24 @@ private:
 
     std::vector<PendingClear> pending_clears;
     RectClearDrawer rect_clear_drawer;
+    MsaaRefresher msaa_refresher;
+    /// Samples of the active render pass, for the clears drawn into it.
+    u32 pass_samples{1};
+
+    /// The multisampled copy of a render target texture, made the first time a multisampled pass
+    /// renders to it. It is what the passes draw into: they load it, store it and resolve it into
+    /// the texture, so the next pass continues with every sample (edges stay smooth across passes).
+    /// `valid` is cleared when the texture is written another way (NoteWritten).
+    struct MsaaTexture {
+        __weak id<MTLTexture> owner = nil;
+        id<MTLTexture> msaa = nil;
+        bool valid = false;
+    };
+    std::unordered_map<std::uintptr_t, MsaaTexture> msaa_textures;
+    /// The multisampled copy of `texture`, made or remade as needed. Refreshes it from the texture
+    /// unless `will_clear` (the pass clears it anyway).
+    id<MTLTexture> MsaaFor(id<MTLTexture> texture, id<MTLTexture> stencil_view, u32 samples,
+                           bool is_depth, bool will_clear);
     void NoteWholeClearInPass();
     /// Draws a partial clear into the active encoder (with the formats of the current target).
     void DrawRectClear(id<MTLRenderCommandEncoder> encoder, const PendingClear& clear,

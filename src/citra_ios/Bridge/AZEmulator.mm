@@ -524,9 +524,12 @@ const char* ThermalStateName() {
     values.resolution_factor = static_cast<u32>(configuration.resolutionFactor);
     values.filter_mode = configuration.linearFiltering;
     values.texture_filter = static_cast<Settings::TextureFilter>(configuration.textureFilter);
-    // Upstream's MSAA has no Metal implementation, and the Metal renderer limits how far the
-    // emulation runs ahead of the GPU itself (WaitForPreviousFrame), so both stay off.
-    values.antialiasing = Settings::AntiAliasingMethod::None;
+    // MSAA: the rasterizer cache gives render targets this sample count, the Metal renderer
+    // draws them through multisampled copies (capped to what the device supports).
+    values.antialiasing = static_cast<Settings::AntiAliasingMethod>(
+        std::clamp<NSInteger>(configuration.antiAliasing, 0, 3));
+    // The Metal renderer limits how far the emulation runs ahead of the GPU itself
+    // (QualityOptions::wait_for_gpu), upstream's own limit stays off.
     values.use_limit_frames_ahead_of_gpu = false;
     // Frame generation needs to know which frames are new, so it skips the repeated ones.
     values.use_skip_duplicate_frames =
@@ -545,6 +548,7 @@ const char* ThermalStateName() {
     quality.texture_pool = configuration.texturePool;
     quality.vertex_depth = configuration.hiddenSurfaceRemoval;
     quality.draw_optimizations = configuration.drawOptimizations;
+    quality.wait_for_gpu = configuration.waitForGPU;
     quality.gpu_pass_timing = configuration.gpuPassTiming;
     quality.dump_shaders = configuration.dumpShaders;
     quality.texture_compression = static_cast<Metal::TextureCompression>(
@@ -1263,7 +1267,7 @@ const char* ThermalStateName() {
                          "{:.1f} blit passes, {:.1f} feedback copies, drawable wait {:.1f} ms "
                          "per frame; frames on screen every {:.2f} ms (spread {:.2f} ms), {:.0f} late, "
                          "emulation thread CPU {:.1f} ms per frame (worst {:.1f} ms), CPU JIT {}, shader JIT {}, "
-                         "device {}{}",
+                         "device {}{}{}",
                          _speed.load(), _fps.load(), gpu.gpu_ms, gpu.present_ms, gpu.stall_ms,
                          gpu.stalls,
                          gpu.draws, gpu.skipped, gpu.render_passes, gpu.blit_passes,
@@ -1272,7 +1276,11 @@ const char* ThermalStateName() {
                          Settings::values.use_cpu_jit.GetValue() ? "on" : "OFF (slow)",
                          Settings::values.use_shader_jit.GetValue() ? "on" : "off",
                          ThermalStateName(),
-                         NSProcessInfo.processInfo.lowPowerModeEnabled ? ", low power mode" : "");
+                         NSProcessInfo.processInfo.lowPowerModeEnabled ? ", low power mode" : "",
+                         Settings::values.antialiasing.GetValue() != Settings::AntiAliasingMethod::None
+                             ? fmt::format(", MSAA on ({:.1f} refreshes of multisampled copies)",
+                                           gpu.msaa_refreshes)
+                             : std::string{});
                 if (gpu.fg_made > 0 || gpu.fg_skipped > 0) {
                     LOG_INFO(Frontend,
                              "Frame generation: {:.0f} frames made ({:.1f} ms each), {:.0f} game "

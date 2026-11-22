@@ -47,6 +47,8 @@
     config.texturePool = NO;
     config.hiddenSurfaceRemoval = NO;
     config.drawOptimizations = YES;
+    config.antiAliasing = 0;
+    config.waitForGPU = YES;
     config.gpuPassTiming = NO;
     config.dumpShaders = NO;
     config.textureCompression = 0;

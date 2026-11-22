@@ -329,8 +329,21 @@ struct GraphicsSettingsView: View {
         text += "blending that changes nothing and draws clears of part of the screen inside the "
         text += "game's own render passes; turn it off if a game shows glitches it did not "
         text += "have before. "
+        text += "Anti-Aliasing (MSAA) smooths the jagged edges of the game's 3D: each pixel is "
+        text += "drawn with several samples along the edges (2x, 4x or 8x, capped at what the "
+        text += "device supports). It is cheap on Apple GPUs for what it does, but costs GPU "
+        text += "time and memory, more at higher Internal Resolution; most useful at 1x or 2x. "
+        text += "Wait for GPU Each Frame keeps the emulation at most one frame ahead of the GPU, "
+        text += "which keeps frame pacing even; turning it off lets the emulation run further "
+        text += "ahead (as Azahar does by default on its other renderers), which can help a game "
+        text += "whose CPU and GPU work are both heavy, at the cost of more input latency and "
+        text += "less even pacing. "
         text += "All of these apply the next time a game starts."
         return text
+    }
+
+    static func antiAliasingName(_ value: Int) -> String {
+        value == 0 ? "Off" : "\(1 << value)x"
     }
 
     @ViewBuilder private var rendererSections: some View {
@@ -372,6 +385,9 @@ struct GraphicsSettingsView: View {
                     Text("Off").tag(1)
                     ForEach([2, 4, 8, 16], id: \.self) { Text("\($0)x").tag($0) }
                 }
+                Picker("Anti-Aliasing (MSAA)", selection: $settings.antiAliasing) {
+                    ForEach(0...3, id: \.self) { Text(Self.antiAliasingName($0)).tag($0) }
+                }
                 Toggle("Fast Shader Math", isOn: $settings.fastShaderMath)
                 Toggle("Fast Lighting Math", isOn: $settings.fastLighting)
                 Toggle("Fast Lighting Lookups", isOn: $settings.fastLightingLookups)
@@ -387,6 +403,7 @@ struct GraphicsSettingsView: View {
                     .disabled(!settings.hardwareShaders)
                 Toggle("Texture Pool", isOn: $settings.texturePool)
                 Toggle("Fast Depth Readback", isOn: $settings.fastDepthReadback)
+                Toggle("Wait for GPU Each Frame", isOn: $settings.waitForGPU)
                 Toggle("Disable Right Eye Render", isOn: $settings.disableRightEyeRender)
                 Toggle("Hidden Surface Removal", isOn: $settings.hiddenSurfaceRemoval)
                 Toggle("Draw Optimizations", isOn: $settings.drawOptimizations)

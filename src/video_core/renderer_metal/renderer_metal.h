@@ -128,6 +128,10 @@ struct QualityOptions {
     /// scissor test inside the box as the GPU scissor rectangle, and blending that keeps the
     /// source color drawn unblended. Off draws as before they existed.
     bool draw_optimizations = true;
+    /// Waits each frame until the GPU finished the previous one, so the emulation is never more
+    /// than a frame ahead of the GPU. Off lets it run further ahead (Azahar's default on other
+    /// renderers since its frames-ahead limit became optional).
+    bool wait_for_gpu = true;
     /// GPU timestamps for every render pass, for the GPU time per pass in the log. A diagnostic:
     /// it can keep passes from overlapping on the GPU.
     bool gpu_pass_timing = false;
@@ -207,6 +211,7 @@ struct FrameStats {
     double draws = 0.0;    ///< Draw calls
     double skipped = 0.0;  ///< Draws skipped while their pipeline was being built
     double render_passes = 0.0;   ///< Render passes (each loads and stores its attachments)
+    double msaa_refreshes = 0.0;  ///< Multisampled copies refreshed (MSAA), each an extra pass
     double blit_passes = 0.0;     ///< Blit passes (copies, uploads), each splits a render pass
     double feedback_copies = 0.0; ///< Copies of a render target that is also sampled
     double drawable_ms = 0.0;     ///< Time waiting for the layer to hand out a drawable

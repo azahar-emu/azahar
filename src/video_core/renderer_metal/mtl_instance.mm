@@ -20,6 +20,14 @@ Instance::Instance() {
     stencil_export =
         [device supportsFamily:MTLGPUFamilyApple5] || [device supportsFamily:MTLGPUFamilyMac2];
     astc_support = [device supportsFamily:MTLGPUFamilyApple2];
+    if (stencil_export) {
+        for (u32 samples = 8; samples >= 2; samples /= 2) {
+            if ([device supportsTextureSampleCount:samples]) {
+                max_msaa_samples = samples;
+                break;
+            }
+        }
+    }
 #if TARGET_OS_OSX
     bc_support = true;
 #else

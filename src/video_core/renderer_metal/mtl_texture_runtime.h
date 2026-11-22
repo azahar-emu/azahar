@@ -71,14 +71,16 @@ public:
 
     /// Returns (and caches) a utility pipeline using the provided fragment function.
     /// `color_writes` false keeps the color attachment unchanged (a depth clear in a color pass).
+    /// `samples` is the MSAA sample count of the pass it draws in.
     id<MTLRenderPipelineState> GetPipeline(std::string_view function, MTLPixelFormat color,
                                            MTLPixelFormat depth, MTLPixelFormat stencil,
-                                           bool color_writes = true);
+                                           bool color_writes = true, u32 samples = 1);
 
-    /// Draws a partial clear into a render pass with the given attachment formats (see
-    /// Scheduler::ClearColorRect), without touching the attachments it does not clear.
+    /// Draws a partial clear into a render pass with the given attachment formats and samples
+    /// (see Scheduler::ClearColorRect), without touching the attachments it does not clear.
     void DrawClear(id<MTLRenderCommandEncoder> encoder, const Scheduler::PendingClear& clear,
-                   MTLPixelFormat color, MTLPixelFormat depth, MTLPixelFormat stencil);
+                   MTLPixelFormat color, MTLPixelFormat depth, MTLPixelFormat stencil,
+                   u32 samples = 1);
 
     /// Sets the viewport/scissor to the destination rectangle and returns source coordinates
     /// adjusted for flipped rectangles.
@@ -195,6 +197,13 @@ public:
     /// Once per frame.
     void TickFrame() {
         texture_pool.Tick();
+        scheduler.SweepMsaaTextures();
+    }
+
+    /// The MSAA sample count render targets get (Settings::values.antialiasing, as far as the
+    /// device supports it), 1 without MSAA.
+    u32 MsaaSamples(u32 requested) const {
+        return instance.MsaaSamples(requested);
     }
 
     bool SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const {
@@ -336,8 +345,8 @@ public:
     void Download(const VideoCore::BufferTextureCopy& download,
                   const VideoCore::StagingData& staging);
 
-    /// Scales up the surface to match the new resolution scale. The Metal backend does not do
-    /// MSAA (Settings::values.antialiasing stays off on iOS), so the sample count is always 1.
+    /// Scales up the surface to match the new resolution scale and records its MSAA sample count
+    /// (the multisampled copy of a render target is kept by the scheduler, see RenderTarget).
     void ScaleUp(u32 new_scale, u8 new_sample_count = 1);
 
     /// Returns the bpp of the internal surface format

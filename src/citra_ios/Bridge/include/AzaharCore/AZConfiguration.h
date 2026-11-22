@@ -107,6 +107,11 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 /// Depth/stencil-only draws without a fragment function, the scissor test as the GPU's scissor
 /// rectangle and no-op blending dropped. Off draws the way it was done before.
 @property(nonatomic) BOOL drawOptimizations;
+/// MSAA anti-aliasing of the game's 3D: 0 off, 1 2x, 2 4x, 3 8x (as far as the device supports).
+@property(nonatomic) NSInteger antiAliasing;
+/// Wait each frame for the GPU to finish the previous one (the emulation stays at most a frame
+/// ahead). Off lets the emulation run further ahead of the GPU.
+@property(nonatomic) BOOL waitForGPU;
 /// GPU timestamps of every render pass for the log (diagnostic, costs GPU time).
 @property(nonatomic) BOOL gpuPassTiming;
 /// Writes the most used shaders of the game to Neroli/shader_dump (diagnostic).

@@ -107,6 +107,9 @@ all screen layouts and 3D modes), the backend now has:
   quaternion fix-up done in the fragment shader instead of a geometry shader
 - A per-game disk shader cache, a Metal binary archive and asynchronous pipeline compilation
 - Texture filters, MetalFX upscaling, sharpening and post-processing shaders
+- MSAA anti-aliasing: render targets are drawn through multisampled copies kept by the scheduler,
+  resolved at the end of every pass and refreshed from the texture when it was written another
+  way (an upload, a copy, shadow rendering)
 - Frame generation (VideoToolbox or MetalFX frame interpolation) with display-driven pacing
 - Tile-based GPU optimizations: hidden surface removal, depth-only pipelines, hardware scissor and
   clears drawn inside the game's render passes

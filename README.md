@@ -37,8 +37,8 @@ blossom.
 - **Hardware shaders**: the 3DS's vertex programs run on the GPU as Metal shaders.
 - **Shader cache** that persists between sessions (a per-game disk cache plus a Metal binary
   archive), with asynchronous compilation, so stutter fades after the first play.
-- **Higher internal resolutions**, anisotropic filtering, texture filters (Anime4K, ScaleForce,
-  xBRZ, MMPX and more) and custom texture packs.
+- **Higher internal resolutions**, **MSAA anti-aliasing**, anisotropic filtering, texture
+  filters (Anime4K, ScaleForce, xBRZ, MMPX and more) and custom texture packs.
 - **MetalFX upscaling** and sharpening, including contrast adaptive sharpening.
 - **Post-processing**: built-in effects plus your own `.metal` shaders.
 - **3D modes**: side-by-side, anaglyph and interlaced, with per-eye options.

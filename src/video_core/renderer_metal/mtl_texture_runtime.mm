@@ -145,10 +145,10 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_)
 
 void BlitHelper::DrawClear(id<MTLRenderCommandEncoder> encoder,
                            const Scheduler::PendingClear& clear, MTLPixelFormat color,
-                           MTLPixelFormat depth, MTLPixelFormat stencil) {
+                           MTLPixelFormat depth, MTLPixelFormat stencil, u32 samples) {
     if (clear.is_depth) {
         id<MTLRenderPipelineState> pipeline =
-            GetPipeline("clear_depth_fs", color, depth, stencil, false);
+            GetPipeline("clear_depth_fs", color, depth, stencil, false, samples);
         if (!pipeline) {
             return;
         }
@@ -159,7 +159,8 @@ void BlitHelper::DrawClear(id<MTLRenderCommandEncoder> encoder,
         SetupRect(encoder, clear.texture, clear.level, clear.rect, clear.rect, 1, 1, 0.0f, {},
                   static_cast<float>(clear.depth));
     } else {
-        id<MTLRenderPipelineState> pipeline = GetPipeline("clear_color_fs", color, depth, stencil);
+        id<MTLRenderPipelineState> pipeline =
+            GetPipeline("clear_color_fs", color, depth, stencil, true, samples);
         if (!pipeline) {
             return;
         }
@@ -179,10 +180,11 @@ BlitHelper::~BlitHelper() = default;
 
 id<MTLRenderPipelineState> BlitHelper::GetPipeline(std::string_view function, MTLPixelFormat color,
                                                    MTLPixelFormat depth, MTLPixelFormat stencil,
-                                                   bool color_writes) {
+                                                   bool color_writes, u32 samples) {
+    samples = std::max(samples, 1u);
     const std::string key =
-        fmt::format("{}:{}:{}:{}:{}", function, static_cast<u64>(color), static_cast<u64>(depth),
-                    static_cast<u64>(stencil), color_writes ? 1 : 0);
+        fmt::format("{}:{}:{}:{}:{}:{}", function, static_cast<u64>(color), static_cast<u64>(depth),
+                    static_cast<u64>(stencil), color_writes ? 1 : 0, samples);
     if (const auto it = pipelines.find(key); it != pipelines.end()) {
         return it->second;
     }
@@ -204,6 +206,7 @@ id<MTLRenderPipelineState> BlitHelper::GetPipeline(std::string_view function, MT
     desc.colorAttachments[0].pixelFormat = color;
     desc.depthAttachmentPixelFormat = depth;
     desc.stencilAttachmentPixelFormat = stencil;
+    desc.rasterSampleCount = samples;
     if (color == MTLPixelFormatInvalid || !color_writes) {
         desc.colorAttachments[0].writeMask = MTLColorWriteMaskNone;
     }
@@ -275,8 +278,10 @@ void BlitHelper::BlitColor(id<MTLTexture> src, u32 src_level, u32 src_slice,
                            const Common::Rectangle<u32>& src_rect, id<MTLTexture> dst,
                            u32 dst_level, u32 dst_slice, const Common::Rectangle<u32>& dst_rect,
                            bool linear) {
+    // A multisampled destination is the copy of a render target being refreshed (MSAA).
     id<MTLRenderPipelineState> pipeline =
-        GetPipeline("blit_color_fs", dst.pixelFormat, MTLPixelFormatInvalid, MTLPixelFormatInvalid);
+        GetPipeline("blit_color_fs", dst.pixelFormat, MTLPixelFormatInvalid, MTLPixelFormatInvalid,
+                    true, static_cast<u32>(dst.sampleCount));
     if (!pipeline) {
         return;
     }
@@ -363,12 +368,17 @@ void BlitHelper::BlitDepthStencil(id<MTLTexture> src, id<MTLTexture> src_stencil
         has_stencil ? MTLPixelFormatDepth32Float_Stencil8 : MTLPixelFormatInvalid;
     id<MTLRenderPipelineState> pipeline =
         GetPipeline(copy_stencil ? "blit_depth_stencil_fs" : "blit_depth_fs", MTLPixelFormatInvalid,
-                    dst.pixelFormat, stencil_format);
+                    dst.pixelFormat, stencil_format, true, static_cast<u32>(dst.sampleCount));
     if (!pipeline) {
         return;
     }
     if (has_stencil && !copy_stencil) {
-        LOG_WARNING(Render, "Stencil export is not supported, stencil data will be lost on blit");
+        static bool warned = false;
+        if (!warned) {
+            warned = true;
+            LOG_WARNING(Render, "A depth blit cannot copy stencil (no stencil export or stencil "
+                                "view), the stencil data is not copied");
+        }
     }
 
     id<MTLTexture> src_view = MakeLevelView(src, src.pixelFormat, src_level, 0);
@@ -466,13 +476,32 @@ TextureRuntime::TextureRuntime(const Instance& instance_, Scheduler& scheduler_)
     scheduler.SetRectClearDrawer([this](id<MTLRenderCommandEncoder> encoder,
                                         const Scheduler::PendingClear& clear,
                                         MTLPixelFormat color, MTLPixelFormat depth,
-                                        MTLPixelFormat stencil) {
-        blit_helper.DrawClear(encoder, clear, color, depth, stencil);
+                                        MTLPixelFormat stencil, u32 samples) {
+        blit_helper.DrawClear(encoder, clear, color, depth, stencil, samples);
+    });
+    // MSAA: a multisampled copy is refreshed with the blits, every sample of a pixel taking the
+    // pixel's value. Edges drawn before keep the smoothing they were resolved with.
+    scheduler.SetMsaaRefresher([this](id<MTLTexture> resolved, id<MTLTexture> stencil_view,
+                                      id<MTLTexture> msaa, bool is_depth) {
+        const u32 width = static_cast<u32>(resolved.width);
+        const u32 height = static_cast<u32>(resolved.height);
+        const Common::Rectangle<u32> rect{0, height, width, 0};
+        scheduler.SetPassLabel("MSAA refresh");
+        if (is_depth) {
+            if (stencil_view == nil && resolved.pixelFormat == MTLPixelFormatDepth32Float_Stencil8 &&
+                (resolved.usage & MTLTextureUsagePixelFormatView) != 0) {
+                stencil_view = [resolved newTextureViewWithPixelFormat:MTLPixelFormatX32_Stencil8];
+            }
+            blit_helper.BlitDepthStencil(resolved, stencil_view, 0, rect, msaa, 0, rect);
+        } else {
+            blit_helper.BlitColor(resolved, 0, 0, rect, msaa, 0, 0, rect, false);
+        }
     });
 }
 
 TextureRuntime::~TextureRuntime() {
     scheduler.SetRectClearDrawer({});
+    scheduler.SetMsaaRefresher({});
 }
 
 VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
@@ -623,6 +652,7 @@ bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
     }
 
     id<MTLBlitCommandEncoder> blit = scheduler.BlitEncoder();
+    scheduler.NoteWritten(dst);
     for (const auto& copy : copies) {
         const auto [src_w, src_h] = LevelExtent(src, copy.src_level);
         const auto [dst_w, dst_h] = LevelExtent(dst, copy.dst_level);
@@ -1005,6 +1035,7 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
     const MTLOrigin origin = MTLOriginMake(rect.left, std::min(rect.bottom, rect.top), 0);
     const MTLSize size = MTLSizeMake(rect_width, rect_height, 1);
     id<MTLBuffer> buffer = runtime->upload_buffer.Handle();
+    scheduler->NoteWritten(texture);
 
     if (traits.has_stencil) {
         // De-interleave the (D24 << 8 | S8) words into a float depth plane and a stencil plane.
@@ -1096,6 +1127,7 @@ void Surface::UploadCustom(const VideoCore::Material* custom_material, u32 level
         runtime->upload_buffer.Commit(custom_size);
 
         const auto [bytes_per_row, rows] = CustomLayout(custom_format, mat_width, mat_height);
+        scheduler->NoteWritten(target);
         [scheduler->BlitEncoder() copyFromBuffer:runtime->upload_buffer.Handle()
                                     sourceOffset:offset
                                sourceBytesPerRow:bytes_per_row
@@ -1271,6 +1303,9 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
 }
 
 void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
+    // The sample count only says this surface is rendered to with MSAA: the multisampled copy is
+    // made by the scheduler for the passes that need it (see Framebuffer).
+    sample_count = std::max(sample_count, new_sample_count);
     if (res_scale == new_scale || new_scale == 1) {
         return;
     }
@@ -1360,6 +1395,21 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         return;
     }
 
+    // MSAA (Settings::values.antialiasing, see RenderTarget::samples) for the base level of 2D
+    // render targets, which is what games draw their frames into.
+    const u32 wanted_samples =
+        std::max(color ? color->sample_count : u8{1}, depth ? depth->sample_count : u8{1});
+    u32 samples = runtime.MsaaSamples(wanted_samples);
+    if ((color && (color_level != 0 || color->texture_type != VideoCore::TextureType::Texture2D)) ||
+        (depth && (depth_level != 0 || depth->texture_type != VideoCore::TextureType::Texture2D))) {
+        samples = 1;
+    }
+    if (samples > 1 && depth && depth->HasStencil()) {
+        // Taken before the depth texture below: it may replace the texture with one that can
+        // have a stencil view.
+        target.stencil_view = depth->StencilTexture();
+    }
+
     if (color) {
         const auto [w, h] = level_extent(color, color_level);
         width = std::min(width, w);
@@ -1388,6 +1438,7 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
     }
     target.width = width;
     target.height = height;
+    target.samples = samples;
     valid = attachments[0] != nil || attachments[1] != nil;
 }
 
