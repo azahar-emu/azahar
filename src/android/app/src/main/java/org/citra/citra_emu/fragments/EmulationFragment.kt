@@ -1654,9 +1654,14 @@ class EmulationFragment :
     }
 
     private fun setInsets() {
-        if (!activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
-            ViewCompat.setOnApplyWindowInsetsListener(binding.surfaceEmulation, applyCutoutInsets)
+        // When expanding into the cutout area every view is laid out edge to edge, so no
+        // cutout margins are applied. Otherwise the emulation surface, the input overlay and
+        // the menus all avoid the cutout by the same amount, keeping them aligned.
+        if (activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
+            return
         }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.surfaceEmulation, applyCutoutInsets)
         ViewCompat.setOnApplyWindowInsetsListener(binding.surfaceInputOverlay, applyCutoutInsets)
         ViewCompat.setOnApplyWindowInsetsListener(
             binding.performanceOverlayShowText,

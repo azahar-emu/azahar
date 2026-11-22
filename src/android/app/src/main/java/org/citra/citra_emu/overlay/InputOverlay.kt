@@ -145,14 +145,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             var xPosition = event.getX(pointerIndex).toInt()
             var yPosition = event.getY(pointerIndex).toInt()
 
-            if (CitraSettings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
-                val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
-                val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
-                val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
-                xPosition += marginsX
-                yPosition += marginsY
-            }
-
             var hasActiveButtons = false
             for (button in overlayButtons) {
                 if (button.trackId == pointerId) {
@@ -728,7 +720,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             displayWidth = displayMetrics.widthPixels.toFloat()
             displayHeight = displayMetrics.heightPixels.toFloat()
         }
-        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        // When the display is expanded into the cutout area the overlay spans the whole
+        // window, so the cutout must not be subtracted from the usable area.
+        val cutout =
+            if (CitraSettings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
+                null
+            } else {
+                ViewCompat.getRootWindowInsets(this)?.displayCutout
+            }
         val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
         val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
         var maxX = displayWidth - marginsX
@@ -903,7 +902,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             displayWidth = displayMetrics.widthPixels.toFloat()
             displayHeight = displayMetrics.heightPixels.toFloat()
         }
-        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        // When the display is expanded into the cutout area the overlay spans the whole
+        // window, so the cutout must not be subtracted from the usable area.
+        val cutout =
+            if (CitraSettings.activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
+                null
+            } else {
+                ViewCompat.getRootWindowInsets(this)?.displayCutout
+            }
         val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
         val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
         var maxX = displayWidth - marginsX
