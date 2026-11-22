@@ -71,7 +71,7 @@ struct ArticView: View {
                     } footer: {
                         Text("This installs console unique data from your console. Do not share "
                              + "your user or nand folders afterwards. Don't go online with both "
-                             + "Azahar and your 3DS at the same time after the setup. The Old 3DS "
+                             + "Neroli and your 3DS at the same time after the setup. The Old 3DS "
                              + "setup is needed for the New 3DS setup, doing both is recommended; "
                              + "both work whatever the model of your console is.")
                     }

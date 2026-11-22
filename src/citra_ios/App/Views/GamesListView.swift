@@ -301,7 +301,7 @@ extension GameInfoView {
         do {
             let url = try SaveManager.export(game)
             backups = SaveManager.backups(of: game)
-            saveMessage = "Saved as \(url.lastPathComponent) in Files › Azahar › saves."
+            saveMessage = "Saved as \(url.lastPathComponent) in Files › Neroli › saves."
         } catch {
             saveMessage = error.localizedDescription
         }
@@ -396,7 +396,7 @@ struct GameInfoView: View {
                     } header: {
                         Text("Save Data")
                     } footer: {
-                        Text("A backup is a copy of the game's save in Files › Azahar › saves. "
+                        Text("A backup is a copy of the game's save in Files › Neroli › saves. "
                              + "Restoring replaces the save of the game with a backup (or any "
                              + "folder with a save) and keeps the save it had as a backup first.")
                     }

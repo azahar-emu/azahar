@@ -6,7 +6,7 @@ import Foundation
 import UIKit
 import UniformTypeIdentifiers
 
-/// Backs up and restores the save data of a game as a folder in Files › Azahar › saves.
+/// Backs up and restores the save data of a game as a folder in Files › Neroli › saves.
 enum SaveManager {
     enum SaveError: LocalizedError {
         case noSave

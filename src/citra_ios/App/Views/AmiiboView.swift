@@ -23,7 +23,7 @@ struct AmiiboView: View {
                     }
                 } footer: {
                     Text("The game has to ask for an amiibo (its amiibo screen) before one can be "
-                         + "loaded. Imported files are kept in Files › Azahar › amiibo, a game "
+                         + "loaded. Imported files are kept in Files › Neroli › amiibo, a game "
                          + "saves what it writes to an amiibo into that file.")
                 }
 

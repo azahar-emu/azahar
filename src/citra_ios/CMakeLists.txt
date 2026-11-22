@@ -137,9 +137,9 @@ set(SRC_DIR "${PROJECT_SOURCE_DIR}")
 generate_build_info()
 
 set_target_properties(azahar_ios PROPERTIES
-    OUTPUT_NAME "Azahar"
+    OUTPUT_NAME "Neroli"
     MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in"
-    MACOSX_BUNDLE_BUNDLE_NAME "Azahar-iOS"
+    MACOSX_BUNDLE_BUNDLE_NAME "Neroli"
     MACOSX_BUNDLE_GUI_IDENTIFIER "${AZAHAR_IOS_BUNDLE_ID}"
     MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
     MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
@@ -184,7 +184,7 @@ if (AZAHAR_IOS_JIT_HELPER)
         OUTPUT_NAME "AzaharJITHelper"
         XCODE_PRODUCT_TYPE "com.apple.product-type.app-extension"
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/JITHelper/Info.plist.in"
-        MACOSX_BUNDLE_BUNDLE_NAME "Azahar JIT Helper"
+        MACOSX_BUNDLE_BUNDLE_NAME "Neroli JIT Helper"
         MACOSX_BUNDLE_GUI_IDENTIFIER "${AZAHAR_IOS_BUNDLE_ID}.jit-helper"
         MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
@@ -267,7 +267,7 @@ function(azahar_license_mit name summary copyright)
         "@@@ ${name}\n${summary}\nCopyright (c) ${copyright}\n\n${AZAHAR_MIT_TEXT}\n")
 endfunction()
 
-azahar_license("Azahar" "GPL-3.0-or-later. The source code of this app: https://github.com/JMillz269/Azahar-iOS"
+azahar_license("Neroli, based on Azahar" "GPL-3.0-or-later. The source code of this app: https://github.com/JMillz269/Azahar-iOS"
     "LICENSE.txt")
 azahar_license("Azahar (parts under GPLv2 or later)"
     "GPL-2.0-or-later. Older files of Azahar and Citra are licensed under the GPLv2 or any later version"

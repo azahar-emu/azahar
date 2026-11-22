@@ -344,7 +344,7 @@ struct GraphicsSettingsView: View {
                     .disabled(!AZEmulator.isJITAvailable)
             } header: {
                 InfoHeader("Renderer") {
-                    Text("Azahar renders natively with Metal. Hardware Shaders run the game's vertex "
+                    Text("Neroli renders natively with Metal. Hardware Shaders run the game's vertex "
                          + "shaders on the GPU. Draws that can't be translated, and games that use "
                          + "geometry shaders, still run on the CPU, where the shader JIT speeds them "
                          + "up. Accurate Multiplication fixes graphical glitches in some games at a "
@@ -416,7 +416,7 @@ struct GraphicsSettingsView: View {
                          + "give the display the screen layout you pick while this device keeps its "
                          + "own layout. Takes effect when a game starts. "
                          + "Running inside another app (such as LiveContainer) may stop iOS from "
-                         + "offering the display to Azahar.")
+                         + "offering the display to Neroli.")
                 }
             }
 
@@ -434,9 +434,9 @@ struct GraphicsSettingsView: View {
             } header: {
                 InfoHeader("Texture Packs") {
                     Text("Custom Textures replaces the textures of a game with the images in Files › "
-                         + "Azahar › load › textures › the game's title ID. Preloading loads them all "
+                         + "Neroli › load › textures › the game's title ID. Preloading loads them all "
                          + "when the game starts (more memory, no stutter). Dump Textures saves the "
-                         + "textures a game uses to Files › Azahar › dump › textures, to make a pack. "
+                         + "textures a game uses to Files › Neroli › dump › textures, to make a pack. "
                          + "Applies the next time a game starts.")
                 }
             }
@@ -617,7 +617,7 @@ struct GraphicsSettingsView: View {
                          + "Grid effect are, Saturation, Contrast and Brightness adjust the "
                          + "colors. "
                          + "An effect is applied to the finished screens. A custom shader replaces it: "
-                         + "put a .metal file with a post_effect function in Files › Azahar › shaders "
+                         + "put a .metal file with a post_effect function in Files › Neroli › shaders "
                          + "› post (Example.metal shows how). A shader that does not compile is "
                          + "ignored, the log tells why. Applies when a game starts.")
                 }
@@ -1061,7 +1061,7 @@ struct SystemSettingsView: View {
                     Text("LLE Applets runs the console's own system applets (the Mii maker and the "
                          + "like) instead of the built-in ones; it needs the system files of a real "
                          + "console. Loads Luma-style 3GX plugins for games. Put a plugin in the folder of the "
-                         + "game's title ID (Files › Azahar › sdmc › luma › plugins › 0004000000XXXXXX "
+                         + "game's title ID (Files › Neroli › sdmc › luma › plugins › 0004000000XXXXXX "
                          + "› plugin.3gx) or name it default.3gx in plugins. Applies when a game "
                          + "starts.")
                 }
@@ -1086,14 +1086,14 @@ struct SystemSettingsView: View {
             Section {
                 Toggle("Virtual SD Card", isOn: $settings.useVirtualSD)
                 Toggle("Compress Installed CIAs", isOn: $settings.compressCIAInstalls)
-                LabeledContent("Storage Folder", value: storageName ?? "Azahar folder")
+                LabeledContent("Storage Folder", value: storageName ?? "Neroli folder")
                 Button("Choose Storage Folder…") {
                     CustomStorage.choose { url in
                         if let url { storageName = url.lastPathComponent }
                     }
                 }
                 if storageName != nil {
-                    Button("Use the Azahar Folder", role: .destructive) {
+                    Button("Use the Neroli Folder", role: .destructive) {
                         CustomStorage.reset()
                         storageName = nil
                     }
@@ -1101,9 +1101,9 @@ struct SystemSettingsView: View {
             } header: {
                 InfoHeader("Storage") {
                     Text("A chosen folder holds the console's nand and SD card (as the folders nand "
-                         + "and sdmc inside it) instead of Files › Azahar. Existing data is not moved. "
+                         + "and sdmc inside it) instead of Files › Neroli. Existing data is not moved. "
                          + "Apps that run inside another app (LiveContainer) may not be allowed to "
-                         + "use a folder outside their own; the Azahar folder is used then. Applies "
+                         + "use a folder outside their own; the Neroli folder is used then. Applies "
                          + "when a game starts.")
                 }
             }
@@ -1124,13 +1124,13 @@ struct SystemSettingsView: View {
             .listRowBackground(LGRowBackground())
 
             Section {
-                LabeledContent("Data Folder", value: "Files › Azahar")
+                LabeledContent("Data Folder", value: "Files › Neroli")
                 LabeledContent("Games Folder", value: "Files › ROMs")
             } header: {
                 InfoHeader {
                     EmptyView()
                 } info: {
-                    Text("System files, saves and the virtual SD card live in the Azahar folder of "
+                    Text("System files, saves and the virtual SD card live in the Neroli folder of "
                          + "the app's documents, accessible from the Files app.")
                 }
             }
@@ -1231,7 +1231,7 @@ struct AboutView: View {
                     Image(systemName: "gamecontroller.fill")
                         .font(.system(size: 48))
                         .foregroundStyle(.tint)
-                    Text("Azahar").font(.title.bold())
+                    Text("Neroli").font(.title.bold())
                     Text(AZEmulator.versionString)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -1269,16 +1269,18 @@ struct AboutView: View {
                          + "GPU Pass Timing (with Write Log on) adds the GPU time of every kind of "
                          + "render pass to the log. It costs GPU time and can cause stutter, so "
                          + "only turn it on to measure something. Save Shaders for Analysis writes "
-                         + "the game's most used shaders to Files › Azahar › shader_dump › (game "
+                         + "the game's most used shaders to Files › Neroli › shader_dump › (game "
                          + "ID) every 10 seconds or so, with an index.txt of how often each is "
                          + "used; leave it off for playing. Both apply when a game starts.")
                 }
             }
             .listRowBackground(LGRowBackground())
             Section {
-                Text("Azahar is an open-source Nintendo 3DS emulator based on Citra. This iOS "
-                     + "port uses a native Metal renderer. Azahar is free software, licensed under "
-                     + "the GNU General Public License, version 3 or any later version. "
+                Text("Neroli is an iOS port of Azahar, the open-source Nintendo 3DS emulator "
+                     + "that continues Citra, with a native Metal renderer. It is not affiliated "
+                     + "with the Azahar developers or with Nintendo. Neroli is free software, "
+                     + "licensed under the GNU General Public License, version 3 or any later "
+                     + "version. "
                      + "Only use games and system files dumped from hardware you own.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -1630,7 +1632,7 @@ struct AppColorsSettingsView: View {
 // MARK: - Licenses
 
 /// One component in Licenses.txt, which src/citra_ios/CMakeLists.txt builds from the license
-/// files of Azahar and of every third-party component in the app.
+/// files of Neroli, Azahar and every third-party component in the app.
 struct LicenseEntry: Identifiable {
     let id: Int
     let name: String
@@ -1672,14 +1674,14 @@ enum LicenseList {
     }()
 }
 
-/// The licenses of Azahar and of the third-party code built into the app.
+/// The licenses of Neroli (Azahar) and of the third-party code built into the app.
 struct LicensesView: View {
     private let entries = LicenseList.entries
 
     var body: some View {
         Form {
             Section {
-                Text("Azahar is free software: you can redistribute it and/or modify it under the "
+                Text("Neroli is free software: you can redistribute it and/or modify it under the "
                      + "terms of the GNU General Public License as published by the Free Software "
                      + "Foundation, either version 3 of the License, or (at your option) any later "
                      + "version. It is distributed WITHOUT ANY WARRANTY. The app also contains the "

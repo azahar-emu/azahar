@@ -1,6 +1,7 @@
-# Azahar for iOS
+# Neroli
 
-A native iOS port of Azahar with:
+Neroli (formerly Azahar-iOS) is a native iOS port of Azahar, not affiliated with the Azahar
+developers. It has:
 
 - **A native Metal renderer** (`src/video_core/renderer_metal`). It talks to Metal directly. There is
   no Vulkan or MoltenVK layer.
@@ -37,7 +38,7 @@ git submodule update --init --recursive
 ./.ci/ios.sh package
 ```
 
-The last step writes `artifacts/Azahar-unsigned.ipa`. A sideloading tool (SideStore, AltStore,
+The last step writes `artifacts/Neroli-unsigned.ipa`. A sideloading tool (SideStore, AltStore,
 Sideloadly, …) can sign it, or you can open `build/ios/citra.xcodeproj`, select the `azahar_ios`
 target and sign it with your own team.
 
@@ -50,9 +51,10 @@ compiles every shader the Metal backend can generate with Apple's offline Metal 
 ## Using the app
 
 - Import decrypted games with the **+** button in the Games tab, or copy them into
-  **Files › On My iPhone › Azahar › ROMs**.
-- System files, saves and the virtual SD card are in **Files › Azahar › Azahar**. This is the
-  regular Azahar user directory, so you can copy `sysdata`, `nand` and `sdmc` over from a desktop
+  **Files › On My iPhone › Neroli › ROMs**.
+- System files, saves and the virtual SD card are in **Files › Neroli › Neroli**. This is the
+  regular Azahar user directory (a folder named Azahar from earlier versions is moved there
+  the first time Neroli starts), so you can copy `sysdata`, `nand` and `sdmc` over from a desktop
   install.
 - Supported formats: `.3ds/.cci`, `.cxi`, `.3dsx`, `.app`, `.elf/.axf` and their compressed
   `.z*` variants. CIA installation is not exposed in the UI yet.
@@ -60,7 +62,7 @@ compiles every shader the Metal backend can generate with Apple's offline Metal 
 ### JIT
 
 iOS only allows executable memory while a debugger is attached to the app. When the app is started
-with JIT enabled (for example with StikDebug, or from Xcode), Azahar uses the dynarmic ARM
+with JIT enabled (for example with StikDebug, or from Xcode), Neroli uses the dynarmic ARM
 recompiler and the PICA shader JIT. Otherwise it automatically falls back to the interpreters,
 which are much slower. The JIT status is shown in **Settings › General**.
 
@@ -116,7 +118,7 @@ Next:
 
 ## License
 
-Azahar, and this iOS port with it, is licensed under the GNU General Public License, version 3
+Neroli, like Azahar, is licensed under the GNU General Public License, version 3
 or any later version (see [LICENSE.txt](../../LICENSE.txt)). Older files of Azahar and Citra are
 licensed under the GPLv2 or any later version (see
 [misc/licenses/gplv2.txt](../../misc/licenses/gplv2.txt)); each file's header says which applies.

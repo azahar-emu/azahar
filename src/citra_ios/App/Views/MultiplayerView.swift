@@ -42,7 +42,7 @@ private struct ConnectView: View {
     @AppStorage("multiplayer.address") private var address = ""
     @AppStorage("multiplayer.port") private var port = "24872"
     @AppStorage("multiplayer.nickname") private var nickname = ""
-    @AppStorage("multiplayer.roomName") private var roomName = "Azahar Room"
+    @AppStorage("multiplayer.roomName") private var roomName = "Neroli Room"
     @AppStorage("multiplayer.maxMembers") private var maxMembers = 4
     @State private var password = ""
     @State private var mode = ConnectMode.join

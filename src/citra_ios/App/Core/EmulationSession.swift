@@ -163,7 +163,7 @@ final class EmulationSession: ObservableObject {
             [weak self] path in
             Task { @MainActor in
                 self?.showToast(path != nil
-                    ? "Screenshot saved to Files › Azahar › screenshots"
+                    ? "Screenshot saved to Files › Neroli › screenshots"
                     : "The screenshot failed")
             }
         }
@@ -235,7 +235,7 @@ final class EmulationSession: ObservableObject {
         pendingSettings = nil
 
         if !AZEmulator.isJITAvailable && (settings.cpuJIT || settings.shaderJIT) {
-            NSLog("Azahar: JIT is not available, falling back to the interpreters")
+            NSLog("Neroli: JIT is not available, falling back to the interpreters")
         }
         AZEmulator.shared.apply(configuration: settings.makeConfiguration(for: game))
         // A game can use its own controller profile for as long as it runs.

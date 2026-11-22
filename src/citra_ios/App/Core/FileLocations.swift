@@ -12,8 +12,44 @@ enum FileLocations {
     }
 
     /// Emulator user directory (sdmc, nand, sysdata, config, shaders, logs...).
-    static var userDirectory: URL {
-        documents.appendingPathComponent("Azahar", isDirectory: true)
+    static let userDirectory: URL = resolveUserDirectory()
+
+    /// The folder had the name of the upstream project, Azahar, before the app was called Neroli.
+    /// It is moved to the new name the first time, so saves, system files and everything else
+    /// come along. Should the move fail, the old folder stays in use rather than starting empty.
+    private static func resolveUserDirectory() -> URL {
+        let fileManager = FileManager.default
+        let current = documents.appendingPathComponent("Neroli", isDirectory: true)
+        let legacy = documents.appendingPathComponent("Azahar", isDirectory: true)
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: legacy.path, isDirectory: &isDirectory),
+              isDirectory.boolValue
+        else { return current }
+
+        if !fileManager.fileExists(atPath: current.path) {
+            do {
+                try fileManager.moveItem(at: legacy, to: current)
+                NSLog("Neroli: moved the Azahar folder to Neroli")
+                return current
+            } catch {
+                NSLog("Neroli: could not move the Azahar folder (%@), still using it",
+                      error.localizedDescription)
+                return legacy
+            }
+        }
+        // Both exist (a Neroli folder made by hand, or an earlier move cut short): what is not in
+        // the Neroli folder yet is moved into it, and the Azahar folder goes once it is empty.
+        let items = (try? fileManager.contentsOfDirectory(atPath: legacy.path)) ?? []
+        for name in items {
+            let target = current.appendingPathComponent(name)
+            if !fileManager.fileExists(atPath: target.path) {
+                try? fileManager.moveItem(at: legacy.appendingPathComponent(name), to: target)
+            }
+        }
+        if ((try? fileManager.contentsOfDirectory(atPath: legacy.path)) ?? []).isEmpty {
+            try? fileManager.removeItem(at: legacy)
+        }
+        return current
     }
 
     /// Shows a folder in the Files app (inside this app's Documents, which is where the Files app
@@ -105,7 +141,7 @@ enum FileLocations {
 enum PostShaders {
     /// A shader to start from, written to the folder the first time it is looked at.
     private static let example = """
-        // A post-processing shader for Azahar. Define post_effect: it gets the position in the
+        // A post-processing shader for Neroli. Define post_effect: it gets the position in the
         // screen (0 to 1), the picture of the screen, a sampler and the size of the window
         // (width, height, 1/width, 1/height), and returns the color of that point.
         float4 post_effect(float2 uv, texture2d<float> screen, sampler s, float4 resolution) {

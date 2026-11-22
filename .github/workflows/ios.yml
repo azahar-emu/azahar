@@ -13,7 +13,7 @@ on:
         required: false
         default: ""
       symbolicate_offsets:
-        description: "Space separated imageOffset values (decimal) of the Azahar crash frames"
+        description: "Space separated imageOffset values (decimal) of the Neroli crash frames"
         required: false
         default: ""
 
@@ -42,8 +42,8 @@ jobs:
           OFFSETS: ${{ inputs.symbolicate_offsets }}
         run: |
           cd ipa
-          unzip -q Azahar-unsigned.ipa
-          BIN=Payload/Azahar.app/Azahar
+          unzip -q Neroli-unsigned.ipa
+          BIN=Payload/Neroli.app/Neroli
           echo "Binary UUID:"
           dwarfdump --uuid "$BIN"
           TEXT_VMADDR=$(otool -l "$BIN" | awk '/segname __TEXT$/{found=1} found && /vmaddr/{print $2; exit}')

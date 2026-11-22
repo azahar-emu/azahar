@@ -5,7 +5,7 @@
 #   * msl-validation: generates the Metal shaders the renderer can emit and compiles every one of
 #     them with Apple's offline compiler.
 #   * ios-build: builds the app with the Xcode generator and packages an unsigned IPA, which is
-#     uploaded as an artifact (ios/Azahar-unsigned.ipa) to be signed by a sideloading tool.
+#     uploaded as an artifact (ios/Neroli-unsigned.ipa) to be signed by a sideloading tool.
 #   * symbolicate: maps the offsets of a crash report to functions using the IPA of an earlier
 #     build. Started by passing symbolicate_job_number when triggering the pipeline.
 #
@@ -34,7 +34,7 @@ parameters:
   symbolicate_job_number:
     type: integer
     default: 0
-  # Space separated imageOffset values (decimal) of the Azahar frames of the crash report.
+  # Space separated imageOffset values (decimal) of the Neroli frames of the crash report.
   symbolicate_offsets:
     type: string
     default: ""
@@ -205,8 +205,8 @@ jobs:
           name: Package
           command: ./.ci/ios.sh package
       - store_artifacts:
-          path: artifacts/Azahar-unsigned.ipa
-          destination: ios/Azahar-unsigned.ipa
+          path: artifacts/Neroli-unsigned.ipa
+          destination: ios/Neroli-unsigned.ipa
 
   symbolicate:
     executor: macos
@@ -219,15 +219,15 @@ jobs:
             : "${CIRCLE_TOKEN:?Add a personal API token as the CIRCLE_TOKEN project environment variable}"
             api="https://circleci.com/api/v2/project/<< pipeline.parameters.project_slug >>/<< pipeline.parameters.symbolicate_job_number >>/artifacts"
             curl -fsSL -H "Circle-Token: $CIRCLE_TOKEN" "$api" -o artifacts.json
-            url=$(python3 -c 'import json; print(next(i["url"] for i in json.load(open("artifacts.json"))["items"] if i["path"].endswith("Azahar-unsigned.ipa")))')
+            url=$(python3 -c 'import json; print(next(i["url"] for i in json.load(open("artifacts.json"))["items"] if i["path"].endswith("Neroli-unsigned.ipa")))')
             mkdir ipa
-            curl -fsSL -H "Circle-Token: $CIRCLE_TOKEN" "$url" -o ipa/Azahar-unsigned.ipa
+            curl -fsSL -H "Circle-Token: $CIRCLE_TOKEN" "$url" -o ipa/Neroli-unsigned.ipa
       - run:
           name: Symbolicate
           command: |
             cd ipa
-            unzip -q Azahar-unsigned.ipa
-            BIN=Payload/Azahar.app/Azahar
+            unzip -q Neroli-unsigned.ipa
+            BIN=Payload/Neroli.app/Neroli
             echo "Binary UUID:"
             dwarfdump --uuid "$BIN"
             TEXT_VMADDR=$(otool -l "$BIN" | awk '/segname __TEXT$/{found=1} found && /vmaddr/{print $2; exit}')

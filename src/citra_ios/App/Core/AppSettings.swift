@@ -317,7 +317,7 @@ final class AppSettings: ObservableObject {
     @Published var drawOptimizations: Bool { didSet { save(drawOptimizations, "drawOptimizations") } }
     /// GPU timestamps per render pass in the log (diagnostic).
     @Published var gpuPassTiming: Bool { didSet { save(gpuPassTiming, "gpuPassTiming") } }
-    /// Writes the most used shaders to Azahar/shader_dump (diagnostic).
+    /// Writes the most used shaders to Neroli/shader_dump (diagnostic).
     @Published var dumpShaders: Bool { didSet { save(dumpShaders, "dumpShaders") } }
     @Published var hiddenSurfaceRemoval: Bool {
         didSet { save(hiddenSurfaceRemoval, "hiddenSurfaceRemoval") }

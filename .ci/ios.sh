@@ -39,15 +39,15 @@ build)
     exit "$status"
     ;;
 package)
-    APP=$(find "$BUILD_DIR" -name "Azahar.app" -type d -path "*$CONFIG*" | head -n 1)
+    APP=$(find "$BUILD_DIR" -name "Neroli.app" -type d -path "*$CONFIG*" | head -n 1)
     if [ -z "$APP" ]; then
-        echo "Azahar.app not found"
+        echo "Neroli.app not found"
         exit 1
     fi
     rm -rf artifacts Payload
     mkdir -p artifacts Payload
     cp -R "$APP" Payload/
-    zip -qry artifacts/Azahar-unsigned.ipa Payload
+    zip -qry artifacts/Neroli-unsigned.ipa Payload
     rm -rf Payload
     ls -la artifacts
     ;;

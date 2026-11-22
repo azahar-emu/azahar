@@ -1211,7 +1211,7 @@ const char* ThermalStateName() {
             NSString* message =
                 result == Core::System::ResultStatus::ErrorSavestateBuildMismatch
                     ? [NSString stringWithFormat:@"This state was saved by another version of "
-                                                 @"Azahar (%s) and can't be loaded.",
+                                                 @"Neroli (%s) and can't be loaded.",
                                                  system.GetStatusDetails().c_str()]
                     : [NSString stringWithFormat:@"The state operation failed: %s",
                                                  system.GetStatusDetails().c_str()];

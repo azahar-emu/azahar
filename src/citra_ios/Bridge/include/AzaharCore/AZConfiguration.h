@@ -109,7 +109,7 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) BOOL drawOptimizations;
 /// GPU timestamps of every render pass for the log (diagnostic, costs GPU time).
 @property(nonatomic) BOOL gpuPassTiming;
-/// Writes the most used shaders of the game to Azahar/shader_dump (diagnostic).
+/// Writes the most used shaders of the game to Neroli/shader_dump (diagnostic).
 @property(nonatomic) BOOL dumpShaders;
 /// GPU memory compression of textures: 0 off, 1 lossless, 2 lossy (next game).
 @property(nonatomic) NSInteger textureCompression;
@@ -221,7 +221,7 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 @property(nonatomic) NSInteger postEffect;
 /// 0 Dubois, 1 gray, 2 half color, 3 color.
 @property(nonatomic) NSInteger anaglyphMode;
-/// The name of a Metal shader file in Azahar/shaders/post (without .metal), or empty.
+/// The name of a Metal shader file in Neroli/shaders/post (without .metal), or empty.
 @property(nonatomic, copy) NSString* postShader;
 
 // Storage
