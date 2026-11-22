@@ -38,10 +38,11 @@ parameters:
   symbolicate_offsets:
     type: string
     default: ""
-  # Project slug used to find the artifacts of the build to symbolicate.
+  # Project slug used to find the artifacts of the build to symbolicate. Empty: this project, as
+  # CircleCI names it (so a renamed repository needs no change here).
   project_slug:
     type: string
-    default: "gh/JMillz269/azahar"
+    default: ""
 
 executors:
   macos:
@@ -217,7 +218,9 @@ jobs:
           name: Download the IPA of the build
           command: |
             : "${CIRCLE_TOKEN:?Add a personal API token as the CIRCLE_TOKEN project environment variable}"
-            api="https://circleci.com/api/v2/project/<< pipeline.parameters.project_slug >>/<< pipeline.parameters.symbolicate_job_number >>/artifacts"
+            slug="<< pipeline.parameters.project_slug >>"
+            slug="${slug:-gh/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME}"
+            api="https://circleci.com/api/v2/project/$slug/<< pipeline.parameters.symbolicate_job_number >>/artifacts"
             curl -fsSL -H "Circle-Token: $CIRCLE_TOKEN" "$api" -o artifacts.json
             url=$(python3 -c 'import json; print(next(i["url"] for i in json.load(open("artifacts.json"))["items"] if i["path"].endswith("Neroli-unsigned.ipa")))')
             mkdir ipa

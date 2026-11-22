@@ -267,7 +267,7 @@ function(azahar_license_mit name summary copyright)
         "@@@ ${name}\n${summary}\nCopyright (c) ${copyright}\n\n${AZAHAR_MIT_TEXT}\n")
 endfunction()
 
-azahar_license("Neroli, based on Azahar" "GPL-3.0-or-later. The source code of this app: https://github.com/JMillz269/Azahar-iOS"
+azahar_license("Neroli, based on Azahar" "GPL-3.0-or-later. The source code of this app: https://github.com/JMillz269/Neroli"
     "LICENSE.txt")
 azahar_license("Azahar (parts under GPLv2 or later)"
     "GPL-2.0-or-later. Older files of Azahar and Citra are licensed under the GPLv2 or any later version"

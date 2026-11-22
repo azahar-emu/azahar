@@ -2,7 +2,7 @@
 
 # Neroli
 
-[![ios](https://github.com/JMillz269/azahar/actions/workflows/ios.yml/badge.svg)](https://github.com/JMillz269/azahar/actions/workflows/ios.yml)
+[![ios](https://github.com/JMillz269/Neroli/actions/workflows/ios.yml/badge.svg)](https://github.com/JMillz269/Neroli/actions/workflows/ios.yml)
 <br>
 *iOS Build does pass. Building using runners outside of GitHub at this moment during development.
 <br>

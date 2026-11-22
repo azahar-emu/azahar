@@ -1284,7 +1284,7 @@ struct AboutView: View {
                      + "Only use games and system files dumped from hardware you own.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                Link("Source Code", destination: URL(string: "https://github.com/JMillz269/Azahar-iOS")!)
+                Link("Source Code", destination: URL(string: "https://github.com/JMillz269/Neroli")!)
                 NavigationLink("Licenses") { LicensesView() }
             }
             .listRowBackground(LGRowBackground())

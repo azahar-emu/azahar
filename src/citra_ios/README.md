@@ -131,4 +131,4 @@ list is made by `src/citra_ios/CMakeLists.txt` from the components' own license 
 `.ci/collect-rust-licenses.py` for the crates.
 
 Anyone who is given a build of the app is entitled to its complete corresponding source code
-under the GPL; the source of this port is at https://github.com/JMillz269/Azahar-iOS.
+under the GPL; the source of this port is at https://github.com/JMillz269/Neroli.
