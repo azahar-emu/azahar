@@ -133,6 +133,15 @@ else()
         add_compile_options(-Werror)
     endif()
 
+    # The libc++ of newer Xcode versions (26.6) makes specializing standard type traits an error,
+    # and nihstro specializes std::make_unsigned for its register types. The specializations still
+    # work; only the diagnostic is turned off, where the compiler knows it.
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag(-Wno-invalid-specialization CITRA_HAVE_WNO_INVALID_SPECIALIZATION)
+    if (CITRA_HAVE_WNO_INVALID_SPECIALIZATION)
+        add_compile_options(-Wno-invalid-specialization)
+    endif()
+
     if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL Clang)
         add_compile_options("-stdlib=libc++")
     endif()

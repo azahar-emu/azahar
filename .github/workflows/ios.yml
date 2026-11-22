@@ -66,6 +66,7 @@ jobs:
       - name: Build MSL corpus generator
         run: |
           clang++ -std=c++20 -O1 -Isrc -Iexternals/fmt/include -Iexternals/boost -Iexternals/xxHash -Iexternals/nihstro/include \
+            -Wno-unknown-warning-option -Wno-invalid-specialization \
             -DFMT_HEADER_ONLY -DXXH_INLINE_ALL \
             src/video_core/renderer_metal/tests/msl_corpus.cpp \
             src/video_core/renderer_metal/tests/log_stub.cpp \

@@ -21,6 +21,7 @@ configure)
         -DENABLE_ROOM=OFF \
         -DENABLE_LTO=OFF \
         -DCITRA_USE_PRECOMPILED_HEADERS=OFF \
+        -DCITRA_WARNINGS_AS_ERRORS=OFF \
         -DENABLE_IOS_APP=ON
     ;;
 build)
