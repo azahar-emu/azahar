@@ -826,8 +826,29 @@ void Scheduler::FlushPendingClears() {
     clears.swap(pending_clears);
     EndEncoding();
     for (const PendingClear& clear : clears) {
-        // Drawn into the texture itself, outside of any multisampled pass.
-        NoteWritten(clear.texture);
+        // A whole clear of a texture that has a multisampled copy (MSAA) clears the copy too and
+        // resolves it into the texture, so the copy stays up to date and is not refreshed from
+        // the cleared texture before the next pass (games clear their buffers every frame).
+        // Not for a depth-only clear of a copy that is out of date: its stencil would stay old.
+        MsaaTexture* msaa = nullptr;
+        if (!clear.partial && clear.level == 0 && clear.slice == 0) {
+            const auto it =
+                msaa_textures.find(reinterpret_cast<std::uintptr_t>((__bridge void*)clear.texture));
+            if (it != msaa_textures.end() && it->second.msaa != nil) {
+                id<MTLTexture> owner = it->second.owner;
+                const bool clears_all = !clear.is_depth || clear.has_stencil ||
+                                        clear.texture.pixelFormat !=
+                                            MTLPixelFormatDepth32Float_Stencil8;
+                if (owner == clear.texture && (clears_all || it->second.valid)) {
+                    msaa = &it->second;
+                    msaa->valid = true;
+                }
+            }
+        }
+        if (msaa == nullptr) {
+            // Drawn into the texture itself, outside of any multisampled pass.
+            NoteWritten(clear.texture);
+        }
         if (clear.partial) {
             // A rectangle with nothing to take it over: a pass of its own that draws it.
             MTLRenderPassDescriptor* desc = [MTLRenderPassDescriptor renderPassDescriptor];
@@ -896,6 +917,29 @@ void Scheduler::FlushPendingClears() {
             desc.colorAttachments[0].loadAction = MTLLoadActionClear;
             desc.colorAttachments[0].storeAction = MTLStoreActionStore;
             desc.colorAttachments[0].clearColor = clear.color;
+        }
+        if (msaa != nullptr) {
+            if (clear.is_depth) {
+                desc.depthAttachment.texture = msaa->msaa;
+                desc.depthAttachment.level = 0;
+                desc.depthAttachment.resolveTexture = clear.texture;
+                desc.depthAttachment.depthResolveFilter = MTLMultisampleDepthResolveFilterSample0;
+                desc.depthAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+                if (clear.has_stencil) {
+                    desc.stencilAttachment.texture = msaa->msaa;
+                    desc.stencilAttachment.level = 0;
+                    desc.stencilAttachment.resolveTexture = clear.texture;
+                    desc.stencilAttachment.stencilResolveFilter =
+                        MTLMultisampleStencilResolveFilterSample0;
+                    desc.stencilAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+                }
+            } else {
+                desc.colorAttachments[0].texture = msaa->msaa;
+                desc.colorAttachments[0].level = 0;
+                desc.colorAttachments[0].slice = 0;
+                desc.colorAttachments[0].resolveTexture = clear.texture;
+                desc.colorAttachments[0].storeAction = MTLStoreActionStoreAndMultisampleResolve;
+            }
         }
         render_encoder = [CommandBuffer() renderCommandEncoderWithDescriptor:desc];
         Stats().render_passes.fetch_add(1, std::memory_order_relaxed);
