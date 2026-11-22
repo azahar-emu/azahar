@@ -82,9 +82,14 @@ There are no prebuilt releases yet. [Build the IPA](#building) or use one built 
 install it with a sideloading tool such as SideStore, AltStore or Sideloadly, or add it to
 LiveContainer.
 
-Updating keeps your data as long as you install over the existing app: the bundle identifier
-never changes. Versions from before the rename (Azahar-iOS) update in place too. Their `Azahar`
-data folder is moved to `Neroli` on the first launch.
+Updating keeps your data as long as you install over the existing app: the bundle identifier,
+`org.jmillz269.neroli`, does not change between versions.
+
+**Coming from Azahar-iOS:** it had another bundle identifier (`org.azahar-emu.azahar-ios`), so
+Neroli installs as a separate app and starts empty. To bring your data along, copy the `Azahar`
+folder from **Files › On My iPhone › Azahar-iOS** into **Files › On My iPhone › Neroli** (and the
+`ROMs` folder next to it, if you keep games there) before opening Neroli. On its first launch
+Neroli moves that `Azahar` folder to `Neroli`. Delete Azahar-iOS once everything is there.
 
 ## Enabling JIT
 

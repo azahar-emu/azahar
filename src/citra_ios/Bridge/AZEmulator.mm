@@ -56,7 +56,7 @@ extern void (*g_cache_clear_hook)(int full, std::uint64_t used, std::uint64_t si
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_metal/renderer_metal.h"
 
-NSErrorDomain const AZEmulatorErrorDomain = @"org.azahar-emu.AzaharCore";
+NSErrorDomain const AZEmulatorErrorDomain = @"org.jmillz269.neroli.core";
 
 namespace {
 

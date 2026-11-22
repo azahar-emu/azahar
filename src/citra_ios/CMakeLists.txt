@@ -8,7 +8,7 @@ endif()
 enable_language(Swift)
 
 set(AZAHAR_IOS_DEPLOYMENT_TARGET "16.0")
-set(AZAHAR_IOS_BUNDLE_ID "org.azahar-emu.azahar-ios" CACHE STRING "Bundle identifier of the iOS app")
+set(AZAHAR_IOS_BUNDLE_ID "org.jmillz269.neroli" CACHE STRING "Bundle identifier of the iOS app")
 # The increased memory limit entitlement needs a paid developer account (or a sideloading tool
 # that preserves it). Disable it to sign with a free account from Xcode.
 option(AZAHAR_IOS_ENTITLEMENTS "Request the increased memory limit entitlements" ON)
