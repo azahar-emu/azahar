@@ -106,6 +106,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         AddExtensionIfAvailable(enabled_exts, available_exts, VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
     const bool has_pipeline_creation_cache_control = AddExtensionIfAvailable(
         enabled_exts, available_exts, VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);
+    const bool has_fragment_shader_barycentric = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_KHR_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME);
 
     // These are beneficial but blacklisted on some platforms due to driver bugs
     // For now, let the Instance class handle these decisions
@@ -218,6 +220,12 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT};
     if (has_pipeline_creation_cache_control) {
         enable_supported_features(cache_control_features);
+    }
+
+    VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR barycentric_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR};
+    if (has_fragment_shader_barycentric) {
+        enable_supported_features(barycentric_features);
     }
 
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
