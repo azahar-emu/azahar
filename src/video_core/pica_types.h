@@ -77,6 +77,42 @@ public:
         return res;
     }
 
+    constexpr u32 ToRaw() {
+
+        // TODO(wunk): Detect compiler float16 support with `__FLT16_MANT_DIG__` and use
+        // static_cast<std::float16_t> + std::bit_cast<u32> to convert to raw bits.
+
+        constexpr s32 bias = 127 - ((1 << (E - 1)) - 1);
+        const u32 fp32_hex = std::bit_cast<u32>(value);
+        const u32 fp32_sign = (fp32_hex >> 31) << (E + M);
+        const s32 fp32_exponent = (fp32_hex >> 23) & 0xFF;
+        const u32 fp32_mantissa = fp32_hex & ((1 << 23) - 1);
+        if (fp32_exponent == 0 && fp32_mantissa == 0) {
+            // Zero
+            return fp32_sign;
+        } else [[likely]] {
+            if (fp32_exponent == 0) {
+                // Denormal
+                return fp32_sign;
+            } else if (fp32_exponent == 0xFF) {
+                // Inf or NaN
+                return fp32_sign | (EXPONENT_MASK << M) | (fp32_mantissa >> (23 - M));
+            } else [[likely]] {
+                // Normal
+                const s32 pica_exponent = fp32_exponent - bias;
+                if (pica_exponent <= 0) {
+                    // Underflow to denormal
+                    return fp32_sign;
+                } else if (pica_exponent >= EXPONENT_MASK) {
+                    // Overflow to Inf
+                    return fp32_sign | (EXPONENT_MASK << M);
+                } else [[likely]] {
+                    return fp32_sign | (pica_exponent << M) | (fp32_mantissa >> (23 - M));
+                }
+            }
+        }
+    }
+
     static constexpr Float<M, E> Zero() {
         return FromFloat32(0.f);
     }
