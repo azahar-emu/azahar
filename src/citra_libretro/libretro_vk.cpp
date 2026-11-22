@@ -104,6 +104,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         enabled_exts, available_exts, VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
     const bool has_robustness2 =
         AddExtensionIfAvailable(enabled_exts, available_exts, VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
+    const bool has_pipeline_creation_cache_control = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);
 
     // These are beneficial but blacklisted on some platforms due to driver bugs
     // For now, let the Instance class handle these decisions
@@ -210,6 +212,12 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         // Instance::CreateDevice() enables only nullDescriptor
         robustness2_features.robustBufferAccess2 = VK_FALSE;
         robustness2_features.robustImageAccess2 = VK_FALSE;
+    }
+
+    VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT cache_control_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT};
+    if (has_pipeline_creation_cache_control) {
+        enable_supported_features(cache_control_features);
     }
 
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
