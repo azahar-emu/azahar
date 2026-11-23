@@ -1001,8 +1001,10 @@ id<MTLTexture> Surface::CreateTexture(u32 tex_width, u32 tex_height, MTLPixelFor
     TexturePool& pool = runtime->GetTexturePool();
     if (pool.Enabled()) {
         if (id<MTLTexture> reused = pool.Acquire(TexturePool::KeyOf(desc))) {
-            // Its multisampled copy (MSAA) has the pixels of the surface that had it before.
-            scheduler->NoteWritten(reused, "recycled texture");
+            // Its multisampled copy (MSAA), if any, still matches it: a texture in the pool is not
+            // written, and whatever writes it next keeps the copy in step (or marks it out of
+            // date). Marking it out of date here made Majora's Mask, which gets its depth buffer
+            // anew every frame, refresh the copy every frame for nothing (about 2 ms of GPU time).
             return reused;
         }
     }
