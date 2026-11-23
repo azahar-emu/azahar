@@ -246,6 +246,10 @@ public:
     /// Returns true if the provided pixel format needs convertion
     bool NeedsConversion(const Surface& surface) const;
 
+    /// The stencil of a depth-stencil texture copied into an R8Uint texture (MSAA refresh of a
+    /// texture that cannot have a stencil view), nil if it cannot be made.
+    id<MTLTexture> StencilCopy(id<MTLTexture> depth);
+
 private:
     const Instance& instance;
     Scheduler& scheduler;
@@ -253,6 +257,8 @@ private:
     TexturePool texture_pool;
     StreamBuffer upload_buffer;
     StreamBuffer download_buffer;
+    id<MTLTexture> stencil_copy = nil;
+    id<MTLBuffer> stencil_copy_buffer = nil;
 
     /// Small depth readbacks the CPU asks for every frame, answered with the previous result
     /// while the next one is copied in the background (see Surface::Download).

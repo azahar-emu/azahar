@@ -546,9 +546,10 @@ TextureRuntime::TextureRuntime(const Instance& instance_, Scheduler& scheduler_)
         const Common::Rectangle<u32> rect{0, height, width, 0};
         scheduler.SetPassLabel("MSAA refresh");
         if (is_depth) {
-            if (stencil_view == nil && resolved.pixelFormat == MTLPixelFormatDepth32Float_Stencil8 &&
-                (resolved.usage & MTLTextureUsagePixelFormatView) != 0) {
-                stencil_view = [resolved newTextureViewWithPixelFormat:MTLPixelFormatX32_Stencil8];
+            if (stencil_view == nil && resolved.pixelFormat == MTLPixelFormatDepth32Float_Stencil8) {
+                stencil_view = (resolved.usage & MTLTextureUsagePixelFormatView) != 0
+                                   ? [resolved newTextureViewWithPixelFormat:MTLPixelFormatX32_Stencil8]
+                                   : StencilCopy(resolved);
             }
             blit_helper.BlitDepthStencil(resolved, stencil_view, 0, rect, msaa, 0, rect);
         } else {
@@ -560,6 +561,52 @@ TextureRuntime::TextureRuntime(const Instance& instance_, Scheduler& scheduler_)
 TextureRuntime::~TextureRuntime() {
     scheduler.SetRectClearDrawer({});
     scheduler.SetMsaaRefresher({});
+}
+
+id<MTLTexture> TextureRuntime::StencilCopy(id<MTLTexture> depth) {
+    // The stencil of a depth texture that cannot have a stencil view (texture compression), for
+    // the refresh of its multisampled copy: copied with blits into an R8Uint texture, which the
+    // depth-stencil blit reads like the view.
+    const u32 width = static_cast<u32>(depth.width);
+    const u32 height = static_cast<u32>(depth.height);
+    id<MTLDevice> device = instance.GetDevice();
+    if (stencil_copy == nil || stencil_copy.width != width || stencil_copy.height != height) {
+        MTLTextureDescriptor* desc =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatR8Uint
+                                                               width:width
+                                                              height:height
+                                                           mipmapped:NO];
+        desc.storageMode = MTLStorageModePrivate;
+        desc.usage = MTLTextureUsageShaderRead;
+        stencil_copy = [device newTextureWithDescriptor:desc];
+        stencil_copy_buffer = [device newBufferWithLength:static_cast<NSUInteger>(width) * height
+                                                  options:MTLResourceStorageModePrivate];
+        if (stencil_copy == nil || stencil_copy_buffer == nil) {
+            stencil_copy = nil;
+            return nil;
+        }
+    }
+    id<MTLBlitCommandEncoder> blit = scheduler.BlitEncoder();
+    [blit copyFromTexture:depth
+                     sourceSlice:0
+                     sourceLevel:0
+                    sourceOrigin:MTLOriginMake(0, 0, 0)
+                      sourceSize:MTLSizeMake(width, height, 1)
+                        toBuffer:stencil_copy_buffer
+               destinationOffset:0
+          destinationBytesPerRow:width
+        destinationBytesPerImage:static_cast<NSUInteger>(width) * height
+                         options:MTLBlitOptionStencilFromDepthStencil];
+    [blit copyFromBuffer:stencil_copy_buffer
+               sourceOffset:0
+          sourceBytesPerRow:width
+        sourceBytesPerImage:static_cast<NSUInteger>(width) * height
+                 sourceSize:MTLSizeMake(width, height, 1)
+                  toTexture:stencil_copy
+           destinationSlice:0
+           destinationLevel:0
+          destinationOrigin:MTLOriginMake(0, 0, 0)];
+    return stencil_copy;
 }
 
 VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
@@ -1469,11 +1516,9 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         (depth && (depth_level != 0 || depth->texture_type != VideoCore::TextureType::Texture2D))) {
         samples = 1;
     }
-    if (samples > 1 && depth && depth->HasStencil()) {
-        // Taken before the depth texture below: it may replace the texture with one that can
-        // have a stencil view.
-        target.stencil_view = depth->StencilTexture();
-    }
+    // No stencil view is taken here: with texture compression the depth texture has to be
+    // replaced by a copy that allows one, every time the game gets a new depth buffer (Majora's
+    // Mask does every frame). A refresh of the multisampled copy gets the stencil itself.
 
     if (color) {
         const auto [w, h] = level_extent(color, color_level);
