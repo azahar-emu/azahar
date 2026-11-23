@@ -45,8 +45,8 @@ blossom.
 
 ### Smoothness
 
-- **Frame generation** (iOS 26): Apple's VideoToolbox or MetalFX frame interpolation turns 60 FPS
-  into 120 FPS on ProMotion displays.
+- **Frame generation** (iOS 26): Apple's VideoToolbox or MetalFX frame interpolation turns 30 FPS
+  games into 60 FPS, and 60 FPS games into 120 FPS on ProMotion displays.
   - **Adaptive** sizing, **Pause When Behind**, **Frame Buffer** and **Top Screen Only**.
 - **Frame pacing** driven by the display, a per-game **60 Hz or 120 Hz** refresh rate, and a
   30 FPS frame cap for games that run at 30.
