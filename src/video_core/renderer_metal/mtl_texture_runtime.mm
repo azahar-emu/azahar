@@ -756,8 +756,6 @@ bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
         return false;
     }
 
-    id<MTLBlitCommandEncoder> blit = scheduler.BlitEncoder();
-    scheduler.NoteWritten(dst, "copy");
     for (const auto& copy : copies) {
         const auto [src_w, src_h] = LevelExtent(src, copy.src_level);
         const auto [dst_w, dst_h] = LevelExtent(dst, copy.dst_level);
@@ -772,6 +770,23 @@ bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
         if (width == 0 || height == 0) {
             continue;
         }
+        // MSAA: a color copy into a render target whose multisampled copy is up to date is drawn
+        // into that copy and resolved into the texture (a blit cannot write a multisampled
+        // texture), so the copy stays up to date instead of being refreshed before the next pass.
+        // Nearest sampling at the same size copies the pixels exactly. Luigi's Mansion copies
+        // into its color buffer every frame.
+        if (!dest.IsDepth() && src != dst &&
+            scheduler.UpToDateMsaa(dst, copy.dst_level, copy.dst_layer) != nil) {
+            const Common::Rectangle<u32> src_rect{copy.src_offset.x, copy.src_offset.y + height,
+                                                  copy.src_offset.x + width, copy.src_offset.y};
+            const Common::Rectangle<u32> dst_rect{copy.dst_offset.x, copy.dst_offset.y + height,
+                                                  copy.dst_offset.x + width, copy.dst_offset.y};
+            blit_helper.BlitColor(src, copy.src_level, copy.src_layer, src_rect, dst,
+                                  copy.dst_level, copy.dst_layer, dst_rect, false);
+            continue;
+        }
+        id<MTLBlitCommandEncoder> blit = scheduler.BlitEncoder();
+        scheduler.NoteWritten(dst, "copy");
         [blit copyFromTexture:src
                   sourceSlice:copy.src_layer
                   sourceLevel:copy.src_level
