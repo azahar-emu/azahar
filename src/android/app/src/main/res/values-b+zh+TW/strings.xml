@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_disclaimer">此軟體用於執行 Nintendo 3DS 掌上型遊戲主機之應用程式。本軟體不包含任何遊戲。\n\n在開始模擬之前，請先選取用於儲存 Azahar 使用者資料的資料夾。\n\n這是什麼：\n<a href='https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage'>Wiki - Azahar Android 使用者資料與儲存空間說明</a></string>
     <string name="app_notification_channel_description">Azahar 3DS 模擬器通知</string>
     <string name="app_notification_running">Azahar 正在執行中</string>
     <string name="app_game_install_description">接下來，您需要選取應用程式資料夾。Azahar 將會顯示該選取資料夾內的所有 3DS ROM 遊戲。\n\nCIA 格式 ROM、更新檔與 DLC 需透過點擊資料夾圖示並選擇「安裝 CIA」單獨進行安裝。</string>
@@ -27,6 +28,7 @@
     <string name="select_games_folder">選擇應用資料夾</string>
     <string name="select_games_folder_description">允許 Azahar 載入應用程式清單</string>
     <string name="about">關於</string>
+    <string name="citra_description">一款開源的 3DS 模擬器\n採用 GPLv3 或更新版本授權條款</string>
     <string name="about_description">構建版本、貢獻者以及更多</string>
     <string name="games_dir_selected">已選擇應用目錄</string>
     <string name="select_citra_user_folder_home_description">更改 Azahar 用於載入應用的相關檔案</string>
@@ -97,12 +99,14 @@
     <string name="warning_skip">跳過</string>
     <string name="warning_cancel">取消</string>
     <string name="select_citra_user_folder">選擇使用者資料夾</string>
+    <string name="select_citra_user_folder_description"><![CDATA[請點擊下方按鈕選取您的<a href=\"https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage\">使用者資料</a>目錄。]]></string>
     <string name="select_which_user_directory_to_use">您似乎同時為 Lime3DS 和 Azahar 設定了使用者目錄。這可能是因為您升級到了 Azahar，並在系統提示時選擇了與 Lime3DS 不同的使用者目錄。\n\n這可能導致您誤以為遺失了存檔或其他設定 - 如果發生這種情況，我們深表歉意。\n\n您想恢復原來的 Lime3DS 使用者目錄、Lime3DS 設定和遊戲存檔，還是保持當前的 ​​Azahar 使用者目錄？\n\n無論您選擇哪種方式，這兩個目錄都不會被刪除，您可以使用“選擇使用者資料夾”選項在它們之間自由切換。</string>
     <string name="keep_current_azahar_directory">保持當前的 Azahar 目錄</string>
     <string name="use_prior_lime3ds_directory">使用先前的 Lime3DS 目錄</string>
     <string name="select">選擇</string>
     <string name="cannot_skip">您不能跳過設定使用者資料夾</string>
     <string name="cannot_skip_directory_description">此步驟是 Azahar 正常執行所必需的。請選擇一個目錄，然後才可繼續。</string>
+    <string name="selecting_user_directory_without_write_permissions">您已失去<a href="https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage">使用者資料</a>目錄（用於儲存遊戲存檔與其他資訊）的寫入權限。這可能在部分應用程式或 Android 系統更新後發生。請重新選取該目錄以恢復權限，才能繼續使用。</string>
     <string name="invalid_selection">選取無效</string>
     <string name="invalid_user_directory">使用者目錄選取無效。\n請重新選取使用者目錄，並確保是從裝置儲存空間的根目錄瀏覽進入。</string>
     <string name="filesystem_permission_lost">Azahar 已失去管理此裝置上檔案的權限。這通常會在應用程式更新或 Android 系統更新後發生。請在下一個畫面重新授予此權限以繼續使用本 App。</string>
@@ -161,7 +165,7 @@
     <string name="turbo_toggle_hotkey">加速（切換）</string>
     <string name="turbo_hold_hotkey">加速（按住）</string>
     <string name="turbo_enabled_toast">加速已啟用</string>
-    <string name="turbo_disabled_toast">加速已禁用</string>
+    <string name="turbo_disabled_toast">加速已停用</string>
     <string name="combo_button_settings">設定組合鍵</string>
     <string name="combo_button_settings_description">選取按下組合鍵時同時觸發的按鈕。</string>
 
@@ -261,14 +265,14 @@
     <string name="linear_filtering_description">開啟後，遊戲視覺效果會更加平滑。</string>
     <string name="use_integer_scaling">整數縮放</string>
     <string name="use_integer_scaling_description">以原始 3DS 螢幕的整數倍率進行縮放。對於包含兩種不同螢幕尺寸的配置，最大螢幕將採整數縮放。</string>
-    <string name="texture_filter_name">紋理濾鏡</string>
-    <string name="texture_filter_description">透過對紋理使用濾鏡來增強應用的視覺效果。支援的濾鏡包括 Anime4K Ultrafast、Bicubic、ScaleForce、xBRZ freescale 和 MMPX。</string>
+    <string name="texture_filter_name">材質濾鏡</string>
+    <string name="texture_filter_description">透過對材質套用濾鏡來增強應用程式的視覺效果。支援的濾鏡包括 Anime4K Ultrafast、Bicubic、ScaleForce、xBRZ freescale 和 MMPX。</string>
     <string name="delay_render_thread">延遲遊戲轉譯執行緒</string>
     <string name="delay_render_thread_description">在遊戲轉譯執行緒向 GPU 提交資料時延遲執行緒。有助於解決（極少數）具有動態幀率應用的效能問題。</string>
     <string name="simulate_3ds_gpu_timings">模擬 3DS GPU 時序</string>
     <string name="simulate_3ds_gpu_timings_description">依據實機測量數據延遲 GPU 完成事件，使遊戲擁有更貼近實機的 GPU 時間計量。有助於穩定動態 FPS 遊戲。在極少數情況下關閉此功能可能提升效能，但會降低穩定性。</string>
     <string name="advanced">高階選項</string>
-    <string name="texture_sampling_name">紋理取樣</string>
+    <string name="texture_sampling_name">材質取樣</string>
     <string name="texture_sampling_description">覆蓋遊戲所使用的取樣過濾器。這在某些情況下提升表現不佳的遊戲畫質時可能很有用。如果不確定，請將其設定為“由遊戲控制”</string>
     <string name="use_skip_duplicate_frames">跳過重繪重複畫面</string>
     <string name="use_skip_duplicate_frames_description">跳過非獨特畫面的呈現。這也允許外部幀生成工具 (如 Lossless Scaling / LSFG) 能在 30fps 遊戲中正常運作。</string>
@@ -279,13 +283,15 @@
     <string name="asynchronous_gpu">啟用非同步 GPU 模擬</string>
     <string name="asynchronous_gpu_description">使用一個單獨執行緒非同步模擬 GPU 。啟用後，遊戲效能將有所提高。</string>
     <string name="frame_limit_enable">執行速度限制</string>
-    <string name="frame_limit_enable_description">啟用後，模擬速度將被限制為正常速度的指定百分比。如果禁用，模擬速度則不受限制，並且加速熱鍵將不起作用。</string>
+    <string name="frame_limit_enable_description">啟用後，模擬速度將被限制為正常速度的指定百分比。若停用，模擬速度則不受限制，且加速熱鍵將不會作用。</string>
     <string name="frame_limit_slider">限制執行速度百分比</string>
     <string name="frame_limit_slider_description">指定限制執行速度的百分比。預設情況下，100% 將限制為正常執行速度。較高或較低的值將增加或降低執行速度。</string>
     <string name="android_hide_images">在 Android 裝置上隱藏 3DS 影像</string>
     <string name="android_hide_images_description">防止 Android 媒體庫索引 3DS 相機照片、螢幕截圖與自訂材質影像，避免顯示在相簿中。變更此設定後可能需要重新啟動裝置方能生效。</string>
     <string name="turbo_limit">加速限制</string>
     <string name="turbo_limit_description">加速熱鍵啟用時使用的模擬速度限制。</string>
+    <string name="expand_to_cutout_area">延伸至螢幕挖孔區域</string>
+    <string name="expand_to_cutout_area_description">擴大顯示區域以包含螢幕挖孔（或瀏海）區域。</string>
     <string name="internal_resolution">內部解析度</string>
     <string name="internal_resolution_description">指定轉譯使用的解析度。高解析度將大大提高視覺質量，但也會對效能造成很大影響，並可能導致某些應用出現故障。</string>
     <string name="internal_resolution_setting_auto">自動（螢幕大小）</string>
@@ -314,7 +320,7 @@
     <string name="render3d_description">選取 3D 轉譯的立體 3D 模式。左右分離模式 (Side by Side) 在現代裝置中最常見。紅藍 (Anaglyph) 與隔行掃描 (Interlaced) 模式將一律套用於所有連接的顯示螢幕。</string>
     <string name="factor3d">畫面深度</string>
     <string name="factor3d_description">指定 3D 滑塊按鈕的值。啟用立體 3D 模式時，應將其設定為高於 0% 的值。\n注意：實機硬體上不可能出現超過 100% 的深度值，並且可能會導致圖形問題</string>
-    <string name="disable_right_eye_render">禁用右眼轉譯</string>
+    <string name="disable_right_eye_render">停用右眼轉譯</string>
     <string name="disable_right_eye_render_description">極大地提高某些應用的效能，但可能會導致其他應用出現閃爍。</string>
     <string name="swap_eyes_3d">左右眼交換</string>
     <string name="swap_eyes_3d_description">交換哪隻眼睛顯示在哪一側。結合左右分離模式，可透過鬥雞眼直接裸眼看見 3D 效果！</string>
@@ -335,7 +341,9 @@
     <string name="use_disk_shader_cache_description">透過將生成的著色器快取到儲存空間並載入，以減少畫面頓挫。使用此功能需要啟用硬體著色器。</string>
     <string name="utility">工具</string>
     <string name="dump_textures">傾印材質貼圖</string>
+    <string name="dump_textures_description">將材質傾印至 dump/textures/[Title ID]/。</string>
     <string name="custom_textures">載入自訂高畫質材質</string>
+    <string name="custom_textures_description">從 load/textures/[Title ID]/ 載入材質。</string>
     <string name="preload_textures">預先載入自訂材質</string>
     <string name="preload_textures_description">遊戲啟動時將自訂材質全數預先載入至記憶體，減少遊玩過程中的讀取頓挫 (需較多 RAM)</string>
     <string name="async_custom_loading">非同步載入自訂材質</string>
@@ -344,7 +352,8 @@
     <!-- Audio settings strings -->
     <string name="audio_volume">音量</string>
     <string name="audio_stretch">音訊拉伸</string>
-    <string name="realtime_audio">啟用實時音訊</string>
+    <string name="audio_stretch_description">拉伸音訊以減少聲音斷續。啟用後會增加音訊延遲並略微降低效能。</string>
+    <string name="realtime_audio">啟用即時音訊</string>
     <string name="realtime_audio_description">調整音訊播放速度以適應模擬幀率的下降。這意味著即使遊戲幀率較低，音訊也會全速播放。可能會導致音訊不同步問題。</string>
     <string name="simulate_headphones_plugged">模擬耳機插入</string>
     <string name="simulate_headphones_plugged_description">模擬耳機是否已插入模擬的 3DS 主機。</string>
@@ -421,7 +430,7 @@
     <string name="reset_setting_confirmation">您確定要將此設定項目重設為預設值嗎？</string>
     <string name="reset_setting_global_confirmation">確定要將此自訂設定重設回全域設定值嗎？</string>
     <string name="setting_not_editable">您現在不能編輯此項</string>
-    <string name="setting_disabled">設定已禁用</string>
+    <string name="setting_disabled">設定已停用</string>
     <string name="setting_disabled_description_incompatible_setting">由於另一項設定目前不是適用值，因此此設定已被停用。</string>
     <string name="setting_disabled_description_angle">無法變更轉譯器，因為此裝置使用 ANGLE 執行 OpenGL，目前與 Azahar 不相容。將強制使用 Vulkan。</string>
     <string name="setting_not_editable_description">在遊戲執行時此項不能更改。</string>
@@ -449,10 +458,11 @@
     <string name="preferences_audio">聲音</string>
     <string name="preferences_debug">除錯</string>
     <string name="preferences_theme">主題和色彩</string>
-    <string name="preferences_layout">佈局</string>
+    <string name="preferences_layout">版面配置</string>
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">載入應用程式時發生錯誤</string>
     <string name="loader_error_invalid_format">應用程式檔案格式無效</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[不支援此應用程式檔案格式。<br>請確認您使用的是以下相容檔案格式之一：<ul><li>卡匣映像檔：<b>.cci/.zcci/.bcci/.3ds</b></li><li>可安裝封裝檔：<b>.cia/.zcia/.bcia</b></li><li>自製應用程式：<b>.3dsx/.z3dsx</b></li><li>NCCH 容器：<b>.cxi/.zcxi/.bcxi/.app</b></li><li>ELF 執行檔：<b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">系統模式無效</string>
     <string name="loader_error_invalid_system_mode_description">若未啟用「New 3DS」模式，則無法載入 New 3DS 專用應用程式。</string>
     <string name="loader_error_applying_patches">套用補丁時發生錯誤</string>
@@ -486,13 +496,15 @@
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">按返回鍵撥出選單。</string>
+    <string name="emulation_save_state">建立即時存檔</string>
+    <string name="emulation_load_state">載入即時存檔</string>
     <string name="emulation_empty_state_slot">插槽 %1$d</string>
     <string name="emulation_occupied_state_slot">插槽 %1$d - %2$tF %2$tR</string>
     <string name="emulation_show_fps">顯示 FPS</string>
-    <string name="emulation_haptic_feedback">觸控反饋</string>
+    <string name="emulation_haptic_feedback">觸覺回饋</string>
     <string name="emulation_overlay_options">虛擬按鍵選項</string>
     <string name="emulation_configure_controls">控制設定</string>
-    <string name="emulation_edit_layout">編輯佈局</string>
+    <string name="emulation_edit_layout">編輯版面配置</string>
     <string name="emulation_done">完成</string>
     <string name="emulation_button_sliding">按鍵滑行</string>
     <string name="emulation_button_sliding_disabled">按住起始按下的按鍵</string>
@@ -515,7 +527,7 @@
     <string name="emulation_switch_secondary_layout">副螢幕版型配置</string>
     <string name="emulation_secondary_display_management">副螢幕管理</string>
     <string name="emulation_select_secondary_display">選取顯示螢幕</string>
-    <string name="emulation_switch_secondary_layout_description">有線或無線連線的副螢幕使用佈局（Chromecast, Miracast）</string>
+    <string name="emulation_switch_secondary_layout_description">有線或無線連線的副螢幕使用版面配置（Chromecast, Miracast）</string>
     <string name="emulation_screen_layout_largescreen">大螢幕</string>
     <string name="emulation_screen_layout_portrait">縱向</string>
     <string name="emulation_screen_layout_single">單個螢幕</string>
@@ -533,7 +545,7 @@
     <string name="second_screen_opacity">自訂版型副螢幕不透明度</string>
     <string name="second_screen_opacity_description">使用自訂螢幕版型配置時， 3DS 副螢幕的不透明度。當副螢幕位於主螢幕前面時，此選項很有用。</string>
     <string name="emulation_small_screen_position">小螢幕位置</string>
-    <string name="small_screen_position_description">在“大螢幕”佈局中，小螢幕相對於大螢幕應該出現的位置？</string>
+    <string name="small_screen_position_description">在「大螢幕」版面配置中，小螢幕相對於大螢幕應該出現的位置？</string>
     <string name="small_screen_position_top_right">右上</string>
     <string name="small_screen_position_middle_right">右中</string>
     <string name="small_screen_position_bottom_right">右下（預設）</string>
@@ -545,7 +557,7 @@
     <string name="screen_gap">螢幕間隔</string>
     <string name="screen_gap_description">所有雙屏模式下螢幕之間的間隔。以畫素為單位，相對於上屏的 240 畫素高度進行測量。</string>
     <string name="large_screen_proportion">大螢幕佔比</string>
-    <string name="large_screen_proportion_description">“大螢幕”佈局中大螢幕比小螢幕大多少倍？</string>
+    <string name="large_screen_proportion_description">「大螢幕」版面配置中大螢幕比小螢幕大多少倍？</string>
     <string name="emulation_adjust_custom_layout">在設定中調整自訂版型</string>
     <string name="emulation_landscape_custom_layout">橫向自訂版型</string>
     <string name="emulation_portrait_custom_layout">縱向自訂版型</string>
@@ -555,6 +567,7 @@
     <string name="emulation_custom_layout_y">Y-位置</string>
     <string name="emulation_custom_layout_width">寬度</string>
     <string name="emulation_custom_layout_height">高度</string>
+    <string name="emulation_cycle_landscape_layouts">循環切換版面配置</string>
     <string name="emulation_swap_screens">交換上下屏</string>
     <string name="emulation_rotate_upright">順時針旋轉螢幕</string>
     <string name="emulation_touch_overlay_reset">重設虛擬按鍵</string>
@@ -594,6 +607,9 @@
     <string name="moving_data">移動資料中…</string>
     <string name="copy_file_name">複製檔案：%s</string>
     <string name="copy_complete">複製完成</string>
+    <string name="savestates">即時存檔</string>
+    <string name="savestate_warning_message">警告：即時存檔無法取代遊戲內建存檔，且並非完全可靠。\n\n使用風險請自行承擔！</string>
+
     <!-- Software Keyboard -->
     <string name="software_keyboard">軟體鍵盤</string>
     <string name="i_forgot">我忘記了</string>
@@ -632,6 +648,8 @@
     <string name="invalid_system_mode_message">必須在系統設定中開啟「New 3DS 模式」方可載入 New 3DS 專屬遊戲軟體。</string>
     <string name="shader_cache_crash">著色器快取閃退</string>
     <string name="shader_cache_crash_message">Azahar 上次為目前遊戲建立著色器快取時意外關閉。圖形驅動程式可能在編譯其中一個快取著色器時發生當機，若繼續執行可能會再次閃退。&lt;br/&gt;&lt;br/&gt;若要重設著色器快取，請在應用程式清單中長按該應用程式，點選 &lt;b&gt;刪除著色器快取&lt;/b&gt;，並選擇 &lt;b&gt;Vulkan&lt;/b&gt;。</string>
+    <string name="savestate_build_mismatch_message"><![CDATA[無法載入即時存檔，因為該存檔是由不同版本的 Azahar 所建立：<br/><b>Azahar %1$s</b>。<br/><br/>請參閱我們的部落格文章 <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">認識即時存檔（understanding savestates）</a> 以了解更多資訊。<br/><br/>若要救回遊戲進度，請先降級至 <b>Azahar %1$s</b>，載入此即時存檔後，改用遊戲／應用程式內建的存檔功能儲存進度。]]></string>
+
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">正在準備著色器</string>
     <string name="building_shaders">正在建構著色器：%s</string>
@@ -647,7 +665,7 @@
     <string name="game_context_open_save_dir">開啟存檔資料資料夾</string>
     <string name="game_context_open_app">開啟應用資料夾</string>
     <string name="game_context_open_mods">開啟模組資料夾</string>
-    <string name="game_context_open_textures">開啟紋理資料夾</string>
+    <string name="game_context_open_textures">開啟材質資料夾</string>
     <string name="game_context_open_dlc">開啟 DLC 資料夾</string>
     <string name="game_context_open_updates">開啟更新資料夾</string>
     <string name="game_context_open_extra">開啟額外資料資料夾</string>
@@ -788,13 +806,14 @@
     <!-- Render 3D modes -->
     <string name="side_by_side">並排螢幕</string>
     <string name="side_by_side_full">左右並排 (全寬)</string>
+    <string name="anaglyph">雙色立體（Anaglyph）</string>
     <string name="interlaced">交錯</string>
     <string name="reverse_interlaced">逆向交錯</string>
 
     <!-- Texture filters -->
     <string name="anime4k">Anime4K</string>
-    <string name="incompatible_texture_filter">不相容的紋理濾鏡</string>
-    <string name="incompatible_texture_filter_description">所選的紋理濾鏡（Anime4K）與 Vulkan 算繪器不相容。\n紋理濾鏡將重設為「無」。</string>
+    <string name="incompatible_texture_filter">不相容的材質濾鏡</string>
+    <string name="incompatible_texture_filter_description">所選的材質濾鏡（Anime4K）與 Vulkan 算繪器不相容。\n材質濾鏡將重設為「無」。</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">由遊戲控制</string>
@@ -1019,10 +1038,12 @@
     <string name="multiplayer_wrong_password">房間密碼錯誤</string>
     <string name="multiplayer_could_not_connect">無法連線至伺服器</string>
     <string name="multiplayer_room_is_full">房間人數已滿</string>
+    <string name="multiplayer_host_banned">房主已被封鎖</string>
     <string name="multiplayer_permission_denied">權限不足，拒絕存取</string>
     <string name="multiplayer_no_such_user">查無此使用者</string>
     <string name="multiplayer_already_in_room">您已在房間中</string>
     <string name="multiplayer_create_room_error">建立房間時發生錯誤</string>
+    <string name="multiplayer_host_kicked">房主已被踢出</string>
     <string name="multiplayer_unknown_error">未知錯誤</string>
     <string name="multiplayer_room_uninitialized">房間尚未初始化</string>
     <string name="multiplayer_room_idle">房間閒置中</string>
@@ -1031,6 +1052,7 @@
     <string name="multiplayer_room_moderator">房間管理員</string>
     <string name="multiplayer_member_join">%1$s 已加入房間</string>
     <string name="multiplayer_member_leave">%1$s 已離開房間</string>
+    <string name="multiplayer_member_kicked">%1$s 已被踢出</string>
     <string name="multiplayer_member_banned">%1$s 已被封鎖</string>
     <string name="multiplayer_address_unbanned">位址已解除封鎖</string>
     <string name="multiplayer_kick_member">踢出房間</string>

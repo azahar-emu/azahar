@@ -3112,7 +3112,7 @@ installed applications.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="514"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Battery state used by the system.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;État de la batterie utilisée par le système.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;État de la batterie utilisée par l&apos;appareil.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="517"/>
@@ -5095,17 +5095,17 @@ Use at your own risk!</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3792"/>
         <source>Video dumping is not yet supported when using the Vulkan renderer.</source>
-        <translation type="unfinished"></translation>
+        <translation>La capture vidéo n&apos;est pas encore supportée lors de l&apos;usage du rendu Vulkan.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3795"/>
         <source>Because of this, using video dumping on macOS is not currently possible.</source>
-        <translation type="unfinished"></translation>
+        <translation>À cause de cela, la capture vidéo n&apos;est pas encore possible sur macOS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3805"/>
         <source>Video dumping is not yet supported when using the Software renderer.</source>
-        <translation type="unfinished"></translation>
+        <translation>La capture vidéo n&apos;est pas encore supportée lors de l&apos;usage du rendu Software.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3834"/>
@@ -5251,7 +5251,7 @@ Use at your own risk!</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4224"/>
         <source>The savestate could not be created or restored.&lt;br/&gt;&lt;br/&gt;%1</source>
-        <translation>Le point de récupération n&apos;a pas pu être créé ou restoré.&lt;br/&gt;&lt;br/&gt;%1</translation>
+        <translation>Le point de récupération n&apos;a pas pu être créé ou restauré.&lt;br/&gt;&lt;br/&gt;%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4235"/>

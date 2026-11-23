@@ -94,7 +94,7 @@
     <string name="select_emulator_data_folders">Dossiers de données</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Sélectionnez les dossiers de données<br/>(le dossier utilisateur est obligatoire)]]></string>
     <string name="permissions_description">Accorder des autorisations facultatives pour utiliser des fonctionnalités spécifiques de l\'émulateur</string>
-    <string name="missing_permissions">Permissions manquantes</string>
+    <string name="missing_permissions">Autorisations manquantes</string>
     <string name="warning_help">Aide</string>
     <string name="warning_skip">Passer</string>
     <string name="warning_cancel">Annuler</string>
@@ -130,7 +130,7 @@
     <string name="auto_map_image_description">Les quatre boutons situés à droite de la 3DS avec le bouton A surligné</string>
     <string name="controller_clear_all">Réinitialiser toutes les assignations de touche</string>
     <string name="controller_clear_all_confirm">Cela effacera toutes les assignations de touche de manette actuelles.</string>
-    <string name="controller_reset_all">Réinitialiser toutes les assignations à leur valeur globale</string>
+    <string name="controller_reset_all">Réinitialiser toutes les assignations de touche à leur valeur globale</string>
     <string name="controller_reset_all_confirm">Cela va réinitialiser toutes les assignations de manettes aux assignations globales.</string>
     <string name="controller_circlepad">Pad circulaire</string>
     <string name="controller_c">Stick C</string>
@@ -640,7 +640,7 @@
     <string name="cia_file_not_found">Échec de l\'installation. Fichier CIA introuvable.</string>
     <string name="system_archive_general">Une archive système</string>
     <string name="save_load_error">Erreur de sauvegarde/chargement</string>
-    <string name="savestate_error_message"><![CDATA[Le point de récupération n\'a pas pu être créé ou restoré.<br/><br/>%1$s]]></string>
+    <string name="savestate_error_message"><![CDATA[Le point de récupération n\'a pas pu être créé ou restauré.<br/><br/>%1$s]]></string>
     <string name="fatal_error">Erreur fatale</string>
     <string name="fatal_error_message">Une erreur fatale s\'est produite. Veuillez consulter les logs pour plus de détails.\nPoursuivre l\'émulation peut entraîner des plantages et des bugs.</string>
     <string name="unsupported_encrypted">Application encryptée non supportée</string>
