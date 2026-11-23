@@ -212,8 +212,14 @@ public:
      * a clear of its own, shadow rendering): its multisampled copy, if it has one, no longer has
      * its contents and is refreshed from it before the next pass loads it.
      */
-    /// Returns true when the texture had a multisampled copy.
-    bool NoteWritten(id<MTLTexture> texture);
+    /// Returns true when the texture had a multisampled copy. `reason` (a string literal) is
+    /// counted when the copy is refreshed, for the log.
+    bool NoteWritten(id<MTLTexture> texture, const char* reason);
+
+    /// The multisampled copy of a texture level when it is up to date, else nil. A utility pass
+    /// that writes the texture can draw into it instead and resolve it into the texture, so the
+    /// copy stays up to date (it is loaded, so pixels outside what the pass draws stay).
+    id<MTLTexture> UpToDateMsaa(id<MTLTexture> texture, u32 level, u32 slice);
 
     /// Drops the multisampled copies of textures that no longer exist. Once a frame.
     void SweepMsaaTextures();
@@ -396,7 +402,11 @@ private:
         __weak id<MTLTexture> owner = nil;
         id<MTLTexture> msaa = nil;
         bool valid = false;
+        const char* stale_reason = "new copy"; ///< What made it out of date (for the log)
     };
+    /// Refreshes by what made the copies out of date, logged every few seconds.
+    std::unordered_map<std::string, u32> msaa_refresh_reasons;
+    std::chrono::steady_clock::time_point msaa_reasons_logged{};
     std::unordered_map<std::uintptr_t, MsaaTexture> msaa_textures;
     /// The multisampled copy of `texture`, made or remade as needed. Refreshes it from the texture
     /// unless `will_clear` (the pass clears it anyway).

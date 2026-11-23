@@ -745,7 +745,7 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     if (shadow_rendering) {
         id<MTLTexture> shadow_buffer = framebuffer->ShadowBuffer();
         // Written by the shader, not through a multisampled pass (MSAA).
-        scheduler.NoteWritten(shadow_buffer);
+        scheduler.NoteWritten(shadow_buffer, "shadow rendering");
         if (shadow_buffer != cache.shadow_buffer) {
             [encoder setFragmentTexture:shadow_buffer atIndex:MSL::FS_TEXTURE_SHADOW_BUFFER];
             cache.shadow_buffer = shadow_buffer;

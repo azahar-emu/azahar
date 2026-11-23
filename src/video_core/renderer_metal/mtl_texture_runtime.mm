@@ -278,10 +278,12 @@ void BlitHelper::BlitColor(id<MTLTexture> src, u32 src_level, u32 src_slice,
                            const Common::Rectangle<u32>& src_rect, id<MTLTexture> dst,
                            u32 dst_level, u32 dst_slice, const Common::Rectangle<u32>& dst_rect,
                            bool linear) {
-    // A multisampled destination is the copy of a render target being refreshed (MSAA).
+    // A multisampled destination is the copy of a render target being refreshed (MSAA). A render
+    // target with an up to date copy is blitted into the copy, which is resolved into it.
+    id<MTLTexture> msaa = scheduler.UpToDateMsaa(dst, dst_level, dst_slice);
     id<MTLRenderPipelineState> pipeline =
         GetPipeline("blit_color_fs", dst.pixelFormat, MTLPixelFormatInvalid, MTLPixelFormatInvalid,
-                    true, static_cast<u32>(dst.sampleCount));
+                    true, static_cast<u32>(msaa != nil ? msaa.sampleCount : dst.sampleCount));
     if (!pipeline) {
         return;
     }
@@ -295,6 +297,15 @@ void BlitHelper::BlitColor(id<MTLTexture> src, u32 src_level, u32 src_slice,
     desc.colorAttachments[0].slice = dst_slice;
     desc.colorAttachments[0].loadAction = MTLLoadActionLoad;
     desc.colorAttachments[0].storeAction = MTLStoreActionStore;
+    if (msaa != nil) {
+        desc.colorAttachments[0].texture = msaa;
+        desc.colorAttachments[0].level = 0;
+        desc.colorAttachments[0].slice = 0;
+        desc.colorAttachments[0].resolveTexture = dst;
+        desc.colorAttachments[0].resolveLevel = dst_level;
+        desc.colorAttachments[0].resolveSlice = dst_slice;
+        desc.colorAttachments[0].storeAction = MTLStoreActionStoreAndMultisampleResolve;
+    }
 
     scheduler.SetPassLabel("blit color (scale or copy)");
     id<MTLRenderCommandEncoder> encoder = scheduler.BeginRendering(desc);
@@ -366,9 +377,11 @@ void BlitHelper::BlitDepthStencil(id<MTLTexture> src, id<MTLTexture> src_stencil
     const bool copy_stencil = has_stencil && src_stencil_view != nil && stencil_library != nil;
     const MTLPixelFormat stencil_format =
         has_stencil ? MTLPixelFormatDepth32Float_Stencil8 : MTLPixelFormatInvalid;
+    id<MTLTexture> msaa = scheduler.UpToDateMsaa(dst, dst_level, 0);
     id<MTLRenderPipelineState> pipeline =
         GetPipeline(copy_stencil ? "blit_depth_stencil_fs" : "blit_depth_fs", MTLPixelFormatInvalid,
-                    dst.pixelFormat, stencil_format, true, static_cast<u32>(dst.sampleCount));
+                    dst.pixelFormat, stencil_format, true,
+                    static_cast<u32>(msaa != nil ? msaa.sampleCount : dst.sampleCount));
     if (!pipeline) {
         return;
     }
@@ -395,6 +408,22 @@ void BlitHelper::BlitDepthStencil(id<MTLTexture> src, id<MTLTexture> src_stencil
         desc.stencilAttachment.loadAction = MTLLoadActionLoad;
         desc.stencilAttachment.storeAction = MTLStoreActionStore;
     }
+    if (msaa != nil) {
+        desc.depthAttachment.texture = msaa;
+        desc.depthAttachment.level = 0;
+        desc.depthAttachment.resolveTexture = dst;
+        desc.depthAttachment.resolveLevel = dst_level;
+        desc.depthAttachment.depthResolveFilter = MTLMultisampleDepthResolveFilterSample0;
+        desc.depthAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+        if (has_stencil) {
+            desc.stencilAttachment.texture = msaa;
+            desc.stencilAttachment.level = 0;
+            desc.stencilAttachment.resolveTexture = dst;
+            desc.stencilAttachment.resolveLevel = dst_level;
+            desc.stencilAttachment.stencilResolveFilter = MTLMultisampleStencilResolveFilterSample0;
+            desc.stencilAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+        }
+    }
 
     scheduler.SetPassLabel("blit depth");
     id<MTLRenderCommandEncoder> encoder = scheduler.BeginRendering(desc);
@@ -412,8 +441,10 @@ void BlitHelper::BlitDepthStencil(id<MTLTexture> src, id<MTLTexture> src_stencil
 
 void BlitHelper::ClearColor(id<MTLTexture> texture, u32 level, u32 slice,
                             const Common::Rectangle<u32>& rect, const Common::Vec4f& color) {
-    id<MTLRenderPipelineState> pipeline = GetPipeline("clear_color_fs", texture.pixelFormat,
-                                                      MTLPixelFormatInvalid, MTLPixelFormatInvalid);
+    id<MTLTexture> msaa = scheduler.UpToDateMsaa(texture, level, slice);
+    id<MTLRenderPipelineState> pipeline = GetPipeline(
+        "clear_color_fs", texture.pixelFormat, MTLPixelFormatInvalid, MTLPixelFormatInvalid, true,
+        msaa != nil ? static_cast<u32>(msaa.sampleCount) : 1u);
     if (!pipeline) {
         return;
     }
@@ -424,6 +455,15 @@ void BlitHelper::ClearColor(id<MTLTexture> texture, u32 level, u32 slice,
     desc.colorAttachments[0].slice = slice;
     desc.colorAttachments[0].loadAction = MTLLoadActionLoad;
     desc.colorAttachments[0].storeAction = MTLStoreActionStore;
+    if (msaa != nil) {
+        desc.colorAttachments[0].texture = msaa;
+        desc.colorAttachments[0].level = 0;
+        desc.colorAttachments[0].slice = 0;
+        desc.colorAttachments[0].resolveTexture = texture;
+        desc.colorAttachments[0].resolveLevel = level;
+        desc.colorAttachments[0].resolveSlice = slice;
+        desc.colorAttachments[0].storeAction = MTLStoreActionStoreAndMultisampleResolve;
+    }
 
     scheduler.SetPassLabel("partial clear color");
     id<MTLRenderCommandEncoder> encoder = scheduler.BeginRendering(desc);
@@ -436,8 +476,10 @@ void BlitHelper::ClearColor(id<MTLTexture> texture, u32 level, u32 slice,
 void BlitHelper::ClearDepthStencil(id<MTLTexture> texture, u32 level, bool has_stencil,
                                    const Common::Rectangle<u32>& rect, float depth, u8 stencil) {
     const MTLPixelFormat stencil_format = has_stencil ? texture.pixelFormat : MTLPixelFormatInvalid;
+    id<MTLTexture> msaa = scheduler.UpToDateMsaa(texture, level, 0);
     id<MTLRenderPipelineState> pipeline =
-        GetPipeline("clear_depth_fs", MTLPixelFormatInvalid, texture.pixelFormat, stencil_format);
+        GetPipeline("clear_depth_fs", MTLPixelFormatInvalid, texture.pixelFormat, stencil_format,
+                    true, msaa != nil ? static_cast<u32>(msaa.sampleCount) : 1u);
     if (!pipeline) {
         return;
     }
@@ -452,6 +494,22 @@ void BlitHelper::ClearDepthStencil(id<MTLTexture> texture, u32 level, bool has_s
         desc.stencilAttachment.level = level;
         desc.stencilAttachment.loadAction = MTLLoadActionLoad;
         desc.stencilAttachment.storeAction = MTLStoreActionStore;
+    }
+    if (msaa != nil) {
+        desc.depthAttachment.texture = msaa;
+        desc.depthAttachment.level = 0;
+        desc.depthAttachment.resolveTexture = texture;
+        desc.depthAttachment.resolveLevel = level;
+        desc.depthAttachment.depthResolveFilter = MTLMultisampleDepthResolveFilterSample0;
+        desc.depthAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+        if (has_stencil) {
+            desc.stencilAttachment.texture = msaa;
+            desc.stencilAttachment.level = 0;
+            desc.stencilAttachment.resolveTexture = texture;
+            desc.stencilAttachment.resolveLevel = level;
+            desc.stencilAttachment.stencilResolveFilter = MTLMultisampleStencilResolveFilterSample0;
+            desc.stencilAttachment.storeAction = MTLStoreActionStoreAndMultisampleResolve;
+        }
     }
 
     scheduler.SetPassLabel("partial clear depth");
@@ -652,7 +710,7 @@ bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
     }
 
     id<MTLBlitCommandEncoder> blit = scheduler.BlitEncoder();
-    scheduler.NoteWritten(dst);
+    scheduler.NoteWritten(dst, "copy");
     for (const auto& copy : copies) {
         const auto [src_w, src_h] = LevelExtent(src, copy.src_level);
         const auto [dst_w, dst_h] = LevelExtent(dst, copy.dst_level);
@@ -944,7 +1002,7 @@ id<MTLTexture> Surface::CreateTexture(u32 tex_width, u32 tex_height, MTLPixelFor
     if (pool.Enabled()) {
         if (id<MTLTexture> reused = pool.Acquire(TexturePool::KeyOf(desc))) {
             // Its multisampled copy (MSAA) has the pixels of the surface that had it before.
-            scheduler->NoteWritten(reused);
+            scheduler->NoteWritten(reused, "recycled texture");
             return reused;
         }
     }
@@ -968,7 +1026,7 @@ id<MTLTexture> Surface::CopyTexture() {
                              src.pixelFormat, "copy");
     }
     [scheduler->BlitEncoder() copyFromTexture:src toTexture:copy];
-    scheduler->NoteWritten(copy);
+    scheduler->NoteWritten(copy, "feedback copy");
     Stats().feedback_copies.fetch_add(1, std::memory_order_relaxed);
     return copy;
 }
@@ -996,7 +1054,7 @@ id<MTLTexture> Surface::ReplaceWithFullUsage(Type type) {
                       texture.pixelFormat, "full usage", true);
     [scheduler->BlitEncoder() copyFromTexture:texture toTexture:replacement];
     // The replacement may come from the texture pool with a multisampled copy of other pixels.
-    scheduler->NoteWritten(replacement);
+    scheduler->NoteWritten(replacement, "replacement texture");
     textures[type] = replacement;
     textures[Type::Copy] = nil;
     storage_view = nil;
@@ -1040,7 +1098,7 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
     const MTLOrigin origin = MTLOriginMake(rect.left, std::min(rect.bottom, rect.top), 0);
     const MTLSize size = MTLSizeMake(rect_width, rect_height, 1);
     id<MTLBuffer> buffer = runtime->upload_buffer.Handle();
-    scheduler->NoteWritten(texture);
+    scheduler->NoteWritten(texture, "upload");
 
     if (traits.has_stencil) {
         // De-interleave the (D24 << 8 | S8) words into a float depth plane and a stencil plane.
@@ -1132,7 +1190,7 @@ void Surface::UploadCustom(const VideoCore::Material* custom_material, u32 level
         runtime->upload_buffer.Commit(custom_size);
 
         const auto [bytes_per_row, rows] = CustomLayout(custom_format, mat_width, mat_height);
-        scheduler->NoteWritten(target);
+        scheduler->NoteWritten(target, "custom texture upload");
         [scheduler->BlitEncoder() copyFromBuffer:runtime->upload_buffer.Handle()
                                     sourceOffset:offset
                                sourceBytesPerRow:bytes_per_row

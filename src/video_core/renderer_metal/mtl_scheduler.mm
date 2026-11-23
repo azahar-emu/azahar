@@ -851,7 +851,8 @@ void Scheduler::FlushPendingClears() {
         }
         if (msaa == nullptr) {
             // Drawn into the texture itself, outside of any multisampled pass.
-            NoteWritten(clear.texture);
+            NoteWritten(clear.texture, clear.partial ? "partial clear of its own"
+                                                     : "depth-only clear of its own");
         }
         if (clear.partial) {
             // A rectangle with nothing to take it over: a pass of its own that draws it.
@@ -1069,10 +1070,10 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
     // next multisampled pass loads it, or that pass would resolve the old copy over this drawing.
     bool plain_into_msaa = false;
     if (color_msaa == nil) {
-        plain_into_msaa |= NoteWritten(target.color);
+        plain_into_msaa |= NoteWritten(target.color, "game pass without MSAA");
     }
     if (depth_msaa == nil) {
-        plain_into_msaa |= NoteWritten(target.depth);
+        plain_into_msaa |= NoteWritten(target.depth, "game pass without MSAA");
     }
     if (plain_into_msaa && StatisticsEnabled()) {
         Stats().msaa_plain_passes.fetch_add(1, std::memory_order_relaxed);
@@ -1173,13 +1174,19 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(const RenderTarget& target
 }
 
 id<MTLRenderCommandEncoder> Scheduler::BeginRendering(MTLRenderPassDescriptor* descriptor) {
+    // The clears flushed first would take the caller's label.
+    const char* label = pass_label;
+    pass_label = nullptr;
     end_reason = "a utility pass (clear, blit, present)";
     EndEncoding();
     end_reason = nullptr;
     FlushPendingClears();
-    // Its attachments are drawn into directly, not through a multisampled copy.
-    NoteWritten(descriptor.colorAttachments[0].texture);
-    NoteWritten(descriptor.depthAttachment.texture);
+    pass_label = label;
+    // Its attachments are drawn into directly, not through a multisampled copy (when it draws
+    // into a copy, see UpToDateMsaa, the attachment is the copy and nothing is noted).
+    const char* reason = label != nullptr ? label : "utility pass";
+    NoteWritten(descriptor.colorAttachments[0].texture, reason);
+    NoteWritten(descriptor.depthAttachment.texture, reason);
     pass_samples = 1;
     id<MTLCommandBuffer> buffer = CommandBuffer();
     AttachPassTiming(descriptor);
@@ -1238,6 +1245,18 @@ id<MTLTexture> Scheduler::MsaaFor(id<MTLTexture> texture, id<MTLTexture> stencil
         end_reason = nullptr;
         if (StatisticsEnabled()) {
             Stats().msaa_refreshes.fetch_add(1, std::memory_order_relaxed);
+            msaa_refresh_reasons[fmt::format("{} ({})", entry.stale_reason,
+                                             is_depth ? "depth" : "color")]++;
+            const auto now = std::chrono::steady_clock::now();
+            if (now - msaa_reasons_logged >= std::chrono::seconds{10}) {
+                msaa_reasons_logged = now;
+                std::string text;
+                for (const auto& [reason, count] : msaa_refresh_reasons) {
+                    text += fmt::format("{}{} {}", text.empty() ? "" : ", ", reason, count);
+                }
+                LOG_INFO(Render, "MSAA: multisampled copies refreshed after: {}", text);
+                msaa_refresh_reasons.clear();
+            }
         }
     }
     // The pass that asked keeps it up to date from now on.
@@ -1245,7 +1264,7 @@ id<MTLTexture> Scheduler::MsaaFor(id<MTLTexture> texture, id<MTLTexture> stencil
     return entry.msaa;
 }
 
-bool Scheduler::NoteWritten(id<MTLTexture> texture) {
+bool Scheduler::NoteWritten(id<MTLTexture> texture, const char* reason) {
     if (msaa_textures.empty() || texture == nil) {
         return false;
     }
@@ -1254,8 +1273,23 @@ bool Scheduler::NoteWritten(id<MTLTexture> texture) {
     if (it == msaa_textures.end()) {
         return false;
     }
+    if (it->second.valid) {
+        it->second.stale_reason = reason;
+    }
     it->second.valid = false;
     return true;
+}
+
+id<MTLTexture> Scheduler::UpToDateMsaa(id<MTLTexture> texture, u32 level, u32 slice) {
+    if (msaa_textures.empty() || texture == nil || level != 0 || slice != 0) {
+        return nil;
+    }
+    const auto it = msaa_textures.find(reinterpret_cast<std::uintptr_t>((__bridge void*)texture));
+    if (it == msaa_textures.end() || !it->second.valid || it->second.msaa == nil) {
+        return nil;
+    }
+    id<MTLTexture> owner = it->second.owner;
+    return owner == texture ? it->second.msaa : nil;
 }
 
 void Scheduler::SweepMsaaTextures() {
