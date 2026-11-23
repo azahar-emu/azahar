@@ -1633,7 +1633,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.ui" line="39"/>
         <source>Clear All</source>
-        <translation>Reiniciar todo</translation>
+        <translation>Borrar todo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.ui" line="46"/>
@@ -1694,7 +1694,7 @@ Si continúas, se eliminará la asignación anterior. ¿Quieres continuar?</tran
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="254"/>
         <source>Clear</source>
-        <translation>Reiniciar</translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="272"/>
@@ -1900,7 +1900,7 @@ Si continúas, se eliminará la asignación anterior. ¿Quieres continuar?</tran
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="1126"/>
         <source>Clear All</source>
-        <translation>Reiniciar todo</translation>
+        <translation>Borrar todo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="1154"/>
@@ -2057,7 +2057,7 @@ Si continúas, se eliminará la asignación anterior. ¿Quieres continuar?</tran
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="196"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="257"/>
         <source>Clear</source>
-        <translation>Reiniciar</translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="164"/>
@@ -2518,7 +2518,7 @@ Si continúas, se eliminará la asignación anterior. ¿Deseas continuar?</trans
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="202"/>
         <source>CemuhookUDP Config</source>
-        <translation>Configuración de CemuhookUDP </translation>
+        <translation>Configuración de CemuhookUDP</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="208"/>
@@ -2574,7 +2574,7 @@ Si continúas, se eliminará la asignación anterior. ¿Deseas continuar?</trans
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="79"/>
         <source>Mouse (Right Click for Tilt, Middle Click for Look)</source>
-        <translation>Ratón (Click Derecho para inclinar, Click Medio para mirar)</translation>
+        <translation>Ratón (clic derecho para inclinar, clic central para mirar)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="86"/>
@@ -2738,7 +2738,7 @@ Si continúas, se eliminará la asignación anterior. ¿Deseas continuar?</trans
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="90"/>
         <source>Are you sure you want to &lt;b&gt;reset your settings for this application&lt;/b&gt;?</source>
-        <translation>¿Estás seguro de que quieres &lt;b&gt;restablecer tu configuración para esta aplicación&lt;/b&gt;? </translation>
+        <translation>¿Estás seguro de que quieres &lt;b&gt;restablecer tu configuración para esta aplicación&lt;/b&gt;?</translation>
     </message>
 </context>
 <context>
@@ -3066,7 +3066,7 @@ a las aplicaciones instaladas.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="413"/>
         <source>days</source>
-        <translation>días </translation>
+        <translation>días</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="435"/>
@@ -3097,7 +3097,7 @@ a las aplicaciones instaladas.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="490"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How the system&apos;s battery state is determined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Como se determina el estado de batería del sistema.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cómo se determina el estado de batería del sistema.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="493"/>
@@ -3938,7 +3938,7 @@ a las aplicaciones instaladas.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="633"/>
         <source>This action will unlink your real console from Azahar, with the following consequences:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Your OTP, SecureInfo and LocalFriendCodeSeed will be removed from Azahar.&lt;/li&gt;&lt;li&gt;Your friend list will reset and you will be logged out of your NNID/PNID account.&lt;/li&gt;&lt;li&gt;System files and eshop titles obtained through Azahar will become inaccessible until the same console is linked again (save data will not be lost).&lt;/li&gt;&lt;/ul&gt;&lt;br&gt;Continue?</source>
-        <translation>Esta acción desvinculará tu consola real de Azahar, con las siguientes consecuencias:&lt;ul&gt;&lt;li&gt;OTP, SecureInfo y LocalFriendCodeSeed serán eliminados de Azahar.&lt;/li&gt;&lt;li&gt;Tu lista de amigos se restablecerá y se cerrará la sesión de tu cuenta NNID/PNID.&lt;/li&gt;&lt;li&gt;Los archivos del sistema y los títulos de la eshop obtenidos a través de Azahar se volverán inaccesibles hasta que la misma consola se vincule nuevamente mediante la herramienta de configuración (los datos guardados no se perderán).&lt;/li&gt;&lt;/ul&gt;&lt;br&gt;¿Continuar?</translation>
+        <translation>Esta acción desvinculará tu consola real de Azahar, con las siguientes consecuencias:&lt;br&gt;&lt;ul&gt;&lt;li&gt;OTP, SecureInfo y LocalFriendCodeSeed serán eliminados de Azahar.&lt;/li&gt;&lt;li&gt;Tu lista de amigos se restablecerá y se cerrará la sesión de tu cuenta NNID/PNID.&lt;/li&gt;&lt;li&gt;Los archivos del sistema y los títulos de la eshop obtenidos a través de Azahar se volverán inaccesibles hasta que la misma consola se vincule nuevamente mediante la herramienta de configuración (los datos guardados no se perderán).&lt;/li&gt;&lt;/ul&gt;&lt;br&gt;¿Continuar?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="661"/>
@@ -4392,7 +4392,8 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
 
 Al ejecutarse de esta forma, es posible que la aplicación carezca de ciertas funciones, como la emulación de cámara.
 
-Se recomienda ejecutar Azahar con el comando `open`, por ejemplo: `open ./Azahar.app`</translation>
+Se recomienda ejecutar Azahar con el comando `open`, por ejemplo:
+`open ./Azahar.app`</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="626"/>
@@ -5094,17 +5095,17 @@ Use at your own risk!</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3792"/>
         <source>Video dumping is not yet supported when using the Vulkan renderer.</source>
-        <translation type="unfinished"></translation>
+        <translation>El volcado de vídeo aún no es compatible al utilizar el renderizador Vulkan.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3795"/>
         <source>Because of this, using video dumping on macOS is not currently possible.</source>
-        <translation type="unfinished"></translation>
+        <translation>Debido a esto, actualmente no es posible realizar el volcado de vídeo en macOS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3805"/>
         <source>Video dumping is not yet supported when using the Software renderer.</source>
-        <translation type="unfinished"></translation>
+        <translation>El volcado de vídeo aún no es compatible al utilizar el renderizador por software.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3834"/>
@@ -5255,17 +5256,17 @@ Use at your own risk!</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4235"/>
         <source>Shader Cache Crash</source>
-        <translation>Crash de Caché de Sombreadores</translation>
+        <translation>Fallo de la caché de sombreadores</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4237"/>
         <source>Azahar closed unexpectedly the last time it built the Vulkan shader cache of the current title. The graphics driver may have crashed on one of the cached shaders, and continuing may crash it again.&lt;br/&gt;&lt;br/&gt;To reset the shader cache, right-click the application in the game list and select &lt;b&gt;Disk Shader Cache &amp;gt; Delete Vulkan Shader Cache&lt;/b&gt;.</source>
-        <translation>Azahar se cerró de forma inesperada la última vez que generó la caché de sombreadores de Vulkan para el título actual. Es posible que el controlador gráfico haya fallado al procesar uno de los sombreadores almacenados en caché, continuar podría provocar un nuevo fallo.&lt;br/&gt;&lt;br/&gt;Para restablecer la caché de sombreadores, haz clic derecho sobre la aplicación dentro de la lista de juegos y selecciona &lt;b&gt;Caché de sombreadores en disco &amp;gt; Eliminar caché de sombreado de Vulkan&lt;/b&gt;.</translation>
+        <translation>Azahar se cerró de forma inesperada la última vez que generó la caché de sombreadores de Vulkan del título actual. Es posible que el controlador gráfico haya fallado al procesar uno de los sombreadores almacenados en caché, y continuar podría provocar un nuevo fallo.&lt;br/&gt;&lt;br/&gt;Para restablecer la caché de sombreadores, haz clic derecho sobre la aplicación en la lista de juegos y selecciona &lt;b&gt;Caché de sombreadores en disco &amp;gt; Eliminar caché de sombreadores de Vulkan&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4242"/>
         <source>Shader cache crash</source>
-        <translation>Crash de caché de sombreadores</translation>
+        <translation>Fallo de la caché de sombreadores</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4245"/>
@@ -5543,22 +5544,22 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="738"/>
         <source>Disk Shader Cache</source>
-        <translation>Caché de sombreador de disco</translation>
+        <translation>Caché de sombreadores en disco</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="739"/>
         <source>Open Shader Cache Location</source>
-        <translation>Abrir ubicación de caché de sombreador</translation>
+        <translation>Abrir ubicación de la caché de sombreadores</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="743"/>
         <source>Delete OpenGL Shader Cache</source>
-        <translation>Eliminar caché de sombreado de OpenGL</translation>
+        <translation>Eliminar caché de sombreadores de OpenGL</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="747"/>
         <source>Delete Vulkan Shader Cache</source>
-        <translation>Eliminar caché de sombreado de Vulkan</translation>
+        <translation>Eliminar caché de sombreadores de Vulkan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="750"/>
@@ -5679,7 +5680,7 @@ This will delete the application if installed, as well as any installed updates 
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="1062"/>
         <source>Clear</source>
-        <translation>Reiniciar</translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="1126"/>
@@ -5698,7 +5699,7 @@ This will delete the application if installed, as well as any installed updates 
         <location filename="../../src/citra_qt/game_list_p.h" line="271"/>
         <source>App functions flawlessly with no audio or graphical glitches, all tested functionality works as intended without
 any workarounds needed.</source>
-        <translation>La aplicación funciona sin errores gráficos o de audio. Todas las funciones probadas funcionan según lo previso sin necesidad de soluciones alternativas.</translation>
+        <translation>La aplicación funciona sin errores gráficos o de audio. Todas las funciones probadas funcionan según lo previsto sin necesidad de soluciones alternativas.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="272"/>
@@ -6257,7 +6258,7 @@ Mensaje de depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="30"/>
         <source>Filter:</source>
-        <translation>Buscar:</translation>
+        <translation>Filtro:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="37"/>
@@ -6282,7 +6283,7 @@ Mensaje de depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="82"/>
         <source>Clear</source>
-        <translation>Reiniciar</translation>
+        <translation>Borrar</translation>
     </message>
 </context>
 <context>
@@ -7746,7 +7747,8 @@ Puede que haya dejado la sala.</translation>
         <source>Azahar has detected user data for Citra and Lime3DS.
 
 </source>
-        <translation>Azahar ha detectado datos de usuario de Citra y Lime3DS
+        <translation>Azahar ha detectado datos de usuario de Citra y Lime3DS.
+
 </translation>
     </message>
     <message>
