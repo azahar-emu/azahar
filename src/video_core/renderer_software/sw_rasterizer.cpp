@@ -584,7 +584,8 @@ std::array<Common::Vec4<u8>, 4> RasterizerSoftware::TextureColor(
 
     // Sample procedural texture
     if (regs.texturing.main_config.texture3_enable) {
-        // Value 3 is undefined; use texcoord0 like FragmentModule::DefineProcTexSampler().
+        // TODO: Check what hardware does with the undefined value 3. Until then, use texcoord0
+        // like FragmentModule::DefineProcTexSampler().
         const u32 coord = regs.texturing.main_config.texture3_coordinates;
         const auto& proctex_uv = uv[coord < 3 ? coord : 0];
         texture_color[3] = ProcTex(proctex_uv.u().ToFloat32(), proctex_uv.v().ToFloat32(),
