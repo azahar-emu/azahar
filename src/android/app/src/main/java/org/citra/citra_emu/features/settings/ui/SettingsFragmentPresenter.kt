@@ -1230,6 +1230,16 @@ class SettingsFragmentPresenter(
     private fun addLayoutSettings(sl: ArrayList<SettingsItem>) {
         setSectionTitle(R.string.preferences_layout)
         sl.apply {
+            if (!isPerApp) {
+                add(
+                    RunnableSetting(
+                        R.string.emulation_background_image,
+                        R.string.emulation_background_image_description,
+                        true,
+                        runnable = { fragmentView.showBackgroundImageDialog() }
+                    )
+                )
+            }
             add(
                 SingleChoiceSetting(
                     editingSettings,

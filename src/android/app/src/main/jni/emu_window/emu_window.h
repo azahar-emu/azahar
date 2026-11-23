@@ -47,6 +47,8 @@ public:
     virtual void StopPresenting() {}
 
 protected:
+    void NotifyFramebufferLayoutChanged(const Layout::FramebufferLayout& layout) override;
+
     void OnFramebufferSizeChanged();
 
     void ReportFrameWork();

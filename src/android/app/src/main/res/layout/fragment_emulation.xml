@@ -23,6 +23,12 @@
             android:focusable="false"
             android:focusableInTouchMode="false" />
 
+        <org.citra.citra_emu.display.EmulationBackgroundView
+            android:id="@+id/emulation_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" />
+
         <!-- This is the onscreen input overlay -->
         <org.citra.citra_emu.overlay.InputOverlay
             android:id="@+id/surface_input_overlay"

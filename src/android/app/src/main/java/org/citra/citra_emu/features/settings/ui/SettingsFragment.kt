@@ -9,14 +9,22 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.io.IOException
 import kotlin.getValue
+import kotlinx.coroutines.launch
+import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.FragmentSettingsBinding
+import org.citra.citra_emu.display.EmulationBackgroundStore
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
@@ -34,6 +42,49 @@ class SettingsFragment :
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
+
+    private val backgroundPicker =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                val context = requireContext().applicationContext
+                lifecycleScope.launch {
+                    try {
+                        EmulationBackgroundStore.get(context).importImage(uri)
+                        if (isAdded) {
+                            Toast.makeText(
+                                context,
+                                R.string.emulation_background_imported,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } catch (_: IOException) {
+                        if (isAdded) {
+                            Toast.makeText(
+                                context,
+                                R.string.emulation_background_error,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (_: SecurityException) {
+                        if (isAdded) {
+                            Toast.makeText(
+                                context,
+                                R.string.emulation_background_error,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (_: IllegalArgumentException) {
+                        if (isAdded) {
+                            Toast.makeText(
+                                context,
+                                R.string.emulation_background_error,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -99,6 +150,42 @@ class SettingsFragment :
 
     override fun onSettingChanged() {
         activityView!!.onSettingChanged()
+    }
+
+    override fun showBackgroundImageDialog() {
+        val store = EmulationBackgroundStore.get(requireContext())
+        val items = if (store.hasImage()) {
+            arrayOf(
+                getString(R.string.emulation_background_choose),
+                getString(R.string.emulation_background_remove)
+            )
+        } else {
+            arrayOf(getString(R.string.emulation_background_choose))
+        }
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.emulation_background_image)
+            .setItems(items) { _, which ->
+                if (which == 0) {
+                    backgroundPicker.launch(EmulationBackgroundStore.SUPPORTED_TYPES.toTypedArray())
+                } else {
+                    val context = requireContext().applicationContext
+                    lifecycleScope.launch {
+                        try {
+                            store.remove()
+                        } catch (_: IOException) {
+                            if (isAdded) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.emulation_background_error,
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun setInsets() {

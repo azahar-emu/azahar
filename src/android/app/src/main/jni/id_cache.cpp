@@ -26,6 +26,7 @@ static jclass s_savestate_info_class;
 
 static jclass s_native_library_class;
 static jmethodID s_on_core_error;
+static jmethodID s_on_framebuffer_layout_changed;
 static jmethodID s_is_portrait_mode;
 static jmethodID s_landscape_screen_layout;
 static jmethodID s_portrait_screen_layout;
@@ -85,6 +86,10 @@ jclass GetNativeLibraryClass() {
 
 jmethodID GetOnCoreError() {
     return s_on_core_error;
+}
+
+jmethodID GetOnFramebufferLayoutChanged() {
+    return s_on_framebuffer_layout_changed;
 }
 
 jmethodID GetLandscapeScreenLayout() {
@@ -188,6 +193,8 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     s_on_core_error = env->GetStaticMethodID(
         s_native_library_class, "onCoreError",
         "(Lorg/citra/citra_emu/NativeLibrary$CoreError;Ljava/lang/String;)Z");
+    s_on_framebuffer_layout_changed =
+        env->GetStaticMethodID(s_native_library_class, "onFramebufferLayoutChanged", "(ZII[I)V");
     s_exit_emulation_activity =
         env->GetStaticMethodID(s_native_library_class, "exitEmulationActivity", "(I)V");
     s_request_camera_permission =

@@ -314,7 +314,7 @@ protected:
      * Update framebuffer layout with the given parameter.
      * @note EmuWindow implementations will usually use this in window resize event handlers.
      */
-    void NotifyFramebufferLayoutChanged(const Layout::FramebufferLayout& layout) {
+    virtual void NotifyFramebufferLayoutChanged(const Layout::FramebufferLayout& layout) {
         framebuffer_layout = layout;
     }
 

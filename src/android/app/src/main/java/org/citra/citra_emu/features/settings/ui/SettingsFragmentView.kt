@@ -48,4 +48,6 @@ interface SettingsFragmentView {
      * Have the fragment tell the containing Activity that a setting was modified.
      */
     fun onSettingChanged()
+
+    fun showBackgroundImageDialog()
 }

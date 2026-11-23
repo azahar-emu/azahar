@@ -18,11 +18,15 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.io.IOException
+import kotlinx.coroutines.launch
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ActivitySettingsBinding
+import org.citra.citra_emu.display.EmulationBackgroundStore
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.utils.SettingsFile
@@ -211,6 +215,21 @@ class SettingsActivity :
     }
 
     fun onSettingsReset() {
+        if (editingSettings.isPerApp()) {
+            resetSettings()
+        } else {
+            lifecycleScope.launch {
+                try {
+                    EmulationBackgroundStore.get(applicationContext).remove()
+                    resetSettings()
+                } catch (_: IOException) {
+                    showToastMessage(getString(R.string.emulation_background_error), true)
+                }
+            }
+        }
+    }
+
+    private fun resetSettings() {
         // if we are editing per-game settings, delete the per app file only
         if (editingSettings.isPerApp()) {
             // reset to global settings, save, and exit

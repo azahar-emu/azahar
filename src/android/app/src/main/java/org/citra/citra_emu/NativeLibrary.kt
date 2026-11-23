@@ -30,6 +30,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.lang.ref.WeakReference
 import java.util.Date
 import org.citra.citra_emu.activities.EmulationActivity
+import org.citra.citra_emu.display.EmulationBackgroundLayouts
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
@@ -44,6 +45,17 @@ import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
  * with the native side of the Citra code.
  */
 object NativeLibrary {
+    @Keep
+    @JvmStatic
+    fun onFramebufferLayoutChanged(
+        secondary: Boolean,
+        width: Int,
+        height: Int,
+        rectangles: IntArray?
+    ) {
+        EmulationBackgroundLayouts.update(secondary, width, height, rectangles)
+    }
+
     /**
      * Default touchscreen device
      */

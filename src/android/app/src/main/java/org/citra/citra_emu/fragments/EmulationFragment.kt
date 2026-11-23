@@ -1656,6 +1656,10 @@ class EmulationFragment :
     private fun setInsets() {
         if (!activeSettings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
             ViewCompat.setOnApplyWindowInsetsListener(binding.surfaceEmulation, applyCutoutInsets)
+            ViewCompat.setOnApplyWindowInsetsListener(
+                binding.emulationBackground,
+                applyCutoutInsets
+            )
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.surfaceInputOverlay, applyCutoutInsets)
         ViewCompat.setOnApplyWindowInsetsListener(

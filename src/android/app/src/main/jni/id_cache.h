@@ -22,6 +22,7 @@ jclass GetSavestateInfoClass();
 
 jclass GetNativeLibraryClass();
 jmethodID GetOnCoreError();
+jmethodID GetOnFramebufferLayoutChanged();
 jmethodID GetDisplayAlertMsg();
 jmethodID GetDisplayAlertPrompt();
 jmethodID GetAlertPromptButton();

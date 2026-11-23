@@ -82,6 +82,44 @@ void EmuWindow_Android::OnFramebufferSizeChanged() {
     UpdateCurrentFramebufferLayout(window_width, window_height, is_portrait_mode);
 }
 
+void EmuWindow_Android::NotifyFramebufferLayoutChanged(const Layout::FramebufferLayout& layout) {
+    Frontend::EmuWindow::NotifyFramebufferLayoutChanged(layout);
+    std::vector<jint> regions;
+    const auto add = [&regions](const Common::Rectangle<u32>& rect) {
+        regions.insert(regions.end(),
+                       {static_cast<jint>(rect.left), static_cast<jint>(rect.top),
+                        static_cast<jint>(rect.right), static_cast<jint>(rect.bottom)});
+    };
+    if (layout.render_3d_mode != Settings::StereoRenderOption::Off) {
+        // Stereo projection has additional eye-dependent transforms. Fail closed rather than
+        // allowing an Android decoration to cover either eye's game image.
+        add({0, 0, layout.width, layout.height});
+    } else {
+        if (layout.top_screen_enabled) {
+            add(layout.top_screen);
+        }
+        if (layout.bottom_screen_enabled) {
+            add(layout.bottom_screen);
+        }
+        if (layout.additional_screen_enabled) {
+            add(layout.additional_screen);
+        }
+    }
+    JNIEnv* env = IDCache::GetEnvForThread();
+    jintArray rectangles = env->NewIntArray(static_cast<jsize>(regions.size()));
+    if (!rectangles) {
+        return;
+    }
+    if (!regions.empty()) {
+        env->SetIntArrayRegion(rectangles, 0, static_cast<jsize>(regions.size()), regions.data());
+    }
+    env->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(),
+                              IDCache::GetOnFramebufferLayoutChanged(),
+                              static_cast<jboolean>(is_secondary), static_cast<jint>(layout.width),
+                              static_cast<jint>(layout.height), rectangles);
+    env->DeleteLocalRef(rectangles);
+}
+
 EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface, bool is_secondary)
     : EmuWindow{is_secondary}, host_window(surface) {
     LOG_DEBUG(Frontend, "Initializing EmuWindow_Android");
@@ -95,6 +133,10 @@ EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface, bool is_secondary)
 }
 
 EmuWindow_Android::~EmuWindow_Android() {
+    JNIEnv* env = IDCache::GetEnvForThread();
+    env->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(),
+                              IDCache::GetOnFramebufferLayoutChanged(),
+                              static_cast<jboolean>(is_secondary), 0, 0, nullptr);
     DestroyWindowSurface();
     DestroyContext();
 }

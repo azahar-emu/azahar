@@ -15,6 +15,7 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
+import android.widget.FrameLayout
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
@@ -249,7 +250,13 @@ class SecondaryDisplayPresentation(
             true
         }
 
-        setContentView(surfaceView) // Set SurfaceView as content
+        val content = FrameLayout(context)
+        content.addView(surfaceView, FrameLayout.LayoutParams(-1, -1))
+        content.addView(
+            EmulationBackgroundView(context).apply { secondaryDisplay = true },
+            FrameLayout.LayoutParams(-1, -1)
+        )
+        setContentView(content)
     }
 
     // Publicly accessible method to get the SurfaceHolder

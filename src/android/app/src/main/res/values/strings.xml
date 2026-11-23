@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="emulation_background_image">Background image</string>
+    <string name="emulation_background_image_description">Choose a static image for unused space around the screens. Applies to all applications. Images are stretched to each display. Stereoscopic modes use the background color.</string>
+    <string name="emulation_background_choose">Choose image</string>
+    <string name="emulation_background_remove">Remove image</string>
+    <string name="emulation_background_imported">Background image imported</string>
+    <string name="emulation_background_error">Could not update the background. Choose a static PNG, JPEG or WebP image smaller than 32 MiB.</string>
 
     <!-- General application strings -->
     <string name="app_name" translatable="false">Azahar</string>
