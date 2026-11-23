@@ -216,6 +216,7 @@ void ConfigureDebug::SetupPerGameUI() {
     ui->toggle_unique_data_console_type->setVisible(false);
     ui->toggle_cpu_jit->setVisible(false);
     ui->toggle_fastinterp->setVisible(false);
+    ui->deterministic_async_operations->setVisible(false);
 }
 
 void ConfigureDebug::RetranslateUI() {
