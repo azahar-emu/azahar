@@ -1182,8 +1182,8 @@ id<MTLRenderCommandEncoder> Scheduler::BeginRendering(MTLRenderPassDescriptor* d
     end_reason = nullptr;
     FlushPendingClears();
     pass_label = label;
-    // Its attachments are drawn into directly, not through a multisampled copy (when it draws
-    // into a copy, see UpToDateMsaa, the attachment is the copy and nothing is noted).
+    // Its attachments are drawn into directly, not through a multisampled copy (refreshing a
+    // copy draws into the copy itself, which nothing notes).
     const char* reason = label != nullptr ? label : "utility pass";
     NoteWritten(descriptor.colorAttachments[0].texture, reason);
     NoteWritten(descriptor.depthAttachment.texture, reason);
@@ -1278,18 +1278,6 @@ bool Scheduler::NoteWritten(id<MTLTexture> texture, const char* reason) {
     }
     it->second.valid = false;
     return true;
-}
-
-id<MTLTexture> Scheduler::UpToDateMsaa(id<MTLTexture> texture, u32 level, u32 slice) {
-    if (msaa_textures.empty() || texture == nil || level != 0 || slice != 0) {
-        return nil;
-    }
-    const auto it = msaa_textures.find(reinterpret_cast<std::uintptr_t>((__bridge void*)texture));
-    if (it == msaa_textures.end() || !it->second.valid || it->second.msaa == nil) {
-        return nil;
-    }
-    id<MTLTexture> owner = it->second.owner;
-    return owner == texture ? it->second.msaa : nil;
 }
 
 void Scheduler::SweepMsaaTextures() {

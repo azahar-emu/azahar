@@ -216,11 +216,6 @@ public:
     /// counted when the copy is refreshed, for the log.
     bool NoteWritten(id<MTLTexture> texture, const char* reason);
 
-    /// The multisampled copy of a texture level when it is up to date, else nil. A utility pass
-    /// that writes the texture can draw into it instead and resolve it into the texture, so the
-    /// copy stays up to date (it is loaded, so pixels outside what the pass draws stay).
-    id<MTLTexture> UpToDateMsaa(id<MTLTexture> texture, u32 level, u32 slice);
-
     /// Drops the multisampled copies of textures that no longer exist. Once a frame.
     void SweepMsaaTextures();
 
