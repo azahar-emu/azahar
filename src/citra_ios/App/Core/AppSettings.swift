@@ -485,7 +485,7 @@ final class AppSettings: ObservableObject {
         showSwapButton = value("showSwapButton", true)
         controllerOpacity = value("controllerOpacity", 0.7)
         hapticFeedback = value("hapticFeedback", true)
-        glassControls = value("glassControls", true)
+        glassControls = value("glassControls", false)
         glassControlTint = value("glassControlTint", 0.3)
         useMotion = value("useMotion", true)
 

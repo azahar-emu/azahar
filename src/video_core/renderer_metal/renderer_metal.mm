@@ -1485,8 +1485,12 @@ void RendererMetal::AdaptFrameGeneration() {
     // Dropped frames alone (a hitch of the emulation, JIT compiling) are not the size's fault: only
     // when the made frames also take a good part of their time.
     const bool losing = dropped >= 4 && frame_ms > budget_ms * 0.6;
-    // A smaller size is worth trying already when the made frames come close to their time.
-    const bool behind = frame_ms > budget_ms * 0.8 || losing;
+    // A smaller size only when made frames are actually being lost (2 or more a second) while they
+    // take most of their time. Every size change rebuilds the interpolation (about 90 ms, the game
+    // stutters), and the GPU's clock alone can make the same frames take three times as long for
+    // a while: Dragon Quest VIII went between half and 3/8 every 20 to 60 seconds at 17-19 ms of
+    // a 16.7 ms budget with no frame lost.
+    const bool behind = (frame_ms > budget_ms * 0.8 && dropped >= 2) || losing;
     const bool ahead = frame_ms < budget_ms * 0.45 && dropped == 0;
     fga_behind = behind ? fga_behind + 1 : 0;
     fga_losing = losing ? fga_losing + 1 : 0;
@@ -1555,9 +1559,10 @@ void RendererMetal::AdaptFrameGeneration() {
         }
         return;
     }
-    // A size that was too slow within the last 30 seconds is not tried again yet.
-    constexpr auto RETRY_AFTER = std::chrono::seconds{30};
-    if (adaptive && fga_ahead >= 6 && fga_hold == 0 && fga_level > 0 &&
+    // A larger size after 15 seconds with plenty of room, and not within 2 minutes of being too
+    // slow (each change is a stutter, see above).
+    constexpr auto RETRY_AFTER = std::chrono::seconds{120};
+    if (adaptive && fga_ahead >= 15 && fga_hold == 0 && fga_level > 0 &&
         now - fga_too_slow_at[fga_level - 1] >= RETRY_AFTER) {
         fga_ahead = 0;
         fga_level--;
