@@ -53,16 +53,16 @@ FileType GuessFromExtension(const std::string& extension_) {
     if (extension == ".elf" || extension == ".axf")
         return FileType::ELF;
 
-    if (extension == ".cci" || extension == ".zcci" || extension == ".bcci" || extension == ".3ds")
+    if (extension == ".cci" || extension == ".bcci" || extension == ".zcci" || extension == ".3ds")
         return FileType::CCI;
 
-    if (extension == ".cxi" || extension == ".app" || extension == ".zcxi" || extension == ".bcxi")
+    if (extension == ".cxi" || extension == ".app" || extension == ".bcxi" || extension == ".zcxi")
         return FileType::CXI;
 
     if (extension == ".3dsx" || extension == ".z3dsx")
         return FileType::THREEDSX;
 
-    if (extension == ".cia" || extension == ".zcia" || extension == ".bcia")
+    if (extension == ".cia" || extension == ".bcia" || extension == ".zcia")
         return FileType::CIA;
 
     return FileType::Unknown;
