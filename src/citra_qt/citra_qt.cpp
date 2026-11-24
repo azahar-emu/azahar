@@ -2547,7 +2547,7 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
 void GMainWindow::OnMenuInstallCIA() {
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load Files"), UISettings::values.roms_path,
-        tr("3DS Installation File") + QStringLiteral(" (*.cia *.zcia *.bcia);;") + tr("All Files") +
+        tr("3DS Installation File") + QStringLiteral(" (*.cia *.bcia *.zcia);;") + tr("All Files") +
             QStringLiteral(" (*.*)"));
 
     if (filepaths.isEmpty()) {
@@ -3429,7 +3429,7 @@ void GMainWindow::OnCompressFile() {
 
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load 3DS ROM Files"), UISettings::values.roms_path,
-        tr("3DS ROM Files") + QStringLiteral(" (*.cia *.cci *.3dsx *.cxi *.3ds);;") +
+        tr("3DS ROM Files") + QStringLiteral(" (*.cci *.cia *.cxi *.3dsx *.3ds);;") +
             tr("All Files") + QStringLiteral(" (*.*)"));
 
     QString out_path;
@@ -3544,7 +3544,7 @@ void GMainWindow::OnDecompressFile() {
 
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load 3DS Compressed ROM Files"), UISettings::values.roms_path,
-        tr("3DS Compressed ROM Files") + QStringLiteral(" (*.zcia *zcci *z3dsx *zcxi)") +
+        tr("3DS Compressed ROM Files") + QStringLiteral(" (*.z3dsx *.zcci *.zcia *.zcxi)") +
             QStringLiteral(";;") + tr("All Files") + QStringLiteral(" (*.*)"));
 
     QString out_path;
@@ -3656,7 +3656,7 @@ void GMainWindow::OnDecompressFile() {
 void GMainWindow::OnCreateBundle() {
     QString filepath = QFileDialog::getOpenFileName(
         this, tr("Load Main 3DS ROM File"), UISettings::values.roms_path,
-        tr("3DS ROM Files") + QStringLiteral(" (*.cci *.zcci *.cia *.zcia *.cxi *.3ds);;") +
+        tr("3DS ROM Files") + QStringLiteral(" (*.cci *.cia *.cxi *.zcci *.zcia *.zcxi *.3ds);;") +
             tr("All Files") + QStringLiteral(" (*.*)"));
 
     if (filepath.isEmpty()) {
@@ -3743,7 +3743,7 @@ void GMainWindow::OnCreateBundle() {
 void GMainWindow::OnExtractBundle() {
     QString filepath = QFileDialog::getOpenFileName(
         this, tr("Select 3DS Bundle File"), UISettings::values.roms_path,
-        tr("3DS Bundle Files") + QStringLiteral(" (*.bcci *.bcxi *.bcia);;") + tr("All Files") +
+        tr("3DS Bundle Files") + QStringLiteral(" (*.bcci *.bcia *.bcxi);;") + tr("All Files") +
             QStringLiteral(" (*.*)"));
 
     if (filepath.isEmpty()) {
@@ -4342,8 +4342,8 @@ static bool IsSingleFileDropEvent(const QMimeData* mime) {
 }
 
 static const std::array<std::string, 13> AcceptedExtensions = {
-    "cci",  "cxi",  "bin",   "3dsx", "app",  "elf", "axf",
-    "zcci", "zcxi", "z3dsx", "3ds",  "bcci", "bcxi"};
+    "3ds", "3dsx", "app", "axf",  "bcci", "bcxi", "bin",
+    "cci", "cxi",  "elf", "zcci", "zcxi", "z3dsx"};
 
 static bool IsCorrectFileExtension(const QMimeData* mime) {
     const QString& filename = mime->urls().at(0).toLocalFile();

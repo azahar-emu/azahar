@@ -31,11 +31,18 @@
         <dict>
             <key>CFBundleTypeExtensions</key>
             <array>
-                <string>3dsx</string>
-                <string>cci</string>
-                <string>cxi</string>
-                <string>cia</string>
                 <string>3ds</string>
+                <string>3dsx</string>
+                <string>bcci</string>
+                <string>bcia</string>
+                <string>bcxi</string>
+                <string>cci</string>
+                <string>cia</string>
+                <string>cxi</string>
+                <string>z3dsx</string>
+                <string>zcci</string>
+                <string>zcia</string>
+                <string>zcxi</string>
             </array>
             <key>CFBundleTypeName</key>
             <string>Nintendo 3DS File</string>
