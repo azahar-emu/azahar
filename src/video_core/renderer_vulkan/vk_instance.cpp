@@ -469,7 +469,12 @@ bool Instance::CreateDevice() {
     const bool has_index_type_uint8 =
         add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME, is_moltenvk,
                       "uint8 index conversion causes memory leaks in MoltenVK");
-    const bool has_robustness2 = add_extension(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
+    // 29.1.0 is g29p1, the only ARM driver tested.
+    const bool disable_null_descriptor =
+        is_arm && properties.driverVersion <= VK_MAKE_VERSION(29, 1, 0);
+    const bool has_robustness2 =
+        add_extension(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME, disable_null_descriptor,
+                      "null descriptors crash the shader compiler on ARM drivers");
     const bool has_fragment_shader_interlock =
         add_extension(VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME, is_nvidia,
                       "it is broken on Nvidia drivers");
