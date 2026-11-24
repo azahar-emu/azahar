@@ -5095,17 +5095,17 @@ Use at your own risk!</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3792"/>
         <source>Video dumping is not yet supported when using the Vulkan renderer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Video dumping is not yet supported when using the Vulkan renderer.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3795"/>
         <source>Because of this, using video dumping on macOS is not currently possible.</source>
-        <translation type="unfinished"></translation>
+        <translation>Because of this, using video dumping on macOS is not currently possible.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3805"/>
         <source>Video dumping is not yet supported when using the Software renderer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Video dumping is not yet supported when using the Software renderer.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3834"/>

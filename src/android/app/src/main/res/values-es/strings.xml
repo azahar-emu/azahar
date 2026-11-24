@@ -85,7 +85,7 @@
     <string name="filesystem_permission">Sistema de archivos</string>
     <string name="filesystem_permission_description">Concede el permiso de sistema de archivos abajo para permitir que Azahar almacene archivos.</string>
     <string name="lan_permission">Acceso a Red Local</string>
-    <string name="lan_permission_description">Otorga acceso a la red local para conectar a una consol 3DS real y otras funcionalidades.</string>
+    <string name="lan_permission_description">Otorga acceso a la red local para conectar con consolas 3DS reales para la configuración del sistema y otras funcionalidades.</string>
     <string name="lan_warning_description">Azahar requiere permiso para acceder a la red local a fin de conectarse a sistemas 3DS reales para la configuración del sistema y otras funcionalidades.</string>
     <string name="permission_denied">Permiso denegado</string>
     <string name="add_games_warning">¿Saltarse la selección de la carpeta de aplicaciones?</string>
@@ -93,7 +93,7 @@
     <string name="permissions">Permisos</string>
     <string name="select_emulator_data_folders">Carpetas de datos</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Seleccionar carpetas de datos<br/>(Carpeta de usuario es necesaria)]]></string>
-    <string name="permissions_description">Concede permisos opcionales para usar funciones  específicas del emulador</string>
+    <string name="permissions_description">Concede permisos opcionales para usar funciones específicas del emulador</string>
     <string name="missing_permissions">Faltan Permisos</string>
     <string name="warning_help">Ayuda</string>
     <string name="warning_skip">Saltar</string>
@@ -129,9 +129,9 @@
     <string name="auto_map_prompt">¡Presiona este botón en tu mando!</string>
     <string name="auto_map_image_description">Botones de 3DS con el botón A resaltado</string>
     <string name="controller_clear_all">Limpiar Todas las Asignaciones</string>
-    <string name="controller_clear_all_confirm">Esto eliminará todas los asignaciones del mando actual.</string>
+    <string name="controller_clear_all_confirm">Esto eliminará todas las asignaciones del mando actual.</string>
     <string name="controller_reset_all">Restablecer todo a global</string>
-    <string name="controller_reset_all_confirm">Esto reiniciará todas las asignaciones a las globales.</string>
+    <string name="controller_reset_all_confirm">Esto restablecerá todas las asignaciones del mando a las globales.</string>
     <string name="controller_circlepad">Pad Circular</string>
     <string name="controller_c">Palanca C</string>
     <string name="controller_hotkeys">Teclas de atajo</string>
@@ -259,9 +259,8 @@
     <string name="spirv_shader_gen_description">Usa SPIR-V en vez de GLSL para emitir el fragmento de sombreador usado para emular PICA.</string>
     <string name="disable_spirv_optimizer">Desactivar el optimizador SPIR-V</string>
     <string name="disable_spirv_optimizer_description">Desactiva el pase de optimización SPIR-V reduciendo considerablemente el tartamudeo sin afectar apenas el rendimiento.</string>
-    <string name="async_shaders">Activar compilación de sombreados asíncrona</string>
-    <string name="async_shaders_description">Compila los sombreados en el fondo para reducir los parones durante la partida.
-Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
+    <string name="async_shaders">Activar compilación de sombreadores asíncrona</string>
+    <string name="async_shaders_description">Compila los sombreadores en segundo plano para reducir los parones durante la partida.\nCuando está activada, pueden aparecer fallos gráficos temporales.</string>
     <string name="linear_filtering">Filtro Linear</string>
     <string name="linear_filtering_description">Activa el filtro linear, que hace que los gráficos del juego se vean más suaves.</string>
     <string name="use_integer_scaling">Escalado a múltiplos enteros</string>
@@ -338,7 +337,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="cardboard_y_shift">Desplazamiento vertical</string>
     <string name="cardboard_y_shift_description">Especifica el porcentaje de espacio vacío para desplazar las pantallas verticalmente. Los valores positivos mueven los dos ojos hacia abajo, mientras que los negativos los mueve hacia arriba.</string>
     <string name="use_shader_jit">Shader JIT</string>
-    <string name="use_disk_shader_cache">Caché de sombreador de disco</string>
+    <string name="use_disk_shader_cache">Caché de sombreadores en disco</string>
     <string name="use_disk_shader_cache_description">Reduce los parones al guardar y cargar shaders generados y almacenados. No puede ser usado sin Activar Hardware Shader.</string>
     <string name="utility">Utilidades</string>
     <string name="dump_textures">Volcar Texturas</string>
@@ -403,7 +402,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="aspect_ratio_stretch">Alargar</string>
 
     <!-- Miscellaneous -->
-    <string name="clear">Reiniciar</string>
+    <string name="clear">Borrar</string>
     <string name="slider_default">Por defecto</string>
     <string name="ini_saved">Configuración guardada</string>
     <string name="gameid_saved">Configuración guardada para %1$s</string>
@@ -422,14 +421,14 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="install">Instalar</string>
     <string name="delete">Eliminar</string>
     <string name="reset_all_settings">Reiniciar Toda la Configuración</string>
-    <string name="reset_all_settings_description">Toda la configuración avanzada será reiniciada a su valor de fábrica, incluida la configuración por aplicación. No podrá deshacerse.</string>
+    <string name="reset_all_settings_description">Toda la configuración se restablecerá a sus valores predeterminados, incluida la configuración por aplicación. No podrá deshacerse.</string>
     <string name="settings_reset">Configuración reiniciada</string>
     <string name="reset_settings_to_global">Reiniciar configuración de aplicación</string>
     <string name="reset_settings_to_global_description">Todos los ajustes personalizados de esta aplicación se restablecerán al valor global. Esta acción no se puede deshacer.</string>
     <string name="select_rtc_date">Seleccionar fecha RTC</string>
     <string name="select_rtc_time">Seleccionar hora RTC</string>
     <string name="reset_setting_confirmation">¿Quiere reiniciar esta configuración a su valor por defecto?</string>
-    <string name="reset_setting_global_confirmation">¿Quiere reiniciar esta configuración a su valor global?</string>
+    <string name="reset_setting_global_confirmation">¿Quieres restablecer esta configuración personalizada a su valor global?</string>
     <string name="setting_not_editable">No puedes editarlo ahora</string>
     <string name="setting_disabled">Configuración deshabilitada</string>
     <string name="setting_disabled_description_incompatible_setting">Esta opción está desactivada actualmente porque otra configuración no tiene el valor adecuado.</string>
@@ -463,7 +462,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error cargando la aplicación</string>
     <string name="loader_error_invalid_format">Formato de aplicación inválido</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[El formato de la aplicación no está soportado.<br>Por favor asegúrate de usar uno de los formatos compatibles:<ul><li>Imagenes de cartucho: <b>.cci/.zcci/.bcci/.3ds</b></li><li>Archivos instalables: <b>.cia/.zcia/.bcia</b></li><li>Títulos Homebrew <b>.3dsx/.z3dsx</b></li><li>Contenedores NCCH: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>Archivos ELF: <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_format_description"><![CDATA[El formato de la aplicación no está soportado.<br>Por favor asegúrate de usar uno de los formatos compatibles:<ul><li>Imágenes de cartucho: <b>.cci/.zcci/.bcci/.3ds</b></li><li>Archivos instalables: <b>.cia/.zcia/.bcia</b></li><li>Títulos homebrew: <b>.3dsx/.z3dsx</b></li><li>Contenedores NCCH: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>Archivos ELF: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Modo de sistema no válido</string>
     <string name="loader_error_invalid_system_mode_description">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
     <string name="loader_error_applying_patches">Error al aplicar parches</string>
@@ -479,7 +478,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="core_error_not_initialized">No inicializado</string>
     <string name="core_error_get_loader">El cargador no se ha encontrado, tipo de archivo incompatible</string>
     <string name="core_error_system_mode">Error al analizar el archivo</string>
-    <string name="core_error_loader">Fallo de cargador genérico </string>
+    <string name="core_error_loader">Fallo de cargador genérico</string>
     <string name="core_error_loader_encrypted">Archivo cifrado</string>
     <string name="core_error_loader_invalid_format">Archivo corrupto</string>
     <string name="core_error_loader_gba_title">Archivo es un título de GBA</string>
@@ -493,7 +492,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="core_error_savestate_build_mismatch">Incompatibilidad de versión del estado guardado</string>
     <string name="core_error_shutdown_requested">Se solicitó el cierre</string>
     <string name="core_error_unknown">Error desconocido</string>
-    <string name="core_error_shader_cache_crash">Crash de caché de sombreadores</string>
+    <string name="core_error_shader_cache_crash">Fallo de la caché de sombreadores</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Pulsa Atrás para acceder al menú.</string>
@@ -647,14 +646,14 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="unsupported_encrypted">Aplicación cifrada no soportada</string>
     <string name="invalid_system_mode">Modo de sistema no válido</string>
     <string name="invalid_system_mode_message">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
-    <string name="shader_cache_crash">Crash de Caché de Sombreadores</string>
-    <string name="shader_cache_crash_message"><![CDATA[Azahar se cerró de forma inesperada la última vez que generó la caché de sombreadores de Vulkan para el título actual. Es posible que el controlador gráfico haya fallado al procesar uno de los sombreadores almacenados en caché, continuar podría provocar un nuevo fallo.<br/><br/>Para reiniciar la caché, mantén pulsada la aplicación en la lista de aplicaciones, selecciona <b>Borrar Caché de Sombreador</b>y  después <b>Vulkan</b>.]]></string>
+    <string name="shader_cache_crash">Fallo de la caché de sombreadores</string>
+    <string name="shader_cache_crash_message"><![CDATA[Azahar se cerró de forma inesperada la última vez que generó la caché de sombreadores del título actual. Es posible que el controlador gráfico haya fallado al procesar uno de los sombreadores almacenados en caché, y continuar podría provocar un nuevo fallo.<br/><br/>Para restablecer la caché de sombreadores, mantén pulsada la aplicación en la lista de aplicaciones, toca <b>Eliminar caché de sombreadores</b> y selecciona <b>Vulkan</b>.]]></string>
     <string name="savestate_build_mismatch_message"><![CDATA[No se pudo cargar el estado guardado porque se creó con una versión diferente de Azahar:<br/><b>Azahar %1$s</b>.<br/><br/>Por favor lee nuestro blog <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">entendiendo estados guardados</a> para más información.<br/><br/>Para recuperar tu progreso, vuelve a la versión <b>Azahar %1$s</b>, carga este estado guardado y utiliza la función de guardado integrada de la aplicación emulada.]]></string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
     <string name="building_shaders">Construyendo%s</string>
-    <string name="delete_shader_cache">Eliminar caché de sombreadores </string>
+    <string name="delete_shader_cache">Eliminar caché de sombreadores</string>
     <string name="delete_cache_select_backend">Selecciona la API gráfica para eliminar la caché de sombreadores</string>
     <string name="deleting_shader_cache">Eliminando la caché de sombreadores, por favor espere…</string>
     <string name="shader_cache_deleted">Caché de sombreadores eliminada</string>
@@ -741,7 +740,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="cia_install_success">\"%s\" se ha instalado con éxito</string>
     <string name="cia_install_error_aborted">La instalación de \"%s\" ha sido abortada.\n Por favor, mira el log para más información.</string>
     <string name="cia_install_error_invalid">\"%s\" no es un CIA válido.</string>
-    <string name="cia_install_error_encrypted">\"%s\" debe ser descifrado antes de ser usado en Azahar. Se necesita una 3DS real.</string>
+    <string name="cia_install_error_encrypted">\"%s\" debe ser descifrado antes de ser usado en Azahar.\nSe necesita una 3DS real.</string>
     <string name="cia_install_error_unknown">Ha ocurrido un error desconocido mientras se instalaba \"%s\".\n Por favor, mira el log para más detalles.</string>
 
     <string name="memory_byte">Byte</string>
@@ -1016,7 +1015,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="multiplayer">Multijugador</string>
     <string name="multiplayer_description">Organiza tu propia sala o únete a una ya existente para jugar con otras personas.</string>
     <string name="multiplayer_room_title">Sala: %1$s</string>
-    <string name="multiplayer_console_id">ID de Consola:  %1$s</string>
+    <string name="multiplayer_console_id">ID de consola: %1$s</string>
     <string name="multiplayer_create_room">Crear</string>
     <string name="multiplayer_join_room">Unirse</string>
     <string name="multiplayer_public_room">Buscar Salas Públicas</string>
@@ -1025,7 +1024,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="multiplayer_ip_port">Puerto</string>
     <string name="multiplayer_create_room_success">¡Sala creada correctamente!</string>
     <string name="multiplayer_join_room_success">¡Unido a la sala correctamente!</string>
-    <string name="multiplayer_create_room_failed">¡Fallo al crear un sala!</string>
+    <string name="multiplayer_create_room_failed">¡Fallo al crear una sala!</string>
     <string name="multiplayer_join_room_failed">Falló la entrada a la sala</string>
     <string name="multiplayer_input_invalid">Dirección inválida o el nombre es demasiado corto</string>
     <string name="multiplayer_port_invalid">¡Puerto no válido!</string>
