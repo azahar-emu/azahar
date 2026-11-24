@@ -422,6 +422,33 @@ bool PipelineCache::UsesVertexDepth(const Pica::RegsInternal& regs,
            regs.rasterizer.depthmap_enable != Pica::RasterizerRegs::DepthBuffering::WBuffering;
 }
 
+u8 PipelineCache::ConservativeWDepth(const Pica::RegsInternal& regs,
+                                     bool has_depth_attachment) const {
+    // The exact W-buffer depth across a triangle is k * w + c, a convex function of the screen
+    // position for k > 0 (1/w is linear in screen space), so with the vertices at their exact
+    // depth it is never above the rasterized depth, and never below it for k < 0. k > 0 when the
+    // depth grows with the distance, which the game's depth test says: a "less" test keeps the
+    // nearer pixels. That holds for perspective (and orthographic) projections, where the clip Z
+    // only depends on the distance; an unusual projection could break it, so it is an option.
+    if (!GetQualityOptions().conservative_w_depth || !has_depth_attachment ||
+        !GetProfile().has_clip_planes || regs.framebuffer.IsShadowRendering() ||
+        regs.rasterizer.depthmap_enable != Pica::RasterizerRegs::DepthBuffering::WBuffering ||
+        regs.framebuffer.output_merger.depth_test_enable == 0) {
+        return 0;
+    }
+    using Func = Pica::FramebufferRegs::CompareFunc;
+    switch (regs.framebuffer.output_merger.depth_test_func.Value()) {
+    case Func::LessThan:
+    case Func::LessThanOrEqual:
+        return 1;
+    case Func::GreaterThan:
+    case Func::GreaterThanOrEqual:
+        return 2;
+    default:
+        return 0;
+    }
+}
+
 PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
                                                              const Pica::Shader::UserConfig& user,
                                                              bool has_color_attachment,
@@ -459,6 +486,10 @@ PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInt
     }
     if (metal_config.vertex_depth) {
         hash = Common::HashCombine(hash, 0x0DE9'7400'0000'0002ULL);
+    }
+    metal_config.conservative_w_depth = ConservativeWDepth(regs, has_depth_attachment);
+    if (metal_config.conservative_w_depth != 0) {
+        hash = Common::HashCombine(hash, 0xC0DE'0000'0000'0010ULL + metal_config.conservative_w_depth);
     }
     if (metal_config.fast_color) {
         hash = Common::HashCombine(hash, 0xFA57'C010'0000'0003ULL);

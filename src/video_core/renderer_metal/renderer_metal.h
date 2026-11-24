@@ -124,6 +124,11 @@ struct QualityOptions {
     /// Map the depth in the vertex shader so fragment shaders do not write it, which keeps the
     /// hidden surface removal of Apple GPUs working (not for W-buffering).
     bool vertex_depth = false;
+    /// W-buffered draws keep the GPU's early depth test: the vertices go to their exact W-buffer
+    /// depth and the fragment shader writes the exact depth with a conservative output, see
+    /// MSL::MetalFSConfig::conservative_w_depth. Experimental: an unusual projection could hide
+    /// pixels that should show.
+    bool conservative_w_depth = false;
     /// Draw-time optimizations: depth/stencil-only draws without a fragment function, the
     /// scissor test inside the box as the GPU scissor rectangle, and blending that keeps the
     /// source color drawn unblended. Off draws as before they existed.

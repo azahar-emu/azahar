@@ -547,6 +547,7 @@ const char* ThermalStateName() {
     quality.vertex_fast_math = configuration.vertexFastMath;
     quality.texture_pool = configuration.texturePool;
     quality.vertex_depth = configuration.hiddenSurfaceRemoval;
+    quality.conservative_w_depth = configuration.fastWBufferDepth;
     quality.draw_optimizations = configuration.drawOptimizations;
     quality.wait_for_gpu = configuration.waitForGPU;
     quality.gpu_pass_timing = configuration.gpuPassTiming;

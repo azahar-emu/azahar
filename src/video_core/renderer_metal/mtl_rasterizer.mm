@@ -459,6 +459,7 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     const auto fragment =
         pipeline_cache.UseFragmentShader(regs, user_config, has_color, has_depth);
     const bool vertex_depth = pipeline_cache.UsesVertexDepth(regs, has_depth);
+    const bool conservative_depth = pipeline_cache.ConservativeWDepth(regs, has_depth) != 0;
     const auto& vertex = hw_draw ? hw_draw->vertex : pipeline_cache.TrivialVertexShader();
 
     // Sync the LUTs within the texture buffers
@@ -507,6 +508,7 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
         (key.write_mask == static_cast<u8>(MTLColorWriteMaskNone) ||
          key.color_format == static_cast<u32>(MTLPixelFormatInvalid));
     traits.writes_depth = has_depth && !shadow_rendering && !vertex_depth;
+    traits.conservative_depth = traits.writes_depth && conservative_depth;
     traits.alpha_test =
         output_merger.alpha_test.enable.Value() != 0 &&
         output_merger.alpha_test.func.Value() != Pica::FramebufferRegs::CompareFunc::Always;
@@ -690,15 +692,17 @@ bool RasterizerMetal::Draw(HardwareDraw* hw_draw) {
     fs_data.blend_color = blend_color;
 
     // Depth mapped in the vertex shader: the depth is clamped instead of clipped, the clip
-    // distances of the vertex shader keep the PICA clip volume.
+    // distances of the vertex shader keep the PICA clip volume. With the conservative W-buffer
+    // depth the vertices go to their exact W-buffer depth (the fragment shader writes the depth).
+    const bool depth_in_vs = vertex_depth || conservative_depth;
     const MSL::VSDepthData depth_data{
-        .scale = vertex_depth ? fs_data.depth_scale : 0.0f,
-        .offset = vertex_depth ? fs_data.depth_offset : 0.0f,
-        .enabled = vertex_depth ? 1u : 0u,
-        .pad = 0,
+        .scale = depth_in_vs ? fs_data.depth_scale : 0.0f,
+        .offset = depth_in_vs ? fs_data.depth_offset : 0.0f,
+        .enabled = depth_in_vs ? 1u : 0u,
+        .w_buffer = conservative_depth ? 1u : 0u,
     };
     if (!cache.depth_valid || cache.depth.enabled != depth_data.enabled) {
-        [encoder setDepthClipMode:vertex_depth ? MTLDepthClipModeClamp : MTLDepthClipModeClip];
+        [encoder setDepthClipMode:depth_in_vs ? MTLDepthClipModeClamp : MTLDepthClipModeClip];
     }
     if (!cache.depth_valid ||
         std::memcmp(&depth_data, &cache.depth, sizeof(MSL::VSDepthData)) != 0) {

@@ -46,6 +46,7 @@
     config.vertexFastMath = NO;
     config.texturePool = NO;
     config.hiddenSurfaceRemoval = NO;
+    config.fastWBufferDepth = NO;
     config.drawOptimizations = YES;
     config.antiAliasing = 0;
     config.waitForGPU = YES;

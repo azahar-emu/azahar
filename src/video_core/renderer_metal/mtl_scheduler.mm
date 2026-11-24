@@ -109,6 +109,7 @@ struct PassStats {
     u64 hw_native_vertices = 0, hw_lit_vertices = 0, hw_other_vertices = 0;
     // Pixel shader traits of the draws of the game (NotePixelTraits).
     u32 px_draws = 0, px_depth_only = 0, px_no_fragment = 0, px_writes_depth = 0;
+    u32 px_conservative_depth = 0;
     u32 px_alpha_test = 0, px_scissor = 0, px_lit = 0, px_blended = 0, px_hsr_blocked = 0;
     u32 px_blend_dropped = 0;
     u32 px_textures = 0, px_proctex = 0, px_cube = 0, px_projection = 0, px_fog = 0, px_bump = 0;
@@ -170,12 +171,13 @@ std::vector<std::string> TakeRenderPassSummary(std::size_t max_lines) {
     if (stats.px_draws > 0) {
         lines.push_back(fmt::format(
             "pixel shaders of {} draws: {} only write depth/stencil ({} of them with no pixel "
-            "shader at all); of the others {} write depth themselves, {} alpha test, {} scissor "
+            "shader at all); of the others {} write depth themselves ({} with a conservative "
+            "depth that keeps the early depth test), {} alpha test, {} scissor "
             "test outside a box (each keeps the GPU from skipping hidden pixels: {} draws in "
             "all), {} lit, {} blended ({} more had blending on that kept their own color and "
             "were drawn without it)",
             stats.px_draws, stats.px_depth_only, stats.px_no_fragment, stats.px_writes_depth,
-            stats.px_alpha_test, stats.px_scissor, stats.px_hsr_blocked, stats.px_lit,
+            stats.px_conservative_depth, stats.px_alpha_test, stats.px_scissor, stats.px_hsr_blocked, stats.px_lit,
             stats.px_blended, stats.px_blend_dropped));
         const u32 color_draws = stats.px_draws - stats.px_depth_only;
         lines.push_back(fmt::format(
@@ -490,6 +492,7 @@ void NotePixelTraits(const PixelTraits& traits) {
         return;
     }
     stats.px_writes_depth += traits.writes_depth ? 1 : 0;
+    stats.px_conservative_depth += traits.conservative_depth ? 1 : 0;
     stats.px_alpha_test += traits.alpha_test ? 1 : 0;
     stats.px_scissor += traits.scissor_test ? 1 : 0;
     stats.px_hsr_blocked +=

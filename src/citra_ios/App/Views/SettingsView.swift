@@ -329,6 +329,11 @@ struct GraphicsSettingsView: View {
         text += "blending that changes nothing and draws clears of part of the screen inside the "
         text += "game's own render passes; turn it off if a game shows glitches it did not "
         text += "have before. "
+        text += "Fast W-Buffer Depth (experimental) helps games that use the 3DS's W-buffer "
+        text += "depth mode (Dragon Quest VIII for most of its draws), which Hidden Surface "
+        text += "Removal cannot: the depth stays exact, and the GPU can still skip pixels hidden "
+        text += "behind ones already drawn. It relies on how games normally set up their 3D view; "
+        text += "if parts of a scene go missing or flicker with it on, turn it off for that game. "
         text += "Anti-Aliasing (MSAA) smooths the jagged edges of the game's 3D: each pixel is "
         text += "drawn with several samples along the edges (2x, 4x or 8x, capped at what the "
         text += "device supports). It is cheap on Apple GPUs for what it does, but costs GPU "
@@ -406,6 +411,7 @@ struct GraphicsSettingsView: View {
                 Toggle("Wait for GPU Each Frame", isOn: $settings.waitForGPU)
                 Toggle("Disable Right Eye Render", isOn: $settings.disableRightEyeRender)
                 Toggle("Hidden Surface Removal", isOn: $settings.hiddenSurfaceRemoval)
+                Toggle("Fast W-Buffer Depth (Experimental)", isOn: $settings.fastWBufferDepth)
                 Toggle("Draw Optimizations", isOn: $settings.drawOptimizations)
                 Picker("Texture Compression", selection: $settings.textureCompression) {
                     ForEach(TextureCompressionOption.allCases) { Text($0.title).tag($0) }

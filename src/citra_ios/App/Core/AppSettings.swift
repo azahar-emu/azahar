@@ -315,6 +315,7 @@ final class AppSettings: ObservableObject {
     /// Draw-time optimizations (no fragment function for depth-only draws, hardware scissor,
     /// no-op blending dropped).
     @Published var drawOptimizations: Bool { didSet { save(drawOptimizations, "drawOptimizations") } }
+    @Published var fastWBufferDepth: Bool { didSet { save(fastWBufferDepth, "fastWBufferDepth") } }
     /// MSAA: 0 off, 1 2x, 2 4x, 3 8x.
     @Published var antiAliasing: Int { didSet { save(antiAliasing, "antiAliasing") } }
     @Published var waitForGPU: Bool { didSet { save(waitForGPU, "waitForGPU") } }
@@ -537,6 +538,7 @@ final class AppSettings: ObservableObject {
         fastDepthReadback = value("fastDepthReadback", false)
         hiddenSurfaceRemoval = value("hiddenSurfaceRemoval", false)
         drawOptimizations = value("drawOptimizations", true)
+        fastWBufferDepth = value("fastWBufferDepth", false)
         antiAliasing = value("antiAliasing", 0)
         waitForGPU = value("waitForGPU", true)
         gpuPassTiming = value("gpuPassTiming", false)
@@ -714,6 +716,7 @@ final class AppSettings: ObservableObject {
         config.fastDepthReadback = fastDepthReadback
         config.hiddenSurfaceRemoval = hiddenSurfaceRemoval
         config.drawOptimizations = drawOptimizations
+        config.fastWBufferDepth = fastWBufferDepth
         config.antiAliasing = antiAliasing
         config.waitForGPU = waitForGPU
         config.gpuPassTiming = gpuPassTiming

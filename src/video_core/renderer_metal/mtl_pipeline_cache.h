@@ -102,6 +102,10 @@ public:
     /// MSL::VSDepthData), which leaves the fragment shader without a [[depth]] output.
     bool UsesVertexDepth(const Pica::RegsInternal& regs, bool has_depth_attachment) const;
 
+    /// W-buffered depth written with a conservative depth output, see
+    /// MSL::MetalFSConfig::conservative_w_depth: 0 off, 1 depth(less), 2 depth(greater).
+    u8 ConservativeWDepth(const Pica::RegsInternal& regs, bool has_depth_attachment) const;
+
     /// Returns the fragment program for the current PICA state, generating it if it was never
     /// seen before. Compilation happens when a pipeline using it is built.
     ShaderHandle UseFragmentShader(const Pica::RegsInternal& regs,

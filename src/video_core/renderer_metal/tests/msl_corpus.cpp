@@ -279,6 +279,10 @@ int main(int argc, char** argv) {
         // Keep the lighting enabled half of the time and cap the number of lights.
         regs.lighting.disable.Assign(i % 2);
         regs.lighting.max_light_index.Assign(rng() % 8);
+        // W-buffering for some, which the conservative depth applies to.
+        regs.rasterizer.depthmap_enable.Assign(i % 4 == 1
+                                                   ? Pica::RasterizerRegs::DepthBuffering::WBuffering
+                                                   : Pica::RasterizerRegs::DepthBuffering::ZBuffering);
 
         const FSConfig config{regs};
         UserConfig user{};
@@ -297,6 +301,8 @@ int main(int argc, char** argv) {
         metal_config.fragment_quaternion_fix = (i % 8) < 4;
         metal_config.hardware_scissor = (i % 3) != 1;
         metal_config.lut_texture = (i % 6) >= 3;
+        // Conservative W-buffer depth, depth(less) or depth(greater) (used with W-buffering).
+        metal_config.conservative_w_depth = static_cast<u8>(rng() % 3);
 
         Write(out_dir, "fs_random_" + std::to_string(i) + ".metal",
               MSL::GenerateFragmentShader(config, user, profile, metal_config));

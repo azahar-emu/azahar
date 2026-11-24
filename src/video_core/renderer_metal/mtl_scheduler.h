@@ -74,6 +74,7 @@ struct PixelTraits {
     bool depth_stencil_only; ///< Color writes off or no color buffer
     bool no_fragment;        ///< Drawn without a fragment function
     bool writes_depth;       ///< The fragment shader outputs the depth
+    bool conservative_depth; ///< ... with a conservative output (hidden pixels still rejected early)
     bool alpha_test;         ///< The fragment shader may discard (alpha test)
     bool scissor_test;       ///< The fragment shader may discard (scissor test)
     bool lit;
