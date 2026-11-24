@@ -5,12 +5,12 @@ ARTIFACTS_LIST=($ARTIFACTS)
 BUILD_DIR=build
 UNIVERSAL_DIR=$BUILD_DIR/universal
 BUNDLE_DIR=$UNIVERSAL_DIR/bundle
-OTHER_BUNDLE_DIR=$BUILD_DIR/arm64/bundle
+OTHER_BUNDLE_DIR=$BUILD_DIR/x86_64/bundle
 
 # Set up the base bundle to combine into.
 mkdir $UNIVERSAL_DIR
-cp -a $BUILD_DIR/x86_64/bundle $UNIVERSAL_DIR # ARM64 has some extra libraries, so we need to
-                                              # Use x86_64 as a base.
+cp -a $BUILD_DIR/arm64/bundle $UNIVERSAL_DIR # ARM64 has some extra libraries, so we need to
+                                             # use it as a base.
 
 # Executable binary paths that need to be combined.
 BIN_PATHS=(Azahar.app/Contents/MacOS/azahar)
@@ -26,12 +26,14 @@ for BIN_PATH in "${BIN_PATHS[@]}"; do
 done
 
 for DYLIB_PATH in "${DYLIB_PATHS[@]}"; do
-    # Only merge if the libraries do not have conflicting arches, otherwise it will fail.
-    DYLIB_INFO=`file $BUNDLE_DIR/$DYLIB_PATH`
+    if [ -f $OTHER_BUNDLE_DIR/$DYLIB_PATH ]; then
+        # Only merge if the libraries do not have conflicting arches, otherwise it will fail.
+        DYLIB_INFO=`file $BUNDLE_DIR/$DYLIB_PATH`
 
-    OTHER_DYLIB_INFO=`file $OTHER_BUNDLE_DIR/$DYLIB_PATH`
-    if ! [[ "$DYLIB_INFO" =~ "x86_64" ]] && ! [[ "$OTHER_DYLIB_INFO" =~ "arm64" ]]; then
-        lipo -create -output $BUNDLE_DIR/$DYLIB_PATH $BUNDLE_DIR/$DYLIB_PATH $OTHER_BUNDLE_DIR/$DYLIB_PATH
+        OTHER_DYLIB_INFO=`file $OTHER_BUNDLE_DIR/$DYLIB_PATH`
+        if ! [[ "$DYLIB_INFO" =~ "x86_64" ]] && ! [[ "$OTHER_DYLIB_INFO" =~ "arm64" ]]; then
+            lipo -create -output $BUNDLE_DIR/$DYLIB_PATH $BUNDLE_DIR/$DYLIB_PATH $OTHER_BUNDLE_DIR/$DYLIB_PATH
+        fi
     fi
 done
 
