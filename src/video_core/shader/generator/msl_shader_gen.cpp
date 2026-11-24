@@ -68,7 +68,7 @@ struct VSDepth {
     float scale;
     float offset;
     uint enabled;
-    uint pad;
+    uint w_buffer; // VSDepthData::w_buffer
 };
 
 struct VSUniforms {
