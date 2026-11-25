@@ -1501,20 +1501,26 @@ void FragmentModule::DefineArithmeticTypes() {
     i32_id = Name(TypeSInt(32), "i32_id");
     u32_id = Name(TypeUInt(32), "u32_id");
 
-    f16_id = Name(TypeFloat(16), "f16_id");
+    if (use_float16) {
+        f16_id = Name(TypeFloat(16), "f16_id");
+    } else {
+        f16_id = Name(TypeFloat(32), "f32_mediump_id");
+        Decorate(f16_id, spv::Decoration::RelaxedPrecision);
+    }
 
     for (u32 size = 2; size <= 4; size++) {
         const u32 i = size - 2;
-        f32vec_ids.ids[i] = Name(TypeVector(f32_id, size), fmt::format("vec{}_id", size));
-        i32vec_ids.ids[i] = Name(TypeVector(i32_id, size), fmt::format("ivec{}_id", size));
-        u32vec_ids.ids[i] = Name(TypeVector(u32_id, size), fmt::format("uvec{}_id", size));
+        f32vec_ids.ids[i] = Name(TypeVector(f32_id, size), fmt::format("f32vec{}_id", size));
+        i32vec_ids.ids[i] = Name(TypeVector(i32_id, size), fmt::format("i32vec{}_id", size));
+        u32vec_ids.ids[i] = Name(TypeVector(u32_id, size), fmt::format("u32vec{}_id", size));
         bvec_ids.ids[i] = Name(TypeVector(bool_id, size), fmt::format("bvec{}_id", size));
 
         if (use_float16) {
             f16vec_ids.ids[i] = Name(TypeVector(f16_id, size), fmt::format("f16vec{}_id", size));
         } else {
             // Float16 not supported, use relaxed-precision float32 instead
-            f16vec_ids.ids[i] = Name(TypeVector(f32_id, size), fmt::format("vec{}_id", size));
+            f16vec_ids.ids[i] =
+                Name(TypeVector(f32_id, size), fmt::format("f32vec{}_mediump_id", size));
             Decorate(f16vec_ids.ids[i], spv::Decoration::RelaxedPrecision);
         }
     }
