@@ -92,8 +92,8 @@ final class BundleMaker: ObservableObject {
 
         AZEmulator.createBundle(
             withGameAtPath: game.path, dependencies: dependencies, toDirectory: destination.path,
-            progress: { [weak self] fraction in self?.progress = fraction },
-            completion: { [weak self] success, result in
+            progress: { [weak self] (fraction: Double) in self?.progress = fraction },
+            completion: { [weak self] (success: Bool, result: String) in
                 guard let self else { return }
                 isRunning = false
                 guard success else {

@@ -400,7 +400,9 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
 
 /// Why the file cannot go into a ROM bundle, as the game (`asDependency` NO) or as an update or
 /// DLC (YES, those have to be CIAs), or nil when it can. Safe to call from any thread.
-+ (nullable NSString*)bundleProblemForFileAtPath:(NSString*)path asDependency:(BOOL)asDependency;
++ (nullable NSString*)bundleProblemForFileAtPath:(NSString*)path
+                                    asDependency:(BOOL)asDependency
+    NS_SWIFT_NAME(bundleProblem(forFileAtPath:asDependency:));
 
 /// Creates a ROM bundle of the game and its dependencies (update and DLC CIAs) on a background
 /// queue, in `directory`, named like the game with the bundle extension the core recommends
@@ -411,7 +413,8 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
                       dependencies:(NSArray<NSString*>*)dependencies
                        toDirectory:(NSString*)directory
                           progress:(void (^)(double fraction))progress
-                        completion:(void (^)(BOOL success, NSString* result))completion;
+                        completion:(void (^)(BOOL success, NSString* result))completion
+    NS_SWIFT_NAME(createBundle(withGameAtPath:dependencies:toDirectory:progress:completion:));
 
 // CIA installation, safe to call from any thread while no title is running.
 
