@@ -59,10 +59,16 @@ struct RecordHeader {
 
 constexpr std::size_t SHADER_RECORD_PREFIX = sizeof(u64) + sizeof(u8);
 
-/// Cached programs are MSL produced by this exact build for this exact profile, anything else is
-/// regenerated.
+/// Cached programs are MSL produced by these shader generators for this exact profile, anything
+/// else is regenerated. METAL_SHADER_SOURCE_HASH (src/video_core/CMakeLists.txt) is a hash of the
+/// sources the generated code depends on, so a build that changes nothing there keeps the caches;
+/// without it, any other build starts over.
 u64 BuildHash() {
+#ifdef METAL_SHADER_SOURCE_HASH
+    return METAL_SHADER_SOURCE_HASH;
+#else
     return Common::ComputeHash64(Common::g_scm_rev, std::strlen(Common::g_scm_rev));
+#endif
 }
 
 u64 ProfileHash(const Pica::Shader::Profile& profile) {

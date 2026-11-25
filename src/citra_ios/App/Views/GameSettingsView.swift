@@ -123,6 +123,7 @@ struct GameSettingsView: View {
                     RefreshRateOption(rawValue: $0)?.title ?? "\($0) Hz"
                 }
                 OverrideToggle("Steady 30 FPS", value: $overrides.steadyThirty)
+                OverrideToggle("Present Every Refresh", value: $overrides.presentEveryRefresh)
                 OverrideToggle("30 FPS Frame Cap", value: $overrides.frameCap30)
                 OverrideToggle("Frame Cap: Run Game at 30", value: $overrides.frameCapHoldsGame)
                 OverridePicker("Frame Pacing Buffer", value: $overrides.pacingBufferMs,

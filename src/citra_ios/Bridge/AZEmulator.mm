@@ -681,6 +681,7 @@ const char* ThermalStateName() {
     quality.display_sync = configuration.displaySync;
     quality.frame_cap = configuration.displaySync && configuration.frameCap30 ? 2 : 0;
     quality.steady_thirty = configuration.displaySync && configuration.steadyThirty;
+    quality.present_every_refresh = configuration.displaySync && configuration.presentEveryRefresh;
     quality.frame_generation_display_paced =
         configuration.frameGenerationDisplayPaced || configuration.displaySync;
     // The emulation wakes up for each frame just after a refresh of the display (display sync).

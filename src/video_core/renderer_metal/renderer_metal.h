@@ -200,6 +200,11 @@ struct QualityOptions {
     /// two refreshes, as with frame_cap 2, until it draws at 60 again. Without it a 30 FPS game
     /// that hands over its frames unevenly (one after 1 refresh, the next after 3) judders.
     bool steady_thirty = false;
+    /// With display sync: the display link presents the frame on screen again at every refresh
+    /// that has no new frame, so a ProMotion display stays at the refresh rate asked for (it may
+    /// slow down while a 30 FPS game presents only every fourth refresh at 120 Hz). Costs a small
+    /// copy of the screen per refresh.
+    bool present_every_refresh = false;
     /// Frame generation with MetalFX's own frame interpolator instead of VideoToolbox's.
     bool frame_generation_metalfx = false;
     /// Frames of frame generation are shown by a display link at the display's refreshes.

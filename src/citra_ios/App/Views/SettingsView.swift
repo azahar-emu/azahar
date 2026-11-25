@@ -737,6 +737,7 @@ struct GraphicsSettingsView: View {
                     if !settings.frameCap30 {
                         Toggle("Steady 30 FPS", isOn: $settings.steadyThirty)
                     }
+                    Toggle("Present Every Refresh", isOn: $settings.presentEveryRefresh)
                     Toggle("30 FPS Frame Cap", isOn: $settings.frameCap30)
                     if settings.frameCap30 {
                         Toggle("Run Game at 30", isOn: $settings.frameCapHoldsGame)
@@ -769,7 +770,11 @@ struct GraphicsSettingsView: View {
                          + "then shows each of its frames for exactly two 3DS refreshes, which "
                          + "removes the judder of games that hand over their frames unevenly; it "
                          + "follows the game again as soon as it draws faster, and does not slow "
-                         + "it down. 30 FPS Frame "
+                         + "it down. Present Every Refresh (experimental) shows the current "
+                         + "frame again at every refresh that has no new one, so a ProMotion "
+                         + "display keeps its full rate between the frames of a 30 FPS game "
+                         + "instead of slowing down, which can make frames land a refresh late; "
+                         + "it costs a little GPU time and battery. 30 FPS Frame "
                          + "Cap (with Sync to Display Refresh) shows every new frame of the game for "
                          + "exactly two 3DS refreshes, for games that run at 30 FPS but hand their "
                          + "frames over unevenly (for example with Minimum GPU Time); a game running "

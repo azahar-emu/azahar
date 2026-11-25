@@ -143,6 +143,9 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 /// shown for two refreshes like with the cap (the game itself is not held), and it follows the
 /// game again once that draws faster.
 @property(nonatomic) BOOL steadyThirty;
+/// With displaySync: the frame on screen is presented again at every refresh without a new frame,
+/// so a ProMotion display does not slow down between the frames of a 30 FPS game.
+@property(nonatomic) BOOL presentEveryRefresh;
 /// With frameCap30, the game itself also runs at 30: its 3D work never finishes within one
 /// refresh, so games that adapt their frame rate do not make frames the cap would throw away.
 @property(nonatomic) BOOL frameCapHoldsGame;

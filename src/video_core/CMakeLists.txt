@@ -240,6 +240,32 @@ if (ENABLE_METAL)
         renderer_metal/mtl_texture_runtime.mm
         renderer_metal/renderer_metal.mm
     )
+    # The Metal shader cache keeps generated MSL, which only depends on the shader generators and
+    # what feeds them, not on the rest of the build. A hash of those sources marks the cache, so
+    # an update that does not touch them keeps every game's shaders. Hashed when configuring;
+    # editing one of the files configures again.
+    file(GLOB METAL_SHADER_CACHE_INPUTS
+        ${CMAKE_CURRENT_SOURCE_DIR}/shader/generator/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/shader/generator/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/shader/shader.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/pica/regs_*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/pica/shader_setup.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pica/shader_setup.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/renderer_metal/mtl_pipeline_cache.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/renderer_metal/mtl_pipeline_cache.mm)
+    list(SORT METAL_SHADER_CACHE_INPUTS)
+    set(METAL_SHADER_INPUT_HASHES "")
+    foreach(METAL_SHADER_INPUT IN LISTS METAL_SHADER_CACHE_INPUTS)
+        file(SHA256 ${METAL_SHADER_INPUT} METAL_SHADER_INPUT_HASH)
+        string(APPEND METAL_SHADER_INPUT_HASHES ${METAL_SHADER_INPUT_HASH})
+    endforeach()
+    string(SHA256 METAL_SHADER_SOURCE_HASH "${METAL_SHADER_INPUT_HASHES}")
+    string(SUBSTRING ${METAL_SHADER_SOURCE_HASH} 0 16 METAL_SHADER_SOURCE_HASH)
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${METAL_SHADER_CACHE_INPUTS})
+    set_property(SOURCE renderer_metal/mtl_pipeline_cache.mm APPEND PROPERTY
+        COMPILE_DEFINITIONS METAL_SHADER_SOURCE_HASH=0x${METAL_SHADER_SOURCE_HASH}ULL)
+    message(STATUS "Metal shader cache key: ${METAL_SHADER_SOURCE_HASH}")
+
     # The Metal backend is Objective-C++ with ARC. Precompiled headers are C++ only.
     set_source_files_properties(${METAL_OBJCXX_SOURCES} PROPERTIES
         COMPILE_OPTIONS "-fobjc-arc"

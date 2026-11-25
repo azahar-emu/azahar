@@ -35,6 +35,7 @@
     config.displaySync = YES;
     config.frameCap30 = NO;
     config.steadyThirty = YES;
+    config.presentEveryRefresh = NO;
     config.frameCapHoldsGame = YES;
     config.pacingBufferMs = 0;
     config.fastShaderMath = NO;

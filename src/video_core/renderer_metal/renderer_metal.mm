@@ -87,6 +87,10 @@ struct DisplayPacer {
     /// When a frame last reached the screen later than asked (presentation time), 0 for never.
     std::atomic<double> last_late{0.0};
     u32 deferred = 0; ///< Frames that waited a refresh for their GPU work, this second
+    /// Present the frame on screen again at every refresh without a new one
+    /// (QualityOptions::present_every_refresh), and that frame.
+    bool repeat_frames = false;
+    Frame on_screen;
     u32 late_seconds = 0; ///< Seconds in a row with frames shown late
     double last_log = 0.0;
     /// Draws a frame over the whole drawable.
@@ -115,6 +119,7 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
     const double target = update.targetPresentationTimestamp;
     Metal::NoteDisplayCallback(CACurrentMediaTime(), target);
     Metal::DisplayPacer::Frame next;
+    bool repeat = false;
     {
         std::scoped_lock lock{p->mutex};
         // Behind (the game or the interpolation hitched): keep only the newest pair (plus the one
@@ -154,37 +159,48 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
         if (!p->primed) {
             p->primed = p->waiting.size() >= p->min_waiting;
         }
-        if (p->waiting.empty() || !due || !p->primed) {
-            return; // The frame on screen stays for this refresh
-        }
+        bool take = !p->waiting.empty() && due && p->primed;
         // A frame held for several refreshes (30 FPS) reached the screen late a moment ago: its
         // GPU work was not done in time (the GPU lowers its clock when it is idle half the time,
         // as at 30 FPS). Then a frame whose GPU work is not finished yet waits one refresh, once,
         // which moves the frames a refresh later for good instead of one of them arriving late
         // again and again. Not at 60 FPS, whose frames would all fall a refresh behind.
-        Metal::DisplayPacer::Frame& front = p->waiting.front();
-        if (!front.deferred && p->slot > 0.025 && front.event != nil &&
-            target - p->last_late.load(std::memory_order_relaxed) < 10.0 &&
-            [(id)front.event conformsToProtocol:@protocol(MTLSharedEvent)] &&
-            [(id<MTLSharedEvent>)front.event signaledValue] < front.value) {
-            front.deferred = true;
-            p->deferred++;
-            return;
+        if (take) {
+            Metal::DisplayPacer::Frame& front = p->waiting.front();
+            if (!front.deferred && p->slot > 0.025 && front.event != nil &&
+                target - p->last_late.load(std::memory_order_relaxed) < 10.0 &&
+                [(id)front.event conformsToProtocol:@protocol(MTLSharedEvent)] &&
+                [(id<MTLSharedEvent>)front.event signaledValue] < front.value) {
+                front.deferred = true;
+                p->deferred++;
+                take = false;
+            }
         }
-        p->queued_sum += static_cast<double>(p->waiting.size());
-        next = p->waiting.front();
-        p->waiting.pop_front();
-        p->shown_at = target;
-        p->shown++;
-        p->missed_this_frame = false;
+        if (take) {
+            p->queued_sum += static_cast<double>(p->waiting.size());
+            next = p->waiting.front();
+            p->waiting.pop_front();
+            p->shown_at = target;
+            p->shown++;
+            p->missed_this_frame = false;
+            p->on_screen = next;
+        } else if (p->repeat_frames && p->on_screen.texture != nil) {
+            // The same picture again: the display keeps refreshing at the rate asked for instead
+            // of slowing down between the frames of a 30 FPS game (ProMotion), so the next new
+            // frame lands on the refresh it was meant for.
+            next = p->on_screen;
+            repeat = true;
+        } else {
+            return; // The frame on screen stays for this refresh
+        }
     }
     id<CAMetalDrawable> drawable = update.drawable;
     if (drawable == nil || next.texture == nil) {
         return;
     }
-    const bool own_queue = next.event != nil && p->present_queue != nil;
+    const bool own_queue = (next.event != nil || repeat) && p->present_queue != nil;
     id<MTLCommandBuffer> buffer = [own_queue ? p->present_queue : p->command_queue commandBuffer];
-    if (own_queue) {
+    if (own_queue && next.event != nil && !repeat) {
         [buffer encodeWaitForEvent:next.event value:next.value];
     }
     MTLRenderPassDescriptor* pass = [MTLRenderPassDescriptor renderPassDescriptor];
@@ -194,6 +210,12 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
     id<MTLRenderCommandEncoder> draw = [buffer renderCommandEncoderWithDescriptor:pass];
     p->draw(draw, next);
     [draw endEncoding];
+    if (repeat) {
+        // Not a frame of the game: not counted in the frame timing.
+        [buffer presentDrawable:drawable];
+        [buffer commit];
+        return;
+    }
     std::atomic<u32>* late = &p->presented_late;
     const std::shared_ptr<Metal::DisplayPacer> keep = p;
     [drawable addPresentedHandler:^(id<MTLDrawable> presented) {
@@ -2881,6 +2903,7 @@ bool RendererMetal::StartPacer(CAMetalLayer* layer) {
             GetQualityOptions().frame_generation > 0 && GetQualityOptions().frame_generation_buffer
                 ? 2u
                 : 1u;
+        pacer->repeat_frames = GetQualityOptions().present_every_refresh;
         id<MTLRenderPipelineState> pipeline = present_pipeline;
         id<MTLSamplerState> sampler = present_samplers[0];
         pacer->draw = [pipeline, sampler](id<MTLRenderCommandEncoder> encoder,
