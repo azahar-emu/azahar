@@ -633,16 +633,18 @@ void FragmentModule::WriteLighting() {
         }
     }
 
+    // Apply ambient lighting
+    const Id lighting_global_ambient{
+        ToF16(GetShaderDataMember(f32vec_ids.Get(3), ConstS32(23)), 3)};
+    const Id lighting_global_ambient_rgba{
+        PadVectorF16(lighting_global_ambient, f16vec_ids.Get(4), 0.f)};
+    diffuse_sum = OpFAdd(f16vec_ids.Get(4), diffuse_sum, lighting_global_ambient_rgba);
+
+    // Final lighting
     diffuse_sum = ToF32(diffuse_sum, 4);
     specular_sum = ToF32(specular_sum, 4);
-
-    // Sum final lighting result
-    const Id lighting_global_ambient{GetShaderDataMember(f32vec_ids.Get(3), ConstS32(23))};
-    const Id lighting_global_ambient_rgba{
-        PadVectorF32(lighting_global_ambient, f32vec_ids.Get(4), 0.f)};
     const Id zero_vec{ConstF32(0.f, 0.f, 0.f, 0.f)};
     const Id one_vec{ConstF32(1.f, 1.f, 1.f, 1.f)};
-    diffuse_sum = OpFAdd(f32vec_ids.Get(4), diffuse_sum, lighting_global_ambient_rgba);
     primary_fragment_color = OpFClamp(f32vec_ids.Get(4), diffuse_sum, zero_vec, one_vec);
     secondary_fragment_color = OpFClamp(f32vec_ids.Get(4), specular_sum, zero_vec, one_vec);
 }
