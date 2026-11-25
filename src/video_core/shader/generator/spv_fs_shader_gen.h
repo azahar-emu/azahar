@@ -238,6 +238,25 @@ private:
         return ConstantComposite(type, constituents);
     }
 
+    // Converts to 16-bit floating point representation, if supported by the platform. Otherwise,
+    // converts to 32-bit float with relaxed precision.
+    [[nodiscard]] Id ToF16(Id var, u32 size = 1) {
+        if (size > 1) {
+            return OpFConvert(f16vec_ids.Get(size), var);
+        }
+        return OpFConvert(f16_id, var);
+        // Note: For debugging, use OpQuantizeToF16 here simulate the behavior of OpFConvert to
+        // f16 when the platform does not support float16
+        // return OpQuantizeToF16(f16_id, var);
+    }
+
+    [[nodiscard]] Id ToF32(Id var, u32 size = 1) {
+        if (size > 1) {
+            return OpFConvert(f32vec_ids.Get(size), var);
+        }
+        return OpFConvert(f32_id, var);
+    }
+
     void DefineArithmeticTypes();
     void DefineEntryPoint();
     void DefineUniformStructs();
