@@ -87,6 +87,7 @@ set(APP_SWIFT_SOURCES
     App/Core/EmulationSession.swift
     App/Core/FileLocations.swift
     App/Core/GameCompressor.swift
+    App/Core/BundleMaker.swift
     App/Core/GameSettings.swift
     App/Core/GameLibrary.swift
     App/Core/GameStats.swift

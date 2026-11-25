@@ -87,6 +87,7 @@ struct GeneralSettingsView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var library: GameLibrary
     @EnvironmentObject private var compressor: GameCompressor
+    @EnvironmentObject private var bundleMaker: BundleMaker
     @State private var helperReport: String?
     @State private var testingHelper = false
     @State private var importingPairing = false
@@ -260,6 +261,31 @@ struct GeneralSettingsView: View {
             }
 
             .listRowBackground(LGRowBackground())
+
+            Section {
+                bundleRow("Game", files: bundleMaker.game.map { [$0] } ?? [], slot: .game)
+                bundleRow("Update", files: bundleMaker.update.map { [$0] } ?? [], slot: .update)
+                bundleRow("DLC", files: bundleMaker.dlc, slot: .dlc)
+                Button("Create Bundle") {
+                    bundleMaker.create(library: library)
+                }
+                .disabled(!bundleMaker.canCreate)
+                if bundleMaker.isRunning {
+                    ProgressView(value: bundleMaker.progress)
+                }
+            } header: {
+                InfoHeader("ROM Bundles") {
+                    Text("A bundle (.bcci, .bcxi) is a game together with its update and DLC in one "
+                         + "file: it plays with them without installing them, and is easy to move "
+                         + "or back up. Choose the game (.3ds, .cci, .cxi or .cia, also compressed), "
+                         + "then its update and DLC if you have them (.cia or .zcia files). The bundle "
+                         + "is written to the games folder (Files › ROMs); the files you chose are "
+                         + "left where they are. A game chosen as a .cia makes a .bcia, which is "
+                         + "installed like a .cia. Encrypted games cannot be bundled.")
+                }
+            }
+
+            .listRowBackground(LGRowBackground())
         }
         .fileImporter(isPresented: $importingPairing,
                       allowedContentTypes: [.propertyList, .data, .item]) { result in
@@ -271,8 +297,46 @@ struct GeneralSettingsView: View {
             }
             pairingStatus = AZJITHelper.pairingStatus()
         }
+        .alert("ROM Bundle", isPresented: Binding(
+            get: { bundleMaker.message != nil },
+            set: { if !$0 { bundleMaker.message = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(bundleMaker.message ?? "")
+        }
         .navigationTitle("General")
         .lgSettingsStyle()
+    }
+
+    /// A row of the ROM Bundles section: the chosen files, a button to choose and one to clear.
+    @ViewBuilder
+    private func bundleRow(_ title: String, files: [URL], slot: BundleMaker.Slot) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(files.isEmpty ? (slot == .game ? "Not chosen" : "None")
+                     : files.map(\.lastPathComponent).joined(separator: ", "))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+            }
+            Spacer()
+            if !files.isEmpty {
+                Button(role: .destructive) {
+                    bundleMaker.clear(slot)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Remove \(title)")
+            }
+            Button(slot == .dlc && !files.isEmpty ? "Add…" : "Choose…") {
+                bundleMaker.choose(slot)
+            }
+            .buttonStyle(.borderless)
+        }
+        .disabled(bundleMaker.isRunning)
     }
 }
 

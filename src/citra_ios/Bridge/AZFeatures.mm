@@ -8,6 +8,7 @@
 #import <AzaharCore/AZEmulator.h>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -1083,6 +1084,99 @@ static void (^g_movie_finished)(void) = nil;
           return;
       }
       finish(AZCompressStatusSuccess, output);
+    });
+}
+
++ (NSString*)bundleProblemForFileAtPath:(NSString*)path asDependency:(BOOL)asDependency {
+    const auto info = Loader::GetLoaderFileInfo(std::string{path.UTF8String});
+    if (!info.is_valid) {
+        return @"it is not a 3DS game file";
+    }
+    if (info.is_bundled) {
+        return @"it is a bundle already";
+    }
+    if (!info.is_bundle_supported) {
+        return @"it cannot be bundled (encrypted, or not a .3ds, .cci, .cxi or .cia game)";
+    }
+    // Like the desktop app: updates and DLC go in as CIAs.
+    if (asDependency && info.underlying_magic != std::array<u8, 4>{'C', 'I', 'A', '\0'}) {
+        return @"updates and DLC have to be .cia files (also compressed .zcia)";
+    }
+    return nil;
+}
+
++ (void)createBundleWithGameAtPath:(NSString*)gamePath
+                      dependencies:(NSArray<NSString*>*)dependencies
+                       toDirectory:(NSString*)directory
+                          progress:(void (^)(double))progress
+                        completion:(void (^)(BOOL, NSString*))completion {
+    NSArray<NSString*>* dependency_paths = [dependencies copy];
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+      const auto finish = ^(BOOL success, NSString* result) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+          completion(success, result);
+        });
+      };
+      if (NSString* problem = [AZEmulator bundleProblemForFileAtPath:gamePath asDependency:NO]) {
+          finish(NO, [NSString stringWithFormat:@"%@: %@", gamePath.lastPathComponent, problem]);
+          return;
+      }
+      std::vector<std::string> deps;
+      for (NSString* dependency in dependency_paths) {
+          if (NSString* problem = [AZEmulator bundleProblemForFileAtPath:dependency
+                                                            asDependency:YES]) {
+              finish(NO,
+                     [NSString stringWithFormat:@"%@: %@", dependency.lastPathComponent, problem]);
+              return;
+          }
+          deps.emplace_back(dependency.UTF8String);
+      }
+      const std::string game{gamePath.UTF8String};
+      const auto info = Loader::GetLoaderFileInfo(game);
+
+      // Named like the game, never over an existing file.
+      NSFileManager* files = [NSFileManager defaultManager];
+      NSString* base = [gamePath.lastPathComponent stringByDeletingPathExtension];
+      NSString* extension =
+          [NSString stringWithUTF8String:info.recommended_bundle_extension.c_str()];
+      NSString* output = [directory
+          stringByAppendingPathComponent:[base stringByAppendingPathExtension:extension]];
+      for (int i = 2; [files fileExistsAtPath:output]; i++) {
+          NSString* name = [NSString stringWithFormat:@"%@ (%d)", base, i];
+          output = [directory
+              stringByAppendingPathComponent:[name stringByAppendingPathExtension:extension]];
+      }
+      NSString* partial = [output stringByAppendingPathExtension:@"partial"];
+      const std::string partial_path{partial.UTF8String};
+      FileUtil::Delete(partial_path);
+
+      auto last_percent = std::make_shared<std::atomic<int>>(-1);
+      const auto status = Loader::CreateBundleFile(
+          partial_path, game, deps, [progress, last_percent](std::size_t written, std::size_t total) {
+              if (total == 0) {
+                  return;
+              }
+              const int percent = static_cast<int>(100.0 * static_cast<double>(written) /
+                                                   static_cast<double>(total));
+              if (last_percent->exchange(percent) == percent) {
+                  return;
+              }
+              dispatch_async(dispatch_get_main_queue(), ^{
+                progress(static_cast<double>(percent) / 100.0);
+              });
+          });
+      if (status != Loader::ResultStatus::Success) {
+          FileUtil::Delete(partial_path);
+          finish(NO, @"the bundle could not be written (see the log for details)");
+          return;
+      }
+      NSError* error = nil;
+      if (![files moveItemAtPath:partial toPath:output error:&error]) {
+          FileUtil::Delete(partial_path);
+          finish(NO, error.localizedDescription ?: @"the bundle could not be saved");
+          return;
+      }
+      finish(YES, output);
     });
 }
 

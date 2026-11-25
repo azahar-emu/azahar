@@ -396,6 +396,23 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
                 completion:(void (^)(AZCompressStatus status, NSString* _Nullable outputPath))
                                completion;
 
+// ROM bundles (.bcci, .bcxi, .bcia): a game together with its update and DLC CIAs in one file.
+
+/// Why the file cannot go into a ROM bundle, as the game (`asDependency` NO) or as an update or
+/// DLC (YES, those have to be CIAs), or nil when it can. Safe to call from any thread.
++ (nullable NSString*)bundleProblemForFileAtPath:(NSString*)path asDependency:(BOOL)asDependency;
+
+/// Creates a ROM bundle of the game and its dependencies (update and DLC CIAs) on a background
+/// queue, in `directory`, named like the game with the bundle extension the core recommends
+/// (.bcci, .bcxi or .bcia). It is written under a temporary name first. `progress` and
+/// `completion` are called on the main thread; the completion gets the path of the bundle when it
+/// worked, or a description of what went wrong.
++ (void)createBundleWithGameAtPath:(NSString*)gamePath
+                      dependencies:(NSArray<NSString*>*)dependencies
+                       toDirectory:(NSString*)directory
+                          progress:(void (^)(double fraction))progress
+                        completion:(void (^)(BOOL success, NSString* result))completion;
+
 // CIA installation, safe to call from any thread while no title is running.
 
 /// Installs a CIA (also its compressed form) on a background queue. `progress` and `completion`

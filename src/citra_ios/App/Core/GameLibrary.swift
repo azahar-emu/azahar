@@ -216,7 +216,7 @@ final class GameLibrary: ObservableObject {
         return failures
     }
 
-    nonisolated fileprivate static func isInTemporaryDirectory(_ url: URL) -> Bool {
+    nonisolated static func isInTemporaryDirectory(_ url: URL) -> Bool {
         let temporary = FileManager.default.temporaryDirectory.standardizedFileURL.resolvingSymlinksInPath()
         let file = url.standardizedFileURL.resolvingSymlinksInPath()
         return file.path.hasPrefix(temporary.path + "/")
