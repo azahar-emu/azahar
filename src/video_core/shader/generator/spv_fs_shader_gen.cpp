@@ -406,7 +406,7 @@ void FragmentModule::WriteLighting() {
             break;
         }
 
-        const Id sampler_index{ConstU32(static_cast<u32>(sampler))};
+        const Id sampler_index{ConstS32(static_cast<s32>(sampler))};
         if (abs) {
             // LUT index is in the range of (0.0, 1.0)
             index = lighting.lights[light_num].two_sided_diffuse
