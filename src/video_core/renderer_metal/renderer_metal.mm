@@ -590,6 +590,7 @@ private:
     f32 steady_cadence{1.0f};
     u32 steady_short_run{};
     bool steady_active{};
+    u32 steady_exit_swap{}; ///< fg_swaps when Steady 30 FPS last stopped
     std::chrono::steady_clock::time_point rhythm_start{};
     /// Display sync: the pictures waiting for the display link or on screen (it keeps up to two
     /// waiting and one shown, so four never overwrite one in use).
@@ -2712,10 +2713,16 @@ void RendererMetal::NoteFrameRhythm() {
         steady_cadence = steady_cadence * 0.85f + static_cast<f32>(lasted) * 0.15f;
         steady_short_run = lasted == 1 ? steady_short_run + 1 : 0;
         const bool was_active = steady_active;
+        // Once stopped it waits 3 seconds of the game (180 refreshes) before starting again:
+        // scenes that switch between 30 and 60 FPS every few frames made it stop and start
+        // several times a second, and each switch is a small hitch.
+        constexpr u32 RESTART_AFTER_SWAPS = 180;
         if (!steady_active) {
-            steady_active = steady_cadence >= 1.8f && lasted >= 2;
+            steady_active = steady_cadence >= 1.8f && lasted >= 2 &&
+                            fg_swaps - steady_exit_swap >= RESTART_AFTER_SWAPS;
         } else if (steady_cadence < 1.4f || steady_short_run >= 3) {
             steady_active = false;
+            steady_exit_swap = fg_swaps;
         }
         if (steady_active != was_active && GetQualityOptions().steady_thirty) {
             LOG_INFO(Render, "Steady 30 FPS: {}", steady_active
