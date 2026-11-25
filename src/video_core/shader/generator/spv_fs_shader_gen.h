@@ -221,14 +221,19 @@ private:
     }
 
     [[nodiscard]] Id ConstF16(f32 value) {
-        return Constant(f16_id, Pica::f16::FromFloat32(value).ToRaw());
+        if (use_float16) {
+            return Constant(f16_id, Pica::f16::FromFloat32(value).ToRaw());
+        }
+        return Constant(f16_id, value);
     }
 
     template <typename... Args>
     [[nodiscard]] Id ConstF16(Args... values) {
         constexpr u32 size = static_cast<u32>(sizeof...(values));
         static_assert(size >= 2);
-        const std::array constituents{Constant(f16_id, Pica::f16::FromFloat32(values).ToRaw())...};
+        const std::array constituents{
+            (use_float16 ? Constant(f16_id, Pica::f16::FromFloat32(values).ToRaw())
+                         : Constant(f16_id, values))...};
         const Id type = size <= 4 ? f16vec_ids.Get(size) : TypeArray(f16_id, ConstU32(size));
         return ConstantComposite(type, constituents);
     }
