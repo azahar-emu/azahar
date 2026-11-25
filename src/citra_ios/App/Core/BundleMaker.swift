@@ -92,29 +92,35 @@ final class BundleMaker: ObservableObject {
 
         AZEmulator.createBundle(
             withGameAtPath: game.path, dependencies: dependencies, toDirectory: destination.path,
-            progress: { [weak self] (fraction: Double) in self?.progress = fraction },
+            // Both are called on the main thread, Swift does not know that.
+            progress: { [weak self] (fraction: Double) in
+                Task { @MainActor in self?.progress = fraction }
+            },
             completion: { [weak self] (success: Bool, result: String) in
-                guard let self else { return }
-                isRunning = false
-                guard success else {
-                    message = "The bundle was not created: \(result)"
-                    return
-                }
-                let output = URL(fileURLWithPath: result)
-                // The copies the picker made are not needed any more.
-                clear(.game)
-                clear(.update)
-                clear(.dlc)
-                if output.pathExtension.lowercased() == "bcia" {
-                    message = "Created \(output.lastPathComponent) in Files › Neroli › ROMs. "
-                        + "It is a bundle of CIAs, so it is installed now (see the library)."
-                    library.importFiles([output])
-                } else {
-                    message = "Created \(output.lastPathComponent) in Files › Neroli › ROMs. "
-                        + "It is in the library and plays with its update and DLC."
-                    library.refresh()
-                }
+                Task { @MainActor in self?.finish(success: success, result: result, library: library) }
             })
+    }
+
+    private func finish(success: Bool, result: String, library: GameLibrary) {
+        isRunning = false
+        guard success else {
+            message = "The bundle was not created: \(result)"
+            return
+        }
+        let output = URL(fileURLWithPath: result)
+        // The copies the picker made are not needed any more.
+        clear(.game)
+        clear(.update)
+        clear(.dlc)
+        if output.pathExtension.lowercased() == "bcia" {
+            message = "Created \(output.lastPathComponent) in Files › Neroli › ROMs. "
+                + "It is a bundle of CIAs, so it is installed now (see the library)."
+            library.importFiles([output])
+        } else {
+            message = "Created \(output.lastPathComponent) in Files › Neroli › ROMs. "
+                + "It is in the library and plays with its update and DLC."
+            library.refresh()
+        }
     }
 
     private static func removeIfTemporary(_ url: URL) {

@@ -64,6 +64,11 @@ target_link_libraries(azahar_ios_bridge PRIVATE
     "-framework Foundation" "-framework Metal" "-framework QuartzCore" "-weak_framework MetalFX"
     "-framework AVFoundation" "-framework CoreMedia" "-framework CoreVideo"
 )
+# The JIT warm-up (Bridge/jit_warmup.cpp) calls into dynarmic through ARM_Dynarmic, whose header
+# includes dynarmic's. citra_core links it privately, so its include path does not reach here.
+if (TARGET dynarmic)
+    target_link_libraries(azahar_ios_bridge PRIVATE dynarmic)
+endif()
 
 set_target_properties(azahar_ios_bridge PROPERTIES
     XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES

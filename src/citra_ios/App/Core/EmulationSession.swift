@@ -49,6 +49,8 @@ final class EmulationSession: ObservableObject {
     private var pendingGame: Game?
     private var pendingSettings: AppSettings?
     private var statsTimer: Timer?
+    /// The settings of the running game, for the stats timer (whether the overlay is shown).
+    private weak var statsSettings: AppSettings?
 
     var isActive: Bool { currentGame != nil }
 
@@ -260,13 +262,14 @@ final class EmulationSession: ObservableObject {
         if settings.useMotion {
             motion.start()
         }
-        statsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self, weak settings] _ in
+        statsSettings = settings
+        statsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
                 // Only what changed is set: every set of a published value redraws the views of
                 // the game screen on the main thread, which competes with the emulation for the
                 // CPU. The numbers change once a second, and are only needed for the overlay.
-                if settings?.showPerformanceOverlay ?? true {
+                if self.statsSettings?.showPerformanceOverlay ?? true {
                     self.setIfChanged(\.fps, AZEmulator.shared.framesPerSecond)
                     self.setIfChanged(\.displayFps, AZEmulator.shared.displayFramesPerSecond)
                     self.setIfChanged(\.speed, AZEmulator.shared.emulationSpeed)
