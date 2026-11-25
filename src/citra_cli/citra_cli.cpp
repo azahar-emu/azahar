@@ -16,18 +16,18 @@ namespace CitraCLI {
 
 bool CheckForOptions(const char* optstring, int argc, char* argv[]) {
     // Scan a copy, since getopt can reorder argv and the frontend parses argv afterwards
-    std::vector<char*> args(argv, argv + argc);
-    args.push_back(nullptr);
-
-    // getopt_long_only keeps "--fullscreen" and "-platform" from being split into short options
-    static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
+    std::vector<char*> args_copy(argv, argv + argc);
+    args_copy.push_back(nullptr);
 
     const int original_opterr = opterr;
     opterr = 0; // Temporarily suppress invalid option messages
 
     bool return_value = false;
+    static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
     int option;
-    while ((option = getopt_long_only(argc, args.data(), optstring, no_long_opts, nullptr)) != -1) {
+    // getopt_long_only keeps long options from being interpreted as short options, they
+    // are to be ignored and handled in citra_meta instead.
+    while ((option = getopt_long_only(argc, args_copy.data(), optstring, no_long_opts, nullptr)) != -1) {
         for (size_t i = 0; optstring[i] != '\0'; ++i) {
             if (optstring[i] == ':') {
                 continue;
