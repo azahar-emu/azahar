@@ -215,28 +215,17 @@ void FragmentModule::WriteLighting() {
 
     const auto& lighting = config.lighting;
 
-    // Define lighting globals
-    Id diffuse_sum{ConstF32(0.f, 0.f, 0.f, 1.f)};
-    Id specular_sum{ConstF32(0.f, 0.f, 0.f, 1.f)};
-    Id light_vector{ConstF32(0.f, 0.f, 0.f)};
-    Id light_distance{ConstF32(0.f)};
-    Id spot_dir{ConstF32(0.f, 0.f, 0.f)};
-    Id half_vector{ConstF32(0.f, 0.f, 0.f)};
-    Id dot_product{ConstF32(0.f)};
-    Id clamp_highlights{ConstF32(1.f)};
-    Id geo_factor{ConstF32(1.f)};
-    Id surface_normal{};
-    Id surface_tangent{};
-
     // Compute fragment normals and tangents
     const auto perturbation = [&]() -> Id {
-        const Id texel{
-            OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[lighting.bump_selector])};
-        const Id texel_rgb{OpVectorShuffle(f32vec_ids.Get(3), texel, texel, 0, 1, 2)};
-        const Id rgb_mul_two{OpVectorTimesScalar(f32vec_ids.Get(3), texel_rgb, ConstF32(2.f))};
-        return OpFSub(f32vec_ids.Get(3), rgb_mul_two, ConstF32(1.f, 1.f, 1.f));
+        const Id texel{ToF16(
+            OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[lighting.bump_selector]), 4)};
+        const Id texel_rgb{OpVectorShuffle(f16vec_ids.Get(3), texel, texel, 0, 1, 2)};
+        const Id rgb_mul_two{OpVectorTimesScalar(f16vec_ids.Get(3), texel_rgb, ConstF16(2.f))};
+        return OpFSub(f16vec_ids.Get(3), rgb_mul_two, ConstF16(1.f, 1.f, 1.f));
     };
 
+    Id surface_normal{};
+    Id surface_tangent{};
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
         // Bump mapping is enabled using a normal map
         surface_normal = perturbation();
@@ -244,16 +233,16 @@ void FragmentModule::WriteLighting() {
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result
         if (lighting.bump_renorm) {
-            const Id normal_x{OpCompositeExtract(f32_id, surface_normal, 0)};
-            const Id normal_y{OpCompositeExtract(f32_id, surface_normal, 1)};
-            const Id y_mul_y{OpFMul(f32_id, normal_y, normal_y)};
-            const Id val{OpFSub(f32_id, ConstF32(1.f), OpFma(f32_id, normal_x, normal_x, y_mul_y))};
-            const Id normal_z{OpSqrt(f32_id, OpFMax(f32_id, val, ConstF32(0.f)))};
-            surface_normal = OpCompositeConstruct(f32vec_ids.Get(3), normal_x, normal_y, normal_z);
+            const Id normal_x{OpCompositeExtract(f16_id, surface_normal, 0)};
+            const Id normal_y{OpCompositeExtract(f16_id, surface_normal, 1)};
+            const Id y_mul_y{OpFMul(f16_id, normal_y, normal_y)};
+            const Id val{OpFSub(f16_id, ConstF16(1.f), OpFma(f16_id, normal_x, normal_x, y_mul_y))};
+            const Id normal_z{OpSqrt(f16_id, OpFMax(f16_id, val, ConstF16(0.f)))};
+            surface_normal = OpCompositeConstruct(f16vec_ids.Get(3), normal_x, normal_y, normal_z);
         }
 
         // The tangent vector is not perturbed by the normal map and is just a unit vector.
-        surface_tangent = ConstF32(1.f, 0.f, 0.f);
+        surface_tangent = ConstF16(1.f, 0.f, 0.f);
     } else if (lighting.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
         // Bump mapping is enabled using a tangent map
         surface_tangent = perturbation();
@@ -263,23 +252,23 @@ void FragmentModule::WriteLighting() {
         // even if 'renorm' is enabled.
 
         // The normal vector is not perturbed by the tangent map and is just a unit vector.
-        surface_normal = ConstF32(0.f, 0.f, 1.f);
+        surface_normal = ConstF16(0.f, 0.f, 1.f);
     } else {
         // No bump mapping - surface local normal and tangent are just unit vectors
-        surface_normal = ConstF32(0.f, 0.f, 1.f);
-        surface_tangent = ConstF32(1.f, 0.f, 0.f);
+        surface_normal = ConstF16(0.f, 0.f, 1.f);
+        surface_tangent = ConstF16(1.f, 0.f, 0.f);
     }
 
     // Rotate the vector v by the quaternion q
     const auto quaternion_rotate = [this](Id q, Id v) -> Id {
-        const Id q_xyz{OpVectorShuffle(f32vec_ids.Get(3), q, q, 0, 1, 2)};
-        const Id q_xyz_cross_v{OpCross(f32vec_ids.Get(3), q_xyz, v)};
-        const Id q_w{OpCompositeExtract(f32_id, q, 3)};
-        const Id val1{OpFAdd(f32vec_ids.Get(3), q_xyz_cross_v,
-                             OpVectorTimesScalar(f32vec_ids.Get(3), v, q_w))};
-        const Id val2{OpVectorTimesScalar(f32vec_ids.Get(3),
-                                          OpCross(f32vec_ids.Get(3), q_xyz, val1), ConstF32(2.f))};
-        return OpFAdd(f32vec_ids.Get(3), v, val2);
+        const Id q_xyz{OpVectorShuffle(f16vec_ids.Get(3), q, q, 0, 1, 2)};
+        const Id q_xyz_cross_v{OpCross(f16vec_ids.Get(3), q_xyz, v)};
+        const Id q_w{OpCompositeExtract(f16_id, q, 3)};
+        const Id val1{OpFAdd(f16vec_ids.Get(3), q_xyz_cross_v,
+                             OpVectorTimesScalar(f16vec_ids.Get(3), v, q_w))};
+        const Id val2{OpVectorTimesScalar(f16vec_ids.Get(3),
+                                          OpCross(f16vec_ids.Get(3), q_xyz, val1), ConstF16(2.f))};
+        return OpFAdd(f16vec_ids.Get(3), v, val2);
     };
 
     // Perform quaternion correction in the fragment shader if fragment_shader_barycentric is
@@ -320,62 +309,75 @@ void FragmentModule::WriteLighting() {
     } else {
         normquat = OpLoad(f32vec_ids.Get(4), normquat_id);
     }
+    normquat = ToF16(normquat, 4);
 
     // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
     // eyespace.
-    const Id normalized_normquat{OpNormalize(f32vec_ids.Get(4), normquat)};
+    const Id normalized_normquat{OpNormalize(f16vec_ids.Get(4), normquat)};
     const Id normal{quaternion_rotate(normalized_normquat, surface_normal)};
     const Id tangent{quaternion_rotate(normalized_normquat, surface_tangent)};
 
-    Id shadow{ConstF32(1.f, 1.f, 1.f, 1.f)};
+    Id shadow{ConstF16(1.f, 1.f, 1.f, 1.f)};
     if (lighting.enable_shadow) {
         shadow = OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
+        shadow = ToF16(shadow, 4);
         if (lighting.shadow_invert) {
-            shadow = OpFSub(f32vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f, 1.f), shadow);
+            shadow = OpFSub(f16vec_ids.Get(4), ConstF16(1.f, 1.f, 1.f, 1.f), shadow);
         }
     }
 
     const auto lookup_lighting_lut_unsigned = [this](Id lut_index, Id pos) -> Id {
-        const Id pos_floor{OpFloor(f32_id, OpFMul(f32_id, pos, ConstF32(256.f)))};
-        const Id index_float{OpFClamp(f32_id, pos_floor, ConstF32(0.f), ConstF32(255.f))};
+        const Id pos_floor{OpFloor(f16_id, OpFMul(f16_id, pos, ConstF16(256.f)))};
+        const Id index_float{OpFClamp(f16_id, pos_floor, ConstF16(0.f), ConstF16(255.f))};
         const Id index{OpConvertFToS(i32_id, index_float)};
-        const Id neg_index{OpFNegate(f32_id, OpConvertSToF(f32_id, index))};
-        const Id delta{OpFma(f32_id, pos, ConstF32(256.f), neg_index)};
+        const Id neg_index{OpFNegate(f16_id, OpConvertSToF(f16_id, index))};
+        const Id delta{OpFma(f16_id, pos, ConstF16(256.f), neg_index)};
         return LookupLightingLUT(lut_index, index, delta);
     };
 
     const auto lookup_lighting_lut_signed = [this](Id lut_index, Id pos) -> Id {
-        const Id pos_floor{OpFloor(f32_id, OpFMul(f32_id, pos, ConstF32(128.f)))};
-        const Id index_float{OpFClamp(f32_id, pos_floor, ConstF32(-128.f), ConstF32(127.f))};
+        const Id pos_floor{OpFloor(f16_id, OpFMul(f16_id, pos, ConstF16(128.f)))};
+        const Id index_float{OpFClamp(f16_id, pos_floor, ConstF16(-128.f), ConstF16(127.f))};
         const Id index{OpConvertFToS(i32_id, index_float)};
-        const Id neg_index{OpFNegate(f32_id, OpConvertSToF(f32_id, index))};
-        const Id delta{OpFma(f32_id, pos, ConstF32(128.f), neg_index)};
+        const Id neg_index{OpFNegate(f16_id, OpConvertSToF(f16_id, index))};
+        const Id delta{OpFma(f16_id, pos, ConstF16(128.f), neg_index)};
         const Id increment{
             OpSelect(i32_id, OpSLessThan(bool_id, index, ConstS32(0)), ConstS32(256), ConstS32(0))};
         return LookupLightingLUT(lut_index, OpIAdd(i32_id, index, increment), delta);
     };
 
     // Samples the specified lookup table for specular lighting
-    const Id view{OpLoad(f32vec_ids.Get(3), view_id)};
+    const Id view{ToF16(OpLoad(f32vec_ids.Get(3), view_id), 3)};
+    // Define lighting globals
+    Id diffuse_sum{ConstF16(0.f, 0.f, 0.f, 1.f)};
+    Id specular_sum{ConstF16(0.f, 0.f, 0.f, 1.f)};
+    Id light_vector{ConstF16(0.f, 0.f, 0.f)};
+    Id light_distance{ConstF16(0.f)};
+    Id spot_dir{ConstF16(0.f, 0.f, 0.f)};
+    Id half_vector{ConstF16(0.f, 0.f, 0.f)};
+    Id dot_product{ConstF16(0.f)};
+    Id clamp_highlights{ConstF16(1.f)};
+    Id geo_factor{ConstF16(1.f)};
+
     const auto get_lut_value = [&](LightingRegs::LightingSampler sampler, u32 light_num,
                                    LightingRegs::LightingLutInput input, bool abs) -> Id {
         Id index{};
         switch (input) {
         case LightingRegs::LightingLutInput::NH:
-            index = OpDot(f32_id, normal, OpNormalize(f32vec_ids.Get(3), half_vector));
+            index = OpDot(f16_id, normal, OpNormalize(f16vec_ids.Get(3), half_vector));
             break;
         case LightingRegs::LightingLutInput::VH:
-            index = OpDot(f32_id, OpNormalize(f32vec_ids.Get(3), view),
-                          OpNormalize(f32vec_ids.Get(3), half_vector));
+            index = OpDot(f16_id, OpNormalize(f16vec_ids.Get(3), view),
+                          OpNormalize(f16vec_ids.Get(3), half_vector));
             break;
         case LightingRegs::LightingLutInput::NV:
-            index = OpDot(f32_id, normal, OpNormalize(f32vec_ids.Get(3), view));
+            index = OpDot(f16_id, normal, OpNormalize(f16vec_ids.Get(3), view));
             break;
         case LightingRegs::LightingLutInput::LN:
-            index = OpDot(f32_id, light_vector, normal);
+            index = OpDot(f16_id, light_vector, normal);
             break;
         case LightingRegs::LightingLutInput::SP:
-            index = OpDot(f32_id, light_vector, spot_dir);
+            index = OpDot(f16_id, light_vector, spot_dir);
             break;
         case LightingRegs::LightingLutInput::CP:
             // CP input is only available with configuration 7
@@ -383,24 +385,24 @@ void FragmentModule::WriteLighting() {
                 // Note: even if the normal vector is modified by normal map, which is not the
                 // normal of the tangent plane anymore, the half angle vector is still projected
                 // using the modified normal vector.
-                const Id normalized_half_vector{OpNormalize(f32vec_ids.Get(3), half_vector)};
-                const Id normal_dot_half_vector{OpDot(f32_id, normal, normalized_half_vector)};
+                const Id normalized_half_vector{OpNormalize(f16vec_ids.Get(3), half_vector)};
+                const Id normal_dot_half_vector{OpDot(f16_id, normal, normalized_half_vector)};
                 const Id normal_mul_dot{
-                    OpVectorTimesScalar(f32vec_ids.Get(3), normal, normal_dot_half_vector)};
+                    OpVectorTimesScalar(f16vec_ids.Get(3), normal, normal_dot_half_vector)};
                 const Id half_angle_proj{
-                    OpFSub(f32vec_ids.Get(3), normalized_half_vector, normal_mul_dot)};
+                    OpFSub(f16vec_ids.Get(3), normalized_half_vector, normal_mul_dot)};
 
                 // Note: the half angle vector projection is confirmed not normalized before the dot
                 // product. The result is in fact not cos(phi) as the name suggested.
-                index = OpDot(f32_id, half_angle_proj, tangent);
+                index = OpDot(f16_id, half_angle_proj, tangent);
             } else {
-                index = ConstF32(0.f);
+                index = ConstF16(0.f);
             }
             break;
         default:
             LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input {}", (int)input);
             UNIMPLEMENTED();
-            index = ConstF32(0.f);
+            index = ConstF16(0.f);
             break;
         }
 
@@ -408,8 +410,8 @@ void FragmentModule::WriteLighting() {
         if (abs) {
             // LUT index is in the range of (0.0, 1.0)
             index = lighting.lights[light_num].two_sided_diffuse
-                        ? OpFAbs(f32_id, index)
-                        : OpFMax(f32_id, index, ConstF32(0.f));
+                        ? OpFAbs(f16_id, index)
+                        : OpFMax(f16_id, index, ConstF16(0.f));
             return lookup_lighting_lut_unsigned(sampler_index, index);
         } else {
             // LUT index is in the range of (-1.0, 1.0)
@@ -425,7 +427,9 @@ void FragmentModule::WriteLighting() {
             const Id member_type = member < 6 ? f32vec_ids.Get(3) : f32_id;
             const Id light_num{
                 ConstS32(static_cast<s32>(lighting.lights[light_index].num.Value()))};
-            return GetShaderDataMember(member_type, ConstS32(24), light_num, ConstS32(member));
+            return ToF16(
+                GetShaderDataMember(member_type, ConstS32(24), light_num, ConstS32(member)),
+                member < 6 ? 3 : 1);
         };
 
         // Compute light vector (directional or positional)
@@ -433,61 +437,61 @@ void FragmentModule::WriteLighting() {
         if (light_config.directional) {
             light_vector = light_position;
         } else {
-            light_vector = OpFAdd(f32vec_ids.Get(3), light_position, view);
+            light_vector = OpFAdd(f16vec_ids.Get(3), light_position, view);
         }
 
-        light_distance = OpLength(f32_id, light_vector);
-        light_vector = OpNormalize(f32vec_ids.Get(3), light_vector);
+        light_distance = OpLength(f16_id, light_vector);
+        light_vector = OpNormalize(f16vec_ids.Get(3), light_vector);
 
         spot_dir = GetLightMember(5);
-        half_vector = OpFAdd(f32vec_ids.Get(3), OpNormalize(f32vec_ids.Get(3), view), light_vector);
+        half_vector = OpFAdd(f16vec_ids.Get(3), OpNormalize(f16vec_ids.Get(3), view), light_vector);
 
         // Compute dot product of light_vector and normal, adjust if lighting is one-sided or
         // two-sided
         if (light_config.two_sided_diffuse) {
-            dot_product = OpFAbs(f32_id, OpDot(f32_id, light_vector, normal));
+            dot_product = OpFAbs(f16_id, OpDot(f16_id, light_vector, normal));
         } else {
-            dot_product = OpFMax(f32_id, OpDot(f32_id, light_vector, normal), ConstF32(0.f));
+            dot_product = OpFMax(f16_id, OpDot(f16_id, light_vector, normal), ConstF16(0.f));
         }
 
         // If enabled, clamp specular component if lighting result is zero
         if (lighting.clamp_highlights) {
-            clamp_highlights = OpFSign(f32_id, dot_product);
+            clamp_highlights = OpFSign(f16_id, dot_product);
         }
 
         // If enabled, compute spot light attenuation value
-        Id spot_atten{ConstF32(1.f)};
+        Id spot_atten{ConstF16(1.f)};
         if (light_config.spot_atten_enable &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config, LightingRegs::LightingSampler::SpotlightAttenuation)) {
             const Id value{
                 get_lut_value(LightingRegs::SpotlightAttenuationSampler(light_config.num),
                               light_config.num, lighting.lut_sp.type, lighting.lut_sp.abs_input)};
-            spot_atten = OpFMul(f32_id, ConstF32(lighting.lut_sp.GetScale()), value);
+            spot_atten = OpFMul(f16_id, ConstF16(lighting.lut_sp.GetScale()), value);
         }
 
         // If enabled, compute distance attenuation value
-        Id dist_atten{ConstF32(1.f)};
+        Id dist_atten{ConstF16(1.f)};
         if (light_config.dist_atten_enable) {
             const Id dist_atten_scale{GetLightMember(7)};
             const Id dist_atten_bias{GetLightMember(6)};
-            const Id index{OpFma(f32_id, dist_atten_scale, light_distance, dist_atten_bias)};
-            const Id clamped_index{OpFClamp(f32_id, index, ConstF32(0.f), ConstF32(1.f))};
+            const Id index{OpFma(f16_id, dist_atten_scale, light_distance, dist_atten_bias)};
+            const Id clamped_index{OpFClamp(f16_id, index, ConstF16(0.f), ConstF16(1.f))};
             const Id sampler{ConstS32(
                 static_cast<s32>(LightingRegs::DistanceAttenuationSampler(light_config.num)))};
             dist_atten = lookup_lighting_lut_unsigned(sampler, clamped_index);
         }
 
         if (light_config.geometric_factor_0 || light_config.geometric_factor_1) {
-            geo_factor = OpDot(f32_id, half_vector, half_vector);
+            geo_factor = OpDot(f16_id, half_vector, half_vector);
             const Id dot_div_geo{
-                OpFMin(f32_id, OpFDiv(f32_id, dot_product, geo_factor), ConstF32(1.f))};
-            const Id is_geo_factor_zero{OpFOrdEqual(bool_id, geo_factor, ConstF32(0.f))};
-            geo_factor = OpSelect(f32_id, is_geo_factor_zero, ConstF32(0.f), dot_div_geo);
+                OpFMin(f16_id, OpFDiv(f16_id, dot_product, geo_factor), ConstF16(1.f))};
+            const Id is_geo_factor_zero{OpFOrdEqual(bool_id, geo_factor, ConstF16(0.f))};
+            geo_factor = OpSelect(f16_id, is_geo_factor_zero, ConstF16(0.f), dot_div_geo);
         }
 
         // Specular 0 component
-        Id d0_lut_value{ConstF32(1.f)};
+        Id d0_lut_value{ConstF16(1.f)};
         if (lighting.lut_d0.enable &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config, LightingRegs::LightingSampler::Distribution0)) {
@@ -495,16 +499,16 @@ void FragmentModule::WriteLighting() {
             const Id value{get_lut_value(LightingRegs::LightingSampler::Distribution0,
                                          light_config.num, lighting.lut_d0.type,
                                          lighting.lut_d0.abs_input)};
-            d0_lut_value = OpFMul(f32_id, ConstF32(lighting.lut_d0.GetScale()), value);
+            d0_lut_value = OpFMul(f16_id, ConstF16(lighting.lut_d0.GetScale()), value);
         }
 
-        Id specular_0{OpVectorTimesScalar(f32vec_ids.Get(3), GetLightMember(0), d0_lut_value)};
+        Id specular_0{OpVectorTimesScalar(f16vec_ids.Get(3), GetLightMember(0), d0_lut_value)};
         if (light_config.geometric_factor_0) {
-            specular_0 = OpVectorTimesScalar(f32vec_ids.Get(3), specular_0, geo_factor);
+            specular_0 = OpVectorTimesScalar(f16vec_ids.Get(3), specular_0, geo_factor);
         }
 
         // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
-        Id refl_value_r{ConstF32(1.f)};
+        Id refl_value_r{ConstF16(1.f)};
         if (lighting.lut_rr.enable &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
                                                      LightingRegs::LightingSampler::ReflectRed)) {
@@ -512,7 +516,7 @@ void FragmentModule::WriteLighting() {
                                          light_config.num, lighting.lut_rr.type,
                                          lighting.lut_rr.abs_input)};
 
-            refl_value_r = OpFMul(f32_id, ConstF32(lighting.lut_rr.GetScale()), value);
+            refl_value_r = OpFMul(f16_id, ConstF16(lighting.lut_rr.GetScale()), value);
         }
 
         // If enabled, lookup ReflectGreen value, otherwise, ReflectRed value is used
@@ -524,7 +528,7 @@ void FragmentModule::WriteLighting() {
                                          light_config.num, lighting.lut_rg.type,
                                          lighting.lut_rg.abs_input)};
 
-            refl_value_g = OpFMul(f32_id, ConstF32(lighting.lut_rg.GetScale()), value);
+            refl_value_g = OpFMul(f16_id, ConstF16(lighting.lut_rg.GetScale()), value);
         }
 
         // If enabled, lookup ReflectBlue value, otherwise, ReflectRed value is used
@@ -535,11 +539,11 @@ void FragmentModule::WriteLighting() {
             const Id value{get_lut_value(LightingRegs::LightingSampler::ReflectBlue,
                                          light_config.num, lighting.lut_rb.type,
                                          lighting.lut_rb.abs_input)};
-            refl_value_b = OpFMul(f32_id, ConstF32(lighting.lut_rb.GetScale()), value);
+            refl_value_b = OpFMul(f16_id, ConstF16(lighting.lut_rb.GetScale()), value);
         }
 
         // Specular 1 component
-        Id d1_lut_value{ConstF32(1.f)};
+        Id d1_lut_value{ConstF16(1.f)};
         if (lighting.lut_d1.enable &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config, LightingRegs::LightingSampler::Distribution1)) {
@@ -547,17 +551,17 @@ void FragmentModule::WriteLighting() {
             const Id value{get_lut_value(LightingRegs::LightingSampler::Distribution1,
                                          light_config.num, lighting.lut_d1.type,
                                          lighting.lut_d1.abs_input)};
-            d1_lut_value = OpFMul(f32_id, ConstF32(lighting.lut_d1.GetScale()), value);
+            d1_lut_value = OpFMul(f16_id, ConstF16(lighting.lut_d1.GetScale()), value);
         }
 
         const Id refl_value{
-            OpCompositeConstruct(f32vec_ids.Get(3), refl_value_r, refl_value_g, refl_value_b)};
+            OpCompositeConstruct(f16vec_ids.Get(3), refl_value_r, refl_value_g, refl_value_b)};
         const Id light_specular_1{GetLightMember(1)};
-        Id specular_1{OpFMul(f32vec_ids.Get(3),
-                             OpVectorTimesScalar(f32vec_ids.Get(3), refl_value, d1_lut_value),
+        Id specular_1{OpFMul(f16vec_ids.Get(3),
+                             OpVectorTimesScalar(f16vec_ids.Get(3), refl_value, d1_lut_value),
                              light_specular_1)};
         if (light_config.geometric_factor_1) {
-            specular_1 = OpVectorTimesScalar(f32vec_ids.Get(3), specular_1, geo_factor);
+            specular_1 = OpVectorTimesScalar(f16vec_ids.Get(3), specular_1, geo_factor);
         }
 
         // Fresnel
@@ -568,66 +572,69 @@ void FragmentModule::WriteLighting() {
             // Lookup fresnel LUT value
             Id value{get_lut_value(LightingRegs::LightingSampler::Fresnel, light_config.num,
                                    lighting.lut_fr.type, lighting.lut_fr.abs_input)};
-            value = OpFMul(f32_id, ConstF32(lighting.lut_fr.GetScale()), value);
+            value = OpFMul(f16_id, ConstF16(lighting.lut_fr.GetScale()), value);
 
             // Enabled for diffuse lighting alpha component
             if (lighting.enable_primary_alpha) {
-                diffuse_sum = OpCompositeInsert(f32vec_ids.Get(4), value, diffuse_sum, 3);
+                diffuse_sum = OpCompositeInsert(f16vec_ids.Get(4), value, diffuse_sum, 3);
             }
 
             // Enabled for the specular lighting alpha component
             if (lighting.enable_secondary_alpha) {
-                specular_sum = OpCompositeInsert(f32vec_ids.Get(4), value, specular_sum, 3);
+                specular_sum = OpCompositeInsert(f16vec_ids.Get(4), value, specular_sum, 3);
             }
         }
 
         const bool shadow_primary_enable = lighting.shadow_primary && light_config.shadow_enable;
         const bool shadow_secondary_enable =
             lighting.shadow_secondary && light_config.shadow_enable;
-        const Id shadow_rgb{OpVectorShuffle(f32vec_ids.Get(3), shadow, shadow, 0, 1, 2)};
+        const Id shadow_rgb{OpVectorShuffle(f16vec_ids.Get(3), shadow, shadow, 0, 1, 2)};
 
         const Id light_diffuse{GetLightMember(2)};
         const Id light_ambient{GetLightMember(3)};
-        Id diffuse_mul_dot{OpVectorTimesScalar(f32vec_ids.Get(3), light_diffuse, dot_product)};
+        Id diffuse_mul_dot{OpVectorTimesScalar(f16vec_ids.Get(3), light_diffuse, dot_product)};
 
         // Shadow only attenuates diffuse, not the light's ambient
         if (shadow_primary_enable) {
-            diffuse_mul_dot = OpFMul(f32vec_ids.Get(3), diffuse_mul_dot, shadow_rgb);
+            diffuse_mul_dot = OpFMul(f16vec_ids.Get(3), diffuse_mul_dot, shadow_rgb);
         }
 
         // Compute primary fragment color (diffuse lighting) function
-        Id diffuse_sum_rgb{OpFAdd(f32vec_ids.Get(3), diffuse_mul_dot, light_ambient)};
-        diffuse_sum_rgb = OpVectorTimesScalar(f32vec_ids.Get(3), diffuse_sum_rgb, dist_atten);
-        diffuse_sum_rgb = OpVectorTimesScalar(f32vec_ids.Get(3), diffuse_sum_rgb, spot_atten);
+        Id diffuse_sum_rgb{OpFAdd(f16vec_ids.Get(3), diffuse_mul_dot, light_ambient)};
+        diffuse_sum_rgb = OpVectorTimesScalar(f16vec_ids.Get(3), diffuse_sum_rgb, dist_atten);
+        diffuse_sum_rgb = OpVectorTimesScalar(f16vec_ids.Get(3), diffuse_sum_rgb, spot_atten);
 
         // Compute secondary fragment color (specular lighting) function
-        const Id specular_01{OpFAdd(f32vec_ids.Get(3), specular_0, specular_1)};
-        Id specular_sum_rgb{OpVectorTimesScalar(f32vec_ids.Get(3), specular_01, clamp_highlights)};
-        specular_sum_rgb = OpVectorTimesScalar(f32vec_ids.Get(3), specular_sum_rgb, dist_atten);
-        specular_sum_rgb = OpVectorTimesScalar(f32vec_ids.Get(3), specular_sum_rgb, spot_atten);
+        const Id specular_01{OpFAdd(f16vec_ids.Get(3), specular_0, specular_1)};
+        Id specular_sum_rgb{OpVectorTimesScalar(f16vec_ids.Get(3), specular_01, clamp_highlights)};
+        specular_sum_rgb = OpVectorTimesScalar(f16vec_ids.Get(3), specular_sum_rgb, dist_atten);
+        specular_sum_rgb = OpVectorTimesScalar(f16vec_ids.Get(3), specular_sum_rgb, spot_atten);
         if (shadow_secondary_enable) {
-            specular_sum_rgb = OpFMul(f32vec_ids.Get(3), specular_sum_rgb, shadow_rgb);
+            specular_sum_rgb = OpFMul(f16vec_ids.Get(3), specular_sum_rgb, shadow_rgb);
         }
 
         // Accumulate the fragment colors
-        const Id diffuse_sum_rgba{PadVectorF32(diffuse_sum_rgb, f32vec_ids.Get(4), 0.f)};
-        const Id specular_sum_rgba{PadVectorF32(specular_sum_rgb, f32vec_ids.Get(4), 0.f)};
-        diffuse_sum = OpFAdd(f32vec_ids.Get(4), diffuse_sum, diffuse_sum_rgba);
-        specular_sum = OpFAdd(f32vec_ids.Get(4), specular_sum, specular_sum_rgba);
+        const Id diffuse_sum_rgba{PadVectorF16(diffuse_sum_rgb, f16vec_ids.Get(4), 0.f)};
+        const Id specular_sum_rgba{PadVectorF16(specular_sum_rgb, f16vec_ids.Get(4), 0.f)};
+        diffuse_sum = OpFAdd(f16vec_ids.Get(4), diffuse_sum, diffuse_sum_rgba);
+        specular_sum = OpFAdd(f16vec_ids.Get(4), specular_sum, specular_sum_rgba);
     }
 
     // Apply shadow attenuation to alpha components if enabled
     if (lighting.shadow_alpha) {
-        const Id shadow_a{OpCompositeExtract(f32_id, shadow, 3)};
+        const Id shadow_a{OpCompositeExtract(f16_id, shadow, 3)};
         const Id shadow_a_vec{
-            OpCompositeConstruct(f32vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f), shadow_a)};
+            OpCompositeConstruct(f16vec_ids.Get(4), ConstF16(1.f, 1.f, 1.f), shadow_a)};
         if (lighting.enable_primary_alpha) {
-            diffuse_sum = OpFMul(f32vec_ids.Get(4), diffuse_sum, shadow_a_vec);
+            diffuse_sum = OpFMul(f16vec_ids.Get(4), diffuse_sum, shadow_a_vec);
         }
         if (lighting.enable_secondary_alpha) {
-            specular_sum = OpFMul(f32vec_ids.Get(4), specular_sum, shadow_a_vec);
+            specular_sum = OpFMul(f16vec_ids.Get(4), specular_sum, shadow_a_vec);
         }
     }
+
+    diffuse_sum = ToF32(diffuse_sum, 4);
+    specular_sum = ToF32(specular_sum, 4);
 
     // Sum final lighting result
     const Id lighting_global_ambient{GetShaderDataMember(f32vec_ids.Get(3), ConstS32(23))};
@@ -1294,10 +1301,10 @@ Id FragmentModule::LookupLightingLUT(Id lut_index, Id index, Id delta) {
     const Id lut_index_y{OpBitwiseAnd(i32_id, lut_index, ConstS32(3))};
     const Id lut_offset{GetShaderDataMember(i32_id, ConstS32(18), lut_index_x, lut_index_y)};
     const Id coord{OpIAdd(i32_id, lut_offset, index)};
-    const Id entry{OpImageFetch(f32vec_ids.Get(4), texture_buffer_lut_lf, coord)};
-    const Id entry_r{OpCompositeExtract(f32_id, entry, 0)};
-    const Id entry_g{OpCompositeExtract(f32_id, entry, 1)};
-    return OpFma(f32_id, entry_g, delta, entry_r);
+    const Id entry{ToF16(OpImageFetch(f32vec_ids.Get(4), texture_buffer_lut_lf, coord), 4)};
+    const Id entry_r{OpCompositeExtract(f16_id, entry, 0)};
+    const Id entry_g{OpCompositeExtract(f16_id, entry, 1)};
+    return OpFma(f16_id, entry_g, delta, entry_r);
 }
 
 Id FragmentModule::GetSource(TevStageConfig::Source source, s32 index) {
