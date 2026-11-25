@@ -393,6 +393,12 @@ if (ENABLE_LIBRETRO)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
+# GNU unique symbols keep a libretro core from ever being unloaded, so a frontend
+# that loads it again for the next game would run that game in the last one's state
+if (ENABLE_LIBRETRO AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-gnu-unique>)
+endif()
+
 # System imported libraries
 # ======================
 
