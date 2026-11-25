@@ -224,9 +224,14 @@ struct EmulationView: View {
                 Spacer()
                 Text(toast)
                     .font(.subheadline.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 440)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(.ultraThinMaterial, in: Capsule())
+                    // A capsule for a line, rounded corners for a longer message that wraps.
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .padding(.horizontal, 24)
                     .padding(.bottom, 24)
             }
             .allowsHitTesting(false)

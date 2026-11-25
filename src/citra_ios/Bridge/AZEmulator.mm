@@ -113,8 +113,14 @@ bool IsArticPath(const std::string& path) {
  * classes find the image by itself (common/file_preload.h). Skipped, with a log line, when iOS
  * would leave the app too little memory for the game itself.
  */
-void PreloadGame(const std::string& filepath, bool keep_compressed,
-                 const std::atomic<bool>& stop, std::atomic<double>& progress) {
+/// Returns a message for the user when the game is not preloaded (empty otherwise).
+std::string PreloadGame(const std::string& filepath, bool keep_compressed,
+                        const std::atomic<bool>& stop, std::atomic<double>& progress) {
+    const std::string not_preloaded = "Could not load the game into memory, it is read from "
+                                      "storage as usual.";
+    const auto gigabytes = [](u64 bytes) {
+        return fmt::format("{:.1f} GB", static_cast<double>(bytes) / (1024.0 * 1024.0 * 1024.0));
+    };
     // What the game needs besides its file: its memory, textures and render targets at a higher
     // resolution, shaders, the code caches. iOS ends an app that goes over its limit.
     constexpr u64 HEADROOM = 1536ULL << 20;
@@ -135,7 +141,7 @@ void PreloadGame(const std::string& filepath, bool keep_compressed,
         source = std::make_unique<FileUtil::IOFile>(filepath, "rb");
         if (!source->IsOpen()) {
             LOG_WARNING(Frontend, "Preload: could not open {}", filepath);
-            return;
+            return not_preloaded;
         }
         image->kind = FileUtil::Preload::Image::Kind::Raw;
         image->filename = source->Filename();
@@ -143,7 +149,7 @@ void PreloadGame(const std::string& filepath, bool keep_compressed,
         stored_size = image->size;
     }
     if (image->size == 0) {
-        return;
+        return {};
     }
 
     const u64 available = os_proc_available_memory();
@@ -152,25 +158,36 @@ void PreloadGame(const std::string& filepath, bool keep_compressed,
                     "Preload: the game is {} MiB, iOS leaves the app {} MiB; it is read from "
                     "storage as usual (at least {} MiB stay free for the game itself)",
                     image->size >> 20, available >> 20, HEADROOM >> 20);
-        return;
+        if (available != 0 && is_compressed && !keep_compressed &&
+            stored_size + HEADROOM <= available) {
+            return fmt::format("Not enough memory for the decompressed game ({}). Turn on Keep "
+                               "Compressed in Memory to preload it. It is read from storage as "
+                               "usual.",
+                               gigabytes(image->size));
+        }
+        return fmt::format("Not enough memory to load the game into memory ({}, {} available). "
+                           "It is read from storage as usual.",
+                           gigabytes(image->size), gigabytes(available > HEADROOM
+                                                                 ? available - HEADROOM
+                                                                 : 0));
     }
     image->data.reset(new (std::nothrow) u8[image->size]);
     if (!image->data) {
         LOG_WARNING(Frontend, "Preload: could not allocate {} MiB", image->size >> 20);
-        return;
+        return not_preloaded;
     }
 
     const auto start = std::chrono::steady_clock::now();
     for (u64 offset = 0; offset < image->size; offset += CHUNK) {
         if (stop.load(std::memory_order_relaxed)) {
-            return;
+            return {};
         }
         const u64 count = std::min(CHUNK, image->size - offset);
         if (source->ReadAtBytes(image->data.get() + offset, count, offset) != count) {
             LOG_WARNING(Frontend, "Preload: reading {} failed at {} MiB, it is read from storage "
                                   "as usual",
                         filepath, offset >> 20);
-            return;
+            return not_preloaded;
         }
         progress = static_cast<double>(offset + count) / static_cast<double>(image->size);
     }
@@ -184,6 +201,7 @@ void PreloadGame(const std::string& filepath, bool keep_compressed,
                                   : std::string{}),
              seconds, os_proc_available_memory() >> 20);
     FileUtil::Preload::Add(std::move(image));
+    return {};
 }
 
 NSString* FindEntryWithLength(NSString* directory, NSUInteger length) {
@@ -1148,7 +1166,16 @@ const char* ThermalStateName() {
     FileUtil::Preload::Clear();
     if (_preloadGame && !IsArticPath(filepath)) {
         _preloadProgress = 0.0;
-        PreloadGame(filepath, _preloadGameCompressed, _stopRequested, _preloadProgress);
+        const std::string problem =
+            PreloadGame(filepath, _preloadGameCompressed, _stopRequested, _preloadProgress);
+        if (!problem.empty()) {
+            NSString* message = [NSString stringWithUTF8String:problem.c_str()];
+            dispatch_async(dispatch_get_main_queue(), ^{
+              if (self.onToast) {
+                  self.onToast(message);
+              }
+            });
+        }
         _preloadProgress = -1.0;
     }
 

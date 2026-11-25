@@ -221,6 +221,9 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
 /// Called on the main thread with a message for the user that is not an error stopping emulation
 /// (for example a failed save state).
 @property(nonatomic, copy, nullable) void (^onNotice)(NSString* title, NSString* message);
+/// Called on the main thread with a short message to show over the game for a few seconds (for
+/// example why the game could not be preloaded into memory).
+@property(nonatomic, copy, nullable) void (^onToast)(NSString* message);
 
 /// Called on the main thread when emulation stops on its own (shutdown or error). The error is
 /// nil on a regular shutdown.

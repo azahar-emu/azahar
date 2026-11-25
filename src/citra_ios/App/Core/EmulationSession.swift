@@ -103,6 +103,11 @@ final class EmulationSession: ObservableObject {
                 self?.notice = SessionNotice(title: title, message: message)
             }
         }
+        AZEmulator.shared.onToast = { [weak self] message in
+            Task { @MainActor in
+                self?.showToast(message, seconds: 6)
+            }
+        }
     }
 
     // MARK: Save states and cheats
@@ -199,11 +204,11 @@ final class EmulationSession: ObservableObject {
 
     private var toastTask: Task<Void, Never>?
 
-    func showToast(_ text: String) {
+    func showToast(_ text: String, seconds: Double = 2) {
         toast = text
         toastTask?.cancel()
         toastTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             if !Task.isCancelled {
                 toast = nil
             }
