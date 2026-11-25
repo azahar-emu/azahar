@@ -130,6 +130,10 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 /// With displaySync, every new frame of the game is shown for two of the 3DS's refreshes: a steady
 /// 30 FPS for games that run at 30 but hand over their frames unevenly.
 @property(nonatomic) BOOL frameCap30;
+/// With displaySync and without frameCap30: while the game draws at 30 FPS, each of its frames is
+/// shown for two refreshes like with the cap (the game itself is not held), and it follows the
+/// game again once that draws faster.
+@property(nonatomic) BOOL steadyThirty;
 /// With frameCap30, the game itself also runs at 30: its 3D work never finishes within one
 /// refresh, so games that adapt their frame rate do not make frames the cap would throw away.
 @property(nonatomic) BOOL frameCapHoldsGame;

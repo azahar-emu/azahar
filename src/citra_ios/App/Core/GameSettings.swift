@@ -55,6 +55,7 @@ struct GameOverrides: Codable, Equatable {
     /// RefreshRateOption raw value (0 Automatic, 60, 120).
     var refreshRate: Int?
     var frameCap30: Bool?
+    var steadyThirty: Bool?
     var frameCapHoldsGame: Bool?
     var shaderWaitMs: Int?
     var disableRightEyeRender: Bool?
@@ -146,6 +147,7 @@ struct GameOverrides: Codable, Equatable {
             config.displayRefreshRate = refreshRate == 0 ? screenMax : min(refreshRate, screenMax)
         }
         if let frameCap30 { config.frameCap30 = frameCap30 }
+        if let steadyThirty { config.steadyThirty = steadyThirty }
         if let frameCapHoldsGame { config.frameCapHoldsGame = frameCapHoldsGame }
         if let frameGenerationDisplayPaced {
             config.frameGenerationDisplayPaced = frameGenerationDisplayPaced

@@ -195,6 +195,11 @@ struct QualityOptions {
     /// With display sync, each new frame of the game is shown for this many of the 3DS's
     /// refreshes (2: a steady 30 FPS), whatever its own timing was. 0 follows the game.
     int frame_cap = 0;
+    /// With display sync and no frame cap: once the game is seen drawing at 30 FPS (a new frame
+    /// every second refresh of the 3DS, counted in emulated time), each of its frames is shown for
+    /// two refreshes, as with frame_cap 2, until it draws at 60 again. Without it a 30 FPS game
+    /// that hands over its frames unevenly (one after 1 refresh, the next after 3) judders.
+    bool steady_thirty = false;
     /// Frame generation with MetalFX's own frame interpolator instead of VideoToolbox's.
     bool frame_generation_metalfx = false;
     /// Frames of frame generation are shown by a display link at the display's refreshes.

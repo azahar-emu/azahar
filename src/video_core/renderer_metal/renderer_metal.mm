@@ -420,6 +420,9 @@ private:
     /// QualityOptions::display_sync. False when the display link could not be started.
     bool RenderDisplaySynced(CAMetalLayer* target, const Layout::FramebufferLayout& layout);
     void NoteFrameRhythm();
+    /// How many of the 3DS's refreshes each new frame of the game is shown for with display
+    /// sync: the frame cap, 2 while Steady 30 FPS sees a 30 FPS game, 0 to follow the game.
+    int FrameHold() const;
     /// When frame generation last made a pair of frames: the display link stays a little while
     /// after, so a short stretch without frame generation does not restart it.
     std::chrono::steady_clock::time_point fg_last_generated{};
@@ -538,6 +541,12 @@ private:
     // when they were not all the same (an uneven frame rhythm, see SwapBuffers).
     std::array<u32, 4> rhythm{};
     u32 rhythm_last_swaps{};
+    /// Steady 30 FPS (QualityOptions::steady_thirty): refreshes of the 3DS per new frame of the
+    /// game, smoothed, how many new frames in a row lasted a single refresh, and whether the game
+    /// counts as a 30 FPS game now.
+    f32 steady_cadence{1.0f};
+    u32 steady_short_run{};
+    bool steady_active{};
     std::chrono::steady_clock::time_point rhythm_start{};
     /// Display sync: the pictures waiting for the display link or on screen (it keeps up to two
     /// waiting and one shown, so four never overwrite one in use).
@@ -2653,6 +2662,24 @@ void RendererMetal::NoteFrameRhythm() {
         const u32 lasted = std::clamp(fg_swaps - rhythm_last_swaps, 1u, 4u);
         rhythm_last_swaps = fg_swaps;
         rhythm[lasted - 1]++;
+
+        // Steady 30 FPS. A 30 FPS game hands over a frame after 1 or 3 refreshes now and then
+        // (several times a second), which must not count as 60 FPS: it takes a smoothed cadence
+        // of 1.8 to start and below 1.4, or three single-refresh frames in a row, to stop.
+        steady_cadence = steady_cadence * 0.85f + static_cast<f32>(lasted) * 0.15f;
+        steady_short_run = lasted == 1 ? steady_short_run + 1 : 0;
+        const bool was_active = steady_active;
+        if (!steady_active) {
+            steady_active = steady_cadence >= 1.8f && lasted >= 2;
+        } else if (steady_cadence < 1.4f || steady_short_run >= 3) {
+            steady_active = false;
+        }
+        if (steady_active != was_active && GetQualityOptions().steady_thirty) {
+            LOG_INFO(Render, "Steady 30 FPS: {}", steady_active
+                                                      ? "the game draws at 30 FPS, each of its "
+                                                        "frames is shown for two refreshes"
+                                                      : "the game draws faster than 30 FPS again");
+        }
     }
     const auto now = std::chrono::steady_clock::now();
     if (now - rhythm_start < std::chrono::seconds{1}) {
@@ -2666,14 +2693,34 @@ void RendererMetal::NoteFrameRhythm() {
     if (kinds < 2 || std::abs(Settings::GetFrameLimit() - 100.0) > 1.0) {
         return;
     }
-    const int cap = GetQualityOptions().frame_cap;
+    const int hold = FrameHold();
     LOG_INFO(Render,
              "Game frame rhythm: {} frames lasted 1 refresh of the 3DS, {} lasted 2, {} lasted "
              "3, {} lasted 4 or more{}",
              counts[0], counts[1], counts[2], counts[3],
-             cap > 0 && GetQualityOptions().display_sync
-                 ? fmt::format(" (frame cap on: each is shown for {})", cap)
-                 : std::string{});
+             hold > 0 ? fmt::format(" ({}: each is shown for {})",
+                                    GetQualityOptions().frame_cap > 0 ? "frame cap on"
+                                                                      : "Steady 30 FPS",
+                                    hold)
+                      : std::string{});
+}
+
+int RendererMetal::FrameHold() const {
+    const QualityOptions& options = GetQualityOptions();
+    if (!options.display_sync) {
+        return 0;
+    }
+    if (options.frame_cap > 0) {
+        return options.frame_cap;
+    }
+    // Not with frame generation (it has its own handling of 30 FPS games), and not while fast
+    // forwarding or slowed down, where the frames do not come at the game's pace.
+    const double limit = Settings::GetFrameLimit();
+    if (options.steady_thirty && steady_active && options.frame_generation == 0 && limit > 0.0 &&
+        limit <= 110.0) {
+        return 2;
+    }
+    return 0;
 }
 
 bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
@@ -2707,8 +2754,8 @@ bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
     // unevenness of the game's own timing.
     const u32 swaps = std::clamp(fg_swaps - plain_last_swaps, 1u, 4u);
     plain_last_swaps = fg_swaps;
-    const int cap = GetQualityOptions().frame_cap;
-    const u32 held = cap > 0 ? static_cast<u32>(cap) : swaps;
+    const int hold = FrameHold();
+    const u32 held = hold > 0 ? static_cast<u32>(hold) : swaps;
 
     scheduler.Flush();
     scheduler.MarkPresentation();
@@ -3018,11 +3065,10 @@ void RendererMetal::SwapBuffers() {
         held_frames = 0;
     }
 
-    // The frame cap shows new frames of the game only (a repeated one would take a slot).
-    const bool skip_duplicates =
-        Settings::values.use_skip_duplicate_frames.GetValue() ||
-        (GetQualityOptions().frame_cap > 0 && GetQualityOptions().display_sync &&
-         GetQualityOptions().frame_generation == 0);
+    // The frame cap and Steady 30 FPS show new frames of the game only (a repeated one would take
+    // a slot).
+    const bool skip_duplicates = Settings::values.use_skip_duplicate_frames.GetValue() ||
+                                 (FrameHold() > 0 && GetQualityOptions().frame_generation == 0);
     if (!hold_frame && (!skip_duplicates || Core::PerfStats::game_frames_updated)) {
         if (layer_dirty) {
             AcquireLayer();

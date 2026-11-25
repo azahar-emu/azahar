@@ -260,19 +260,31 @@ final class EmulationSession: ObservableObject {
         if settings.useMotion {
             motion.start()
         }
-        statsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        statsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self, weak settings] _ in
             Task { @MainActor in
                 guard let self else { return }
-                self.fps = AZEmulator.shared.framesPerSecond
-                self.displayFps = AZEmulator.shared.displayFramesPerSecond
-                self.speed = AZEmulator.shared.emulationSpeed
-                self.gpuMs = AZEmulator.shared.gpuMilliseconds
-                self.stallMs = AZEmulator.shared.stallMilliseconds
-                self.paceJitterMs = AZEmulator.shared.paceJitterMilliseconds
-                self.draws = AZEmulator.shared.drawsPerFrame
+                // Only what changed is set: every set of a published value redraws the views of
+                // the game screen on the main thread, which competes with the emulation for the
+                // CPU. The numbers change once a second, and are only needed for the overlay.
+                if settings?.showPerformanceOverlay ?? true {
+                    self.setIfChanged(\.fps, AZEmulator.shared.framesPerSecond)
+                    self.setIfChanged(\.displayFps, AZEmulator.shared.displayFramesPerSecond)
+                    self.setIfChanged(\.speed, AZEmulator.shared.emulationSpeed)
+                    self.setIfChanged(\.gpuMs, AZEmulator.shared.gpuMilliseconds)
+                    self.setIfChanged(\.stallMs, AZEmulator.shared.stallMilliseconds)
+                    self.setIfChanged(\.paceJitterMs, AZEmulator.shared.paceJitterMilliseconds)
+                    self.setIfChanged(\.draws, AZEmulator.shared.drawsPerFrame)
+                }
                 let progress = AZEmulator.shared.shaderBuildProgress
-                self.shaderBuildProgress = progress >= 0 ? progress : nil
+                self.setIfChanged(\.shaderBuildProgress, progress >= 0 ? progress : nil)
             }
+        }
+    }
+
+    private func setIfChanged<Value: Equatable>(_ keyPath: ReferenceWritableKeyPath<EmulationSession, Value>,
+                                                _ value: Value) {
+        if self[keyPath: keyPath] != value {
+            self[keyPath: keyPath] = value
         }
     }
 
