@@ -23,7 +23,6 @@ bool CheckForOptions(const char* optstring, int argc, char* argv[]) {
     opterr = 0; // Temporarily suppress invalid option messages
 
     bool return_value = false;
-    static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
     int option;
     // getopt_long_only keeps long options from being interpreted as short options, they
     // are to be ignored and handled in citra_meta instead.
