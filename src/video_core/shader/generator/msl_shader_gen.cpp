@@ -981,6 +981,11 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
         }
 
         const auto sample_2d = [&](u32 unit, u32 coord) {
+            if (metal.hardware_lod) {
+                return fmt::format("        return tex{0}.sample(samp{0}, texcoord{1}, "
+                                   "bias(fs.tex_lod_bias[{0}]));\n",
+                                   unit, coord);
+            }
             return fmt::format("        return tex{0}.sample(samp{0}, texcoord{1}, "
                                "level(getLod(texcoord{1} * float2(tex{0}.get_width(), "
                                "tex{0}.get_height())) + fs.tex_lod_bias[{0}]));\n",

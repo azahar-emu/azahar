@@ -116,6 +116,12 @@ struct MetalFSConfig {
     /// depth, from the interpolated PICA clip Z (VSOutput::pica_z), and promises the GPU on which
     /// side of the rasterized depth it is so hidden fragments can be rejected before shading.
     u8 conservative_w_depth = 0;
+    /// 2D textures are sampled with the GPU's own level of detail (from the screen-space
+    /// derivatives, plus the PICA LOD bias) instead of the PICA formula computed in the shader
+    /// and passed as an explicit level. An explicit level turns off the sampler's anisotropic
+    /// filtering, so this is set while anisotropic filtering is on. The GPU's formula can pick a
+    /// slightly different mip level than the PICA's on surfaces seen at an angle.
+    bool hardware_lod = false;
 };
 
 /// MSL of FixQuaternion(float4 interpolated, float3 barycentric), which corrects opposite

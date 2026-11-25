@@ -500,6 +500,11 @@ PipelineCache::ShaderHandle PipelineCache::UseFragmentShader(const Pica::RegsInt
     if (metal_config.half_interpolants) {
         hash = Common::HashCombine(hash, 0x4A1F'1177'0000'0005ULL);
     }
+    // An explicit level in the shader turns off anisotropic filtering, see hardware_lod.
+    metal_config.hardware_lod = GetQualityOptions().max_anisotropy > 1;
+    if (metal_config.hardware_lod) {
+        hash = Common::HashCombine(hash, 0x10D0'A150'0000'0011ULL);
+    }
     hash = hash == 0 ? 1 : hash;
     if (const auto it = fragment_shaders.find(hash); it != fragment_shaders.end()) {
         return it->second;

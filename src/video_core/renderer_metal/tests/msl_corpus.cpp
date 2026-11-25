@@ -303,6 +303,7 @@ int main(int argc, char** argv) {
         metal_config.lut_texture = (i % 6) >= 3;
         // Conservative W-buffer depth, depth(less) or depth(greater) (used with W-buffering).
         metal_config.conservative_w_depth = static_cast<u8>(rng() % 3);
+        metal_config.hardware_lod = (rng() % 2) == 0;
 
         Write(out_dir, "fs_random_" + std::to_string(i) + ".metal",
               MSL::GenerateFragmentShader(config, user, profile, metal_config));
