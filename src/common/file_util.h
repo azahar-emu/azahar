@@ -298,6 +298,10 @@ enum class DirectorySeparator {
 
 class IOFileBase;
 
+namespace Preload {
+struct Image;
+}
+
 class IOType {
 public:
     enum class Type {
@@ -666,6 +670,9 @@ private:
     std::string filename;
     std::string openmode;
     u32 flags = 0;
+    /// The image of this file in memory (common/file_preload.h), when the game was preloaded and
+    /// this file is opened for reading only: reads are served from it. Looked up when opening.
+    std::shared_ptr<const Preload::Image> m_preload;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {

@@ -204,9 +204,9 @@ struct EmulationView: View {
             .allowsHitTesting(false)
         }
 
-        if let progress = session.shaderBuildProgress {
+        if let progress = session.gamePreloadProgress ?? session.shaderBuildProgress {
             VStack(spacing: 8) {
-                Text("Building Shaders")
+                Text(session.gamePreloadProgress != nil ? "Loading Game into Memory" : "Building Shaders")
                     .font(.headline)
                 ProgressView(value: progress)
                     .frame(width: 180)

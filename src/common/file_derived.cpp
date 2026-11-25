@@ -2,6 +2,8 @@
 // Licensed under GPLv3 or any later version
 // Refer to the LICENSE.txt file included.
 
+#include <algorithm>
+#include <cstring>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
 #include <cryptopp/sha.h>
@@ -12,6 +14,7 @@
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/file_derived.h"
+#include "common/file_preload.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
@@ -764,6 +767,22 @@ struct Z3DSReadIOFile::Z3DSReadIOFileImpl {
                       ZSTD_getErrorName(init_result));
             m_good = false;
         }
+
+        // The game held in memory, already decompressed (common/file_preload.h).
+        if (m_good && Preload::Any()) {
+            preload = Preload::FindDecompressed(file->Filename(), file->GetSize(),
+                                                header.uncompressed_size);
+        }
+    }
+
+    /// Copies from the preloaded contents, the number of bytes copied.
+    size_t CopyPreloaded(void* data, std::size_t length, u64 pos) const {
+        if (pos >= preload->size) {
+            return 0;
+        }
+        const size_t count = static_cast<size_t>(std::min<u64>(length, preload->size - pos));
+        std::memcpy(data, preload->data.get() + pos, count);
+        return count;
     }
 
     int OnZSTDRead(void* buffer, size_t n) {
@@ -785,6 +804,11 @@ struct Z3DSReadIOFile::Z3DSReadIOFileImpl {
     size_t Read(void* data, std::size_t length) {
         if (!m_good)
             return 0;
+        if (preload) {
+            const size_t count = CopyPreloaded(data, length, uncompressed_pos);
+            uncompressed_pos += count;
+            return count;
+        }
         size_t result = ZSTD_seekable_decompress(seekable, data, length, uncompressed_pos);
         if (ZSTD_isError(result)) {
             LOG_ERROR(Common_Filesystem, "ZSTD_seekable_decompress() error : {}",
@@ -798,6 +822,9 @@ struct Z3DSReadIOFile::Z3DSReadIOFileImpl {
     size_t ReadAt(void* data, std::size_t length, size_t pos) {
         if (!m_good)
             return 0;
+        if (preload) {
+            return CopyPreloaded(data, length, pos);
+        }
         // ReadAt should be thread safe, but seekable compression is not,
         // so we are forced to use a lock.
         std::scoped_lock lock(read_mutex);
@@ -844,6 +871,7 @@ struct Z3DSReadIOFile::Z3DSReadIOFileImpl {
     std::mutex read_mutex;
     u64 uncompressed_pos = 0;
     Z3DSMetadata metadata;
+    std::shared_ptr<const Preload::Image> preload;
 };
 
 bool Z3DSReadIOFile::IsZ3DSIOFile(IOFileBase* underlying_file) {
@@ -955,6 +983,10 @@ std::array<u8, 4> Z3DSReadIOFile::GetFileMagic() {
 
 const Z3DSMetadata& Z3DSReadIOFile::Metadata() {
     return impl->metadata;
+}
+
+u64 Z3DSReadIOFile::GetCompressedSize() const {
+    return impl->curr_file != nullptr ? impl->curr_file->GetSize() : 0;
 }
 
 template <class Archive>

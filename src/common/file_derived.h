@@ -359,6 +359,9 @@ public:
 
     const Z3DSMetadata& Metadata();
 
+    /// The size of the compressed file underneath (the key of a preloaded image).
+    u64 GetCompressedSize() const;
+
     bool Seek(s64 off, int origin) override;
     u64 Tell() const override;
 

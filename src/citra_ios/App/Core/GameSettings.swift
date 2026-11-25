@@ -66,6 +66,7 @@ struct GameOverrides: Codable, Equatable {
     var controllerProfile: String?
     var customTextures: Bool?
     var preloadTextures: Bool?
+    var preloadGame: Bool?
     var hiddenSurfaceRemoval: Bool?
     var drawOptimizations: Bool?
     var fastWBufferDepth: Bool?
@@ -159,6 +160,7 @@ struct GameOverrides: Codable, Equatable {
         if let skipDuplicateFrames { config.skipDuplicateFrames = skipDuplicateFrames }
         if let customTextures { config.customTextures = customTextures }
         if let preloadTextures { config.preloadTextures = preloadTextures }
+        if let preloadGame { config.preloadGame = preloadGame }
         if let hiddenSurfaceRemoval { config.hiddenSurfaceRemoval = hiddenSurfaceRemoval }
         if let drawOptimizations { config.drawOptimizations = drawOptimizations }
         if let fastWBufferDepth { config.fastWBufferDepth = fastWBufferDepth }

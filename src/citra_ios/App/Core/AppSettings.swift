@@ -241,6 +241,8 @@ final class AppSettings: ObservableObject {
     @Published var cpuJIT: Bool { didSet { save(cpuJIT, "cpuJIT") } }
     /// Compile the game code seen in earlier runs ahead of time (fewer stutters in known scenes).
     @Published var jitWarmup: Bool { didSet { save(jitWarmup, "jitWarmup") } }
+    /// Read the game into memory (decompressed) before it starts.
+    @Published var preloadGame: Bool { didSet { save(preloadGame, "preloadGame") } }
     @Published var cpuClockPercentage: Int { didSet { save(cpuClockPercentage, "cpuClockPercentage") } }
 
     // Graphics
@@ -496,6 +498,7 @@ final class AppSettings: ObservableObject {
 
         cpuJIT = value("cpuJIT", true)
         jitWarmup = value("jitWarmup", true)
+        preloadGame = value("preloadGame", false)
         cpuClockPercentage = value("cpuClockPercentage", 100)
 
         shaderJIT = value("shaderJIT", true)
@@ -679,6 +682,7 @@ final class AppSettings: ObservableObject {
         config.swapEyes3D = swapEyes3D
         config.useCPUJIT = cpuJIT
         config.jitWarmup = jitWarmup
+        config.preloadGame = preloadGame
         config.cpuClockPercentage = cpuClockPercentage
         config.useShaderJIT = shaderJIT
         config.useHardwareShaders = hardwareShaders

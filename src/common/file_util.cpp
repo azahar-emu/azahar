@@ -22,6 +22,7 @@
 #include "common/common_funcs.h"
 #include "common/common_paths.h"
 #include "common/error.h"
+#include "common/file_preload.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
@@ -1277,6 +1278,7 @@ void IOFile::Swap(IOFile& other) noexcept {
     std::swap(filename, other.filename);
     std::swap(openmode, other.openmode);
     std::swap(flags, other.flags);
+    std::swap(m_preload, other.m_preload);
 }
 
 bool IOFile::Open() {
@@ -1409,6 +1411,11 @@ bool IOFile::Open() {
         Seek(0, SEEK_SET);
     }
 
+    // A game held in memory: only for files opened to read, so nothing written is lost.
+    if (m_good && Preload::Any() && openmode.find_first_of("wa+") == std::string::npos) {
+        m_preload = Preload::FindRaw(filename, GetSize());
+    }
+
     return m_good;
 }
 
@@ -1417,6 +1424,7 @@ bool IOFile::Close() {
         m_good = false;
 
     m_file = nullptr;
+    m_preload.reset();
     return m_good;
 }
 
@@ -1459,6 +1467,16 @@ std::size_t IOFile::ReadImpl(void* data, std::size_t length, std::size_t elem_si
     }
 
     DEBUG_ASSERT(data != nullptr);
+
+    if (m_preload) {
+        // From memory; the stream position is kept so seeking and telling still work.
+        const u64 position = Tell();
+        const u64 left = position < m_preload->size ? m_preload->size - position : 0;
+        const std::size_t items = static_cast<std::size_t>(std::min<u64>(length, left / elem_size));
+        std::memcpy(data, m_preload->data.get() + position, items * elem_size);
+        Seek(static_cast<s64>(position + items * elem_size), SEEK_SET);
+        return items;
+    }
 
     std::size_t read = FREAD(data, elem_size, length, m_file);
     if (read != length) {
@@ -1506,6 +1524,16 @@ std::size_t IOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t o
     }
 
     DEBUG_ASSERT(data != nullptr);
+
+    if (m_preload) {
+        if (offset >= m_preload->size) {
+            return 0;
+        }
+        const std::size_t count =
+            static_cast<std::size_t>(std::min<u64>(byte_count, m_preload->size - offset));
+        std::memcpy(data, m_preload->data.get() + offset, count);
+        return count;
+    }
 
     std::size_t read;
 #ifdef HAVE_LIBRETRO_VFS

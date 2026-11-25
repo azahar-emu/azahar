@@ -158,6 +158,7 @@ struct GeneralSettingsView: View {
                     .disabled(!AZEmulator.isJITAvailable)
                 Toggle("JIT Warm-Up", isOn: $settings.jitWarmup)
                     .disabled(!settings.cpuJIT)
+                Toggle("Preload Game into Memory", isOn: $settings.preloadGame)
                 Stepper(value: $settings.cpuClockPercentage, in: 25...400, step: 25) {
                     LabeledContent("CPU Clock", value: "\(settings.cpuClockPercentage)%")
                 }
@@ -173,7 +174,11 @@ struct GeneralSettingsView: View {
                          + "which game code each game needed, and in later runs prepares it "
                          + "while the game waits for the next frame, so scenes you have been to "
                          + "before load without the stutter of new code. It is kept with the "
-                         + "shader cache.")
+                         + "shader cache. Preload Game into Memory reads the whole game into "
+                         + "memory when it starts (a compressed game decompressed), so it is "
+                         + "never read from storage while playing. Starting takes a few "
+                         + "seconds longer and it uses as much memory as the game is big; a "
+                         + "game too big for the memory iOS leaves the app is read as usual.")
                 }
             }
             .listRowBackground(LGRowBackground())

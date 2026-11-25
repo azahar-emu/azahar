@@ -10,6 +10,7 @@
     AZConfiguration* config = [[AZConfiguration alloc] init];
     config.useCPUJIT = YES;
     config.jitWarmup = YES;
+    config.preloadGame = NO;
     config.cpuClockPercentage = 100;
     config.useShaderJIT = YES;
     config.useHardwareShaders = YES;

@@ -202,6 +202,9 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
 @property(nonatomic, readonly) double displayFramesPerSecond;
 /// Progress (0 to 1) of building the cached shaders while a game boots, negative otherwise.
 @property(nonatomic, readonly) double shaderBuildProgress;
+/// Progress (0 to 1) of reading the game into memory while it boots (Preload Game into Memory),
+/// negative otherwise.
+@property(nonatomic, readonly) double gamePreloadProgress;
 /// Average GPU time, time the emulation thread waited for the GPU, and draw calls per frame.
 @property(nonatomic, readonly) double gpuMilliseconds;
 @property(nonatomic, readonly) double stallMilliseconds;

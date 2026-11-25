@@ -17,6 +17,8 @@ final class EmulationSession: ObservableObject {
     @Published private(set) var speed: Double = 0
     /// Progress of building the cached shaders while the game boots, nil when not building.
     @Published private(set) var shaderBuildProgress: Double?
+    /// Progress of reading the game into memory while it boots (Preload Game into Memory).
+    @Published private(set) var gamePreloadProgress: Double?
     /// Average GPU time and time the emulation thread waited for the GPU, per frame, in ms.
     @Published private(set) var gpuMs: Double = 0
     @Published private(set) var stallMs: Double = 0
@@ -280,6 +282,8 @@ final class EmulationSession: ObservableObject {
                 }
                 let progress = AZEmulator.shared.shaderBuildProgress
                 self.setIfChanged(\.shaderBuildProgress, progress >= 0 ? progress : nil)
+                let preload = AZEmulator.shared.gamePreloadProgress
+                self.setIfChanged(\.gamePreloadProgress, preload >= 0 ? preload : nil)
             }
         }
     }

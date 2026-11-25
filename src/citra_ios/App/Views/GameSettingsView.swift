@@ -129,6 +129,7 @@ struct GameSettingsView: View {
                                options: [0, 8, 17, 25]) { $0 == 0 ? "Off" : "\($0) ms" }
                 OverrideToggle("Custom Textures", value: $overrides.customTextures)
                 OverrideToggle("Preload Custom Textures", value: $overrides.preloadTextures)
+                OverrideToggle("Preload Game into Memory", value: $overrides.preloadGame)
                 OverrideToggle("Hidden Surface Removal", value: $overrides.hiddenSurfaceRemoval)
                 OverrideToggle("Fast W-Buffer Depth (Experimental)",
                                value: $overrides.fastWBufferDepth)
