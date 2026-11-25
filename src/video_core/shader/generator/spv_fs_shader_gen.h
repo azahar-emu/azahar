@@ -136,6 +136,12 @@ private:
 
     /// Pads the provided vector by inserting args at the end
     template <typename... Args>
+    [[nodiscard]] Id PadVectorF16(Id vector, Id pad_type_id, Args&&... args) {
+        return OpCompositeConstruct(pad_type_id, vector, ConstF16(args...));
+    }
+
+    /// Pads the provided vector by inserting args at the end
+    template <typename... Args>
     [[nodiscard]] Id PadVectorF32(Id vector, Id pad_type_id, Args&&... args) {
         return OpCompositeConstruct(pad_type_id, vector, ConstF32(args...));
     }
