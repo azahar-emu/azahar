@@ -11,6 +11,7 @@
     config.useCPUJIT = YES;
     config.jitWarmup = YES;
     config.preloadGame = NO;
+    config.preloadGameCompressed = NO;
     config.cpuClockPercentage = 100;
     config.useShaderJIT = YES;
     config.useHardwareShaders = YES;

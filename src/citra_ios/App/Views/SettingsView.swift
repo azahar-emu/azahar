@@ -159,6 +159,9 @@ struct GeneralSettingsView: View {
                 Toggle("JIT Warm-Up", isOn: $settings.jitWarmup)
                     .disabled(!settings.cpuJIT)
                 Toggle("Preload Game into Memory", isOn: $settings.preloadGame)
+                if settings.preloadGame {
+                    Toggle("Keep Compressed in Memory", isOn: $settings.preloadGameCompressed)
+                }
                 Stepper(value: $settings.cpuClockPercentage, in: 25...400, step: 25) {
                     LabeledContent("CPU Clock", value: "\(settings.cpuClockPercentage)%")
                 }
@@ -178,7 +181,10 @@ struct GeneralSettingsView: View {
                          + "memory when it starts (a compressed game decompressed), so it is "
                          + "never read from storage while playing. Starting takes a few "
                          + "seconds longer and it uses as much memory as the game is big; a "
-                         + "game too big for the memory iOS leaves the app is read as usual.")
+                         + "game too big for the memory iOS leaves the app is read as usual. "
+                         + "Keep Compressed in Memory keeps a compressed game (.zcci, .zcxi) as it "
+                         + "is stored: it takes much less memory and starts faster, and is still "
+                         + "decompressed as the game reads it.")
                 }
             }
             .listRowBackground(LGRowBackground())

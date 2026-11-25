@@ -243,6 +243,8 @@ final class AppSettings: ObservableObject {
     @Published var jitWarmup: Bool { didSet { save(jitWarmup, "jitWarmup") } }
     /// Read the game into memory (decompressed) before it starts.
     @Published var preloadGame: Bool { didSet { save(preloadGame, "preloadGame") } }
+    /// With preloadGame: keep a compressed game compressed in memory (less memory).
+    @Published var preloadGameCompressed: Bool { didSet { save(preloadGameCompressed, "preloadGameCompressed") } }
     @Published var cpuClockPercentage: Int { didSet { save(cpuClockPercentage, "cpuClockPercentage") } }
 
     // Graphics
@@ -499,6 +501,7 @@ final class AppSettings: ObservableObject {
         cpuJIT = value("cpuJIT", true)
         jitWarmup = value("jitWarmup", true)
         preloadGame = value("preloadGame", false)
+        preloadGameCompressed = value("preloadGameCompressed", false)
         cpuClockPercentage = value("cpuClockPercentage", 100)
 
         shaderJIT = value("shaderJIT", true)
@@ -683,6 +686,7 @@ final class AppSettings: ObservableObject {
         config.useCPUJIT = cpuJIT
         config.jitWarmup = jitWarmup
         config.preloadGame = preloadGame
+        config.preloadGameCompressed = preloadGameCompressed
         config.cpuClockPercentage = cpuClockPercentage
         config.useShaderJIT = shaderJIT
         config.useHardwareShaders = hardwareShaders

@@ -108,12 +108,13 @@ bool IsArticPath(const std::string& path) {
 /**
  * Preload Game into Memory: reads the game into memory before it is loaded, so playing never reads
  * it from storage. A compressed game (.zcci, .zcxi, or one in a .bcci bundle) is kept decompressed,
- * so it is not decompressed while playing either; anything else is kept as the file is. The file
+ * so it is not decompressed while playing either, unless `keep_compressed` asks to keep it as it
+ * is stored (less memory, decompressed as it is read); anything else is kept as the file is. The file
  * classes find the image by itself (common/file_preload.h). Skipped, with a log line, when iOS
  * would leave the app too little memory for the game itself.
  */
-void PreloadGame(const std::string& filepath, const std::atomic<bool>& stop,
-                 std::atomic<double>& progress) {
+void PreloadGame(const std::string& filepath, bool keep_compressed,
+                 const std::atomic<bool>& stop, std::atomic<double>& progress) {
     // What the game needs besides its file: its memory, textures and render targets at a higher
     // resolution, shaders, the code caches. iOS ends an app that goes over its limit.
     constexpr u64 HEADROOM = 1536ULL << 20;
@@ -122,8 +123,9 @@ void PreloadGame(const std::string& filepath, const std::atomic<bool>& stop,
     auto image = std::make_shared<FileUtil::Preload::Image>();
     std::unique_ptr<FileUtil::IOFileBase> source = FileSys::NCCHContainer::AutoOpenNCCHNCSD(filepath);
     u64 stored_size = 0;
-    if (auto* const compressed = dynamic_cast<FileUtil::Z3DSReadIOFile*>(source.get());
-        compressed != nullptr && compressed->IsGood()) {
+    auto* const compressed = dynamic_cast<FileUtil::Z3DSReadIOFile*>(source.get());
+    const bool is_compressed = compressed != nullptr && compressed->IsGood();
+    if (is_compressed && !keep_compressed) {
         image->kind = FileUtil::Preload::Image::Kind::Decompressed;
         image->filename = compressed->Filename();
         image->source_size = compressed->GetCompressedSize();
@@ -178,7 +180,8 @@ void PreloadGame(const std::string& filepath, const std::atomic<bool>& stop,
              image->size >> 20,
              image->kind == FileUtil::Preload::Image::Kind::Decompressed
                  ? fmt::format(", decompressed from {} MiB", stored_size >> 20)
-                 : std::string{},
+                 : (is_compressed ? std::string{" (kept compressed, decompressed as it is read)"}
+                                  : std::string{}),
              seconds, os_proc_available_memory() >> 20);
     FileUtil::Preload::Add(std::move(image));
 }
@@ -394,6 +397,7 @@ const char* ThermalStateName() {
     BOOL _jitWarmup;
     /// Read the game into memory before it starts (see PreloadGame).
     BOOL _preloadGame;
+    BOOL _preloadGameCompressed;
     // Fractions of the custom layouts, see AZConfiguration (guarded by _surfaceMutex).
     std::array<float, 8> _customLandscape;
     std::array<float, 8> _customPortrait;
@@ -821,6 +825,7 @@ const char* ThermalStateName() {
     _secondaryLayoutMode = configuration.secondaryDisplayLayout;
     _jitWarmup = configuration.jitWarmup;
     _preloadGame = configuration.preloadGame;
+    _preloadGameCompressed = configuration.preloadGameCompressed;
     values.preload_textures = configuration.preloadTextures;
     values.dump_textures = configuration.dumpTextures;
 
@@ -1143,7 +1148,7 @@ const char* ThermalStateName() {
     FileUtil::Preload::Clear();
     if (_preloadGame && !IsArticPath(filepath)) {
         _preloadProgress = 0.0;
-        PreloadGame(filepath, _stopRequested, _preloadProgress);
+        PreloadGame(filepath, _preloadGameCompressed, _stopRequested, _preloadProgress);
         _preloadProgress = -1.0;
     }
 

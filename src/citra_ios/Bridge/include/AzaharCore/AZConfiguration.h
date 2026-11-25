@@ -35,6 +35,9 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 /// The game file is read into memory before the game starts (decompressed, when it is a
 /// compressed file), and the game reads from there. Skipped when iOS has too little memory left.
 @property(nonatomic) BOOL preloadGame;
+/// With preloadGame: a compressed game is kept in memory as it is stored (less memory), and is
+/// still decompressed as it is read.
+@property(nonatomic) BOOL preloadGameCompressed;
 @property(nonatomic) NSInteger cpuClockPercentage;
 
 // Graphics
