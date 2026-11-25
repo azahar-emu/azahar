@@ -16,6 +16,7 @@ import android.graphics.drawable.VectorDrawable
 import android.os.Build
 import android.util.AttributeSet
 import android.util.DisplayMetrics
+import android.view.DisplayCutout
 import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.SurfaceView
@@ -728,7 +729,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             displayWidth = displayMetrics.widthPixels.toFloat()
             displayHeight = displayMetrics.heightPixels.toFloat()
         }
-        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        val cutout: DisplayCutout? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display.cutout
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay.cutout
+        }
         val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
         val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
         var maxX = displayWidth - marginsX
@@ -903,7 +909,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             displayWidth = displayMetrics.widthPixels.toFloat()
             displayHeight = displayMetrics.heightPixels.toFloat()
         }
-        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        val cutout: DisplayCutout? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display.cutout
+        } else {
+            @Suppress("DEPRECATION")
+            (context as Activity).windowManager.defaultDisplay.cutout
+        }
         val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
         val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
         var maxX = displayWidth - marginsX
