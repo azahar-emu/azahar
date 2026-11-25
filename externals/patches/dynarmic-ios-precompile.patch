@@ -1,0 +1,109 @@
+diff --git a/src/dynarmic/backend/arm64/a32_interface.cpp b/src/dynarmic/backend/arm64/a32_interface.cpp
+index 2ca4080..2b9e2a4 100644
+--- a/src/dynarmic/backend/arm64/a32_interface.cpp
++++ b/src/dynarmic/backend/arm64/a32_interface.cpp
+@@ -65,6 +65,15 @@ struct Jit::Impl final {
+         return hr;
+     }
+ 
++    int Precompile(std::uint64_t descriptor, std::size_t keep_free) {
++        if (jit_interface->is_executing) {
++            return 2;
++        }
++        // Pending invalidations first, so the block is not compiled from code about to go away.
++        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&halt_reason)));
++        return current_address_space.Precompile(IR::LocationDescriptor{descriptor}, keep_free) ? 0 : 1;
++    }
++
+     void ClearCache() {
+         std::unique_lock lock{invalidation_mutex};
+         invalidate_entire_cache = true;
+@@ -188,6 +197,10 @@ void Jit::ClearCache() {
+     impl->ClearCache();
+ }
+ 
++int Jit::Precompile(std::uint64_t descriptor, std::size_t keep_free) {
++    return impl->Precompile(descriptor, keep_free);
++}
++
+ void Jit::InvalidateCacheRange(std::uint32_t start_address, std::size_t length) {
+     impl->InvalidateCacheRange(start_address, length);
+ }
+diff --git a/src/dynarmic/backend/arm64/address_space.cpp b/src/dynarmic/backend/arm64/address_space.cpp
+index 49f6c95..7528836 100644
+--- a/src/dynarmic/backend/arm64/address_space.cpp
++++ b/src/dynarmic/backend/arm64/address_space.cpp
+@@ -21,8 +21,9 @@
+ #include "dynarmic/interface/exclusive_monitor.h"
+ 
+ namespace Dynarmic {
+-/// Called with the time each newly compiled block took, when set (Azahar).
+-void (*g_block_compile_hook)(std::uint64_t nanoseconds) = nullptr;
++/// Called with the location descriptor and the time of each newly compiled block, when set
++/// (Azahar: the slow frame log and the JIT warm-up profile).
++void (*g_block_compile_hook)(std::uint64_t descriptor, std::uint64_t nanoseconds) = nullptr;
+ /// Called when a code cache is thrown away: full (1, with the bytes it held and its size) or on
+ /// request (0, the cache was invalidated as a whole).
+ void (*g_cache_clear_hook)(int full, std::uint64_t used, std::uint64_t size) = nullptr;
+@@ -81,13 +82,25 @@ CodePtr AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
+     IR::Block ir_block = GenerateIR(descriptor);
+     const EmittedBlockInfo block_info = Emit(std::move(ir_block));
+     if (hook) {
+-        hook(static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
++        hook(descriptor.Value(),
++             static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                             std::chrono::steady_clock::now() - start)
+                                             .count()));
+     }
+     return block_info.entry_point;
+ }
+ 
++bool AddressSpace::Precompile(IR::LocationDescriptor descriptor, size_t keep_free) {
++    if (Get(descriptor)) {
++        return true;
++    }
++    if (GetRemainingSize() < keep_free) {
++        return false;
++    }
++    GetOrEmit(descriptor);
++    return true;
++}
++
+ void AddressSpace::InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>& descriptors) {
+     UnprotectCodeMemory();
+ 
+diff --git a/src/dynarmic/backend/arm64/address_space.h b/src/dynarmic/backend/arm64/address_space.h
+index 835566b..d7d317c 100644
+--- a/src/dynarmic/backend/arm64/address_space.h
++++ b/src/dynarmic/backend/arm64/address_space.h
+@@ -39,6 +39,10 @@ public:
+ 
+     CodePtr GetOrEmit(IR::LocationDescriptor descriptor);
+ 
++    /// Azahar: GetOrEmit ahead of time, false (nothing done) when less than keep_free bytes of
++    /// the code cache are left.
++    bool Precompile(IR::LocationDescriptor descriptor, size_t keep_free);
++
+     void InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>& descriptors);
+ 
+     void ClearCache();
+diff --git a/src/dynarmic/interface/A32/a32.h b/src/dynarmic/interface/A32/a32.h
+index e1c5b40..2801c87 100644
+--- a/src/dynarmic/interface/A32/a32.h
++++ b/src/dynarmic/interface/A32/a32.h
+@@ -47,6 +47,15 @@ public:
+      */
+     void InvalidateCacheRange(std::uint32_t start_address, std::size_t length);
+ 
++    /**
++     * Azahar: compiles the block at a location descriptor (a value the block compile hook
++     * reported) ahead of time, unless it is compiled already. Must not be called while executing.
++     * @param keep_free Nothing is compiled when the code cache has less room left than this.
++     * @return 0 when the block is compiled now (or was already), 1 when the code cache is too
++     *         full, 2 while executing.
++     */
++    int Precompile(std::uint64_t descriptor, std::size_t keep_free);
++
+     /**
+      * Reset CPU state to state at startup. Does not clear code cache.
+      * Cannot be called from a callback.

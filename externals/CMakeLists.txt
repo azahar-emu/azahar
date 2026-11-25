@@ -124,12 +124,24 @@ if (IOS AND NOT USE_SYSTEM_OAKNUT AND NOT USE_SYSTEM_DYNARMIC)
     endfunction()
     azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/oaknut
                        ${CMAKE_CURRENT_SOURCE_DIR}/patches/oaknut-ios-dual-mapping.patch)
-    azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
-                       ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-dual-mapping.patch)
-    # Reports the time compiling each new block takes (the slow frame log). After the patch
-    # above, which changes the same file.
-    azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
-                       ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-jit-timing.patch)
+    # The dynarmic patches build on each other. Once the last one is in, the earlier ones no
+    # longer reverse cleanly on their own, so a tree with all of them is left as it is.
+    execute_process(COMMAND ${GIT_EXECUTABLE} apply --reverse --check
+                            ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-precompile.patch
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
+                    RESULT_VARIABLE dynarmic_patched OUTPUT_QUIET ERROR_QUIET)
+    if (NOT dynarmic_patched EQUAL 0)
+        azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
+                           ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-dual-mapping.patch)
+        # Reports the time compiling each new block takes (the slow frame log). After the patch
+        # above, which changes the same file.
+        azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
+                           ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-jit-timing.patch)
+        # Compiling blocks ahead of time (the JIT warm-up of src/citra_ios/Bridge/jit_warmup.h),
+        # and the location of each new block for the hook of the patch above.
+        azahar_apply_patch(${CMAKE_CURRENT_SOURCE_DIR}/dynarmic
+                           ${CMAKE_CURRENT_SOURCE_DIR}/patches/dynarmic-ios-precompile.patch)
+    endif()
 endif()
 
 # Oaknut

@@ -9,6 +9,7 @@
 + (instancetype)defaultConfiguration {
     AZConfiguration* config = [[AZConfiguration alloc] init];
     config.useCPUJIT = YES;
+    config.jitWarmup = YES;
     config.cpuClockPercentage = 100;
     config.useShaderJIT = YES;
     config.useHardwareShaders = YES;

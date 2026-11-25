@@ -7,6 +7,9 @@
 #include <map>
 #include <memory>
 #include <dynarmic/interface/A32/a32.h>
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/dynarmic/arm_dynarmic_cp15.h"
@@ -59,6 +62,14 @@ public:
     bool HasSingleInstructionBreakAccuracy() override {
         return false;
     }
+
+#if defined(__APPLE__) && TARGET_OS_IPHONE
+    /// Compiles a block of the current process ahead of time (the JIT warm-up of the iOS app, a
+    /// patch of dynarmic). See Dynarmic::A32::Jit::Precompile for the arguments and results.
+    int Precompile(u64 descriptor, std::size_t keep_free) {
+        return jit != nullptr ? jit->Precompile(descriptor, keep_free) : 2;
+    }
+#endif
 
 protected:
     std::shared_ptr<Memory::PageTable> GetPageTable() const override;

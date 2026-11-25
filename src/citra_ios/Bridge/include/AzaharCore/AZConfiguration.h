@@ -29,6 +29,9 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
 
 // CPU
 @property(nonatomic) BOOL useCPUJIT;
+/// With the CPU JIT: the blocks of game code compiled in earlier runs of a game are compiled
+/// ahead of time, while the game waits for the next frame, instead of when it first needs them.
+@property(nonatomic) BOOL jitWarmup;
 @property(nonatomic) NSInteger cpuClockPercentage;
 
 // Graphics

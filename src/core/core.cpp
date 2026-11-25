@@ -337,6 +337,9 @@ void System::ProcessPendingWork() {
 void System::ProcessPendingWorkUntil(std::chrono::steady_clock::time_point deadline) {
     do {
         ProcessPendingWork();
+        if (idle_work) {
+            idle_work(deadline);
+        }
     } while (pending_work_event.WaitUntil(deadline));
 }
 

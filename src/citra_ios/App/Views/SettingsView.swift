@@ -156,6 +156,8 @@ struct GeneralSettingsView: View {
                 }
                 Toggle("CPU JIT", isOn: $settings.cpuJIT)
                     .disabled(!AZEmulator.isJITAvailable)
+                Toggle("JIT Warm-Up", isOn: $settings.jitWarmup)
+                    .disabled(!settings.cpuJIT)
                 Stepper(value: $settings.cpuClockPercentage, in: 25...400, step: 25) {
                     LabeledContent("CPU Clock", value: "\(settings.cpuClockPercentage)%")
                 }
@@ -167,7 +169,11 @@ struct GeneralSettingsView: View {
                          + "debugger app when this app starts without JIT, and asks it to attach. "
                          + "The debugger has to be set up already (its pairing file, VPN). The "
                          + "link formats are guesses: if the app doesn't react, use Custom URL "
-                         + "with the link from that app's documentation.")
+                         + "with the link from that app's documentation. JIT Warm-Up remembers "
+                         + "which game code each game needed, and in later runs prepares it "
+                         + "while the game waits for the next frame, so scenes you have been to "
+                         + "before load without the stutter of new code. It is kept with the "
+                         + "shader cache.")
                 }
             }
             .listRowBackground(LGRowBackground())

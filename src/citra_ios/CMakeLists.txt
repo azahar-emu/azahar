@@ -36,6 +36,8 @@ add_library(azahar_ios_bridge STATIC
     Bridge/emu_window_ios.h
     Bridge/input_ios.cpp
     Bridge/input_ios.h
+    Bridge/jit_warmup.cpp
+    Bridge/jit_warmup.h
     Bridge/include/AzaharCore/AzaharCore.h
     Bridge/include/AzaharCore/AZConfiguration.h
     Bridge/include/AzaharCore/AZEmulator.h

@@ -31,6 +31,7 @@
 #include "citra_ios/Bridge/mic_ios.h"
 #include "citra_ios/Bridge/emu_window_ios.h"
 #include "citra_ios/Bridge/input_ios.h"
+#include "citra_ios/Bridge/jit_warmup.h"
 #include "common/apple_jit.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
@@ -42,7 +43,7 @@
 #if defined(__aarch64__)
 namespace Dynarmic {
 /// Defined by externals/patches/dynarmic-ios-jit-timing.patch.
-extern void (*g_block_compile_hook)(std::uint64_t nanoseconds);
+extern void (*g_block_compile_hook)(std::uint64_t descriptor, std::uint64_t nanoseconds);
 extern void (*g_cache_clear_hook)(int full, std::uint64_t used, std::uint64_t size);
 } // namespace Dynarmic
 #endif
@@ -306,6 +307,8 @@ const char* ThermalStateName() {
     Settings::LayoutOption _userLayoutOption;
     bool _userSwapScreens;
     NSInteger _secondaryLayoutMode;
+    /// Compile blocks of game code seen in earlier runs ahead of time (see jit_warmup.h).
+    BOOL _jitWarmup;
     // Fractions of the custom layouts, see AZConfiguration (guarded by _surfaceMutex).
     std::array<float, 8> _customLandscape;
     std::array<float, 8> _customPortrait;
@@ -726,6 +729,7 @@ const char* ThermalStateName() {
                  gpu_floor_us / 1000.0);
     }
     _secondaryLayoutMode = configuration.secondaryDisplayLayout;
+    _jitWarmup = configuration.jitWarmup;
     values.preload_textures = configuration.preloadTextures;
     values.dump_textures = configuration.dumpTextures;
 
@@ -1119,9 +1123,17 @@ const char* ThermalStateName() {
     system.RegisterCoreLoopThreadId();
     Common::FrameCost::MarkEmulationThread();
 #if defined(__aarch64__)
-    // The JIT reports how long compiling each new block of game code takes (a patch of dynarmic).
-    Dynarmic::g_block_compile_hook = [](std::uint64_t nanoseconds) {
-        if (Common::FrameCost::t_emulation_thread) {
+    // The blocks of game code compiled in earlier runs, compiled ahead of time in this one. Next
+    // to the shader cache, so Clear Shader Cache clears it too.
+    JitWarmup::Start(system,
+                     fmt::format("{}metal/jit/{:016X}.bin",
+                                 FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir), program_id),
+                     _jitWarmup && Settings::values.use_cpu_jit.GetValue());
+    // The JIT reports each new block of game code and how long compiling it took (a patch of
+    // dynarmic): for the slow frame log and the warm-up's profile.
+    Dynarmic::g_block_compile_hook = [](std::uint64_t descriptor, std::uint64_t nanoseconds) {
+        const bool ahead_of_time = JitWarmup::OnBlockCompiled(descriptor, nanoseconds);
+        if (!ahead_of_time && Common::FrameCost::t_emulation_thread) {
             Common::FrameCost::Add(Common::FrameCost::Kind::JitCompile, nanoseconds);
         }
     };
@@ -1241,6 +1253,7 @@ const char* ThermalStateName() {
         if (now - last_stats_time >= std::chrono::seconds(1)) {
             const double window = std::chrono::duration<double>(now - last_stats_time).count();
             last_stats_time = now;
+            JitWarmup::Tick();
             const auto stats = system.GetAndResetPerfStats();
             _speed = stats.emulation_speed * 100.0;
             _fps = stats.game_fps;
@@ -1293,6 +1306,7 @@ const char* ThermalStateName() {
             }
         }
     }
+    JitWarmup::Stop();
     return error;
 }
 

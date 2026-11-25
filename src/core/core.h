@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -248,6 +249,21 @@ public:
         for (const auto& cpu : cpu_cores) {
             cpu->InvalidateCacheRange(start_address, length);
         }
+        if (code_invalidated) {
+            code_invalidated(start_address, length);
+        }
+    }
+
+    /// Work for the time the emulation thread waits for the next frame (in the frame limiter),
+    /// called with the time it has to be done by. Empty for none.
+    void RegisterIdleWork(std::function<void(std::chrono::steady_clock::time_point)> func) {
+        idle_work = std::move(func);
+    }
+
+    /// Called with each range InvalidateCacheRange invalidates (code that was loaded or
+    /// patched). Empty for none.
+    void RegisterCodeInvalidated(std::function<void(u32, std::size_t)> func) {
+        code_invalidated = std::move(func);
     }
 
     /**
@@ -585,6 +601,8 @@ private:
 
     Common::Vec3<u8> info_led_color;
     std::function<void()> info_led_color_changed;
+    std::function<void(std::chrono::steady_clock::time_point)> idle_work;
+    std::function<void(u32, std::size_t)> code_invalidated;
 
     bool debug_next_process;
     int override_gdb_port = -1;
