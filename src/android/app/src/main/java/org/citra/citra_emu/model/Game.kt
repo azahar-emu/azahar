@@ -98,8 +98,8 @@ class Game(
     companion object {
         val extensions: Set<String> = HashSet(
             listOf(
-                "3dsx", "app", "axf", "cci", "cxi", "elf",
-                "z3dsx", "zcci", "zcxi", "bcci", "bcxi", "3ds"
+                "3ds", "3dsx", "app", "axf", "bcci", "bcxi",
+                "cci", "cxi", "elf", "z3dsx", "zcci", "zcxi"
             )
         )
     }
