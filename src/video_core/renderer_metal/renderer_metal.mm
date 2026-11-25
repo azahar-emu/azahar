@@ -64,6 +64,8 @@ struct DisplayPacer {
         /// not wait behind the next frames of the game on the GPU.
         id<MTLEvent> event = nil;
         u64 value = 0;
+        /// Already waited a refresh for its GPU work (see the display link's delegate).
+        bool deferred = false;
     };
     std::mutex mutex;
     std::deque<Frame> waiting;
@@ -82,6 +84,9 @@ struct DisplayPacer {
     bool missed_this_frame = false;
     double queued_sum = 0.0; ///< Frames waiting when one was taken, summed
     std::atomic<u32> presented_late{0};
+    /// When a frame last reached the screen later than asked (presentation time), 0 for never.
+    std::atomic<double> last_late{0.0};
+    u32 deferred = 0; ///< Frames that waited a refresh for their GPU work, this second
     u32 late_seconds = 0; ///< Seconds in a row with frames shown late
     double last_log = 0.0;
     /// Draws a frame over the whole drawable.
@@ -123,14 +128,16 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
         } else if (target - p->last_log >= 1.0) {
             const u32 late = p->presented_late.exchange(0);
             // Only seconds with something to report: a frame missing or late.
-            if (p->not_ready > 0 || late > 0) {
+            if (p->not_ready > 0 || late > 0 || p->deferred > 0) {
                 LOG_INFO(Render,
                          "Display link: {} refreshes, {} frames shown ({:.1f} waiting on "
                          "average), {} times no frame was ready when one was due, {} shown at a "
-                         "later refresh than asked (lead {:.0f} refreshes)",
+                         "later refresh than asked (lead {:.0f} refreshes), {} waited a refresh "
+                         "for the GPU",
                          p->refreshes, p->shown, p->shown > 0 ? p->queued_sum / p->shown : 0.0,
-                         p->not_ready, late, link.preferredFrameLatency);
+                         p->not_ready, late, link.preferredFrameLatency, p->deferred);
             }
+            p->deferred = 0;
             p->refreshes = 0;
             p->shown = 0;
             p->not_ready = 0;
@@ -149,6 +156,20 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
         }
         if (p->waiting.empty() || !due || !p->primed) {
             return; // The frame on screen stays for this refresh
+        }
+        // A frame held for several refreshes (30 FPS) reached the screen late a moment ago: its
+        // GPU work was not done in time (the GPU lowers its clock when it is idle half the time,
+        // as at 30 FPS). Then a frame whose GPU work is not finished yet waits one refresh, once,
+        // which moves the frames a refresh later for good instead of one of them arriving late
+        // again and again. Not at 60 FPS, whose frames would all fall a refresh behind.
+        Metal::DisplayPacer::Frame& front = p->waiting.front();
+        if (!front.deferred && p->slot > 0.025 && front.event != nil &&
+            target - p->last_late.load(std::memory_order_relaxed) < 10.0 &&
+            [(id)front.event conformsToProtocol:@protocol(MTLSharedEvent)] &&
+            [(id<MTLSharedEvent>)front.event signaledValue] < front.value) {
+            front.deferred = true;
+            p->deferred++;
+            return;
         }
         p->queued_sum += static_cast<double>(p->waiting.size());
         next = p->waiting.front();
@@ -179,8 +200,8 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
       Metal::RecordPresentedTime(presented.presentedTime);
       if (presented.presentedTime > target + 0.002) {
           late->fetch_add(1, std::memory_order_relaxed);
+          keep->last_late.store(presented.presentedTime, std::memory_order_relaxed);
       }
-      (void)keep;
     }];
     [buffer presentDrawable:drawable];
     [buffer commit];
@@ -2778,7 +2799,8 @@ bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
 #endif
     // The display link draws it on a queue of its own once this event says it is finished.
     if (ds_event == nil) {
-        ds_event = [device newEvent];
+        // Shared: the display link reads how far it got (signaledValue).
+        ds_event = [device newSharedEvent];
     }
     ds_event_value++;
     [scheduler.CommandBuffer() encodeSignalEvent:ds_event value:ds_event_value];
@@ -2830,7 +2852,7 @@ bool RendererMetal::RenderPacedPlain(const Layout::FramebufferLayout& layout) {
 #endif
     // The display link draws it on a queue of its own once this event says it is finished.
     if (ds_event == nil) {
-        ds_event = [instance.GetDevice() newEvent];
+        ds_event = [instance.GetDevice() newSharedEvent];
     }
     ds_event_value++;
     [scheduler.CommandBuffer() encodeSignalEvent:ds_event value:ds_event_value];
