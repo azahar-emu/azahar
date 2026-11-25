@@ -110,7 +110,8 @@ CPU recompiler (dynarmic) and the shader JIT. Choose one:
    does not help you get them.
 2. Import games with the **+** button, or copy them to **Files › On My iPhone › Neroli › ROMs**.
    Supported formats: `.3ds`/`.cci`, `.cxi`, `.3dsx`, `.app`, `.elf`/`.axf`, their compressed
-   `.z*` versions, and `.cia` to install.
+   `.z*` versions, `.bcci`/`.bcxi` bundles (a game with its updates and DLC in one file), and
+   `.cia`/`.bcia` to install.
 3. Optionally, copy `sysdata`, `nand` and `sdmc` from a desktop Azahar install to
    **Files › Neroli › Neroli**. The folder layout is the same.
 

@@ -89,6 +89,8 @@ enum FileLocations {
     /// File extensions the emulator can boot.
     static let bootableExtensions: Set<String> = [
         "3ds", "cci", "cxi", "3dsx", "app", "elf", "axf", "zcci", "zcxi", "z3dsx",
+        // Bundles: the game with its updates and DLC in one file, used without installing them.
+        "bcci", "bcxi",
     ]
 
     /// Metal shader caches of every game (see the Metal PipelineCache).
@@ -114,7 +116,8 @@ enum FileLocations {
     }
 
     /// Installable titles (games, updates and DLC) the emulator installs instead of importing.
-    static let ciaExtensions: Set<String> = ["cia", "zcia"]
+    /// A .bcia bundle holds several CIAs (a game with its updates and DLC), all installed.
+    static let ciaExtensions: Set<String> = ["cia", "zcia", "bcia"]
 
     /// Where the installed titles live.
     static var installedTitlesDirectory: URL {

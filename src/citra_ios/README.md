@@ -56,8 +56,10 @@ compiles every shader the Metal backend can generate with Apple's offline Metal 
   regular Azahar user directory (a folder named Azahar from earlier versions is moved there
   the first time Neroli starts), so you can copy `sysdata`, `nand` and `sdmc` over from a desktop
   install.
-- Supported formats: `.3ds/.cci`, `.cxi`, `.3dsx`, `.app`, `.elf/.axf` and their compressed
-  `.z*` variants. `.cia` files (games, updates and DLC) are installed to the virtual SD card.
+- Supported formats: `.3ds/.cci`, `.cxi`, `.3dsx`, `.app`, `.elf/.axf`, their compressed
+  `.z*` variants and `.bcci/.bcxi` bundles (a game with its updates and DLC, used without
+  installing them). `.cia` and `.bcia` files (games, updates and DLC) are installed to the
+  virtual SD card.
 
 ### JIT
 
