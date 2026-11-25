@@ -781,9 +781,9 @@ void PipelineCache::DumpShaders() {
     const std::string dir = fmt::format("{}shader_dump/{:016X}/",
                                         FileUtil::GetUserPath(FileUtil::UserPath::UserDir),
                                         title_id);
-    // Only the current ones: the ranking changes as the game goes on.
-    FileUtil::DeleteDirRecursively(dir);
-    FileUtil::CreateFullPath(dir);
+    // The files are written on a worker thread: deleting and writing them on the emulation thread
+    // made a 15-20 ms frame every time (every 10 seconds).
+    std::vector<std::pair<std::string, std::string>> files;
     std::string index = fmt::format(
         "Most used shaders of {:016X} since the game started (vertex programs by vertices "
         "drawn, fragment programs by draws). Written again every 10 seconds or so.\n\n",
@@ -805,17 +805,24 @@ void PipelineCache::DumpShaders() {
             index += fmt::format("{}: {} draws, {} vertices{}\n", name, use.draws, use.vertices,
                                  use.shader->source.empty() ? " (source not kept)" : "");
             if (!use.shader->source.empty()) {
-                FileUtil::WriteStringToFile(
-                    true, dir + name,
-                    fmt::format("// {} draws, {} vertices since the game started\n{}",
-                                use.draws, use.vertices, use.shader->source));
+                files.emplace_back(dir + name,
+                                   fmt::format("// {} draws, {} vertices since the game started\n{}",
+                                               use.draws, use.vertices, use.shader->source));
             }
         }
         index += "\n";
     };
     dump(vertex_use, "vs", true);
     dump(fragment_use, "fs", false);
-    FileUtil::WriteStringToFile(true, dir + "index.txt", index);
+    files.emplace_back(dir + "index.txt", std::move(index));
+    workers->QueueWork([dir, files = std::move(files)] {
+        // Only the current ones: the ranking changes as the game goes on.
+        FileUtil::DeleteDirRecursively(dir);
+        FileUtil::CreateFullPath(dir);
+        for (const auto& [path, contents] : files) {
+            FileUtil::WriteStringToFile(true, path, contents);
+        }
+    });
 }
 
 void PipelineCache::TickFrame() {
