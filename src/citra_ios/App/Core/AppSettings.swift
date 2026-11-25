@@ -474,7 +474,7 @@ final class AppSettings: ObservableObject {
         func value<T>(_ key: String, _ fallback: T) -> T { d.object(forKey: key) as? T ?? fallback }
 
         libraryStyle = LibraryStyle(rawValue: value("libraryStyle", LibraryStyle.grid.rawValue)) ?? .grid
-        showPerformanceOverlay = value("showPerformanceOverlay", true)
+        showPerformanceOverlay = value("showPerformanceOverlay", false)
         hideControllerWithHardware = value("hideControllerWithHardware", true)
         builtInJIT = value("builtInJIT", false)
         autoEnableJIT = value("autoEnableJIT", false)
