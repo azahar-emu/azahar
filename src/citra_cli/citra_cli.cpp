@@ -27,7 +27,8 @@ bool CheckForOptions(const char* optstring, int argc, char* argv[]) {
     int option;
     // getopt_long_only keeps long options from being interpreted as short options, they
     // are to be ignored and handled in citra_meta instead.
-    while ((option = getopt_long_only(argc, args_copy.data(), optstring, no_long_opts, nullptr)) != -1) {
+    while ((option = getopt_long_only(argc, args_copy.data(), optstring, no_long_opts, nullptr)) !=
+           -1) {
         for (size_t i = 0; optstring[i] != '\0'; ++i) {
             if (optstring[i] == ':') {
                 continue;
