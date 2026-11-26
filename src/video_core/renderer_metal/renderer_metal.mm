@@ -84,6 +84,9 @@ struct DisplayPacer {
     bool missed_this_frame = false;
     double queued_sum = 0.0; ///< Frames waiting when one was taken, summed
     std::atomic<u32> presented_late{0};
+    /// Frames that never reached the screen (presentation time 0): with Present Every Refresh the
+    /// repeat of the next refresh got there first, so the frame was shown a refresh late.
+    std::atomic<u32> presented_dropped{0};
     /// When a frame last reached the screen later than asked (presentation time), 0 for never.
     std::atomic<double> last_late{0.0};
     u32 deferred = 0; ///< Frames that waited a refresh for their GPU work, this second
@@ -132,15 +135,16 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
             p->last_log = target;
         } else if (target - p->last_log >= 1.0) {
             const u32 late = p->presented_late.exchange(0);
+            const u32 dropped = p->presented_dropped.exchange(0);
             // Only seconds with something to report: a frame missing or late.
-            if (p->not_ready > 0 || late > 0 || p->deferred > 0) {
+            if (p->not_ready > 0 || late > 0 || dropped > 0 || p->deferred > 0) {
                 LOG_INFO(Render,
                          "Display link: {} refreshes, {} frames shown ({:.1f} waiting on "
                          "average), {} times no frame was ready when one was due, {} shown at a "
-                         "later refresh than asked (lead {:.0f} refreshes), {} waited a refresh "
-                         "for the GPU",
+                         "later refresh than asked and {} overtaken by a repeat (lead {:.0f} "
+                         "refreshes), {} waited a refresh for the GPU",
                          p->refreshes, p->shown, p->shown > 0 ? p->queued_sum / p->shown : 0.0,
-                         p->not_ready, late, link.preferredFrameLatency, p->deferred);
+                         p->not_ready, late, dropped, link.preferredFrameLatency, p->deferred);
             }
             p->deferred = 0;
             p->refreshes = 0;
@@ -220,7 +224,12 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
     const std::shared_ptr<Metal::DisplayPacer> keep = p;
     [drawable addPresentedHandler:^(id<MTLDrawable> presented) {
       Metal::RecordPresentedTime(presented.presentedTime);
-      if (presented.presentedTime > target + 0.002) {
+      if (presented.presentedTime <= 0.0) {
+          // Never shown: it was not ready at its refresh and the repeat of the next refresh
+          // (the same picture) went instead, a refresh late. Late as well for the GPU wait.
+          keep->presented_dropped.fetch_add(1, std::memory_order_relaxed);
+          keep->last_late.store(target, std::memory_order_relaxed);
+      } else if (presented.presentedTime > target + 0.002) {
           late->fetch_add(1, std::memory_order_relaxed);
           keep->last_late.store(presented.presentedTime, std::memory_order_relaxed);
       }
