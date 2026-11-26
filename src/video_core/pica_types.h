@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <utility>
 #include <boost/serialization/access.hpp>
 #include "common/common_types.h"
 
@@ -84,30 +85,32 @@ public:
 
         constexpr s32 bias = 127 - ((1 << (E - 1)) - 1);
         const u32 fp32_hex = std::bit_cast<u32>(value);
-        const u32 fp32_sign = (fp32_hex >> 31) << (E + M);
+        const u32 pica_sign = (fp32_hex >> 31) << (E + M);
         const s32 fp32_exponent = (fp32_hex >> 23) & 0xFF;
         const u32 fp32_mantissa = fp32_hex & ((1 << 23) - 1);
         if (fp32_exponent == 0 && fp32_mantissa == 0) {
             // Zero
-            return fp32_sign;
+            return pica_sign;
         } else [[likely]] {
             if (fp32_exponent == 0) {
                 // Denormal
-                return fp32_sign;
+                return pica_sign;
             } else if (fp32_exponent == 0xFF) {
                 // Inf or NaN
-                return fp32_sign | (EXPONENT_MASK << M) | (fp32_mantissa >> (23 - M));
+                return pica_sign | (EXPONENT_MASK << M) | (fp32_mantissa >> (23 - M));
             } else [[likely]] {
-                // Normal
+                // Normal, handle the exponent
                 const s32 pica_exponent = fp32_exponent - bias;
                 if (pica_exponent <= 0) {
-                    // Underflow to denormal
-                    return fp32_sign;
-                } else if (pica_exponent >= EXPONENT_MASK) {
+                    // Pica denormal, update the mantissa value
+                    u32 pica_mantissa = fp32_mantissa | (1 << 23);
+                    pica_mantissa >>= (1 - pica_exponent);
+                    return pica_sign | (pica_mantissa >> (23 - M));
+                } else if (std::cmp_greater_equal(pica_exponent, EXPONENT_MASK)) {
                     // Overflow to Inf
-                    return fp32_sign | (EXPONENT_MASK << M);
+                    return pica_sign | (EXPONENT_MASK << M);
                 } else [[likely]] {
-                    return fp32_sign | (pica_exponent << M) | (fp32_mantissa >> (23 - M));
+                    return pica_sign | (pica_exponent << M) | (fp32_mantissa >> (23 - M));
                 }
             }
         }
