@@ -14,6 +14,8 @@
 
 namespace CitraCLI {
 
+static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
+
 bool CheckForOptions(const char* optstring, int argc, char* argv[]) {
     // Scan a copy, since getopt can reorder argv and the frontend parses argv afterwards
     std::vector<char*> args_copy(argv, argv + argc);
