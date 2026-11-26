@@ -487,7 +487,7 @@ final class AppSettings: ObservableObject {
         showPerformanceOverlay = value("showPerformanceOverlay", false)
         hideControllerWithHardware = value("hideControllerWithHardware", true)
         builtInJIT = value("builtInJIT", false)
-        autoEnableJIT = value("autoEnableJIT", false)
+        autoEnableJIT = value("autoEnableJIT", true)
         jitDebuggerName = value("jitDebugger", JITDebugger.stikDebug.rawValue)
         jitCustomURL = value("jitCustomURL", "")
         showHomeButton = value("showHomeButton", true)

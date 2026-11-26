@@ -416,6 +416,8 @@ const char* ThermalStateName() {
     /// Read the game into memory before it starts (see PreloadGame).
     BOOL _preloadGame;
     BOOL _preloadGameCompressed;
+    /// CPU JIT was asked for but JIT is not enabled: the game runs with the interpreter.
+    BOOL _jitFallback;
     // Fractions of the custom layouts, see AZConfiguration (guarded by _surfaceMutex).
     std::array<float, 8> _customLandscape;
     std::array<float, 8> _customPortrait;
@@ -632,8 +634,11 @@ const char* ThermalStateName() {
 
     // Without a debugger attached, iOS does not allow mapping executable memory.
     [AZEmulator setLoggingEnabled:configuration.loggingEnabled];
+    // Without JIT both run on the interpreters (the fast interpreter for the CPU), so a game
+    // still runs, only slower; the user is told when it starts.
     values.use_cpu_jit = configuration.useCPUJIT && jit;
     values.use_shader_jit = configuration.useShaderJIT && jit;
+    _jitFallback = configuration.useCPUJIT && !jit;
     values.cpu_clock_percentage = static_cast<s32>(configuration.cpuClockPercentage);
 
     values.resolution_factor = static_cast<u32>(configuration.resolutionFactor);
@@ -1254,6 +1259,16 @@ const char* ThermalStateName() {
     system.RegisterCoreLoopThreadId();
     Common::FrameCost::MarkEmulationThread();
 #if defined(__aarch64__)
+    if (_jitFallback) {
+        LOG_WARNING(Frontend, "JIT is not enabled: the game runs with the fast interpreter");
+        dispatch_async(dispatch_get_main_queue(), ^{
+          if (self.onToast) {
+              self.onToast(@"JIT isn't enabled, so the game runs with the fast interpreter "
+                           @"(slower). Enable JIT with StikDebug or the built-in JIT helper for "
+                           @"full speed.");
+          }
+        });
+    }
     // The blocks of game code compiled in earlier runs, compiled ahead of time in this one. Next
     // to the shader cache, so Clear Shader Cache clears it too.
     JitWarmup::Start(system,
