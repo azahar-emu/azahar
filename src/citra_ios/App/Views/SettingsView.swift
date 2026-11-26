@@ -167,24 +167,19 @@ struct GeneralSettingsView: View {
                 }
             } header: {
                 InfoHeader("CPU") {
-                    Text("JIT recompilation requires the app to be launched with JIT enabled, for "
-                         + "example through StikDebug or a debugger. Without JIT the much slower "
-                         + "interpreter is used. Open Debugger to Enable JIT opens the chosen "
-                         + "debugger app when this app starts without JIT, and asks it to attach. "
-                         + "The debugger has to be set up already (its pairing file, VPN). The "
-                         + "link formats are guesses: if the app doesn't react, use Custom URL "
-                         + "with the link from that app's documentation. JIT Warm-Up remembers "
-                         + "which game code each game needed, and in later runs prepares it "
-                         + "while the game waits for the next frame, so scenes you have been to "
-                         + "before load without the stutter of new code. It is kept with the "
-                         + "shader cache. Preload Game into Memory reads the whole game into "
-                         + "memory when it starts (a compressed game decompressed), so it is "
-                         + "never read from storage while playing. Starting takes a few "
-                         + "seconds longer and it uses as much memory as the game is big; a "
-                         + "game too big for the memory iOS leaves the app is read as usual. "
-                         + "Keep Compressed in Memory keeps a compressed game (.zcci, .zcxi) as it "
-                         + "is stored: it takes much less memory and starts faster, and is still "
-                         + "decompressed as the game reads it.")
+                    HelpList([
+                        HelpItem(note: "JIT recompilation needs the app to be started with JIT enabled. Without JIT the much slower interpreter is used."),
+                        HelpItem("Built-in JIT Helper", "Enables JIT by itself through a small app extension, using your device's pairing file (import it below). Enable JIT Now tries it right away."),
+                        HelpItem("Open Debugger to Enable JIT", "When the app starts without JIT, opens the debugger app you pick and asks it to attach. The debugger has to be set up already (its pairing file, VPN)."),
+                        HelpItem("Debugger App", "The app that attaches. The link formats are guesses: if the app doesn't react, choose Custom and enter the link from that app's documentation, with {pid} for this app."),
+                        HelpItem("Test the JIT Helper / Check the Connection", "Report what the helper and the debug service answer, to find out why JIT does not turn on."),
+                        HelpItem("Pairing File", "Your device's pairing file, which the built-in JIT helper needs. Import it from Files; it stays on this device."),
+                        HelpItem("CPU JIT", "Runs the game's code through the recompiler (much faster). Only available while JIT is enabled."),
+                        HelpItem("JIT Warm-Up", "Remembers which game code each game needed, and in later runs prepares it while the game waits for the next frame, so scenes you have been to before load without the stutter of new code. Kept with the shader cache."),
+                        HelpItem("Preload Game into Memory", "Reads the whole game into memory when it starts (a compressed game decompressed), so it is never read from storage while playing. Starting takes a few seconds longer and it uses as much memory as the game is big; a game too big for the memory iOS leaves the app is read as usual, with a message."),
+                        HelpItem("Keep Compressed in Memory", "Keeps a compressed game (.zcci, .zcxi) in memory as it is stored: much less memory and a faster start, still decompressed as the game reads it."),
+                        HelpItem("CPU Clock", "The speed of the emulated 3DS processor. Above 100% can smooth out games that slow down on a real 3DS, below 100% saves work; some games misbehave away from 100%."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -213,20 +208,15 @@ struct GeneralSettingsView: View {
                     .disabled(!settings.simulateGPUTimings)
             } header: {
                 InfoHeader("Speed") {
-                    Text("Simulate 3DS GPU Timing makes games see the graphics chip take as long as "
-                         + "the real one. Games that adapt their frame rate to it (some run at 60 "
-                         + "FPS where there is little to draw and drop to 30 in heavy scenes) then "
-                         + "run at the frame rate they have on a console; GPU Timing Strength sets "
-                         + "how slow that GPU is (the estimate is twice as fast as a console, so "
-                         + "about 200% is the console; raise it if a game still runs at 60 FPS "
-                         + "where the console would run 30). Minimum GPU Time is steadier than the "
-                         + "estimate: the game never sees a frame's 3D work finish sooner than that "
-                         + "after the vertical blank (17 ms and up is more than one 60 FPS refresh), so "
-                         + "a game that switches between 30 and 60 holds 30 (try 20 ms; raise it if "
-                         + "it goes below 30, lower it if it never reaches 30); without it the "
-                         + "emulated GPU is instant and they can run at 60 FPS everywhere. Fast Forward is in the game menu, and on a controller button in Controls › "
-                         + "Controller Mapping. With Hold on, the controller button only fast-forwards "
-                         + "while it is held.")
+                    HelpList([
+                        HelpItem("Sync Speed to Display", "Runs the game at exactly the display's 60 frames per second instead of the 3DS's 59.83, so no frame has to be repeated or dropped. The difference in speed is too small to notice."),
+                        HelpItem("Limit Speed / Speed Limit", "Holds the game at the speed limit (100% is a real 3DS). Off runs as fast as the device can."),
+                        HelpItem("Fast Forward Speed", "How fast Fast Forward runs. Fast Forward is in the game menu, and on a controller button in Controls › Controller Mapping."),
+                        HelpItem("Hold to Fast Forward (Controller)", "The controller button only fast-forwards while it is held, instead of switching it on and off."),
+                        HelpItem("Simulate 3DS GPU Timing", "Makes games see the graphics chip take as long as the real one. Games that adapt their frame rate to it (60 FPS where there is little to draw, 30 in heavy scenes) then run at the frame rate they have on a console; without it the emulated GPU is instant and they can run at 60 FPS everywhere."),
+                        HelpItem("GPU Timing Strength", "How slow the simulated GPU is. The estimate is twice as fast as a console, so about 200% is the console; raise it if a game still runs at 60 FPS where the console would run 30."),
+                        HelpItem("Minimum GPU Time", "Steadier than the estimate: the game never sees a frame's 3D work finish sooner than this after the vertical blank, so a game that switches between 30 and 60 holds 30. Try 20 ms; raise it if the game goes below 30, lower it if it never reaches 30."),
+                    ])
                 }
             }
 
@@ -268,12 +258,12 @@ struct GeneralSettingsView: View {
                 }
             } header: {
                 InfoHeader("Compression") {
-                    Text("Compressed games (.zcci, .zcxi, .z3dsx and .zcia) are smaller and play the "
-                         + "same. They are written to the games folder (Files › ROMs). Compress the "
-                         + "Games… picks files to compress, the originals you pick are left where "
-                         + "they are; the library button compresses the games in the games folder "
-                         + "and removes their originals unless Keep Original Files is on. A .zcia "
-                         + "installs like a .cia. Encrypted and bundled games cannot be compressed.")
+                    HelpList([
+                        HelpItem(note: "Compressed games (.zcci, .zcxi, .z3dsx and .zcia) are smaller and play the same. They are written to the games folder (Files › ROMs). Encrypted and bundled games cannot be compressed."),
+                        HelpItem("Keep Original Files", "Compressing the games in the library keeps their uncompressed files instead of removing them."),
+                        HelpItem("Compress Games…", "Pick files to compress. The files you pick are left where they are."),
+                        HelpItem("Compress the Games in the Library", "Compresses the games in the games folder and removes their originals, unless Keep Original Files is on. A .zcia installs like a .cia."),
+                    ])
                 }
             }
 
@@ -292,13 +282,11 @@ struct GeneralSettingsView: View {
                 }
             } header: {
                 InfoHeader("ROM Bundles") {
-                    Text("A bundle (.bcci, .bcxi) is a game together with its update and DLC in one "
-                         + "file: it plays with them without installing them, and is easy to move "
-                         + "or back up. Choose the game (.3ds, .cci, .cxi or .cia, also compressed), "
-                         + "then its update and DLC if you have them (.cia or .zcia files). The bundle "
-                         + "is written to the games folder (Files › ROMs); the files you chose are "
-                         + "left where they are. A game chosen as a .cia makes a .bcia, which is "
-                         + "installed like a .cia. Encrypted games cannot be bundled.")
+                    HelpList([
+                        HelpItem(note: "A bundle (.bcci, .bcxi) is a game together with its update and DLC in one file: it plays with them without installing them, and is easy to move or back up. Encrypted games cannot be bundled."),
+                        HelpItem("Game, Update, DLC", "Choose the game (.3ds, .cci, .cxi or .cia, also compressed), then its update and DLC if you have them (.cia or .zcia files). The files you choose are left where they are."),
+                        HelpItem("Create Bundle", "Writes the bundle to the games folder (Files › ROMs). A game chosen as a .cia makes a .bcia, which is installed like a .cia."),
+                    ])
                 }
             }
 
@@ -362,73 +350,36 @@ struct GraphicsSettingsView: View {
     @State private var postShaders = PostShaders.availableNames()
     @State private var clearedShaderCache = false
 
-    /// Built in steps: one long concatenation is too much for the type checker.
-    private static var enhancementsFooter: String {
-        var text = ""
-        text += "Texture filters smooth the textures of games when Internal Resolution is above "
-        text += "1x (xBRZ and MMPX suit pixel art, Bicubic and ScaleForce are gentler). "
-        text += "Lower anisotropic filtering and Fast Shader Math make games run faster. "
-        text += "With anisotropic filtering on, textures use the GPU's own choice of mipmap "
-        text += "level (plus the game's bias), which anisotropic filtering needs; Off keeps the "
-        text += "3DS's exact formula. "
-        text += "Fast Shader Math can cause small graphical differences in some games. "
-        text += "Fast Lighting Math computes lighting in half precision, which helps games "
-        text += "with a lot of lighting (Luigi's Mansion) and can shift highlights slightly. "
-        text += "Fast Lighting Lookups reads the lighting tables with the GPU's texture "
-        text += "filtering, one step per lookup instead of several; the ends of the tables are "
-        text += "held instead of extended, which can change the brightest highlights a little. "
-        text += "Fast Math Functions uses faster versions of functions like normalize and "
-        text += "pow (iOS 18), without the NaN assumptions of Fast Shader Math; it can be on "
-        text += "together with it. Half Precision Colors Between "
-        text += "Stages passes the vertex color to the pixel shader as half precision, "
-        text += "which saves a little bandwidth. Untracked Stream Buffers stops Metal "
-        text += "from tracking the buffers the emulator already keeps in order itself, "
-        text += "which saves CPU time in games with many draws (turn it off if a game "
-        text += "flickers). Reuse Shaded Vertices draws the models the GPU shades without "
-        text += "lighting natively, so a vertex shared by several triangles is shaded once "
-        text += "and not once for every triangle (it can make GPU-shaded vertices several "
-        text += "times cheaper; models with lighting are not affected; turn it off if a game "
-        text += "shows broken models). Fast Math Functions in Vertex Shaders uses the faster, "
-        text += "less exact versions of functions like reciprocal and square root in the "
-        text += "vertex programs (iOS 18); it can make vertices a little cheaper but may "
-        text += "leave tiny cracks between models (turn it off if you see them). Fast Math in "
-        text += "Vertex Shaders goes further (the compiler may assume values are never NaN or "
-        text += "infinite) and turns Accurate Multiplication off, which it cannot work with; "
-        text += "it can break models in games that depend on that (exploding or missing "
-        text += "geometry). Texture Pool keeps the textures of surfaces a game stopped using "
-        text += "(up to 192 MB) and gives them to the next surface of the same size and "
-        text += "format, instead of creating new ones, which helps games that stream a lot of "
-        text += "assets (turn it off if a game shows leftover pictures). They apply when a "
-        text += "game starts. "
-        text += "Fast Color Math does the color combiners in half precision, the same "
-        text += "8-bit result in practice. Hidden Surface Removal lets the GPU skip "
-        text += "pixels hidden behind others (not for games using W-buffering). Texture "
-        text += "Compression saves GPU memory bandwidth: Lossless looks identical, Lossy "
-        text += "(A15 and later) saves more with a tiny loss of quality. "
-        text += "Fast Depth Readback answers the small depth checks some games do every "
-        text += "frame (Mario Kart 7's sun glare) with the previous frame's values instead "
-        text += "of waiting for the GPU. "
-        text += "Draw Optimizations draws depth-only geometry (like shadow volumes) without a "
-        text += "pixel shader, does the scissor test with the GPU's own scissor, drops "
-        text += "blending that changes nothing and draws clears of part of the screen inside the "
-        text += "game's own render passes; turn it off if a game shows glitches it did not "
-        text += "have before. "
-        text += "Fast W-Buffer Depth (experimental) helps games that use the 3DS's W-buffer "
-        text += "depth mode (Dragon Quest VIII for most of its draws), which Hidden Surface "
-        text += "Removal cannot: the depth stays exact, and the GPU can still skip pixels hidden "
-        text += "behind ones already drawn. It relies on how games normally set up their 3D view; "
-        text += "if parts of a scene go missing or flicker with it on, turn it off for that game. "
-        text += "Anti-Aliasing (MSAA) smooths the jagged edges of the game's 3D: each pixel is "
-        text += "drawn with several samples along the edges (2x, 4x or 8x, capped at what the "
-        text += "device supports). It is cheap on Apple GPUs for what it does, but costs GPU "
-        text += "time and memory, more at higher Internal Resolution; most useful at 1x or 2x. "
-        text += "Wait for GPU Each Frame keeps the emulation at most one frame ahead of the GPU, "
-        text += "which keeps frame pacing even; turning it off lets the emulation run further "
-        text += "ahead (as Azahar does by default on its other renderers), which can help a game "
-        text += "whose CPU and GPU work are both heavy, at the cost of more input latency and "
-        text += "less even pacing. "
-        text += "All of these apply the next time a game starts."
-        return text
+    /// What each setting of the section does, for its info sheet (HelpList).
+    static var enhancementsHelp: [HelpItem] {
+        let items: [HelpItem] = [
+            HelpItem("Internal Resolution", "Renders the 3D at a multiple of the 3DS's resolution: sharper, more GPU work. With MetalFX, 1x or 2x often looks as good."),
+            HelpItem("Linear Screen Filtering", "Smooths the screens when they are enlarged; off keeps hard pixels."),
+            HelpItem("Texture Sampling", "Game Controlled uses each texture's own filtering; the others force nearest or linear filtering on all textures."),
+            HelpItem("Texture Filter", "Smooths the games' textures when Internal Resolution is above 1x: xBRZ and MMPX suit pixel art, Bicubic and ScaleForce are gentler."),
+            HelpItem("Anisotropic Filtering", "Keeps textures seen at an angle sharp; lower values are faster. On, textures use the GPU's own choice of mipmap level (plus the game's bias), which it needs; Off keeps the 3DS's exact formula."),
+            HelpItem("Anti-Aliasing (MSAA)", "Smooths the jagged edges of the 3D: each pixel is drawn with several samples along the edges (2x, 4x or 8x, capped at what the device supports). Cheap on Apple GPUs for what it does, but it costs GPU time and memory, more at higher Internal Resolution; most useful at 1x or 2x."),
+            HelpItem("Fast Shader Math", "Lets the shader compiler use faster math; can cause small graphical differences in some games."),
+            HelpItem("Fast Lighting Math", "Computes lighting in half precision, which helps games with a lot of lighting (Luigi's Mansion) and can shift highlights slightly."),
+            HelpItem("Fast Lighting Lookups", "Reads the lighting tables with the GPU's texture filtering, one step per lookup instead of several; the ends of the tables are held instead of extended, which can change the brightest highlights a little."),
+            HelpItem("Fast Color Math", "Does the color combiners in half precision, the same 8-bit result in practice."),
+            HelpItem("Fast Math Functions", "Uses faster versions of functions like normalize and pow (iOS 18), without the NaN assumptions of Fast Shader Math; it can be on together with it."),
+            HelpItem("Half Precision Colors Between Stages", "Passes the vertex color to the pixel shader in half precision, which saves a little bandwidth."),
+            HelpItem("Untracked Stream Buffers", "Stops Metal from tracking the buffers the emulator already keeps in order itself, which saves CPU time in games with many draws. Turn it off if a game flickers."),
+            HelpItem("Reuse Shaded Vertices", "Draws the models the GPU shades without lighting natively, so a vertex shared by several triangles is shaded once instead of once per triangle (several times cheaper; lit models are not affected). Turn it off if a game shows broken models."),
+            HelpItem("Fast Math Functions in Vertex Shaders", "Faster, less exact reciprocal, square root and the like in the vertex programs (iOS 18). A little cheaper, but may leave tiny cracks between models; turn it off if you see them."),
+            HelpItem("Fast Math in Vertex Shaders", "Goes further (the compiler may assume values are never NaN or infinite) and turns Accurate Multiplication off; it can break models in games that depend on that (exploding or missing geometry)."),
+            HelpItem("Texture Pool", "Keeps the textures of surfaces a game stopped using (up to 192 MB) and gives them to the next surface of the same size and format instead of creating new ones, which helps games that stream a lot. Turn it off if a game shows leftover pictures."),
+            HelpItem("Fast Depth Readback", "Answers the small depth checks some games do every frame (Mario Kart 7's sun glare) with the previous frame's values instead of waiting for the GPU."),
+            HelpItem("Wait for GPU Each Frame", "Keeps the emulation at most one frame ahead of the GPU, which keeps frame pacing even. Off lets it run further ahead, which can help a game whose CPU and GPU work are both heavy, at the cost of more input latency and less even pacing."),
+            HelpItem("Disable Right Eye Render", "Skips drawing the right eye's picture while 3D is off, which saves GPU work. Some games need it drawn (the game hacks know them)."),
+            HelpItem("Hidden Surface Removal", "Lets the GPU skip pixels hidden behind others (not for games using W-buffering)."),
+            HelpItem("Fast W-Buffer Depth (Experimental)", "Helps games that use the 3DS's W-buffer depth mode (Dragon Quest VIII for most of its draws), which Hidden Surface Removal cannot: the depth stays exact, and the GPU can still skip pixels hidden behind ones already drawn. It relies on how games normally set up their 3D view; if parts of a scene go missing or flicker, turn it off for that game."),
+            HelpItem("Draw Optimizations", "Draws depth-only geometry (like shadow volumes) without a pixel shader, does the scissor test with the GPU's own scissor, drops blending that changes nothing and draws partial clears inside the game's own render passes. Turn it off if a game shows glitches it did not have before."),
+            HelpItem("Texture Compression", "Saves GPU memory bandwidth: Lossless looks identical, Lossy (A15 and later) saves more with a tiny loss of quality."),
+            HelpItem(note: "All of these apply the next time a game starts."),
+        ]
+        return items
     }
 
     static func antiAliasingName(_ value: Int) -> String {
@@ -446,11 +397,12 @@ struct GraphicsSettingsView: View {
                     .disabled(!AZEmulator.isJITAvailable)
             } header: {
                 InfoHeader("Renderer") {
-                    Text("Neroli renders natively with Metal. Hardware Shaders run the game's vertex "
-                         + "shaders on the GPU. Draws that can't be translated, and games that use "
-                         + "geometry shaders, still run on the CPU, where the shader JIT speeds them "
-                         + "up. Accurate Multiplication fixes graphical glitches in some games at a "
-                         + "small GPU cost.")
+                    HelpList([
+                        HelpItem("Renderer", "Neroli renders natively with Metal."),
+                        HelpItem("Hardware Shaders", "Runs the game's vertex shaders on the GPU. Draws that can't be translated, and games that use geometry shaders, still run on the CPU."),
+                        HelpItem("Accurate Multiplication", "Matches the 3DS's multiplication exactly, which fixes graphical glitches in some games at a small GPU cost."),
+                        HelpItem("Shader JIT", "Speeds up the shaders that still run on the CPU. Needs JIT."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -502,7 +454,7 @@ struct GraphicsSettingsView: View {
                 }
             } header: {
                 InfoHeader("Enhancements") {
-                    Text(verbatim: Self.enhancementsFooter)
+                    HelpList(Self.enhancementsHelp)
                 }
             }
 
@@ -518,12 +470,10 @@ struct GraphicsSettingsView: View {
                 .disabled(!settings.useExternalDisplay)
             } header: {
                 InfoHeader("External Display") {
-                    Text("With a TV or AirPlay display connected, the default shows the top screen on "
-                         + "it and this device the bottom screen with the controls. The other choices "
-                         + "give the display the screen layout you pick while this device keeps its "
-                         + "own layout. Takes effect when a game starts. "
-                         + "Running inside another app (such as LiveContainer) may stop iOS from "
-                         + "offering the display to Neroli.")
+                    HelpList([
+                        HelpItem("Use External Display", "Uses a TV or AirPlay display while one is connected. Running inside another app (such as LiveContainer) may stop iOS from offering the display to Neroli."),
+                        HelpItem("External Display Shows", "Default shows the top screen on the display and the bottom screen with the controls on this device. The other choices give the display the screen layout you pick, while this device keeps its own layout. Takes effect when a game starts."),
+                    ])
                 }
             }
 
@@ -540,11 +490,13 @@ struct GraphicsSettingsView: View {
                 Toggle("Dump Textures", isOn: $settings.dumpTextures)
             } header: {
                 InfoHeader("Texture Packs") {
-                    Text("Custom Textures replaces the textures of a game with the images in Files › "
-                         + "Neroli › load › textures › the game's title ID. Preloading loads them all "
-                         + "when the game starts (more memory, no stutter). Dump Textures saves the "
-                         + "textures a game uses to Files › Neroli › dump › textures, to make a pack. "
-                         + "Applies the next time a game starts.")
+                    HelpList([
+                        HelpItem("Custom Textures", "Replaces the textures of a game with the images in Files › Neroli › load › textures › the game's title ID."),
+                        HelpItem("Preload Custom Textures", "Loads all of a pack's images when the game starts: more memory and a longer start, no stutter when a texture first appears."),
+                        HelpItem("Load Custom Textures in the Background", "Without preloading, loads each image as it is needed without stopping the game."),
+                        HelpItem("Dump Textures", "Saves the textures a game uses to Files › Neroli › dump › textures, to make a pack."),
+                        HelpItem(note: "These apply the next time a game starts."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -558,9 +510,9 @@ struct GraphicsSettingsView: View {
                 }
             } header: {
                 InfoHeader("Cameras") {
-                    Text("Choose which camera of this device a camera of the 3DS shows. Off shows a "
-                         + "black picture. The first time a game uses a camera, iOS asks for "
-                         + "permission. Applies the next time a game starts.")
+                    HelpList([
+                        HelpItem("Outer Cameras, Inner Camera", "Which camera of this device each camera of the 3DS shows. Off shows a black picture. The first time a game uses a camera, iOS asks for permission. Applies the next time a game starts."),
+                    ])
                 }
             }
 
@@ -603,9 +555,13 @@ struct GraphicsSettingsView: View {
                 }
             } header: {
                 InfoHeader("3D") {
-                    Text("Anaglyph needs red/cyan glasses. Interlaced shows the eyes on alternate rows "
-                         + "of the screen. Side by Side and Cardboard VR show one picture per eye, for "
-                         + "a headset or glasses holder (landscape). These modes don't use MetalFX.")
+                    HelpList([
+                        HelpItem("3D Mode", "Anaglyph needs red/cyan glasses. Interlaced shows the eyes on alternate rows of the screen. Side by Side and Cardboard VR show one picture per eye, for a headset or glasses holder (landscape). These modes don't use MetalFX."),
+                        HelpItem("Swap Eyes", "Shows each eye's picture to the other eye, for glasses or headsets that expect them the other way round."),
+                        HelpItem("Eye Shown", "With 3D off, which eye's picture is shown."),
+                        HelpItem("Anaglyph Colors", "How the two eyes' pictures are mixed into red and cyan."),
+                        HelpItem("Cardboard Screen Size, Shifts", "The size and position of each eye's picture in Cardboard VR, to fit your headset."),
+                    ])
                 }
             }
 
@@ -635,17 +591,12 @@ struct GraphicsSettingsView: View {
             } header: {
                 InfoHeader("MetalFX") {
                     if AZEmulator.isUpscalingSupported {
-                        Text("MetalFX Spatial scales each screen up to the size it is shown at with "
-                             + "Apple's GPU upscaler, which looks sharper than plain filtering and "
-                             + "lets you use a lower Internal Resolution (1x or 2x) for the same "
-                             + "picture. It applies to the next frame, you do not need to restart. "
-                             + "The scale sets how far it enlarges a screen (1.5x, 2x, ...); the "
-                             + "result is then stretched to the size on the display. A lower scale "
-                             + "costs less GPU time, \"Fit to screen\" goes straight to the "
-                             + "display size. Scales that would not enlarge the screen by at least "
-                             + "a quarter use plain filtering.")
+                        HelpList([
+                            HelpItem("Upscaling", "MetalFX Spatial scales each screen up to the size it is shown at with Apple's GPU upscaler, which looks sharper than plain filtering and lets you use a lower Internal Resolution (1x or 2x) for the same picture. It applies to the next frame, no restart needed."),
+                            HelpItem("Scale", "How far it enlarges a screen (1.5x, 2x, ...); the result is then stretched to the size on the display. A lower scale costs less GPU time, Fit to Screen goes straight to the display size. Scales that would not enlarge the screen by at least a quarter use plain filtering."),
+                        ])
                     } else {
-                        Text("MetalFX is not available on this device.")
+                        HelpList([HelpItem(note: "MetalFX is not available on this device.")])
                     }
                 }
             }
@@ -714,19 +665,14 @@ struct GraphicsSettingsView: View {
                 }
             } header: {
                 InfoHeader("Post-Processing") {
-                    Text("Sharp Pixels keeps the pixels of a screen crisp when it is enlarged (only "
-                         + "the edge of a pixel is smoothed). Sharpening adds contrast at edges, "
-                         + "after MetalFX, and can be combined with an effect. Contrast Adaptive "
-                         + "sharpening only sharpens where the picture is soft and keeps edges "
-                         + "free of halos. The Scaling Filter sets how a screen is enlarged "
-                         + "(Bicubic and Lanczos keep edges crisper than Bilinear; Sharp Pixels "
-                         + "takes its place). LCD Grid Darkness is how dark the gaps of the LCD "
-                         + "Grid effect are, Saturation, Contrast and Brightness adjust the "
-                         + "colors. "
-                         + "An effect is applied to the finished screens. A custom shader replaces it: "
-                         + "put a .metal file with a post_effect function in Files › Neroli › shaders "
-                         + "› post (Example.metal shows how). A shader that does not compile is "
-                         + "ignored, the log tells why. Applies when a game starts.")
+                    HelpList([
+                        HelpItem("Effect", "An effect applied to the finished screens (such as LCD Grid). LCD Grid Darkness is how dark the gaps of the grid are; Saturation, Contrast and Brightness adjust the colors."),
+                        HelpItem("Sharp Pixels", "Keeps the pixels of a screen crisp when it is enlarged; only the edge of a pixel is smoothed. Takes the place of the Scaling Filter."),
+                        HelpItem("Sharpening Method", "Adds contrast at edges, after MetalFX; it can be combined with an effect. Contrast Adaptive only sharpens where the picture is soft and keeps edges free of halos."),
+                        HelpItem("Scaling Filter", "How a screen is enlarged: Bicubic and Lanczos keep edges crisper than Bilinear."),
+                        HelpItem("Custom Shader", "Replaces the effect with your own: put a .metal file with a post_effect function in Files › Neroli › shaders › post (Example.metal shows how). A shader that does not compile is ignored, the log tells why."),
+                        HelpItem(note: "These apply when a game starts."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -759,33 +705,16 @@ struct GraphicsSettingsView: View {
                 }
             } header: {
                 InfoHeader("Smoothness") {
-                    Text("Frame Pacing shows each frame for the same amount of time, which makes motion "
-                         + "look smoother, most on displays that refresh faster than the game. It does "
-                         + "not apply while fast-forwarding. Display Refresh Rate asks ProMotion displays to run at "
-                         + "60 Hz (saves power, one refresh per game frame) or up to 120 Hz; games run "
-                         + "at 60 frames per second either way. iOS may ignore the request, especially "
-                         + "when the app runs inside another app. The performance overlay's Pace value is "
-                         + "how much the time between frames varies (lower is smoother). Steady 30 FPS "
-                         + "(with Sync to Display Refresh) notices when a game draws at 30 FPS and "
-                         + "then shows each of its frames for exactly two 3DS refreshes, which "
-                         + "removes the judder of games that hand over their frames unevenly; it "
-                         + "follows the game again as soon as it draws faster, and does not slow "
-                         + "it down. Present Every Refresh shows the current "
-                         + "frame again at every refresh that has no new one, so a ProMotion "
-                         + "display keeps its full rate between the frames of a 30 FPS game "
-                         + "instead of slowing down, which can make frames land a refresh late; "
-                         + "it costs a little GPU time and battery, and is not used while "
-                         + "Frame Generation is on (that presents every second refresh itself). "
-                         + "30 FPS Frame "
-                         + "Cap (with Sync to Display Refresh) shows every new frame of the game for "
-                         + "exactly two 3DS refreshes, for games that run at 30 FPS but hand their "
-                         + "frames over unevenly (for example with Minimum GPU Time); a game running "
-                         + "faster is held to 30. Run Game at 30 also makes the game itself run "
-                         + "at 30 (its 3D work never finishes within one refresh), so it hands "
-                         + "over frames evenly and does not draw frames that would be thrown "
-                         + "away; it works with or without Simulate 3DS GPU Timing. Turn it off "
-                         + "for a game that slows down instead of dropping to 30. The cap is best "
-                         + "set per game. Applies when a game starts.")
+                    HelpList([
+                        HelpItem("Sync to Display Refresh", "Frames go to the screen in step with the display's refreshes, and the game makes each frame just after a refresh, so they stay even."),
+                        HelpItem("Steady 30 FPS", "Notices when a game draws at 30 FPS and then shows each of its frames for exactly two 3DS refreshes, which removes the judder of games that hand over their frames unevenly. It follows the game again as soon as it draws faster, and does not slow it down."),
+                        HelpItem("Present Every Refresh", "Shows the current frame again at every refresh that has no new one, so a ProMotion display keeps its full rate between the frames of a 30 FPS game instead of slowing down, which can make frames land a refresh late. Costs a little GPU time and battery. Not used while Frame Generation is on, nor at 60 FPS."),
+                        HelpItem("30 FPS Frame Cap", "Shows every new frame of the game for exactly two refreshes and holds a faster game to 30. Best set per game, for games that run at 30 FPS but hand their frames over unevenly."),
+                        HelpItem("Run Game at 30", "With the cap, the game itself also runs at 30 (its 3D work never finishes within one refresh), so it hands over frames evenly and does not draw frames that would be thrown away. Turn it off for a game that slows down instead of dropping to 30."),
+                        HelpItem("Frame Pacing, Frame Pacing Buffer", "Without Sync to Display Refresh: shows each frame for the same amount of time, which makes motion smoother on displays that refresh faster than the game. The buffer adds a little delay so a slow frame still meets its slot. Not while fast-forwarding."),
+                        HelpItem("Display Refresh Rate", "Asks ProMotion displays to run at 60 Hz (saves power) or up to 120 Hz; games run at their own frame rate either way. iOS may ignore the request, especially inside another app."),
+                        HelpItem(note: "The performance overlay's Pace value is how much the time between frames varies (lower is smoother). These apply when a game starts."),
+                    ])
                 }
             }
 
@@ -806,16 +735,13 @@ struct GraphicsSettingsView: View {
                 }
             } header: {
                 InfoHeader("Shaders") {
-                    Text("Async Shader Compilation builds new shaders in the background instead of "
-                         + "pausing the game, an object may be missing for a moment instead. Hold "
-                         + "Frame keeps showing the previous frame (up to three in a row) while a "
-                         + "shader is still building, so nothing flickers; the picture repeats "
-                         + "for a moment instead. Wait for Shaders lets a draw wait a few milliseconds "
-                         + "for its shader first (at most four times that per frame), which avoids "
-                         + "most skipped draws for a tiny hitch. Only frames with a hole in the "
-                         + "screen-sized picture are held. The disk "
-                         + "shader cache remembers the shaders of each game and builds them while it "
-                         + "boots, so they don't need to be built again during play.")
+                    HelpList([
+                        HelpItem("Async Shader Compilation", "Builds new shaders in the background instead of pausing the game; an object may be missing for a moment instead."),
+                        HelpItem("Hold Frame While Shaders Build", "Keeps showing the previous frame (up to three in a row) while a shader of a screen-sized picture is still building, so nothing flickers; the picture repeats for a moment instead."),
+                        HelpItem("Wait for Shaders", "Lets a draw wait a few milliseconds for its shader first (at most four times that per frame), which avoids most missing objects for a tiny hitch."),
+                        HelpItem("Disk Shader Cache", "Remembers the shaders of each game and builds them while it boots, so they don't need to be built again during play."),
+                        HelpItem("Clear Shader Cache", "Deletes the shader caches (and the JIT warm-up lists) of all games; they are built up again as you play."),
+                    ])
                 }
             }
 
@@ -825,45 +751,24 @@ struct GraphicsSettingsView: View {
             }
     }
 
-    /// Built in steps: one long concatenation with a condition in it is too much for the type
-    /// checker.
-    private static var performanceFooter: String {
-        var text: String = "Frame Generation makes the frames between the real ones with Apple's "
-        text += "frame interpolation, so a 30 FPS game looks like 60. Games that already run "
-        text += "at 60 FPS are left alone unless Also 60 FPS Games is on. "
-        if !FrameGenerator.isSupported {
-            text += "Not available on this device or iOS version. "
-        }
-        text += "It adds about half a frame of delay, can smear text and the 3D depth, and uses "
-        text += "more GPU and battery. It turns on Frame Presentation Skip. Frame Generation Size "
-        text += "is the size the in-between frames are made at (the real frames are always full "
-        text += "size): Full is sharpest and slowest, each step down is less work and heat with "
-        text += "softer in-between frames, for slower devices. It stays at the size you pick: if "
-        text += "the device can't make frames that size, frame generation stays off. Adaptive "
-        text += "starts at Half and goes down to Quarter while in-between frames are being lost "
-        text += "(heavy scenes such as water), then back up when there has been room for a while "
-        text += "(a size that was too slow is not tried again for 2 minutes, and a smaller size "
-        text += "that does not make the frames faster is undone). Each change of size makes the "
-        text += "game stutter briefly. Frame Buffer keeps one more frame "
-        text += "waiting before showing them, so a frame that comes a little late still makes "
-        text += "its refresh: a steadier frame rate (most noticeable at 120 Hz) for one refresh "
-        text += "more input latency. Pause When "
-        text += "Behind shows the game's own frames, a steady frame rate without in-between "
-        text += "frames, only while made frames are actually being lost (several a second) and "
-        text += "no smaller size helps, and tries frame generation again after 5 seconds (longer "
-        text += "when it has to pause again soon after). Top Screen "
-        text += "Only leaves "
-        text += "the bottom screen at the game's own frame rate, which halves the work in most "
-        text += "layouts. Display-Driven Pacing (iOS 17 or later, experimental) lets the display "
-        text += "pick up each frame at its own refresh instead of timing the frames in advance, "
-        text += "which should keep them even at 60 Hz too. Also 60 FPS Games makes 60 FPS games "
-        text += "show 120 frames per second; it needs Display-Driven Pacing and the display at "
-        text += "120 Hz, adds about 8 ms of delay and twice the heat.\n\n"
-        text += "Frame Presentation Skip does not present a frame the game did not draw again, so "
-        text += "a 30 FPS game shows 30 frames per second instead of every frame twice at 60. "
-        text += "The emulation speed and the audio stay the same. Meant for frame generation and "
-        text += "interpolation tools that need the real frame rate."
-        return text
+    /// What each setting of the section does, for its info sheet (HelpList).
+    static var performanceHelp: [HelpItem] {
+        let prefix: [HelpItem] = FrameGenerator.isSupported
+            ? []
+            : [HelpItem(note: "Frame generation is not available on this device or iOS version.")]
+        let items: [HelpItem] = [
+            HelpItem("Frame Presentation Skip", "Does not present a frame the game did not draw again, so a 30 FPS game shows 30 frames per second instead of every frame twice. The emulation speed and the audio stay the same. Meant for frame generation and interpolation tools that need the real frame rate."),
+            HelpItem("Frame Generation (Experimental)", "Makes the frames between the real ones with Apple's frame interpolation, so a 30 FPS game looks like 60. It adds about half a frame of delay, can smear text and the 3D depth, and uses more GPU and battery. It turns on Frame Presentation Skip."),
+            HelpItem("Frame Generation Size", "The size the in-between frames are made at (the real frames are always full size): Full is sharpest and slowest, each step down is less work and heat with softer in-between frames. If the device can't make frames that size, frame generation stays off. Adaptive starts at Half and goes down to Quarter while in-between frames are being lost (heavy scenes such as water), then back up when there has been room for a while; each change of size makes the game stutter briefly."),
+            HelpItem("Pause When Behind", "Shows the game's own frames, at a steady rate, only while made frames are actually being lost (several a second) and no smaller size helps, and tries frame generation again after 5 seconds."),
+            HelpItem("Frame Buffer", "Keeps one more frame waiting before showing them, so a frame that comes a little late still makes its refresh: steadier (most noticeable at 120 Hz) for one refresh more input latency."),
+            HelpItem("Use MetalFX Interpolation (Experimental)", "Makes the in-between frames with MetalFX's frame interpolator instead of VideoToolbox's."),
+            HelpItem("Top Screen Only", "Leaves the bottom screen at the game's own frame rate, which halves the work in most layouts."),
+            HelpItem("Display-Driven Pacing", "Lets the display pick up each frame at its own refresh instead of timing the frames in advance (iOS 17 or later)."),
+            HelpItem("Also 60 FPS Games (120 Hz)", "Makes 60 FPS games show 120 frames per second; needs Display-Driven Pacing and the display at 120 Hz, adds about 8 ms of delay and twice the heat."),
+            HelpItem("Show Performance Overlay", "Shows the frame rate, speed, GPU time and frame pacing over the game."),
+        ]
+        return prefix + items
     }
 
     @ViewBuilder private var performanceSections: some View {
@@ -899,7 +804,7 @@ struct GraphicsSettingsView: View {
                 Toggle("Show Performance Overlay", isOn: $settings.showPerformanceOverlay)
             } header: {
                 InfoHeader("Performance") {
-                    Text(verbatim: Self.performanceFooter)
+                    HelpList(Self.performanceHelp)
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -930,9 +835,9 @@ struct LayoutSettingsView: View {
                 }
             } header: {
                 InfoHeader("Landscape") {
-                    if settings.layout == .custom {
-                        Text("Place the screens with Edit Screen Layout in the menu while a game runs.")
-                    }
+                    HelpList([
+                        HelpItem("Screen Layout", "How the two screens are placed in landscape. Place the screens yourself with Edit Screen Layout in the menu while a game runs (Custom)."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -942,9 +847,9 @@ struct LayoutSettingsView: View {
                 }
             } header: {
                 InfoHeader("Portrait") {
-                    if settings.portraitLayout == .custom {
-                        Text("Place the screens with Edit Screen Layout in the menu while a game runs.")
-                    }
+                    HelpList([
+                        HelpItem("Screen Layout", "How the two screens are placed in portrait. Place the screens yourself with Edit Screen Layout in the menu while a game runs (Custom)."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -998,9 +903,13 @@ struct LayoutSettingsView: View {
                 }
             } header: {
                 InfoHeader("Shape") {
-                    Text("Aspect Ratio changes the shape the screens are drawn in. Stretching fills the "
-                         + "window with a screen apart from the padding, in pixels. Applies to the "
-                         + "layouts that do not place the screens by hand.")
+                    HelpList([
+                        HelpItem("Integer Scaling", "Enlarges the screens only by whole multiples, so every 3DS pixel becomes the same number of display pixels."),
+                        HelpItem("Aspect Ratio", "The shape the screens are drawn in."),
+                        HelpItem("Stretch Top Screen, Stretch Bottom Screen", "Fills the window with the screen, apart from the padding."),
+                        HelpItem("Paddings", "Space left free around a stretched screen, in pixels."),
+                        HelpItem(note: "These apply to the layouts that do not place the screens by hand."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -1019,9 +928,10 @@ struct LayoutSettingsView: View {
                 }
             } header: {
                 InfoHeader("Saved Layouts") {
-                    Text("Tap a saved layout to use it, swipe to delete one. In a game, Next Screen "
-                         + "Layout in the menu (or a controller shortcut) cycles through them, and "
-                         + "Save Screen Layout saves what you set up with Edit Screen Layout.")
+                    HelpList([
+                        HelpItem("Saved Layouts", "Tap a saved layout to use it, swipe to delete one. In a game, Next Screen Layout in the menu (or a controller shortcut) cycles through them."),
+                        HelpItem("Save Current Layout…", "Saves what you set up with Edit Screen Layout. Save Screen Layout in the game menu does the same."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -1132,11 +1042,12 @@ struct SystemSettingsView: View {
                 Toggle("Region-Free Patch", isOn: $settings.regionFreePatch)
             } header: {
                 InfoHeader("Console") {
-                    Text("A fixed clock starts every game at the time above (useful for games that "
-                         + "depend on the date). Without a fixed battery the console reports this "
-                         + "device's battery. Steps per Hour feeds games that count steps (the "
-                         + "Play Coins). The region-free patch lets a game run on a console of "
-                         + "another region.")
+                    HelpList([
+                        HelpItem("Fixed Clock, Console Time", "Starts every game at the time set here instead of the current time (useful for games that depend on the date)."),
+                        HelpItem("Fixed Battery, Battery Level, Charging", "Reports this battery level to games instead of this device's battery."),
+                        HelpItem("Steps per Hour", "Steps fed to games that count them (the Play Coins)."),
+                        HelpItem("Region-Free Patch", "Lets a game run on a console of another region."),
+                    ])
                 }
             }
 
@@ -1147,11 +1058,10 @@ struct SystemSettingsView: View {
                 Toggle("Simulate Headphones Plugged In", isOn: $settings.simulateHeadphones)
             } header: {
                 InfoHeader("Compatibility") {
-                    Text("Deterministic Async Operations runs file and install operations that "
-                         + "normally finish in the background at a fixed time and order, which helps "
-                         + "netplay and movies stay in sync and can fix games that break on the "
-                         + "timing. Simulate Headphones makes the console report headphones plugged "
-                         + "in, which some games use to pick their audio mix.")
+                    HelpList([
+                        HelpItem("Deterministic Async Operations", "Runs file and install operations that normally finish in the background at a fixed time and order, which helps netplay and movies stay in sync and can fix games that break on the timing."),
+                        HelpItem("Simulate Headphones Plugged In", "Makes the console report headphones plugged in, which some games use to pick their audio mix."),
+                    ])
                 }
             }
 
@@ -1161,11 +1071,9 @@ struct SystemSettingsView: View {
                 Toggle("Built-in Game Hacks", isOn: $settings.gameHacksEnabled)
             } header: {
                 InfoHeader("Game Hacks") {
-                    Text("The core knows games that need a workaround (accurate shader math for Ocarina "
-                         + "of Time 3D, no right-eye skipping for the Luigi's Mansion games) and "
-                         + "applies it by itself. Turn this off to run every game without them. A "
-                         + "single game can decide each workaround for itself in its Game Settings "
-                         + "under Game Hacks.")
+                    HelpList([
+                        HelpItem("Built-in Game Hacks", "The core knows games that need a workaround (accurate shader math for Ocarina of Time 3D, no right-eye skipping for the Luigi's Mansion games) and applies it by itself. Turn this off to run every game without them. A single game can decide each workaround for itself in its Game Settings under Game Hacks."),
+                    ])
                 }
             }
 
@@ -1181,12 +1089,11 @@ struct SystemSettingsView: View {
                 }
             } header: {
                 InfoHeader("Plugins") {
-                    Text("LLE Applets runs the console's own system applets (the Mii maker and the "
-                         + "like) instead of the built-in ones; it needs the system files of a real "
-                         + "console. Loads Luma-style 3GX plugins for games. Put a plugin in the folder of the "
-                         + "game's title ID (Files › Neroli › sdmc › luma › plugins › 0004000000XXXXXX "
-                         + "› plugin.3gx) or name it default.3gx in plugins. Applies when a game "
-                         + "starts.")
+                    HelpList([
+                        HelpItem("LLE Applets", "Runs the console's own system applets (the Mii maker and the like) instead of the built-in ones; it needs the system files of a real console."),
+                        HelpItem("Plugin Loader (3GX)", "Loads Luma-style 3GX plugins for games. Put a plugin in the folder of the game's title ID (Files › Neroli › sdmc › luma › plugins › 0004000000XXXXXX › plugin.3gx), or name it default.3gx in plugins for every game."),
+                        HelpItem(note: "These apply when a game starts."),
+                    ])
                 }
             }
 
@@ -1197,10 +1104,9 @@ struct SystemSettingsView: View {
                 NavigationLink("Online Play Guide") { OnlinePlayGuideView() }
             } header: {
                 InfoHeader("Online Play") {
-                    Text("Runs the console's own online system modules (network, certificates, "
-                         + "friends) instead of the built-in ones, which online games need. It needs "
-                         + "the system files of a real console and a replacement for Nintendo's "
-                         + "servers. See the guide. Applies when a game starts.")
+                    HelpList([
+                        HelpItem("Nintendo Network Support", "Runs the console's own online system modules (network, certificates, friends) instead of the built-in ones, which online games need. It needs the system files of a real console and a replacement for Nintendo's servers; see the guide. Applies when a game starts."),
+                    ])
                 }
             }
 
@@ -1223,11 +1129,11 @@ struct SystemSettingsView: View {
                 }
             } header: {
                 InfoHeader("Storage") {
-                    Text("A chosen folder holds the console's nand and SD card (as the folders nand "
-                         + "and sdmc inside it) instead of Files › Neroli. Existing data is not moved. "
-                         + "Apps that run inside another app (LiveContainer) may not be allowed to "
-                         + "use a folder outside their own; the Neroli folder is used then. Applies "
-                         + "when a game starts.")
+                    HelpList([
+                        HelpItem("Virtual SD Card", "Gives games an SD card, where installed titles, updates, DLC and some saves live."),
+                        HelpItem("Compress Installed CIAs", "Stores the titles installed from CIA files compressed, to save space."),
+                        HelpItem("Storage Folder", "A folder you choose holds the console's nand and SD card (as the folders nand and sdmc inside it) instead of Files › Neroli. Existing data is not moved. Apps running inside another app (LiveContainer) may not be allowed to use a folder outside their own; the Neroli folder is used then. Applies when a game starts."),
+                    ])
                 }
             }
 
@@ -1303,8 +1209,15 @@ struct ControlsSettingsView: View {
                 }
             } header: {
                 InfoHeader("On-Screen Controller") {
-                    Text("While playing, open the menu and choose Edit Controller Layout to move and "
-                         + "resize the buttons.")
+                    HelpList([
+                        HelpItem("Show Controller", "Shows the touch controls over the game. While playing, open the menu and choose Edit Controller Layout to move and resize the buttons."),
+                        HelpItem("Show Swap Screens Button, Show Home Button", "Adds those buttons to the touch controls."),
+                        HelpItem("Hide When a Controller Is Connected", "Hides the touch controls while a game controller is connected."),
+                        HelpItem("Fade Out Menu Buttons With a Controller", "With a controller, the menu buttons fade until you touch the screen."),
+                        HelpItem("Opacity", "How see-through the touch controls are."),
+                        HelpItem("Liquid Glass Controls, Glass Tint", "Draws the controls with iOS's Liquid Glass look (iOS 26). It costs some GPU time, so it is off by default."),
+                        HelpItem("Haptic Feedback", "A light tap of the vibration motor when a button is pressed."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -1384,17 +1297,13 @@ struct AboutView: View {
                 }
             } header: {
                 InfoHeader("Diagnostics") {
-                    Text("Shares the start and the end of the log and the last crash report, so the "
-                         + "file stays small even when the full log is huge. Write Log turns the "
-                         + "log off (only critical errors are still written) and stops the "
-                         + "statistics line and its counters, which saves a little work in the "
-                         + "emulator. It is off by default, so turn it on before you play a game you want a log of. "
-                         + "GPU Pass Timing (with Write Log on) adds the GPU time of every kind of "
-                         + "render pass to the log. It costs GPU time and can cause stutter, so "
-                         + "only turn it on to measure something. Save Shaders for Analysis writes "
-                         + "the game's most used shaders to Files › Neroli › shader_dump › (game "
-                         + "ID) every 10 seconds or so, with an index.txt of how often each is "
-                         + "used; leave it off for playing. Both apply when a game starts.")
+                    HelpList([
+                        HelpItem("Share Log", "Shares the start and the end of the log and the last crash report, so the file stays small even when the full log is huge."),
+                        HelpItem("Write Log", "Off, only critical errors are written and the statistics line and its counters stop, which saves a little work. Turn it on before you play a game you want a log of."),
+                        HelpItem("GPU Pass Timing", "With Write Log on, adds the GPU time of every kind of render pass to the log. It costs GPU time and can cause stutter, so only turn it on to measure something."),
+                        HelpItem("Save Shaders for Analysis", "Writes the game's most used shaders to Files › Neroli › shader_dump › (game ID) every 10 seconds or so, with an index.txt of how often each is used. Leave it off for playing."),
+                        HelpItem(note: "GPU Pass Timing and Save Shaders apply when a game starts."),
+                    ])
                 }
             }
             .listRowBackground(LGRowBackground())
@@ -1510,9 +1419,13 @@ struct ConsoleProfileView: View {
                 Stepper("Play Coins: \(playCoins)", value: $playCoins, in: 0...300)
             } header: {
                 InfoHeader("Console") {
-                    Text("These are the settings of the emulated console, which games read. A country "
-                         + "that does not belong to the console's region can stop some games from "
-                         + "starting.")
+                    HelpList([
+                        HelpItem(note: "These are the settings of the emulated console, which games read."),
+                        HelpItem("Language", "The console's language; games use it to pick theirs."),
+                        HelpItem("Country", "A country that does not belong to the console's region can stop some games from starting."),
+                        HelpItem("Sound", "Mono, stereo or surround output, as games see it."),
+                        HelpItem("Play Coins", "The console's Play Coins, which some games spend."),
+                    ])
                 }
             }
 
@@ -1609,6 +1522,55 @@ extension InfoHeader where Title == EmptyView {
         self.titleText = nil
         self.title = EmptyView()
         self.info = info()
+    }
+}
+
+/// One entry of a section's info sheet: a setting's name and what it does, or a note about the
+/// whole section (no name).
+struct HelpItem {
+    let name: String?
+    let text: String
+
+    init(_ name: String, _ text: String) {
+        self.name = name
+        self.text = text
+    }
+
+    init(note: String) {
+        self.name = nil
+        self.text = note
+    }
+}
+
+/// The settings of a section one by one, in the order of their rows: the name in bold and what
+/// it does under it, so a setting can be found at a glance instead of in one long paragraph.
+struct HelpList: View {
+    let items: [HelpItem]
+
+    init(_ items: [HelpItem]) {
+        self.items = items
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                if index > 0 {
+                    Divider().padding(.vertical, 12)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    if let name = item.name {
+                        Text(name)
+                            .font(.headline)
+                        Text(item.text)
+                    } else {
+                        Text(item.text)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+            }
+        }
     }
 }
 
