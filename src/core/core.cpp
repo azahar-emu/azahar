@@ -580,17 +580,17 @@ void System::LoadAMTitles() {
     if (!am) {
         return;
     }
-    bool bundle_registered = false;
-    if (!GetCartridge().empty()) {
-        auto tar = FileUtil::TarArchive::OpenTarArchive(GetCartridge());
+    // The bundle of the booted application is registered first, so that its titles take
+    // precedence over the ones of an inserted cartridge bundle.
+    app_loader->LoadBundle();
+    const auto& cartridge = GetCartridge();
+    // TODO(PabloMK7): This path comparation is a weak check but it shouldn't have any side effects.
+    if (!cartridge.empty() && cartridge != app_loader->GetFilePath()) {
+        auto tar = FileUtil::TarArchive::OpenTarArchive(cartridge);
         if (tar) {
             tar.reset();
-            am->GetBundleCIAHandler()->RegisterBundle(GetCartridge());
-            bundle_registered = true;
+            am->GetBundleCIAHandler()->RegisterBundle(cartridge);
         }
-    }
-    if (!bundle_registered) {
-        app_loader->LoadBundle();
     }
     am->ScanForAllTitles();
 }
