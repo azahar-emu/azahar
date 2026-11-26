@@ -88,6 +88,8 @@ Handler::Handler(Core::Timing& timing, u64 override_init_time) : timing(timing) 
     float slidestate = Settings::values.factor_3d.GetValue() / 100.0f;
     shared_page.sliderstate_3d = static_cast<float_le>(slidestate);
 
+    SetHeadphonesConnected(Settings::values.simulate_headphones_plugged.GetValue());
+
     // TODO(PabloMK7)
     // Set wifi state to internet, to fake a connection from the NDM service.
     // Remove once it is figured out how NDM uses AC to connect at console boot.
@@ -176,6 +178,10 @@ void SharedPage::Handler::SetBatteryState(const BatteryState& state) {
 
 const BatteryState& SharedPage::Handler::GetBatteryState() {
     return shared_page.battery_state;
+}
+
+void Handler::SetHeadphonesConnected(bool connected) {
+    shared_page.headphones_connected = connected ? 1 : 0;
 }
 
 SharedPageDef& Handler::GetSharedPage() {
