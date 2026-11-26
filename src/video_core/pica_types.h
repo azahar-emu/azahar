@@ -80,8 +80,11 @@ public:
 
     constexpr u32 ToRaw() {
 
-        // TODO(wunk): Detect compiler float16 support with `__FLT16_MANT_DIG__` and use
-        // static_cast<std::float16_t> + std::bit_cast<u32> to convert to raw bits.
+#ifdef __FLT16_MANT_DIG__
+        if constexpr (M == 10 && E == 5) {
+            return std::bit_cast<std::uint16_t>(static_cast<_Float16>(value));
+        }
+#endif
 
         constexpr s32 bias = 127 - ((1 << (E - 1)) - 1);
         const u32 fp32_hex = std::bit_cast<u32>(value);
