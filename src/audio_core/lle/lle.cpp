@@ -2,9 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the misc/licenses/gplv2.txt file included.
 
+#include <algorithm>
 #include <array>
 #include <atomic>
+#include <deque>
+#include <functional>
+#include <mutex>
 #include <thread>
+#include <vector>
 #include <teakra/teakra.h>
 #include "audio_core/lle/lle.h"
 #include "common/assert.h"
@@ -123,8 +128,7 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 struct DspLle::Impl final {
     Impl(Core::Timing& timing, Memory::MemorySystem& memory, bool multithread, bool use_jit)
         : teakra(Teakra::UserConfig{.dsp_memory = memory.GetDspMemory(0), .use_jit = use_jit}),
-          core_timing(timing),
-          multithread(multithread) {
+          core_timing(timing), multithread(multithread) {
         teakra_slice_event = core_timing.RegisterEvent(
             "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
     }
@@ -152,9 +156,89 @@ struct DspLle::Impl final {
     static constexpr u32 DspDataOffset = 0x40000;
     static constexpr u32 TeakraSlice = 16384;
 
+    // Simulates the delay between the guest application writing commands and the DSP hardware
+    // receiving them. Without this delay, the events would arrive too quickly which causes issues
+    // inside the DSP firmware. Measured on a real console, and takes about 2650 cycles on average.
+    static constexpr u64 HostWriteLatency = 2650;
+
+    struct HostWrite {
+        u64 cycles_remaining;
+        std::function<void()> apply;
+    };
+    std::mutex host_mutex;
+    std::deque<HostWrite> host_writes;
+    std::array<bool, 3> index_data_pending{};
+
+    void QueueHostWrite(std::function<void()> apply) {
+        std::lock_guard lock(host_mutex);
+        host_writes.push_back({HostWriteLatency, std::move(apply)});
+    }
+
+    void ClearHostWrites() {
+        std::lock_guard lock(host_mutex);
+        host_writes.clear();
+        index_data_pending = {};
+    }
+
+    void SetSemaphore(u16 value) {
+        QueueHostWrite([this, value] { teakra.SetSemaphore(value); });
+    }
+
+    void SendData(u8 index, u16 value) {
+        {
+            std::lock_guard lock(host_mutex);
+            index_data_pending[index] = true;
+        }
+        QueueHostWrite([this, index, value] {
+            {
+                std::lock_guard lock(host_mutex);
+                index_data_pending[index] = false;
+            }
+            teakra.SendData(index, value);
+        });
+    }
+
+    bool SendDataIsEmpty(u8 index) {
+        std::lock_guard lock(host_mutex);
+        return !index_data_pending[index] && teakra.SendDataIsEmpty(index);
+    }
+
+    // Runs the DSP, applying queued host writes when appropriate.
+    void RunTeakra(u64 cycles) {
+        while (cycles > 0) {
+            std::size_t pending_host_writes;
+            u64 step = cycles;
+            {
+                std::lock_guard lock(host_mutex);
+                pending_host_writes = host_writes.size();
+                for (const auto& write : host_writes) {
+                    step = std::min(step, write.cycles_remaining);
+                }
+            }
+            teakra.Run(static_cast<unsigned>(step));
+            cycles -= step;
+
+            std::vector<std::function<void()>> ready;
+            {
+                std::lock_guard lock(host_mutex);
+                for (std::size_t i = 0; i < pending_host_writes; ++i) {
+                    host_writes[i].cycles_remaining -= step;
+                }
+                while (!host_writes.empty() && host_writes.front().cycles_remaining == 0) {
+                    ready.push_back(std::move(host_writes.front().apply));
+                    host_writes.pop_front();
+                }
+            }
+            for (auto& apply : ready) {
+                // Run the apply callback
+                apply();
+            }
+        }
+    }
+
     void TeakraThread() {
         while (true) {
-            teakra.Run(TeakraSlice);
+            RunTeakra(TeakraSlice);
             teakra_slice_barrier.Sync();
             if (stop_signal) {
                 if (stop_generation == teakra_slice_barrier.Generation())
@@ -177,7 +261,7 @@ struct DspLle::Impl final {
         if (multithread) {
             teakra_slice_barrier.Sync();
         } else {
-            teakra.Run(TeakraSlice);
+            RunTeakra(TeakraSlice);
         }
     }
 
@@ -254,9 +338,9 @@ struct DspLle::Impl final {
         }
         if (need_update) {
             UpdatePipeStatus(pipe_status);
-            while (!teakra.SendDataIsEmpty(2))
+            while (!SendDataIsEmpty(2))
                 RunTeakraSlice();
-            teakra.SendData(2, pipe_status.slot_index);
+            SendData(2, pipe_status.slot_index);
         }
     }
 
@@ -291,9 +375,9 @@ struct DspLle::Impl final {
         }
         if (need_update) {
             UpdatePipeStatus(pipe_status);
-            while (!teakra.SendDataIsEmpty(2))
+            while (!SendDataIsEmpty(2))
                 RunTeakraSlice();
-            teakra.SendData(2, pipe_status.slot_index);
+            SendData(2, pipe_status.slot_index);
         }
         return data;
     }
@@ -313,6 +397,7 @@ struct DspLle::Impl final {
         }
 
         teakra.Reset();
+        ClearHostWrites();
 
         Dsp1 dsp(buffer);
         auto dsp_memory = teakra.GetDspMemory();
@@ -363,10 +448,10 @@ struct DspLle::Impl final {
 
         // Send finalization signal via command/reply register 2
         constexpr u16 FinalizeSignal = 0x8000;
-        while (!teakra.SendDataIsEmpty(2))
+        while (!SendDataIsEmpty(2))
             RunTeakraSlice();
 
-        teakra.SendData(2, FinalizeSignal);
+        SendData(2, FinalizeSignal);
 
         // Wait for completion
         while (!teakra.RecvDataIsReady(2))
@@ -391,7 +476,7 @@ bool DspLle::RecvDataIsReady(u32 register_number) const {
 }
 
 void DspLle::SetSemaphore(u16 semaphore_value) {
-    impl->teakra.SetSemaphore(semaphore_value);
+    impl->SetSemaphore(semaphore_value);
 }
 
 std::vector<u8> DspLle::PipeRead(DspPipe pipe_number, std::size_t length) {
