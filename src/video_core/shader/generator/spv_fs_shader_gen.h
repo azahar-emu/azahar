@@ -241,6 +241,11 @@ private:
     // Converts to 16-bit floating point representation, if supported by the platform. Otherwise,
     // converts to 32-bit float with relaxed precision.
     [[nodiscard]] Id ToF16(Id var, u32 size = 1) {
+        if (!use_float16) [[likely]] {
+            Decorate(var, spv::Decoration::RelaxedPrecision);
+            return var;
+        }
+
         if (size > 1) {
             return OpFConvert(f16vec_ids.Get(size), var);
         }
@@ -251,6 +256,10 @@ private:
     }
 
     [[nodiscard]] Id ToF32(Id var, u32 size = 1) {
+        if (!use_float16) [[likely]] {
+            return var;
+        }
+
         if (size > 1) {
             return OpFConvert(f32vec_ids.Get(size), var);
         }
