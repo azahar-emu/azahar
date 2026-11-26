@@ -103,7 +103,7 @@ enum class BooleanSetting(
     SIMULATE_HEADPHONES_PLUGGED(
         SettingKeys.simulate_headphones_plugged(),
         CitraSettings.SECTION_AUDIO,
-        false
+        true
     ),
     CPU_JIT(SettingKeys.use_cpu_jit(), CitraSettings.SECTION_CORE, true),
     USE_FASTINTERP(SettingKeys.use_fastinterp(), CitraSettings.SECTION_CORE, true),

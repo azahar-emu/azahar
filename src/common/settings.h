@@ -683,7 +683,7 @@ struct Values {
 #endif
     Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, Keys::input_type};
     Setting<std::string> input_device{"Auto", Keys::input_device};
-    SwitchableSetting<bool> simulate_headphones_plugged{false, Keys::simulate_headphones_plugged};
+    SwitchableSetting<bool> simulate_headphones_plugged{true, Keys::simulate_headphones_plugged};
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;
