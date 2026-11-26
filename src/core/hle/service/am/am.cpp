@@ -1369,33 +1369,46 @@ bool BundleCIAHandler::RegisterBundle(const std::string& filename) {
         LOG_ERROR(Service_AM, "Failed to parse bundle file");
         return false;
     }
+    std::vector<FileSys::CIAContainer> containers;
     for (auto f : files) {
         if (f.name.ends_with(".cia") || f.name.ends_with(".zcia")) {
             auto sub_file = tar.OpenSubFile(f.name);
             if (!sub_file->IsGood()) {
                 LOG_ERROR(Service_AM, "Failed to open sub file {}", f.name);
-                cia_containers.clear();
                 return false;
             }
             if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(sub_file.get()) != std::nullopt) {
                 sub_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(sub_file));
             }
-            cia_containers.emplace_back();
-            auto res = cia_containers.back().Load(std::move(sub_file));
+            auto& container = containers.emplace_back();
+            auto res = container.Load(std::move(sub_file));
             if (res != Loader::ResultStatus::Success) {
                 LOG_ERROR(Service_AM, "Failed to parse bundled cia file {}: (error {})", f.name,
                           res);
-                cia_containers.clear();
                 return false;
             }
-            if (cia_containers.back().GetTitleMetadata().HasEncryptedContent(
-                    cia_containers.back().GetHeader())) {
+            if (container.GetTitleMetadata().HasEncryptedContent(container.GetHeader())) {
                 LOG_ERROR(Service_AM, "Bundle contains encrypted cia file {}", f.name);
-                cia_containers.clear();
                 return false;
             }
         }
     }
+
+    // A title registered by an earlier bundle takes preference.
+    std::string title_ids;
+    for (auto& c : containers) {
+        const u64 title_id = c.GetTitleMetadata().GetTitleID();
+        if (std::ranges::any_of(cia_containers, [title_id](const auto& other) {
+                return other.GetTitleMetadata().GetTitleID() == title_id;
+            })) {
+            LOG_WARNING(Service_AM, "Title {:016X} of bundle {} is already registered, skipping it",
+                        title_id, filename);
+            continue;
+        }
+        title_ids += fmt::format(" {:016X}", title_id);
+        cia_containers.push_back(std::move(c));
+    }
+    LOG_INFO(Service_AM, "Registered bundle {} with titles:{}", filename, title_ids);
     return true;
 }
 
