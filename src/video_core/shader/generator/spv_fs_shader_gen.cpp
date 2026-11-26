@@ -167,33 +167,34 @@ void FragmentModule::WriteFog() {
     // Get index into fog LUT
     Id fog_index{};
     if (config.texture.fog_flip) {
-        fog_index = OpFMul(f32_id, OpFSub(f32_id, ConstF32(1.f), depth), ConstF32(128.f));
+        fog_index = OpFMul(f16_id, OpFSub(f16_id, ConstF16(1.f), ToF16(depth)), ConstF16(128.f));
     } else {
-        fog_index = OpFMul(f32_id, depth, ConstF32(128.f));
+        fog_index = OpFMul(f16_id, ToF16(depth), ConstF16(128.f));
     }
 
     // Generate clamped fog factor from LUT for given fog index
-    const Id fog_i{OpFClamp(f32_id, OpFloor(f32_id, fog_index), ConstF32(0.f), ConstF32(127.f))};
-    const Id fog_f{OpFSub(f32_id, fog_index, fog_i)};
+    const Id fog_i{OpFClamp(f16_id, OpFloor(f16_id, fog_index), ConstF16(0.f), ConstF16(127.f))};
+    const Id fog_f{OpFSub(f16_id, fog_index, fog_i)};
     const Id fog_lut_offset{GetShaderDataMember(i32_id, ConstS32(10))};
     const Id coord{OpIAdd(i32_id, OpConvertFToS(i32_id, fog_i), fog_lut_offset)};
     if (!Sirit::ValidId(texture_buffer_lut_lf)) {
         texture_buffer_lut_lf = OpLoad(image_buffer_id, texture_buffer_lut_lf_id);
     }
-    const Id fog_lut_entry_rgba{OpImageFetch(f32vec_ids.Get(4), texture_buffer_lut_lf, coord)};
-    const Id fog_lut_r{OpCompositeExtract(f32_id, fog_lut_entry_rgba, 0)};
-    const Id fog_lut_g{OpCompositeExtract(f32_id, fog_lut_entry_rgba, 1)};
-    Id fog_factor{OpFma(f32_id, fog_f, fog_lut_g, fog_lut_r)};
-    fog_factor = OpFClamp(f32_id, fog_factor, ConstF32(0.f), ConstF32(1.f));
+    const Id fog_lut_entry_rgba{
+        ToF16(OpImageFetch(f32vec_ids.Get(4), texture_buffer_lut_lf, coord), 4)};
+    const Id fog_lut_r{OpCompositeExtract(f16_id, fog_lut_entry_rgba, 0)};
+    const Id fog_lut_g{OpCompositeExtract(f16_id, fog_lut_entry_rgba, 1)};
+    Id fog_factor{OpFma(f16_id, fog_f, fog_lut_g, fog_lut_r)};
+    fog_factor = OpFClamp(f16_id, fog_factor, ConstF16(0.f), ConstF16(1.f));
 
     // Blend the fog
     const Id tex_env_rgb{
-        OpVectorShuffle(f32vec_ids.Get(3), combiner_output, combiner_output, 0, 1, 2)};
-    const Id fog_color{GetShaderDataMember(f32vec_ids.Get(3), ConstS32(19))};
+        OpVectorShuffle(f16vec_ids.Get(3), combiner_output, combiner_output, 0, 1, 2)};
+    const Id fog_color{ToF16(GetShaderDataMember(f32vec_ids.Get(3), ConstS32(19)), 3)};
     const Id fog_factor_rgb{
-        OpCompositeConstruct(f32vec_ids.Get(3), fog_factor, fog_factor, fog_factor)};
-    const Id fog_result{OpFMix(f32vec_ids.Get(3), fog_color, tex_env_rgb, fog_factor_rgb)};
-    combiner_output = OpVectorShuffle(f32vec_ids.Get(4), fog_result, combiner_output, 0, 1, 2, 6);
+        OpCompositeConstruct(f16vec_ids.Get(3), fog_factor, fog_factor, fog_factor)};
+    const Id fog_result{OpFMix(f16vec_ids.Get(3), fog_color, tex_env_rgb, fog_factor_rgb)};
+    combiner_output = OpVectorShuffle(f16vec_ids.Get(4), fog_result, combiner_output, 0, 1, 2, 6);
 }
 
 void FragmentModule::WriteGas() {
