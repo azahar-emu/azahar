@@ -2,10 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the misc/licenses/gplv2.txt file included.
 
+#include <array>
+#include <cstring>
+#include <span>
+#include <cryptopp/sha.h>
 #include "audio_core/audio_types.h"
 #include "common/archives.h"
 #include "common/assert.h"
+#include "common/common_funcs.h"
 #include "common/logging/log.h"
+#include "common/swap.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/process.h"
@@ -22,6 +28,70 @@ enum class DspPipe;
 }
 
 namespace Service::DSP {
+
+namespace {
+
+constexpr Result ResultInvalidComponent(ErrorDescription::NotAuthorized, ErrorModule::DSP,
+                                        ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+
+// The checks the dsp module makes on a DSP1 component before loading it. The RSA signature over
+// the header is not checked to allow custom firmwares.
+bool IsValidComponent(std::span<const u8> component) {
+    struct Segment {
+        u32_le offset;
+        u32_le address;
+        u32_le size;
+        INSERT_PADDING_BYTES(3);
+        u8 memory_type;
+        std::array<u8, CryptoPP::SHA256::DIGESTSIZE> sha256;
+    };
+    struct Header {
+        std::array<u8, 0x100> signature;
+        std::array<u8, 4> magic;
+        u32_le binary_size;
+        u16_le memory_layout;
+        INSERT_PADDING_BYTES(4);
+        u8 num_segments;
+        INSERT_PADDING_BYTES(0x11);
+        std::array<Segment, 10> segments;
+    };
+    static_assert(sizeof(Segment) == 0x30);
+    static_assert(sizeof(Header) == 0x300);
+
+    if (component.size() < sizeof(Header)) {
+        return false;
+    }
+    Header header;
+    std::memcpy(&header, component.data(), sizeof(header));
+    constexpr std::array<u8, 4> Magic{'D', 'S', 'P', '1'};
+    if (header.magic != Magic || header.binary_size != component.size() ||
+        header.binary_size >= 0x100000 || header.num_segments == 0 || header.num_segments > 10) {
+        return false;
+    }
+    for (u32 i = 0; i < header.num_segments; ++i) {
+        const Segment& segment = header.segments[i];
+        if (static_cast<u64>(segment.offset) + segment.size > component.size()) {
+            return false;
+        }
+        // Program memory is 0x20000 words. Types 1 to 3 are limited to 0x10000 words.
+        if (segment.memory_type > 3) {
+            return false;
+        }
+        const u32 limit = segment.memory_type == 0 ? 0x20000 : 0x10000;
+        if (segment.address >= limit || segment.address + segment.size / 2 > limit) {
+            return false;
+        }
+        std::array<u8, CryptoPP::SHA256::DIGESTSIZE> hash;
+        CryptoPP::SHA256().CalculateDigest(hash.data(), component.data() + segment.offset,
+                                           segment.size);
+        if (hash != segment.sha256) {
+            return false;
+        }
+    }
+    return true;
+}
+
+} // namespace
 
 void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
@@ -202,14 +272,19 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
     const auto data_mask = rp.Pop<u16>();
     auto& buffer = rp.PopMappedBuffer();
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(ResultSuccess);
-    rb.Push(true);
-    rb.PushMappedBuffer(buffer);
-
     std::vector<u8> component_data(size);
     buffer.Read(component_data.data(), 0, size);
 
+    const bool valid = IsValidComponent(component_data);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(valid ? ResultSuccess : ResultInvalidComponent);
+    rb.Push(valid);
+    rb.PushMappedBuffer(buffer);
+
+    if (!valid) {
+        LOG_ERROR(Service_DSP, "Invalid DSP component, size=0x{:X}", size);
+        return;
+    }
     system.DSP().LoadComponent(component_data);
 
     LOG_INFO(Service_DSP, "called size=0x{:X}, prog_mask=0x{:04X}, data_mask=0x{:04X}", size,

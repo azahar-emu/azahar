@@ -233,7 +233,6 @@ struct DspLle::Impl final {
     };
     std::mutex interrupt_mutex;
     std::deque<PendingInterrupt> pending_interrupts;
-    u64 step_end = 0;
 
     void QueueInterrupt(std::function<void()> deliver) {
         std::lock_guard lock(interrupt_mutex);
