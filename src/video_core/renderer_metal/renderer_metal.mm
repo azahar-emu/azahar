@@ -592,9 +592,9 @@ private:
     bool steady_active{};
     u32 steady_exit_swap{}; ///< fg_swaps when Steady 30 FPS last stopped
     std::chrono::steady_clock::time_point rhythm_start{};
-    /// Display sync: the pictures waiting for the display link or on screen (it keeps up to two
-    /// waiting and one shown, so four never overwrite one in use).
-    static constexpr u32 DS_COLORS = 4;
+    /// Display sync: the pictures waiting for the display link or on screen. One that is on screen
+    /// or waiting is never drawn over (see RenderDisplaySynced).
+    static constexpr u32 DS_COLORS = 6;
     std::array<id<MTLTexture>, DS_COLORS> ds_color{};
     u32 ds_index{};
     u32 ds_width{}, ds_height{};
@@ -2796,7 +2796,28 @@ bool RendererMetal::RenderDisplaySynced(CAMetalLayer* target,
         ds_width = layout.width;
         ds_height = layout.height;
     }
-    ds_index = (ds_index + 1) % DS_COLORS;
+    // The next picture the display link is not using: not the one on screen, which it presents
+    // again at every refresh without a new frame (Present Every Refresh), and none that is waiting.
+    // Picking the next one in turn drew over the picture on screen when the frames came faster
+    // than the display took them, which then showed half-drawn. Frames waiting beyond what the
+    // display link keeps are let go first, it would drop them anyway.
+    {
+        std::scoped_lock lock{fg_pacer->mutex};
+        while (fg_pacer->waiting.size() > 1 + fg_pacer->min_waiting) {
+            fg_pacer->waiting.pop_front();
+        }
+        for (u32 tries = 0; tries < DS_COLORS; ++tries) {
+            ds_index = (ds_index + 1) % DS_COLORS;
+            const id<MTLTexture> candidate = ds_color[ds_index];
+            bool in_use = candidate == fg_pacer->on_screen.texture;
+            for (const DisplayPacer::Frame& frame : fg_pacer->waiting) {
+                in_use = in_use || frame.texture == candidate;
+            }
+            if (!in_use) {
+                break;
+            }
+        }
+    }
     id<MTLTexture> current = ds_color[ds_index];
 
     // How long this frame of the game lasts: as many of the game's refreshes as swaps went by.
