@@ -63,6 +63,30 @@ private:
     void RecvDataIsReady(Kernel::HLERequestContext& ctx);
 
     /**
+     * DSP_DSP::SendData service function
+     *  Inputs:
+     *      0 : Header Code[0x00030080]
+     *      1 : Register Number
+     *      2 : u16, Value to write
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *  Note:
+     *      The dsp module waits until the DSP has read the previous value.
+     */
+    void SendData(Kernel::HLERequestContext& ctx);
+
+    /**
+     * DSP_DSP::SendDataIsEmpty service function
+     *  Inputs:
+     *      0 : Header Code[0x00040040]
+     *      1 : Register Number
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : u8, 1 if the DSP has read the last value written to the register, 0 otherwise
+     */
+    void SendDataIsEmpty(Kernel::HLERequestContext& ctx);
+
+    /**
      * DSP_DSP::SetSemaphore service function
      *  Inputs:
      *      0 : Header Code[0x00070040]

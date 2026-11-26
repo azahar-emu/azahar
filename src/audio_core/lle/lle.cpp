@@ -568,6 +568,26 @@ bool DspLle::RecvDataIsReady(u32 register_number) const {
     return impl->teakra.RecvDataIsReady(register_number);
 }
 
+void DspLle::SendData(u32 register_number, u16 value) {
+    if (register_number >= 3) {
+        LOG_ERROR(Audio_DSP, "Invalid register_number {}", register_number);
+        return;
+    }
+    const u8 index = static_cast<u8>(register_number);
+    while (!impl->SendDataIsEmpty(index)) {
+        impl->RunTeakraSlice();
+    }
+    impl->SendData(index, value);
+}
+
+bool DspLle::SendDataIsEmpty(u32 register_number) const {
+    if (register_number >= 3) {
+        LOG_ERROR(Audio_DSP, "Invalid register_number {}", register_number);
+        return true;
+    }
+    return impl->SendDataIsEmpty(static_cast<u8>(register_number));
+}
+
 void DspLle::SetSemaphore(u16 semaphore_value) {
     impl->SetSemaphore(semaphore_value);
 }

@@ -32,6 +32,8 @@ public:
 
     u16 RecvData(u32 register_number) override;
     bool RecvDataIsReady(u32 register_number) const override;
+    void SendData(u32 register_number, u16 value) override;
+    bool SendDataIsEmpty(u32 register_number) const override;
     void SetSemaphore(u16 semaphore_value) override;
     std::vector<u8> PipeRead(DspPipe pipe_number, std::size_t length) override;
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;

@@ -45,6 +45,30 @@ void DSP_DSP::RecvDataIsReady(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
 
+void DSP_DSP::SendData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 register_number = rp.Pop<u32>();
+    const u16 value = rp.Pop<u16>();
+
+    system.DSP().SendData(register_number, value);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+
+    LOG_DEBUG(Service_DSP, "register_number={}, value=0x{:04X}", register_number, value);
+}
+
+void DSP_DSP::SendDataIsEmpty(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 register_number = rp.Pop<u32>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(system.DSP().SendDataIsEmpty(register_number));
+
+    LOG_DEBUG(Service_DSP, "register_number={}", register_number);
+}
+
 void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u16 semaphore_value = rp.Pop<u16>();
@@ -272,7 +296,7 @@ void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
     rb.PushCopyObjects(semaphore_event);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    LOG_DEBUG(Service_DSP, "called");
 }
 
 void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
@@ -282,7 +306,7 @@ void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:04X}", preset_semaphore);
+    LOG_DEBUG(Service_DSP, "called mask=0x{:04X}", preset_semaphore);
 }
 
 void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
@@ -352,8 +376,8 @@ DSP_DSP::DSP_DSP(Core::System& system)
         // clang-format off
         {0x0001, &DSP_DSP::RecvData, "RecvData"},
         {0x0002, &DSP_DSP::RecvDataIsReady, "RecvDataIsReady"},
-        {0x0003, nullptr, "SendData"},
-        {0x0004, nullptr, "SendDataIsEmpty"},
+        {0x0003, &DSP_DSP::SendData, "SendData"},
+        {0x0004, &DSP_DSP::SendDataIsEmpty, "SendDataIsEmpty"},
         {0x0005, nullptr, "SendFifoEx"},
         {0x0006, nullptr, "RecvFifoEx"},
         {0x0007, &DSP_DSP::SetSemaphore, "SetSemaphore"},
