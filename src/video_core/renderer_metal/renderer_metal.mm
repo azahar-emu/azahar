@@ -2910,7 +2910,11 @@ bool RendererMetal::StartPacer(CAMetalLayer* layer) {
             GetQualityOptions().frame_generation > 0 && GetQualityOptions().frame_generation_buffer
                 ? 2u
                 : 1u;
-        pacer->repeat_frames = GetQualityOptions().present_every_refresh;
+        // Not with frame generation: it already presents a frame every second refresh, and the
+        // copies took GPU time from making frames, which turned frame generation off (Adaptive,
+        // Pause When Behind) in a game that was close to its budget.
+        pacer->repeat_frames =
+            GetQualityOptions().present_every_refresh && GetQualityOptions().frame_generation == 0;
         id<MTLRenderPipelineState> pipeline = present_pipeline;
         id<MTLSamplerState> sampler = present_samplers[0];
         pacer->draw = [pipeline, sampler](id<MTLRenderCommandEncoder> encoder,
