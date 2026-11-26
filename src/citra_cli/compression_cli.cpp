@@ -18,6 +18,8 @@
 
 namespace CitraCLI {
 
+static const struct option no_long_opts[] = {{nullptr, 0, nullptr, 0}};
+
 static std::string strip_path_filename(std::string path) {
     namespace fs = std::filesystem;
     fs::path path_path = path;
