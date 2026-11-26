@@ -188,10 +188,13 @@ API_AVAILABLE(ios(17.0), macos(14.0), tvos(17.0))
             p->shown++;
             p->missed_this_frame = false;
             p->on_screen = next;
-        } else if (p->repeat_frames && p->on_screen.texture != nil) {
+        } else if (p->repeat_frames && p->slot > 0.025 && p->on_screen.texture != nil) {
             // The same picture again: the display keeps refreshing at the rate asked for instead
             // of slowing down between the frames of a 30 FPS game (ProMotion), so the next new
-            // frame lands on the refresh it was meant for.
+            // frame lands on the refresh it was meant for. Only for frames held three refreshes
+            // or more (30 FPS): at 60 FPS the display already gets a frame every second refresh,
+            // and a repeat in between, queued before the next frame, held that frame up in heavy
+            // scenes so the repeat after it went first (uneven 60 FPS in Fire Emblem battles).
             next = p->on_screen;
             repeat = true;
         } else {
