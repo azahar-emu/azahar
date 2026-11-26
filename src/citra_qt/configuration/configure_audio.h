@@ -39,6 +39,7 @@ private:
 
     void SetupPerGameUI();
 
+    ConfigurationShared::CheckState dsp_lle_jit;
     ConfigurationShared::CheckState audio_stretching;
     ConfigurationShared::CheckState realtime_audio;
     ConfigurationShared::CheckState simulate_headphones_plugged;

@@ -298,6 +298,7 @@ void QtConfig::ReadAudioValues() {
     qt_config->beginGroup(QStringLiteral("Audio"));
 
     ReadGlobalSetting(Settings::values.audio_emulation);
+    ReadGlobalSetting(Settings::values.enable_dsp_lle_jit);
     ReadGlobalSetting(Settings::values.enable_audio_stretching);
     ReadGlobalSetting(Settings::values.enable_realtime_audio);
     ReadGlobalSetting(Settings::values.simulate_headphones_plugged);
@@ -967,6 +968,7 @@ void QtConfig::SaveAudioValues() {
     qt_config->beginGroup(QStringLiteral("Audio"));
 
     WriteGlobalSetting(Settings::values.audio_emulation);
+    WriteGlobalSetting(Settings::values.enable_dsp_lle_jit);
     WriteGlobalSetting(Settings::values.enable_audio_stretching);
     WriteGlobalSetting(Settings::values.enable_realtime_audio);
     WriteGlobalSetting(Settings::values.simulate_headphones_plugged);

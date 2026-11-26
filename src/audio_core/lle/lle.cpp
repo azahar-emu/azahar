@@ -121,8 +121,9 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 }
 
 struct DspLle::Impl final {
-    Impl(Core::Timing& timing, Memory::MemorySystem& memory, bool multithread)
-        : teakra(Teakra::UserConfig{.dsp_memory = memory.GetDspMemory(0)}), core_timing(timing),
+    Impl(Core::Timing& timing, Memory::MemorySystem& memory, bool multithread, bool use_jit)
+        : teakra(Teakra::UserConfig{.dsp_memory = memory.GetDspMemory(0), .use_jit = use_jit}),
+          core_timing(timing),
           multithread(multithread) {
         teakra_slice_event = core_timing.RegisterEvent(
             "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
@@ -462,12 +463,15 @@ void DspLle::UnloadComponent() {
     impl->UnloadComponent();
 }
 
-DspLle::DspLle(Core::System& system, bool multithread)
-    : DspLle(system, system.Memory(), system.CoreTiming(), multithread) {}
+DspLle::DspLle(Core::System& system, bool multithread, bool use_jit)
+    : DspLle(system, system.Memory(), system.CoreTiming(), multithread, use_jit) {}
 
 DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
-               bool multithread)
-    : DspInterface(system), impl(std::make_unique<Impl>(timing, memory, multithread)) {
+               bool multithread, bool use_jit)
+    : DspInterface(system), impl(std::make_unique<Impl>(timing, memory, multithread, use_jit)) {
+    if (use_jit && !IsJitSupported()) {
+        LOG_WARNING(Audio_DSP, "The DSP JIT is not supported on this host, using the interpreter");
+    }
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {
         return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);
@@ -496,5 +500,9 @@ DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing&
         [this](std::array<s16, 2> sample) { OutputSample(std::move(sample)); });
 }
 DspLle::~DspLle() = default;
+
+bool DspLle::IsJitSupported() {
+    return Teakra::Teakra::IsJitSupported();
+}
 
 } // namespace AudioCore

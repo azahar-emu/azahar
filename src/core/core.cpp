@@ -657,7 +657,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         dsp_core = std::make_unique<AudioCore::DspHle>(*this);
     } else {
         const bool multithread = audio_emulation == Settings::AudioEmulation::LLEMultithreaded;
-        dsp_core = std::make_unique<AudioCore::DspLle>(*this, multithread);
+        dsp_core = std::make_unique<AudioCore::DspLle>(
+            *this, multithread, Settings::values.enable_dsp_lle_jit.GetValue());
     }
 
     dsp_core->SetSink(Settings::values.output_type.GetValue(),

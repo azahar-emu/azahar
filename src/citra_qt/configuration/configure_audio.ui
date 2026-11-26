@@ -62,6 +62,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="toggle_dsp_lle_jit">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Translates the DSP code to native code instead of interpreting it, which makes LLE audio emulation faster. Only used with LLE audio emulation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Enable JIT for DSP LLE</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QGridLayout" name="output_layout" columnstretch="1,1">
         <item row="0" column="0">
          <widget class="QLabel" name="output_type_label">
@@ -261,6 +271,7 @@
  </widget>
  <tabstops>
   <tabstop>emulation_combo_box</tabstop>
+  <tabstop>toggle_dsp_lle_jit</tabstop>
   <tabstop>toggle_audio_stretching</tabstop>
   <tabstop>volume_slider</tabstop>
   <tabstop>output_type_combo_box</tabstop>

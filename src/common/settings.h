@@ -672,6 +672,7 @@ struct Values {
     // Audio
     bool audio_muted;
     SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, Keys::audio_emulation};
+    SwitchableSetting<bool> enable_dsp_lle_jit{true, Keys::enable_dsp_lle_jit};
     SwitchableSetting<bool> enable_audio_stretching{false, Keys::enable_audio_stretching};
     SwitchableSetting<bool> enable_realtime_audio{false, Keys::enable_realtime_audio};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, Keys::volume};

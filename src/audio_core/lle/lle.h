@@ -19,10 +19,13 @@ namespace AudioCore {
 
 class DspLle final : public DspInterface {
 public:
-    explicit DspLle(Core::System& system, bool multithread);
+    explicit DspLle(Core::System& system, bool multithread, bool use_jit = false);
     explicit DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
-                    bool multithread);
+                    bool multithread, bool use_jit = false);
     ~DspLle() override;
+
+    /// Whether the DSP JIT is available on this build and host CPU.
+    static bool IsJitSupported();
 
     u16 RecvData(u32 register_number) override;
     bool RecvDataIsReady(u32 register_number) const override;
