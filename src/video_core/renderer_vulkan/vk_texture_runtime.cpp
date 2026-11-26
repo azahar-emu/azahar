@@ -1122,8 +1122,7 @@ bool Surface::Download(const VideoCore::BufferTextureCopy& download,
     }
 
     if (pixel_format == PixelFormat::D24S8) {
-        return runtime.blit_helper.DepthToBuffer(*this, runtime.download_buffer.Handle(),
-                                                download);
+        return runtime.blit_helper.DepthToBuffer(*this, runtime.download_buffer.Handle(), download);
     }
 
     if (res_scale != 1) {
@@ -1498,8 +1497,8 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
     if (!CheckImagesValid(src_image, dst_image, "scale blit")) {
         return;
     }
-    scheduler.Record([src_image, aspect = Aspect(), filter = vk::Filter::eNearest,
-                      dst_image, blit](vk::CommandBuffer render_cmdbuf) {
+    scheduler.Record([src_image, aspect = Aspect(), filter = vk::Filter::eNearest, dst_image,
+                      blit](vk::CommandBuffer render_cmdbuf) {
         const std::array source_offsets = {
             vk::Offset3D{static_cast<s32>(blit.src_rect.left),
                          static_cast<s32>(blit.src_rect.bottom), 0},
