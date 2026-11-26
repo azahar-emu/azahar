@@ -496,7 +496,10 @@ void NotePixelTraits(const PixelTraits& traits) {
     stats.px_alpha_test += traits.alpha_test ? 1 : 0;
     stats.px_scissor += traits.scissor_test ? 1 : 0;
     stats.px_hsr_blocked +=
-        (traits.writes_depth || traits.alpha_test || traits.scissor_test) ? 1 : 0;
+        ((traits.writes_depth && !traits.conservative_depth) || traits.alpha_test ||
+         traits.scissor_test)
+            ? 1
+            : 0;
     stats.px_lit += traits.lit ? 1 : 0;
     stats.px_blended += traits.blended ? 1 : 0;
     stats.px_blend_dropped += traits.blend_dropped ? 1 : 0;

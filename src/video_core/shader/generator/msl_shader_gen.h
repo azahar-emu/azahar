@@ -113,8 +113,9 @@ struct MetalFSConfig {
     /// W-buffered depth with a conservative depth output (QualityOptions::conservative_w_depth):
     /// 0 off, 1 [[depth(less)]], 2 [[depth(greater)]]. The vertex shader puts each vertex at its
     /// exact W-buffer depth (VSDepthData::w_buffer), the fragment shader still writes the exact
-    /// depth, from the interpolated PICA clip Z (VSOutput::pica_z), and promises the GPU on which
-    /// side of the rasterized depth it is so hidden fragments can be rejected before shading.
+    /// depth (VSOutput::w_depth, interpolated with perspective correction, clamped to the promise),
+    /// and promises the GPU on which side of the rasterized depth it is so hidden fragments can be
+    /// rejected before shading.
     u8 conservative_w_depth = 0;
     /// 2D textures are sampled with the GPU's own level of detail (from the screen-space
     /// derivatives, plus the PICA LOD bias) instead of the PICA formula computed in the shader

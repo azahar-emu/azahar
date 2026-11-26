@@ -151,7 +151,7 @@ struct VSOutput {
     float texcoord0_w [[user(texcoord0_w)]];
     float4 normquat [[user(normquat)]];
     float3 view [[user(view)]];
-    float pica_z [[user(pica_z)]]; // PICA clip space Z, for conservative W-buffer depth
+    float w_depth [[user(w_depth)]]; // Exact W-buffer depth of the vertex, for the conservative depth
 #ifdef USE_CLIP_PLANES
     float clip_distance [[clip_distance]] [3];
 #endif
@@ -275,10 +275,10 @@ public:
             input.replace(input.find(plain), plain.size(),
                           "float4 normquat [[user(normquat)]];\n"
                           "    float3 barycentric [[barycentric_coord, center_perspective]];");
-            out += AddPicaZ(input);
+            out += AddWDepth(input);
             out += QUATERNION_FIX_MSL;
         } else {
-            out += AddPicaZ(std::string{FSInputDef});
+            out += AddWDepth(std::string{FSInputDef});
         }
         DefineOutput();
         DefineConstants();
@@ -390,7 +390,7 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
         members.emplace_back("float4", "normquat");
         members.emplace_back("float3", "view");
         if (conservative_depth) {
-            members.emplace_back("float", "pica_z");
+            members.emplace_back("float", "w_depth");
         }
 
         for (const auto& [type, name] : members) {
@@ -481,7 +481,7 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
                 arg = "normquat";
             } else if (name == "texcoord0" || name == "texcoord1" ||
                        name == "texcoord2" || name == "texcoord0_w" || name == "normquat" ||
-                       name == "view" || name == "pica_z") {
+                       name == "view" || name == "w_depth") {
                 arg = "in." + name;
             }
             out += fmt::format("{}{}", i == 0 ? "" : ", ", arg);
@@ -1392,10 +1392,18 @@ constant int proctex_noise_table2[16] = {10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14};
             return;
         }
         if (conservative_depth) {
-            // The rasterized depth is the W-buffer depth at the vertices (VSDepthData::w_buffer):
-            // the exact depth comes from the interpolated clip Z and W instead, the same value as
-            // below (z / w * scale + offset) * w.
-            out += "        float depth = pica_z * fs.depth_scale + fs.depth_offset / frag_coord.w;\n";
+            // The rasterized depth is the W-buffer depth at the vertices interpolated linearly
+            // on the screen (VSDepthData::w_buffer). The exact depth, (z / w * scale + offset) * w
+            // = z * scale + offset * w, is affine in the clip coordinates, so it is the vertex
+            // depth interpolated with perspective correction, which the GPU does for w_depth.
+            out += "        float depth = w_depth;\n";
+            // The promise of [[depth(less)]] / [[depth(greater)]] holds by construction for the
+            // usual projections (see ConservativeWDepth); float rounding, or a projection where it
+            // does not, could break it by a little. Clamped to the rasterized depth, a broken
+            // promise is a slightly wrong depth instead of undefined behaviour.
+            out += metal.conservative_w_depth == 1
+                       ? "        depth = min(depth, frag_coord.z);\n"
+                       : "        depth = max(depth, frag_coord.z);\n";
             return;
         }
         out += "        float z_over_w = -frag_coord.z;\n";
@@ -2053,12 +2061,12 @@ private:
     bool write_fragment_depth{};
     bool conservative_depth{};
 
-    /// The fragment input with the interpolated PICA clip Z, when the depth needs it.
-    std::string AddPicaZ(std::string input) const {
+    /// The fragment input with the interpolated W-buffer depth, when the depth needs it.
+    std::string AddWDepth(std::string input) const {
         if (conservative_depth) {
             const std::string_view view = "float3 view [[user(view)]];";
             input.replace(input.find(view), view.size(),
-                          "float3 view [[user(view)]];\n    float pica_z [[user(pica_z)]];");
+                          "float3 view [[user(view)]];\n    float w_depth [[user(w_depth)]];");
         }
         return input;
     }
@@ -2131,7 +2139,9 @@ vertex VSOutput {}(VSInput in [[stage_in]], constant VSUniforms& vs [[buffer({})
         }}
     }}
     out.position = clip_pos;
-    out.pica_z = vtx_pos.z;
+    // The exact W-buffer depth of the vertex (z / w * scale + offset) * w, interpolated with
+    // perspective correction for the conservative depth of the fragment shader.
+    out.w_depth = vtx_pos.z * vs_depth.scale + vs_depth.offset * vtx_pos.w;
 #ifdef USE_CLIP_PLANES
     out.clip_distance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
     out.clip_distance[1] = vs.enable_clip1 != 0 ? dot(vs.clip_coef, vtx_pos) : 0.0f;
@@ -2468,7 +2478,9 @@ vertex VSOutput {}(uint vid [[vertex_id]], constant VSUniforms& vs [[buffer({})]
         }
     }
     out.position = clip_pos;
-    out.pica_z = vtx_pos.z;
+    // The exact W-buffer depth of the vertex (z / w * scale + offset) * w, interpolated with
+    // perspective correction for the conservative depth of the fragment shader.
+    out.w_depth = vtx_pos.z * vs_depth.scale + vs_depth.offset * vtx_pos.w;
 #ifdef USE_CLIP_PLANES
     out.clip_distance[0] = -vtx_pos.z; // fixed PICA clipping plane z <= 0
     out.clip_distance[1] = vs.enable_clip1 != 0 ? dot(vs.clip_coef, vtx_pos) : 0.0f;
