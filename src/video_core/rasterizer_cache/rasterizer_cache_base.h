@@ -164,6 +164,9 @@ private:
     SurfaceId FindMatch(const SurfaceParams& params, ScaleMatch match_scale_type,
                         std::optional<SurfaceInterval> validate_interval = std::nullopt);
 
+    /// Queues a surface for deletion. It can be recycled until the garbage collector deletes it.
+    void SentenceSurface(SurfaceId surface_id);
+
     /// Unregisters sentenced surfaces that have surpassed the destruction threshold.
     void RunGarbageCollector();
 
@@ -211,6 +214,15 @@ private:
     void UpdatePagesCachedCount(PAddr addr, u32 size, int delta);
 
 private:
+    /// Frames a sentenced surface is kept for recycling after the runtime is done with it.
+    static constexpr u64 RECYCLE_FRAMES = 9;
+
+    struct SentencedSurface {
+        SurfaceId surface_id;
+        u64 resource_tick; ///< Runtime resource tick when the surface was sentenced.
+        u64 frame;         ///< Renderer frame when the surface was sentenced.
+    };
+
     Memory::MemorySystem& memory;
     CustomTexManager& custom_tex_manager;
     Runtime& runtime;
@@ -220,7 +232,7 @@ private:
     tsl::robin_pg_map<u64, std::vector<SurfaceId>, Common::IdentityHash<u64>> page_table;
     std::unordered_map<FramebufferParams, FramebufferId> framebuffers;
     std::unordered_map<SamplerParams, SamplerId> samplers;
-    std::list<std::pair<SurfaceId, u64>> sentenced;
+    std::list<SentencedSurface> sentenced;
     Common::SlotVector<Surface> slot_surfaces;
     Common::SlotVector<Sampler> slot_samplers;
     Common::SlotVector<Framebuffer> slot_framebuffers;
