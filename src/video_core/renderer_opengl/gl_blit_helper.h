@@ -31,7 +31,10 @@ public:
 
     bool ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
 
+    // Resolve the MSAA texture into the non-msaa base/scaled texture
     void ResolveTexture(Surface& surface, u32 level = 0, u32 layer = 0);
+    // Copy the non-MSAA based/scaled texture into the msaa texture
+    void BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit);
 
 private:
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
@@ -55,6 +58,7 @@ private:
     OGLSampler nearest_sampler;
 
     OGLProgram bicubic_program;
+    OGLProgram pass_through_program;
     OGLProgram scale_force_program;
     OGLProgram xbrz_program;
     OGLProgram mmpx_program;

@@ -165,8 +165,9 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore&
 
     glEnable(GL_BLEND);
 
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_SAMPLE_SHADING);
+    // GL_MULTISAMPLE is enabled by default by the OpenGL spec
+    // Enable per-sample shading by default
+    state.multisample.sample_shading = GL_TRUE;
     glMinSampleShading(1.0f);
 }
 

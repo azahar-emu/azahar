@@ -22,12 +22,15 @@
 // Texture filtering shader includes
 #include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
 #include "video_core/host_shaders/texture_filtering/mmpx_frag.h"
+#include "video_core/host_shaders/texture_filtering/pass_through_frag.h"
 #include "video_core/host_shaders/texture_filtering/refine_frag.h"
 #include "video_core/host_shaders/texture_filtering/scale_force_frag.h"
 #include "video_core/host_shaders/texture_filtering/x_gradient_frag.h"
 #include "video_core/host_shaders/texture_filtering/xbrz_freescale_frag.h"
 #include "video_core/host_shaders/texture_filtering/y_gradient_frag.h"
 #include "vk_blit_helper.h"
+
+#include <bit>
 
 namespace Vulkan {
 
@@ -247,6 +250,8 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
           PipelineLayoutCreateInfo(&three_textures_provider.Layout(), false, true))},
       full_screen_vert{Compile(HostShaders::FULL_SCREEN_TRIANGLE_VERT,
                                vk::ShaderStageFlagBits::eVertex, device)},
+      pass_through_frag{
+          Compile(HostShaders::PASS_THROUGH_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       d24s8_to_rgba8_comp{Compile(HostShaders::VULKAN_D24S8_TO_RGBA8_COMP,
                                   vk::ShaderStageFlagBits::eCompute, device)},
       d24s8_to_rgba8_ms_comp{instance_.IsMultiSampleSupported()
@@ -271,14 +276,14 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
               : VK_NULL_HANDLE},
       depth_to_buffer_pipeline{
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
-      depth_blit_pipeline{VK_NULL_HANDLE},
       linear_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eLinear>)},
       nearest_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eNearest>)} {
 
     if (instance.IsShaderStencilExportSupported()) {
         blit_depth_stencil_frag = Compile(HostShaders::VULKAN_BLIT_DEPTH_STENCIL_FRAG,
                                           vk::ShaderStageFlagBits::eFragment, device);
-        depth_blit_pipeline = MakeDepthStencilBlitPipeline();
+        // Create just the first one, the rest will be created on demand when needed
+        MakeDepthStencilBlitPipeline(vk::SampleCountFlagBits::e1);
     }
 
     if (instance.HasDebuggingToolAttached()) {
@@ -306,9 +311,6 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                           "BlitHelper: d24s8_to_rgba8_ms_pipeline");
         }
         SetObjectName(device, depth_to_buffer_pipeline, "BlitHelper: depth_to_buffer_pipeline");
-        if (depth_blit_pipeline) {
-            SetObjectName(device, depth_blit_pipeline, "BlitHelper: depth_blit_pipeline");
-        }
         SetObjectName(device, linear_sampler, "BlitHelper: linear_sampler");
         SetObjectName(device, nearest_sampler, "BlitHelper: nearest_sampler");
     }
@@ -335,6 +337,7 @@ BlitHelper::~BlitHelper() {
     }
     // Destroy texture filtering shader modules
     device.destroyShaderModule(bicubic_frag);
+    device.destroyShaderModule(pass_through_frag);
     device.destroyShaderModule(scale_force_frag);
     device.destroyShaderModule(xbrz_frag);
     device.destroyShaderModule(mmpx_frag);
@@ -344,7 +347,11 @@ BlitHelper::~BlitHelper() {
     if (d24s8_to_rgba8_ms_pipeline) {
         device.destroyPipeline(d24s8_to_rgba8_ms_pipeline);
     }
-    device.destroyPipeline(depth_blit_pipeline);
+    for (const vk::Pipeline& pipeline : depth_blit_pipeline) {
+        if (pipeline) {
+            device.destroyPipeline(pipeline);
+        }
+    }
     device.destroySampler(linear_sampler);
     device.destroySampler(nearest_sampler);
 }
@@ -412,7 +419,8 @@ bool BlitHelper::BlitDepthStencil(Surface& source, Surface& dest,
     scheduler.Record([blit, descriptor_set, &dest, this](vk::CommandBuffer cmdbuf) {
         const vk::PipelineLayout layout = two_textures_pipeline_layout;
 
-        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, depth_blit_pipeline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                            MakeDepthStencilBlitPipeline(vk::SampleCountFlagBits::e1));
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, descriptor_set, {});
         BindBlitState(cmdbuf, layout, blit, dest);
         cmdbuf.draw(3, 1, 0, 0);
@@ -626,7 +634,6 @@ bool BlitHelper::DepthToBuffer(Surface& source, vk::Buffer buffer,
 }
 
 void BlitHelper::ResolveTexture(Surface& surface) {
-
     scheduler.Record([width = surface.GetScaledWidth(), height = surface.GetScaledHeight(),
                       aspect = surface.Aspect(), access_flags = surface.AccessFlags(),
                       pipeline_state_flags = surface.PipelineStageFlags(),
@@ -718,6 +725,135 @@ void BlitHelper::ResolveTexture(Surface& surface) {
     });
 }
 
+void BlitHelper::BlitMultisample(Surface& surface, const VideoCore::TextureBlit& blit) {
+    if (surface.sample_count == 1) {
+        LOG_ERROR(Render_Vulkan, "Unable to do a multisample blit on a non-multisample surface");
+        return;
+    }
+
+    const bool is_depth_stencil = surface.type == VideoCore::SurfaceType::Depth ||
+                                  surface.type == VideoCore::SurfaceType::DepthStencil;
+    if (is_depth_stencil) {
+        if (!instance.IsShaderStencilExportSupported()) {
+            LOG_ERROR(Render_Vulkan, "Unable to emulate depth stencil images");
+            return;
+        }
+
+        const vk::Rect2D dst_render_area = {
+            .offset = {0, 0},
+            .extent = {surface.GetScaledWidth(), surface.GetScaledHeight()},
+        };
+
+        const vk::DescriptorSet descriptor_set = two_textures_provider.Commit();
+        update_queue.AddImageSampler(descriptor_set, 0, 0, surface.DepthView(), nearest_sampler);
+        update_queue.AddImageSampler(descriptor_set, 1, 0, surface.StencilView(), nearest_sampler);
+
+        const RenderPass depth_pass = {
+            .framebuffer = surface.Framebuffer(Type::MultiSampled),
+            .render_pass = renderpass_cache.GetRenderpass(
+                PixelFormat::Invalid, surface.pixel_format, false, surface.sample_count),
+            .render_area = dst_render_area,
+        };
+        renderpass_cache.BeginRendering(depth_pass);
+
+        const vk::Pipeline depth_blit_pipeline = MakeDepthStencilBlitPipeline(
+            static_cast<vk::SampleCountFlagBits>(surface.sample_count));
+
+        scheduler.Record(
+            [blit, descriptor_set, &surface, depth_blit_pipeline, this](vk::CommandBuffer cmdbuf) {
+                const vk::PipelineLayout layout = two_textures_pipeline_layout;
+
+                cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, depth_blit_pipeline);
+                cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
+                                          descriptor_set, {});
+                BindBlitState(cmdbuf, layout, blit, surface);
+                cmdbuf.draw(3, 1, 0, 0);
+            });
+        scheduler.MakeDirty(StateFlags::Pipeline);
+        return;
+    }
+
+    const vk::Pipeline pipeline =
+        MakeFilterPipeline(pass_through_frag, single_texture_pipeline_layout, surface.pixel_format,
+                           surface.sample_count);
+    const vk::PipelineLayout layout = single_texture_pipeline_layout;
+    const vk::DescriptorSet texture_descriptor_set = single_texture_provider.Commit();
+    update_queue.AddImageSampler(texture_descriptor_set, 0, 0, surface.ImageView(ViewType::Sample),
+                                 nearest_sampler, vk::ImageLayout::eGeneral);
+    const vk::RenderPass renderpass = renderpass_cache.GetRenderpass(
+        surface.pixel_format, VideoCore::PixelFormat::Invalid, false, surface.sample_count);
+
+    // Blit into the MSAA texture using a render-pass
+    const RenderPass render_pass = {
+        .framebuffer = surface.Framebuffer(Type::MultiSampled),
+        .render_pass = renderpass,
+        .render_area =
+            {
+                .offset = {0, 0},
+                .extent = {surface.GetScaledWidth(), surface.GetScaledHeight()},
+            },
+    };
+
+    renderpass_cache.BeginRendering(render_pass);
+    const float src_scale = static_cast<float>(surface.GetResScale());
+    // Calculate normalized texture coordinates like OpenGL does
+    const auto src_extent = surface.RealExtent(false); // Get unscaled texture extent
+    const float tex_scale_x =
+        static_cast<float>(blit.src_rect.GetWidth()) / static_cast<float>(src_extent.width);
+    const float tex_scale_y =
+        static_cast<float>(blit.src_rect.GetHeight()) / static_cast<float>(src_extent.height);
+    const float tex_offset_x =
+        static_cast<float>(blit.src_rect.left) / static_cast<float>(src_extent.width);
+    const float tex_offset_y =
+        static_cast<float>(blit.src_rect.bottom) / static_cast<float>(src_extent.height);
+
+    scheduler.Record([pipeline, layout, texture_descriptor_set, blit, tex_scale_x, tex_scale_y,
+                      tex_offset_x, tex_offset_y, src_scale](vk::CommandBuffer cmdbuf) {
+        const FilterPushConstants push_constants{
+            .tex_scale = {tex_scale_x, tex_scale_y},
+            .tex_offset = {tex_offset_x, tex_offset_y},
+            .res_scale = src_scale,
+        };
+
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+
+        // Bind single texture descriptor set
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
+                                  texture_descriptor_set, {});
+
+        cmdbuf.pushConstants(layout, FILTER_PUSH_CONSTANT_RANGE.stageFlags,
+                             FILTER_PUSH_CONSTANT_RANGE.offset, FILTER_PUSH_CONSTANT_RANGE.size,
+                             &push_constants);
+
+        // Set up viewport and scissor for filtering (don't use BindBlitState as it overwrites
+        // push constants)
+        const vk::Offset2D offset{
+            .x = std::min<s32>(blit.dst_rect.left, blit.dst_rect.right),
+            .y = std::min<s32>(blit.dst_rect.bottom, blit.dst_rect.top),
+        };
+        const vk::Extent2D extent{
+            .width = blit.dst_rect.GetWidth(),
+            .height = blit.dst_rect.GetHeight(),
+        };
+        const vk::Viewport viewport{
+            .x = static_cast<float>(offset.x),
+            .y = static_cast<float>(offset.y),
+            .width = static_cast<float>(extent.width),
+            .height = static_cast<float>(extent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+        const vk::Rect2D scissor{
+            .offset = offset,
+            .extent = extent,
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+        cmdbuf.draw(3, 1, 0, 0);
+    });
+    scheduler.MakeDirty(StateFlags::Pipeline);
+}
+
 vk::Pipeline BlitHelper::MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout) {
     const vk::ComputePipelineCreateInfo compute_info = {
         .stage = MakeStages(shader),
@@ -733,11 +869,28 @@ vk::Pipeline BlitHelper::MakeComputePipeline(vk::ShaderModule shader, vk::Pipeli
     }
 }
 
-vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
+vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline(vk::SampleCountFlagBits sample_count) {
+
+    if (!instance.IsShaderStencilExportSupported()) {
+        LOG_ERROR(Render_Vulkan, "Unable to create depth stencil blit pipeline");
+        return VK_NULL_HANDLE;
+    }
     const std::array stages = MakeStages(full_screen_vert, blit_depth_stencil_frag);
     const auto renderpass = renderpass_cache.GetRenderpass(VideoCore::PixelFormat::Invalid,
-                                                           VideoCore::PixelFormat::D24S8, false);
-    vk::GraphicsPipelineCreateInfo depth_stencil_info = {
+                                                           VideoCore::PixelFormat::D24S8, false,
+                                                           static_cast<u8>(sample_count));
+
+    const u32 samples_index = static_cast<u32>(std::bit_width(static_cast<u32>(sample_count)) - 1);
+
+    if (depth_blit_pipeline[samples_index]) {
+        return depth_blit_pipeline[samples_index];
+    }
+
+    vk::PipelineMultisampleStateCreateInfo multisample_state =
+        PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisample_state.rasterizationSamples = sample_count;
+
+    const vk::GraphicsPipelineCreateInfo depth_stencil_info = {
         .stageCount = static_cast<u32>(stages.size()),
         .pStages = stages.data(),
         .pVertexInputState = &PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -745,7 +898,7 @@ vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
         .pTessellationState = nullptr,
         .pViewportState = &PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pRasterizationState = &PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-        .pMultisampleState = &PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pMultisampleState = &multisample_state,
         .pDepthStencilState = &PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
         .pColorBlendState = &PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pDynamicState = &PIPELINE_DYNAMIC_STATE_CREATE_INFO,
@@ -755,6 +908,11 @@ vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
 
     if (const auto result = device.createGraphicsPipeline({}, depth_stencil_info);
         result.result == vk::Result::eSuccess) {
+        if (instance.HasDebuggingToolAttached()) {
+            SetObjectName(device, result.value, "BlitHelper: depth_blit_pipeline samples:{}",
+                          static_cast<u32>(sample_count));
+        }
+        depth_blit_pipeline[samples_index] = result.value;
         return result.value;
     } else {
         LOG_CRITICAL(Render_Vulkan, "Depth stencil blit pipeline creation failed!");
@@ -827,14 +985,16 @@ void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit
 
 vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
                                             vk::PipelineLayout layout,
-                                            VideoCore::PixelFormat color_format) {
+                                            VideoCore::PixelFormat color_format, u8 sample_count) {
 
     const VkShaderModule c_shader = static_cast<VkShaderModule>(fragment_shader);
     const VkPipelineLayout c_layout = static_cast<VkPipelineLayout>(layout);
     const u64 cache_key = Common::HashCombine(
-        Common::HashCombine(static_cast<u64>(reinterpret_cast<uintptr_t>(c_shader)),
-                            static_cast<u64>(reinterpret_cast<uintptr_t>(c_layout))),
-        static_cast<u64>(color_format));
+        Common::HashCombine(
+            Common::HashCombine(static_cast<u64>(reinterpret_cast<uintptr_t>(c_shader)),
+                                static_cast<u64>(reinterpret_cast<uintptr_t>(c_layout))),
+            static_cast<u64>(color_format)),
+        static_cast<u8>(sample_count));
 
     if (const auto it = filter_pipeline_cache.find(cache_key); it != filter_pipeline_cache.end()) {
         return it->second;
@@ -842,10 +1002,16 @@ vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
 
     const std::array stages = MakeStages(full_screen_vert, fragment_shader);
     // Use the provided color format for render pass compatibility
-    const auto renderpass =
-        renderpass_cache.GetRenderpass(color_format, VideoCore::PixelFormat::Invalid, false);
+    const auto renderpass = renderpass_cache.GetRenderpass(
+        color_format, VideoCore::PixelFormat::Invalid, false, sample_count);
 
-    vk::GraphicsPipelineCreateInfo pipeline_info = {
+    vk::PipelineMultisampleStateCreateInfo multisample_state =
+        PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    if (sample_count > 1) {
+        multisample_state.rasterizationSamples = static_cast<vk::SampleCountFlagBits>(sample_count);
+    }
+
+    const vk::GraphicsPipelineCreateInfo pipeline_info = {
         .stageCount = static_cast<u32>(stages.size()),
         .pStages = stages.data(),
         .pVertexInputState = &PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -853,7 +1019,7 @@ vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
         .pTessellationState = nullptr,
         .pViewportState = &PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pRasterizationState = &PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-        .pMultisampleState = &PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pMultisampleState = &multisample_state,
         .pDepthStencilState = nullptr,
         .pColorBlendState = &PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pDynamicState = &PIPELINE_DYNAMIC_STATE_CREATE_INFO,

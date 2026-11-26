@@ -485,6 +485,9 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
     if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
         BlitScale(blit, true);
     }
+    if (sample_count != 1 && !runtime->blit_helper.Filter(*this, blit)) {
+        runtime->blit_helper.BlitMultisample(*this, blit);
+    }
 }
 
 void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
@@ -518,6 +521,9 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
     };
     if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
         BlitScale(blit, true);
+    }
+    if (sample_count != 1 && !runtime->blit_helper.Filter(*this, blit)) {
+        runtime->blit_helper.BlitMultisample(*this, blit);
     }
     for (u32 i = 1; i < VideoCore::MAX_MAPS; i++) {
         const auto texture = material->textures[i];
