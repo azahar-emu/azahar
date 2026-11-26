@@ -7,6 +7,7 @@
 #include <atomic>
 #include <deque>
 #include <functional>
+#include <limits>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -170,23 +171,83 @@ struct DspLle::Impl final {
     // inside the DSP firmware. Measured on a real console, and takes about 2650 cycles on average.
     static constexpr u64 HostWriteLatency = 2650;
 
+    // In multi-thread mode the DSP thread runs in steps of at most this many cycles, so that it
+    // sees writes queued while it runs. Being below the latency, a write arrives on time
+    // whenever the DSP is behind the ARM.
+    static constexpr u64 HostWritePollInterval = 2048;
+
     struct HostWrite {
-        u64 cycles_remaining;
+        u64 arrival_cycle;
         std::function<void()> apply;
     };
     std::mutex host_mutex;
     std::deque<HostWrite> host_writes;
     std::array<bool, 3> index_data_pending{};
+    u64 last_arrival = 0;
+
+    // DSP cycles run since the component was loaded.
+    std::atomic<u64> dsp_cycles = 0;
+    // The DSP cycle that matches ARM tick sync_ticks. In single-thread mode a slice runs ahead,
+    // so this is the end of the last slice run. In multi-thread mode it is the start of the
+    // slice the DSP thread is running.
+    u64 sync_cycles = 0;
+    s64 sync_ticks = 0;
 
     void QueueHostWrite(std::function<void()> apply) {
+        const s64 elapsed = std::max<s64>(core_timing.GetGlobalTicks() - sync_ticks, 0);
+        // The DSP runs at half the ARM clock.
+        const u64 arm_cycles = sync_cycles + static_cast<u64>(elapsed) / 2;
         std::lock_guard lock(host_mutex);
-        host_writes.push_back({HostWriteLatency, std::move(apply)});
+        const u64 arrival =
+            std::max(std::max(arm_cycles, dsp_cycles.load()) + HostWriteLatency, last_arrival);
+        last_arrival = arrival;
+        host_writes.push_back({arrival, std::move(apply)});
     }
 
-    void ClearHostWrites() {
-        std::lock_guard lock(host_mutex);
-        host_writes.clear();
-        index_data_pending = {};
+    void ResetTiming() {
+        {
+            std::lock_guard lock(host_mutex);
+            host_writes.clear();
+            index_data_pending = {};
+            last_arrival = 0;
+        }
+        {
+            std::lock_guard lock(interrupt_mutex);
+            pending_interrupts.clear();
+        }
+        step_end = 0;
+        dsp_cycles = 0;
+        sync_cycles = 0;
+        sync_ticks = core_timing.GetGlobalTicks();
+    }
+
+    // Interrupts for the ARM are delivered on the emulation thread once the ARM has synced past
+    // the slice that raised them.
+    struct PendingInterrupt {
+        u64 cycle;
+        std::function<void()> deliver;
+    };
+    std::mutex interrupt_mutex;
+    std::deque<PendingInterrupt> pending_interrupts;
+    u64 step_end = 0;
+
+    void QueueInterrupt(std::function<void()> deliver) {
+        std::lock_guard lock(interrupt_mutex);
+        pending_interrupts.push_back({step_end, std::move(deliver)});
+    }
+
+    void DeliverInterrupts() {
+        std::vector<std::function<void()>> interrupts;
+        {
+            std::lock_guard lock(interrupt_mutex);
+            while (!pending_interrupts.empty() && pending_interrupts.front().cycle <= sync_cycles) {
+                interrupts.push_back(std::move(pending_interrupts.front().deliver));
+                pending_interrupts.pop_front();
+            }
+        }
+        for (auto& deliver : interrupts) {
+            deliver();
+        }
     }
 
     void SetSemaphore(u16 value) {
@@ -214,34 +275,34 @@ struct DspLle::Impl final {
 
     // Runs the DSP, applying queued host writes when appropriate.
     void RunTeakra(u64 cycles) {
-        while (cycles > 0) {
-            std::size_t pending_host_writes;
-            u64 step = cycles;
-            {
-                std::lock_guard lock(host_mutex);
-                pending_host_writes = host_writes.size();
-                for (const auto& write : host_writes) {
-                    step = std::min(step, write.cycles_remaining);
-                }
-            }
-            teakra.Run(static_cast<unsigned>(step));
-            cycles -= step;
-
+        const u64 end = dsp_cycles + cycles;
+        while (true) {
+            const u64 now = dsp_cycles;
+            u64 next_arrival = std::numeric_limits<u64>::max();
             std::vector<std::function<void()>> ready;
             {
                 std::lock_guard lock(host_mutex);
-                for (std::size_t i = 0; i < pending_host_writes; ++i) {
-                    host_writes[i].cycles_remaining -= step;
-                }
-                while (!host_writes.empty() && host_writes.front().cycles_remaining == 0) {
+                while (!host_writes.empty() && host_writes.front().arrival_cycle <= now) {
                     ready.push_back(std::move(host_writes.front().apply));
                     host_writes.pop_front();
                 }
+                if (!host_writes.empty()) {
+                    next_arrival = host_writes.front().arrival_cycle;
+                }
             }
             for (auto& apply : ready) {
-                // Run the apply callback
                 apply();
             }
+            if (now >= end) {
+                break;
+            }
+            u64 step = std::min(end - now, next_arrival - now);
+            if (multithread) {
+                step = std::min(step, HostWritePollInterval);
+            }
+            step_end = now + step;
+            teakra.Run(static_cast<unsigned>(step));
+            dsp_cycles = step_end;
         }
     }
 
@@ -269,9 +330,13 @@ struct DspLle::Impl final {
     void RunTeakraSlice() {
         if (multithread) {
             teakra_slice_barrier.Sync();
+            sync_cycles += TeakraSlice;
         } else {
             RunTeakra(TeakraSlice);
+            sync_cycles = dsp_cycles;
         }
+        sync_ticks = core_timing.GetGlobalTicks();
+        DeliverInterrupts();
     }
 
     void TeakraSliceEvent(u64 late) {
@@ -406,7 +471,7 @@ struct DspLle::Impl final {
         }
 
         teakra.Reset();
-        ClearHostWrites();
+        ResetTiming();
 
         Dsp1 dsp(buffer);
         auto dsp_memory = teakra.GetDspMemory();
@@ -521,20 +586,28 @@ void DspLle::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
 
 void DspLle::SetInterruptHandler(
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
-    impl->teakra.SetRecvDataHandler(0, [this, handler]() {
+    auto Signal = [this, handler](Service::DSP::InterruptType type, DspPipe pipe) {
+        impl->QueueInterrupt([this, handler, type, pipe] {
+            if (impl->loaded) {
+                handler(type, pipe);
+            }
+        });
+    };
+
+    impl->teakra.SetRecvDataHandler(0, [this, Signal]() {
         if (!impl->loaded) {
             return;
         }
-        handler(Service::DSP::InterruptType::Zero, static_cast<DspPipe>(0));
+        Signal(Service::DSP::InterruptType::Zero, static_cast<DspPipe>(0));
     });
-    impl->teakra.SetRecvDataHandler(1, [this, handler]() {
+    impl->teakra.SetRecvDataHandler(1, [this, Signal]() {
         if (!impl->loaded) {
             return;
         }
-        handler(Service::DSP::InterruptType::One, static_cast<DspPipe>(0));
+        Signal(Service::DSP::InterruptType::One, static_cast<DspPipe>(0));
     });
 
-    auto ProcessPipeEvent = [this, handler](bool event_from_data) {
+    auto ProcessPipeEvent = [this, Signal](bool event_from_data) {
         if (!impl->loaded)
             return;
 
@@ -556,10 +629,13 @@ void DspLle::SetInterruptHandler(
                 return;
             if (pipe == 0) {
                 // pipe 0 is for debug. 3DS automatically drains this pipe and discards the data
-                impl->ReadPipe(static_cast<u8>(pipe),
-                               impl->GetPipeReadableSize(static_cast<u8>(pipe)));
+                impl->QueueInterrupt([this] {
+                    if (impl->loaded) {
+                        impl->ReadPipe(0, impl->GetPipeReadableSize(0));
+                    }
+                });
             } else {
-                handler(Service::DSP::InterruptType::Pipe, static_cast<DspPipe>(pipe));
+                Signal(Service::DSP::InterruptType::Pipe, static_cast<DspPipe>(pipe));
             }
         }
     };
