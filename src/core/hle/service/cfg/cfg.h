@@ -540,6 +540,18 @@ public:
     SystemLanguage GetSystemLanguage();
 
     /**
+     * Gives the config the default 3D filters (surround calibration) when it has none or a zeroed
+     * block.
+     */
+    void Check3dFilters();
+
+    /**
+     * Gets the 3D filters (surround calibration) from config savegame.
+     * @returns the 3D filters block, all zeros when it cannot be read
+     */
+    std::array<u8, 0x214> Get3dFilters();
+
+    /**
      * Sets the sound output mode in config savegame.
      * @param mode the sound output mode to set
      */

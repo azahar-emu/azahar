@@ -18,6 +18,7 @@
 #include "common/thread.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
 
 namespace AudioCore {
@@ -67,12 +68,20 @@ public:
 
     std::vector<Segment> segments;
     bool recv_data_on_start;
+    bool load_special_segment;
+    SegmentType special_segment_type;
+    u32 special_segment_address;
+    u32 special_segment_size;
 };
 
 Dsp1::Dsp1(std::span<const u8> raw) {
     Header header;
     std::memcpy(&header, raw.data(), sizeof(header));
     recv_data_on_start = header.recv_data_on_start != 0;
+    load_special_segment = header.load_special_segment != 0;
+    special_segment_type = header.special_segment_type;
+    special_segment_address = header.special_segment_address;
+    special_segment_size = header.special_segment_size;
     segments.reserve(header.num_segments);
     for (u32 i = 0; i < header.num_segments; ++i) {
         Segment segment;
@@ -390,7 +399,7 @@ struct DspLle::Impl final {
         return size & PipeStatus::PtrMask;
     }
 
-    void LoadComponent(std::span<const u8> buffer) {
+    void LoadComponent(std::span<const u8> buffer, std::span<const u8> special_segment) {
         if (loaded) {
             LOG_ERROR(Audio_DSP, "Component already loaded!");
             return;
@@ -412,7 +421,9 @@ struct DspLle::Impl final {
             }
         }
 
-        // TODO: load special segment
+        if (dsp.load_special_segment) {
+            LoadSpecialSegment(dsp, special_segment);
+        }
 
         core_timing.ScheduleEvent(TeakraSlice, teakra_slice_event, 0);
 
@@ -436,6 +447,23 @@ struct DspLle::Impl final {
         pipe_base_waddr = teakra.RecvData(2);
 
         loaded = true;
+    }
+
+    void LoadSpecialSegment(const Dsp1& dsp, std::span<const u8> special_segment) {
+        const bool is_program = dsp.special_segment_type == SegmentType::ProgramA ||
+                                dsp.special_segment_type == SegmentType::ProgramB;
+        const u32 space_words = is_program ? 0x20000 : 0x10000;
+        const u32 address = dsp.special_segment_address;
+        const u32 size = dsp.special_segment_size;
+        if (static_cast<u8>(dsp.special_segment_type) > static_cast<u8>(SegmentType::Data) ||
+            address >= space_words || address + size / 2 > space_words ||
+            size > special_segment.size()) {
+            LOG_ERROR(Audio_DSP, "Invalid special segment type={} address=0x{:X} size=0x{:X}",
+                      static_cast<u8>(dsp.special_segment_type), address, size);
+            return;
+        }
+        u8* base = teakra.GetDspMemory() + (is_program ? 0 : DspDataOffset);
+        std::memcpy(base + address * 2, special_segment.data(), size);
     }
 
     void UnloadComponent() {
@@ -541,7 +569,13 @@ void DspLle::SetInterruptHandler(
 }
 
 void DspLle::LoadComponent(std::span<const u8> buffer) {
-    impl->LoadComponent(buffer);
+    // The dsp module fills the component's special segment with the 3D filters (surround
+    // calibration) from the config, or with zeros when it cannot read them.
+    std::array<u8, 0x214> filters{};
+    if (auto cfg = Service::CFG::GetModule(system)) {
+        filters = cfg->Get3dFilters();
+    }
+    impl->LoadComponent(buffer, filters);
 }
 
 void DspLle::UnloadComponent() {
@@ -553,7 +587,8 @@ DspLle::DspLle(Core::System& system, bool multithread, bool use_jit)
 
 DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
                bool multithread, bool use_jit)
-    : DspInterface(system), impl(std::make_unique<Impl>(timing, memory, multithread, use_jit)) {
+    : DspInterface(system), system(system),
+      impl(std::make_unique<Impl>(timing, memory, multithread, use_jit)) {
     if (use_jit && !IsJitSupported()) {
         LOG_WARNING(Audio_DSP, "The DSP JIT is not supported on this host, using the interpreter");
     }

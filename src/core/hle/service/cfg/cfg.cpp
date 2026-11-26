@@ -1060,6 +1060,34 @@ Module::Module(Core::System& system_) : system(system_) {
         SetEULAVersion(default_version);
         UpdateConfigNANDSavegame();
     }
+    Check3dFilters();
+}
+
+void Module::Check3dFilters() {
+    const auto& defaults = GetDefaultConfigBlock(_3dFiltersBlockID);
+    std::vector<u8> filters(defaults.data.size());
+    if (GetConfigBlock(_3dFiltersBlockID, static_cast<u32>(filters.size()), AccessFlag::SystemRead,
+                       filters.data())
+            .IsError()) {
+        return;
+    }
+    if (std::any_of(filters.begin(), filters.end(), [](u8 value) { return value != 0; })) {
+        return;
+    }
+    LOG_INFO(Service_CFG, "Replacing the zeroed 3D filters config block with the defaults");
+    SetConfigBlock(_3dFiltersBlockID, static_cast<u32>(defaults.data.size()),
+                   AccessFlag::SystemWrite, defaults.data.data());
+    UpdateConfigNANDSavegame();
+}
+
+std::array<u8, 0x214> Module::Get3dFilters() {
+    std::array<u8, 0x214> filters{};
+    if (GetConfigBlock(_3dFiltersBlockID, static_cast<u32>(filters.size()), AccessFlag::SystemRead,
+                       filters.data())
+            .IsError()) {
+        filters.fill(0);
+    }
+    return filters;
 }
 
 Module::~Module() = default;

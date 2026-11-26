@@ -41,6 +41,7 @@ public:
     void UnloadComponent() override;
 
 private:
+    Core::System& system;
     struct Impl;
     std::unique_ptr<Impl> impl;
 };
