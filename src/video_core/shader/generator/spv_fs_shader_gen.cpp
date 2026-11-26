@@ -37,9 +37,9 @@ FragmentModule::~FragmentModule() = default;
 void FragmentModule::Generate() {
     AddLabel(OpLabel());
 
-    rounded_primary_color = Byteround(OpLoad(f32vec_ids.Get(4), primary_color_id), 4);
-    primary_fragment_color = ConstF32(0.f, 0.f, 0.f, 0.f);
-    secondary_fragment_color = ConstF32(0.f, 0.f, 0.f, 0.f);
+    rounded_primary_color = Byteround(ToF16(OpLoad(f32vec_ids.Get(4), primary_color_id), 4), 4);
+    primary_fragment_color = ConstF16(0.f, 0.f, 0.f, 0.f);
+    secondary_fragment_color = ConstF16(0.f, 0.f, 0.f, 0.f);
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (config.framebuffer.alpha_test_func == Pica::FramebufferRegs::CompareFunc::Never) {
@@ -55,9 +55,9 @@ void FragmentModule::Generate() {
     // Write shader bytecode to emulate all enabled PICA lights
     WriteLighting();
 
-    combiner_buffer = ConstF32(0.f, 0.f, 0.f, 0.f);
-    next_combiner_buffer = GetShaderDataMember(f32vec_ids.Get(4), ConstS32(26));
-    combiner_output = ConstF32(0.f, 0.f, 0.f, 0.f);
+    combiner_buffer = ConstF16(0.f, 0.f, 0.f, 0.f);
+    next_combiner_buffer = ToF16(GetShaderDataMember(f32vec_ids.Get(4), ConstS32(26)), 4);
+    combiner_output = ConstF16(0.f, 0.f, 0.f, 0.f);
 
     // Write shader bytecode to emulate PICA TEV stages
     for (u32 index = 0; index < config.texture.tev_stages.size(); ++index) {
@@ -104,7 +104,7 @@ void FragmentModule::Generate() {
     }
 
     // Write output color
-    OpStore(color_id, color);
+    OpStore(color_id, ToF32(color, 4));
     OpReturn();
     OpFunctionEnd();
 }
@@ -641,12 +641,10 @@ void FragmentModule::WriteLighting() {
     diffuse_sum = OpFAdd(f16vec_ids.Get(4), diffuse_sum, lighting_global_ambient_rgba);
 
     // Final lighting
-    diffuse_sum = ToF32(diffuse_sum, 4);
-    specular_sum = ToF32(specular_sum, 4);
-    const Id zero_vec{ConstF32(0.f, 0.f, 0.f, 0.f)};
-    const Id one_vec{ConstF32(1.f, 1.f, 1.f, 1.f)};
-    primary_fragment_color = OpFClamp(f32vec_ids.Get(4), diffuse_sum, zero_vec, one_vec);
-    secondary_fragment_color = OpFClamp(f32vec_ids.Get(4), specular_sum, zero_vec, one_vec);
+    const Id zero_vec{ConstF16(0.f, 0.f, 0.f, 0.f)};
+    const Id one_vec{ConstF16(1.f, 1.f, 1.f, 1.f)};
+    primary_fragment_color = OpFClamp(f16vec_ids.Get(4), diffuse_sum, zero_vec, one_vec);
+    secondary_fragment_color = OpFClamp(f16vec_ids.Get(4), specular_sum, zero_vec, one_vec);
 }
 
 void FragmentModule::WriteTevStage(s32 index) {
@@ -674,7 +672,7 @@ void FragmentModule::WriteTevStage(s32 index) {
 
         if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
             // result of Dot3_RGBA operation is also placed to the alpha component
-            alpha_output = OpCompositeExtract(f32_id, color_output, 0);
+            alpha_output = OpCompositeExtract(f16_id, color_output, 0);
         } else {
             alpha_results_1 =
                 AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
@@ -687,25 +685,25 @@ void FragmentModule::WriteTevStage(s32 index) {
         }
 
         color_output =
-            OpVectorTimesScalar(f32vec_ids.Get(3), color_output,
-                                ConstF32(static_cast<float>(stage.GetColorMultiplier())));
-        color_output = OpFClamp(f32vec_ids.Get(3), color_output, ConstF32(0.f, 0.f, 0.f),
-                                ConstF32(1.f, 1.f, 1.f));
+            OpVectorTimesScalar(f16vec_ids.Get(3), color_output,
+                                ConstF16(static_cast<float>(stage.GetColorMultiplier())));
+        color_output = OpFClamp(f16vec_ids.Get(3), color_output, ConstF16(0.f, 0.f, 0.f),
+                                ConstF16(1.f, 1.f, 1.f));
         alpha_output =
-            OpFMul(f32_id, alpha_output, ConstF32(static_cast<float>(stage.GetAlphaMultiplier())));
-        alpha_output = OpFClamp(f32_id, alpha_output, ConstF32(0.f), ConstF32(1.f));
-        combiner_output = OpCompositeConstruct(f32vec_ids.Get(4), color_output, alpha_output);
+            OpFMul(f16_id, alpha_output, ConstF16(static_cast<float>(stage.GetAlphaMultiplier())));
+        alpha_output = OpFClamp(f16_id, alpha_output, ConstF16(0.f), ConstF16(1.f));
+        combiner_output = OpCompositeConstruct(f16vec_ids.Get(4), color_output, alpha_output);
     }
 
     combiner_buffer = next_combiner_buffer;
     if (config.TevStageUpdatesCombinerBufferColor(index)) {
         next_combiner_buffer =
-            OpVectorShuffle(f32vec_ids.Get(4), combiner_output, next_combiner_buffer, 0, 1, 2, 7);
+            OpVectorShuffle(f16vec_ids.Get(4), combiner_output, next_combiner_buffer, 0, 1, 2, 7);
     }
 
     if (config.TevStageUpdatesCombinerBufferAlpha(index)) {
         next_combiner_buffer =
-            OpVectorShuffle(f32vec_ids.Get(4), next_combiner_buffer, combiner_output, 0, 1, 2, 7);
+            OpVectorShuffle(f16vec_ids.Get(4), next_combiner_buffer, combiner_output, 0, 1, 2, 7);
     }
 }
 
@@ -748,7 +746,7 @@ void FragmentModule::WriteAlphaTestCondition(FramebufferRegs::CompareFunc func) 
     case CompareFunc::GreaterThan:
     case CompareFunc::GreaterThanOrEqual: {
         const Id alpha_scaled{
-            OpFMul(f32_id, OpCompositeExtract(f32_id, combiner_output, 3), ConstF32(255.f))};
+            OpFMul(f16_id, OpCompositeExtract(f16_id, combiner_output, 3), ConstF16(255.f))};
         const Id alpha_int{OpConvertFToS(i32_id, alpha_scaled)};
         const Id alphatest_ref{GetShaderDataMember(i32_id, ConstS32(1))};
         const Id alpha_comp_ref{compare(alpha_int, alphatest_ref)};
@@ -1164,6 +1162,17 @@ Id FragmentModule::ProcTexSampler() {
 }
 
 Id FragmentModule::Byteround(Id variable_id, u32 size) {
+    if (use_float16) {
+        if (size > 1) {
+            const Id scaled_vec_id{
+                OpVectorTimesScalar(f16vec_ids.Get(size), variable_id, ConstF16(255.f))};
+            const Id rounded_id{OpRound(f16vec_ids.Get(size), scaled_vec_id)};
+            return OpVectorTimesScalar(f16vec_ids.Get(size), rounded_id, ConstF16(1.f / 255.f));
+        } else {
+            const Id rounded_id{OpRound(f16_id, OpFMul(f16_id, variable_id, ConstF16(255.f)))};
+            return OpFMul(f16_id, rounded_id, ConstF16(1.f / 255.f));
+        }
+    }
     if (size > 1) {
         const Id scaled_vec_id{
             OpVectorTimesScalar(f32vec_ids.Get(size), variable_id, ConstF32(255.f))};
@@ -1319,22 +1328,22 @@ Id FragmentModule::GetSource(TevStageConfig::Source source, s32 index) {
     case Source::SecondaryFragmentColor:
         return secondary_fragment_color;
     case Source::Texture0:
-        return OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[0]);
+        return ToF16(OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[0]), 4);
     case Source::Texture1:
-        return OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[1]);
+        return ToF16(OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[1]), 4);
     case Source::Texture2:
-        return OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[2]);
+        return ToF16(OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[2]), 4);
     case Source::Texture3:
-        return OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[3]);
+        return ToF16(OpFunctionCall(f32vec_ids.Get(4), sample_tex_unit_func[3]), 4);
     case Source::PreviousBuffer:
         return combiner_buffer;
     case Source::Constant:
-        return GetShaderDataMember(f32vec_ids.Get(4), ConstS32(25), ConstS32(index));
+        return ToF16(GetShaderDataMember(f32vec_ids.Get(4), ConstS32(25), ConstS32(index)), 4);
     case Source::Previous:
         return combiner_output;
     default:
         LOG_CRITICAL(Render, "Unknown source op {}", source);
-        return ConstF32(0.f, 0.f, 0.f, 0.f);
+        return ConstF16(0.f, 0.f, 0.f, 0.f);
     }
 }
 
@@ -1345,33 +1354,33 @@ Id FragmentModule::AppendColorModifier(TevStageConfig::ColorModifier modifier,
     const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
     const bool force_source3 = index == 0 && source == Source::Previous;
     const Id source_color{GetSource(force_source3 ? stage.color_source3.Value() : source, index)};
-    const Id one_vec{ConstF32(1.f, 1.f, 1.f)};
+    const Id one_vec{ConstF16(1.f, 1.f, 1.f)};
 
     const auto shuffle = [&](s32 r, s32 g, s32 b) -> Id {
-        return OpVectorShuffle(f32vec_ids.Get(3), source_color, source_color, r, g, b);
+        return OpVectorShuffle(f16vec_ids.Get(3), source_color, source_color, r, g, b);
     };
 
     switch (modifier) {
     case ColorModifier::SourceColor:
         return shuffle(0, 1, 2);
     case ColorModifier::OneMinusSourceColor:
-        return OpFSub(f32vec_ids.Get(3), one_vec, shuffle(0, 1, 2));
+        return OpFSub(f16vec_ids.Get(3), one_vec, shuffle(0, 1, 2));
     case ColorModifier::SourceRed:
         return shuffle(0, 0, 0);
     case ColorModifier::OneMinusSourceRed:
-        return OpFSub(f32vec_ids.Get(3), one_vec, shuffle(0, 0, 0));
+        return OpFSub(f16vec_ids.Get(3), one_vec, shuffle(0, 0, 0));
     case ColorModifier::SourceGreen:
         return shuffle(1, 1, 1);
     case ColorModifier::OneMinusSourceGreen:
-        return OpFSub(f32vec_ids.Get(3), one_vec, shuffle(1, 1, 1));
+        return OpFSub(f16vec_ids.Get(3), one_vec, shuffle(1, 1, 1));
     case ColorModifier::SourceBlue:
         return shuffle(2, 2, 2);
     case ColorModifier::OneMinusSourceBlue:
-        return OpFSub(f32vec_ids.Get(3), one_vec, shuffle(2, 2, 2));
+        return OpFSub(f16vec_ids.Get(3), one_vec, shuffle(2, 2, 2));
     case ColorModifier::SourceAlpha:
         return shuffle(3, 3, 3);
     case ColorModifier::OneMinusSourceAlpha:
-        return OpFSub(f32vec_ids.Get(3), one_vec, shuffle(3, 3, 3));
+        return OpFSub(f16vec_ids.Get(3), one_vec, shuffle(3, 3, 3));
     default:
         LOG_CRITICAL(Render, "Unknown color modifier op {}", modifier);
         return one_vec;
@@ -1385,38 +1394,38 @@ Id FragmentModule::AppendAlphaModifier(TevStageConfig::AlphaModifier modifier,
     const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
     const bool force_source3 = index == 0 && source == Source::Previous;
     const Id source_alpha{GetSource(force_source3 ? stage.alpha_source3.Value() : source, index)};
-    const Id one_f32{ConstF32(1.f)};
+    const Id one_f16{ConstF16(1.f)};
 
-    const auto component = [&](s32 c) -> Id { return OpCompositeExtract(f32_id, source_alpha, c); };
+    const auto component = [&](s32 c) -> Id { return OpCompositeExtract(f16_id, source_alpha, c); };
 
     switch (modifier) {
     case AlphaModifier::SourceAlpha:
         return component(3);
     case AlphaModifier::OneMinusSourceAlpha:
-        return OpFSub(f32_id, one_f32, component(3));
+        return OpFSub(f16_id, one_f16, component(3));
     case AlphaModifier::SourceRed:
         return component(0);
     case AlphaModifier::OneMinusSourceRed:
-        return OpFSub(f32_id, one_f32, component(0));
+        return OpFSub(f16_id, one_f16, component(0));
     case AlphaModifier::SourceGreen:
         return component(1);
     case AlphaModifier::OneMinusSourceGreen:
-        return OpFSub(f32_id, one_f32, component(1));
+        return OpFSub(f16_id, one_f16, component(1));
     case AlphaModifier::SourceBlue:
         return component(2);
     case AlphaModifier::OneMinusSourceBlue:
-        return OpFSub(f32_id, one_f32, component(2));
+        return OpFSub(f16_id, one_f16, component(2));
     default:
         LOG_CRITICAL(Render, "Unknown alpha modifier op {}", modifier);
-        return one_f32;
+        return one_f16;
     }
 }
 
 Id FragmentModule::AppendColorCombiner(Pica::TexturingRegs::TevStageConfig::Operation operation) {
     using Operation = TevStageConfig::Operation;
-    const Id half_vec{ConstF32(0.5f, 0.5f, 0.5f)};
-    const Id one_vec{ConstF32(1.f, 1.f, 1.f)};
-    const Id zero_vec{ConstF32(0.f, 0.f, 0.f)};
+    const Id half_vec{ConstF16(0.5f, 0.5f, 0.5f)};
+    const Id one_vec{ConstF16(1.f, 1.f, 1.f)};
+    const Id zero_vec{ConstF16(0.f, 0.f, 0.f)};
     Id color{};
 
     switch (operation) {
@@ -1424,35 +1433,35 @@ Id FragmentModule::AppendColorCombiner(Pica::TexturingRegs::TevStageConfig::Oper
         color = color_results_1;
         break;
     case Operation::Modulate:
-        color = OpFMul(f32vec_ids.Get(3), color_results_1, color_results_2);
+        color = OpFMul(f16vec_ids.Get(3), color_results_1, color_results_2);
         break;
     case Operation::Add:
-        color = OpFAdd(f32vec_ids.Get(3), color_results_1, color_results_2);
+        color = OpFAdd(f16vec_ids.Get(3), color_results_1, color_results_2);
         break;
     case Operation::AddSigned:
-        color = OpFSub(f32vec_ids.Get(3),
-                       OpFAdd(f32vec_ids.Get(3), color_results_1, color_results_2), half_vec);
+        color = OpFSub(f16vec_ids.Get(3),
+                       OpFAdd(f16vec_ids.Get(3), color_results_1, color_results_2), half_vec);
         break;
     case Operation::Lerp:
-        color = OpFMix(f32vec_ids.Get(3), color_results_2, color_results_1, color_results_3);
+        color = OpFMix(f16vec_ids.Get(3), color_results_2, color_results_1, color_results_3);
         break;
     case Operation::Subtract:
-        color = OpFSub(f32vec_ids.Get(3), color_results_1, color_results_2);
+        color = OpFSub(f16vec_ids.Get(3), color_results_1, color_results_2);
         break;
     case Operation::MultiplyThenAdd:
-        color = OpFma(f32vec_ids.Get(3), color_results_1, color_results_2, color_results_3);
+        color = OpFma(f16vec_ids.Get(3), color_results_1, color_results_2, color_results_3);
         break;
     case Operation::AddThenMultiply:
-        color = OpFMin(f32vec_ids.Get(3),
-                       OpFAdd(f32vec_ids.Get(3), color_results_1, color_results_2), one_vec);
-        color = OpFMul(f32vec_ids.Get(3), color, color_results_3);
+        color = OpFMin(f16vec_ids.Get(3),
+                       OpFAdd(f16vec_ids.Get(3), color_results_1, color_results_2), one_vec);
+        color = OpFMul(f16vec_ids.Get(3), color, color_results_3);
         break;
     case Operation::Dot3_RGB:
     case Operation::Dot3_RGBA:
-        color = OpDot(f32_id, OpFSub(f32vec_ids.Get(3), color_results_1, half_vec),
-                      OpFSub(f32vec_ids.Get(3), color_results_2, half_vec));
-        color = OpFMul(f32_id, color, ConstF32(4.f));
-        color = OpCompositeConstruct(f32vec_ids.Get(3), color, color, color);
+        color = OpDot(f16_id, OpFSub(f16vec_ids.Get(3), color_results_1, half_vec),
+                      OpFSub(f16vec_ids.Get(3), color_results_2, half_vec));
+        color = OpFMul(f16_id, color, ConstF16(4.f));
+        color = OpCompositeConstruct(f16vec_ids.Get(3), color, color, color);
         break;
     default:
         color = zero_vec;
@@ -1461,7 +1470,7 @@ Id FragmentModule::AppendColorCombiner(Pica::TexturingRegs::TevStageConfig::Oper
     }
 
     // Clamp result to 0.0, 1.0
-    return OpFClamp(f32vec_ids.Get(3), color, zero_vec, one_vec);
+    return OpFClamp(f16vec_ids.Get(3), color, zero_vec, one_vec);
 }
 
 Id FragmentModule::AppendAlphaCombiner(TevStageConfig::Operation operation) {
@@ -1473,34 +1482,34 @@ Id FragmentModule::AppendAlphaCombiner(TevStageConfig::Operation operation) {
         color = alpha_results_1;
         break;
     case Operation::Modulate:
-        color = OpFMul(f32_id, alpha_results_1, alpha_results_2);
+        color = OpFMul(f16_id, alpha_results_1, alpha_results_2);
         break;
     case Operation::Add:
-        color = OpFAdd(f32_id, alpha_results_1, alpha_results_2);
+        color = OpFAdd(f16_id, alpha_results_1, alpha_results_2);
         break;
     case Operation::AddSigned:
-        color = OpFSub(f32_id, OpFAdd(f32_id, alpha_results_1, alpha_results_2), ConstF32(0.5f));
+        color = OpFSub(f16_id, OpFAdd(f16_id, alpha_results_1, alpha_results_2), ConstF16(0.5f));
         break;
     case Operation::Lerp:
-        color = OpFMix(f32_id, alpha_results_2, alpha_results_1, alpha_results_3);
+        color = OpFMix(f16_id, alpha_results_2, alpha_results_1, alpha_results_3);
         break;
     case Operation::Subtract:
-        color = OpFSub(f32_id, alpha_results_1, alpha_results_2);
+        color = OpFSub(f16_id, alpha_results_1, alpha_results_2);
         break;
     case Operation::MultiplyThenAdd:
-        color = OpFma(f32_id, alpha_results_1, alpha_results_2, alpha_results_3);
+        color = OpFma(f16_id, alpha_results_1, alpha_results_2, alpha_results_3);
         break;
     case Operation::AddThenMultiply:
-        color = OpFMin(f32_id, OpFAdd(f32_id, alpha_results_1, alpha_results_2), ConstF32(1.f));
-        color = OpFMul(f32_id, color, alpha_results_3);
+        color = OpFMin(f16_id, OpFAdd(f16_id, alpha_results_1, alpha_results_2), ConstF16(1.f));
+        color = OpFMul(f16_id, color, alpha_results_3);
         break;
     default:
-        color = ConstF32(0.f);
+        color = ConstF16(0.f);
         LOG_CRITICAL(Render, "Unknown alpha combiner operation: {}", operation);
         break;
     }
 
-    return OpFClamp(f32_id, color, ConstF32(0.f), ConstF32(1.f));
+    return OpFClamp(f16_id, color, ConstF16(0.f), ConstF16(1.f));
 }
 
 void FragmentModule::DefineArithmeticTypes() {
