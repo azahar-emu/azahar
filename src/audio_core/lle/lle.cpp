@@ -617,6 +617,8 @@ void DspLle::SetInterruptHandler(
         } else {
             if ((teakra.GetSemaphore() & 0x8000) == 0)
                 return;
+            // The dsp module clears the bit every time it handles the interrupt.
+            teakra.ClearSemaphore(0x8000);
             impl->semaphore_signaled = true;
         }
         if (impl->semaphore_signaled && impl->data_signaled) {
