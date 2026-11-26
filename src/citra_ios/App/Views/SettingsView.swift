@@ -770,7 +770,7 @@ struct GraphicsSettingsView: View {
                          + "then shows each of its frames for exactly two 3DS refreshes, which "
                          + "removes the judder of games that hand over their frames unevenly; it "
                          + "follows the game again as soon as it draws faster, and does not slow "
-                         + "it down. Present Every Refresh (experimental) shows the current "
+                         + "it down. Present Every Refresh shows the current "
                          + "frame again at every refresh that has no new one, so a ProMotion "
                          + "display keeps its full rate between the frames of a 30 FPS game "
                          + "instead of slowing down, which can make frames land a refresh late; "

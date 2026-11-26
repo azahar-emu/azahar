@@ -523,7 +523,7 @@ final class AppSettings: ObservableObject {
         displaySync = value("displaySync", true)
         frameCap30 = value("frameCap30", false)
         steadyThirty = value("steadyThirty", true)
-        presentEveryRefresh = value("presentEveryRefresh", false)
+        presentEveryRefresh = value("presentEveryRefresh", true)
         frameCapHoldsGame = value("frameCapHoldsGame", true)
         pacingBufferMs = value("pacingBufferMs", 0)
         asyncShaders = value("asyncShaders", true)
