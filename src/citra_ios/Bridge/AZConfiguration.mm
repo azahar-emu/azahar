@@ -74,7 +74,7 @@
     config.innerCamera = 0;
     config.stereoDepth = 50;
     config.swapEyes3D = NO;
-    config.anisotropy = 4;
+    config.anisotropy = 1;
     config.diskShaderCache = YES;
     config.layoutOption = AZLayoutOptionDefault;
     config.portraitLayoutOption = AZPortraitLayoutOptionTopFullWidth;

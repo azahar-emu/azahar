@@ -559,7 +559,7 @@ final class AppSettings: ObservableObject {
         gpuPassTiming = value("gpuPassTiming", false)
         dumpShaders = value("dumpShaders", false)
         textureCompression = TextureCompressionOption(rawValue: value("textureCompression", 0)) ?? .off
-        anisotropy = value("anisotropy", 4)
+        anisotropy = value("anisotropy", 1)
         diskShaderCache = value("diskShaderCache", true)
         upscaling = UpscalingOption(rawValue: value("upscaling", 0)) ?? .off
         upscaleFactorTenths = value("upscaleFactorTenths", 0)
