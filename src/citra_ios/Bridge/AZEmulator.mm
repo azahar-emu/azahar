@@ -635,7 +635,7 @@ const char* ThermalStateName() {
     // Without a debugger attached, iOS does not allow mapping executable memory.
     [AZEmulator setLoggingEnabled:configuration.loggingEnabled];
     // Without JIT both run on the interpreters (the fast interpreter for the CPU), so a game
-    // still runs, only slower; the user is told when it starts.
+    // still runs, only slower.
     values.use_cpu_jit = configuration.useCPUJIT && jit;
     values.use_shader_jit = configuration.useShaderJIT && jit;
     _jitFallback = configuration.useCPUJIT && !jit;
@@ -1260,14 +1260,8 @@ const char* ThermalStateName() {
     Common::FrameCost::MarkEmulationThread();
 #if defined(__aarch64__)
     if (_jitFallback) {
+        // The app already tells the user JIT is missing when it opens, the log notes it here.
         LOG_WARNING(Frontend, "JIT is not enabled: the game runs with the fast interpreter");
-        dispatch_async(dispatch_get_main_queue(), ^{
-          if (self.onToast) {
-              self.onToast(@"JIT isn't enabled, so the game runs with the fast interpreter "
-                           @"(slower). Enable JIT with StikDebug or the built-in JIT helper for "
-                           @"full speed.");
-          }
-        });
     }
     // The blocks of game code compiled in earlier runs, compiled ahead of time in this one. Next
     // to the shader cache, so Clear Shader Cache clears it too.
