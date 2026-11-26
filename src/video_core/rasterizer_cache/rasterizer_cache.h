@@ -282,7 +282,11 @@ bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig
         .dst_offset = {dst_rect.left, dst_rect.bottom},
         .extent = {src_rect.GetWidth(), src_rect.GetHeight()},
     };
-    runtime.CopyTextures(src_surface, dst_surface, texture_copy);
+    if (!runtime.CopyTextures(src_surface, dst_surface, texture_copy)) {
+        // The GPU copy was skipped (e.g. null backing image); fall back to the
+        // software blitter instead of marking unwritten data as valid.
+        return false;
+    }
 
     InvalidateRegion(dst_params.addr, dst_params.size, dst_surface_id);
     return true;
