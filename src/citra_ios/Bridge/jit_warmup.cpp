@@ -3,6 +3,8 @@
 // Refer to the LICENSE.txt file included.
 
 #include <algorithm>
+#include <array>
+#include <optional>
 #include <deque>
 #include <unordered_set>
 #include <utility>
@@ -13,8 +15,11 @@
 
 #include "citra_ios/Bridge/jit_warmup.h"
 #include "common/file_util.h"
+#include "common/hash.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/hle/kernel/process.h"
+#include "core/memory.h"
 #if defined(__aarch64__) && defined(__APPLE__) && TARGET_OS_IPHONE
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #define AZAHAR_JIT_WARMUP 1
@@ -27,8 +32,9 @@ namespace {
 using Clock = std::chrono::steady_clock;
 
 constexpr u32 FILE_MAGIC = 0x504A574E; // "NWJP"
-constexpr u32 FILE_VERSION = 1;
-/// A profile never grows beyond this many blocks (8 bytes each).
+/// 2: each block with a hash of the first bytes of its code (version 1 had none and is discarded).
+constexpr u32 FILE_VERSION = 2;
+/// A profile never grows beyond this many blocks (16 bytes each).
 constexpr std::size_t MAX_ENTRIES = 400'000;
 /// The code cache of a core is 32 MiB (see ARM_Dynarmic::MakeJit). Compiling ahead of time stops
 /// while less than this is left, so it never fills the cache: a full cache is thrown away as a
@@ -39,6 +45,18 @@ constexpr std::size_t KEEP_FREE = 12 * 1024 * 1024;
 constexpr auto DEADLINE_MARGIN = std::chrono::microseconds{2000};
 /// Loads of code smaller than this (patched words, relocations) do not queue the profile again.
 constexpr std::size_t MIN_REQUEUE_RANGE = 4096;
+/// How many bytes from the start of a block its fingerprint covers.
+constexpr std::size_t CODE_HASH_BYTES = 16;
+
+/// A block of game code as the profile keeps it: dynarmic's location descriptor and a hash of the
+/// code at its start, so it is only compiled ahead of time while that same code is in memory.
+/// Games that load modules (CROs) put different code, or data, at the same addresses at different
+/// times; compiling what happened to be there is wasted at best, and bytes that are not code can
+/// stop dynarmic on one of its internal checks (Pokemon Y crashed so).
+struct Entry {
+    u64 descriptor;
+    u64 code_hash;
+};
 
 struct State {
     Core::System* system = nullptr;
@@ -46,11 +64,11 @@ struct State {
     bool enabled = false; ///< Recording and compiling ahead of time
     std::string path;
 
-    std::unordered_set<u64> known; ///< Everything in the file or recorded since
-    std::vector<u64> fresh;        ///< Recorded since the last save
+    std::unordered_set<u64> known; ///< Descriptors in the file or recorded since
+    std::vector<Entry> fresh;      ///< Recorded since the last save
     /// The blocks of the profile file by guest address, for queueing a range of them again.
-    std::vector<std::pair<u32, u64>> by_address;
-    std::deque<u64> queue; ///< Blocks to compile ahead of time
+    std::vector<std::pair<u32, Entry>> by_address;
+    std::deque<Entry> queue; ///< Blocks to compile ahead of time
     bool cache_low = false;
     bool precompiling = false;
 
@@ -60,6 +78,7 @@ struct State {
     u64 ahead = 0;
     u64 ahead_ns = 0;
     u64 requeued = 0;
+    u64 skipped = 0; ///< Not compiled ahead of time: other code (or none) at that address now
     Clock::time_point last_log{};
     Clock::time_point last_save{};
 };
@@ -72,6 +91,26 @@ u32 AddressOf(u64 descriptor) {
 
 bool IsSingleStep(u64 descriptor) {
     return ((descriptor >> 32) & 4) != 0;
+}
+
+/// The fingerprint of the code at a block's start in the current process, if it is mapped.
+std::optional<u64> CodeHash(u32 address) {
+    if (g_state.system == nullptr) {
+        return std::nullopt;
+    }
+    const auto process = g_state.system->Kernel().GetCurrentProcess();
+    if (!process) {
+        return std::nullopt;
+    }
+    Memory::MemorySystem& memory = g_state.system->Memory();
+    const u32 last = address + static_cast<u32>(CODE_HASH_BYTES) - 1;
+    if (last < address || !memory.IsValidVirtualAddress(*process, address) ||
+        !memory.IsValidVirtualAddress(*process, last)) {
+        return std::nullopt;
+    }
+    std::array<u8, CODE_HASH_BYTES> bytes{};
+    memory.ReadBlock(*process, address, bytes.data(), bytes.size());
+    return Common::ComputeHash64(bytes.data(), bytes.size());
 }
 
 void Load() {
@@ -88,16 +127,17 @@ void Load() {
         return;
     }
     const std::size_t count =
-        std::min<std::size_t>((file.GetSize() - sizeof(header)) / sizeof(u64), MAX_ENTRIES);
-    std::vector<u64> entries(count);
+        std::min<std::size_t>((file.GetSize() - sizeof(header)) / sizeof(Entry), MAX_ENTRIES);
+    std::vector<Entry> entries(count);
     entries.resize(file.ReadArray(entries.data(), count));
-    for (const u64 descriptor : entries) {
-        if (!IsSingleStep(descriptor) && g_state.known.insert(descriptor).second) {
-            g_state.queue.push_back(descriptor);
-            g_state.by_address.emplace_back(AddressOf(descriptor), descriptor);
+    for (const Entry& entry : entries) {
+        if (!IsSingleStep(entry.descriptor) && g_state.known.insert(entry.descriptor).second) {
+            g_state.queue.push_back(entry);
+            g_state.by_address.emplace_back(AddressOf(entry.descriptor), entry);
         }
     }
-    std::sort(g_state.by_address.begin(), g_state.by_address.end());
+    std::sort(g_state.by_address.begin(), g_state.by_address.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
 }
 
 void Save() {
@@ -140,7 +180,15 @@ void IdleWork(Clock::time_point deadline) {
     const Clock::time_point stop = deadline - DEADLINE_MARGIN;
     g_state.precompiling = true;
     while (!g_state.queue.empty() && Clock::now() < stop) {
-        const int result = core->Precompile(g_state.queue.front(), KEEP_FREE);
+        const Entry entry = g_state.queue.front();
+        // Only the code it was recorded from: anything else at that address now (another
+        // module, data, nothing mapped) is left alone, the game compiles what it really runs.
+        if (CodeHash(AddressOf(entry.descriptor)) != entry.code_hash) {
+            g_state.queue.pop_front();
+            g_state.skipped++;
+            continue;
+        }
+        const int result = core->Precompile(entry.descriptor, KEEP_FREE);
         if (result == 2) {
             break; // Executing, try again at the next frame
         }
@@ -165,8 +213,9 @@ void CodeInvalidated(u32 start, std::size_t length) {
     // New code was loaded there (a module): its blocks from earlier runs are compiled again from
     // it. Blocks compiled from that range before were thrown away by the invalidation.
     const u64 end = static_cast<u64>(start) + length;
-    auto it = std::lower_bound(g_state.by_address.begin(), g_state.by_address.end(),
-                               std::pair<u32, u64>{start, 0});
+    auto it = std::lower_bound(
+        g_state.by_address.begin(), g_state.by_address.end(), start,
+        [](const std::pair<u32, Entry>& item, u32 address) { return item.first < address; });
     for (; it != g_state.by_address.end() && it->first < end; ++it) {
         g_state.queue.push_back(it->second);
         g_state.requeued++;
@@ -226,10 +275,14 @@ bool OnBlockCompiled(u64 descriptor, u64 nanoseconds) {
     // The blocks of the core the game runs on (core 0), the warm-up compiles for that one.
     if (g_state.enabled && !IsSingleStep(descriptor) && g_state.system != nullptr &&
         g_state.system->GetRunningCore().GetID() == 0 && g_state.known.size() < MAX_ENTRIES &&
-        g_state.known.insert(descriptor).second) {
-        // Not added to by_address: a block recorded now is compiled already, and stays so
-        // unless its code is loaded again in this run.
-        g_state.fresh.push_back(descriptor);
+        !g_state.known.contains(descriptor)) {
+        // The code is in memory right now (it is being compiled to run), its fingerprint
+        // tells later runs whether the same code is there. Not added to by_address: a block
+        // recorded now is compiled already, and stays so unless its code is loaded again.
+        if (const auto hash = CodeHash(AddressOf(descriptor))) {
+            g_state.known.insert(descriptor);
+            g_state.fresh.push_back(Entry{descriptor, *hash});
+        }
     }
     return false;
 }
@@ -244,7 +297,7 @@ void Tick() {
         Save();
     }
     if (now - g_state.last_log < std::chrono::seconds{10} ||
-        (g_state.compiled == 0 && g_state.ahead == 0)) {
+        (g_state.compiled == 0 && g_state.ahead == 0 && g_state.skipped == 0)) {
         return;
     }
     g_state.last_log = now;
@@ -254,13 +307,13 @@ void Tick() {
     LOG_INFO(Frontend,
              "JIT: {} blocks compiled while playing ({:.0f} us each, {:.1f} ms in all), {} ahead "
              "of time ({:.0f} us each); warm-up: {} waiting, {} queued again after code loads, "
-             "{} blocks known",
+             "{} skipped (other code at their address now), {} blocks known",
              g_state.compiled, average_us(g_state.compiled_ns, g_state.compiled),
              static_cast<double>(g_state.compiled_ns) / 1e6, g_state.ahead,
              average_us(g_state.ahead_ns, g_state.ahead), g_state.queue.size(), g_state.requeued,
-             g_state.known.size());
+             g_state.skipped, g_state.known.size());
     g_state.compiled = g_state.compiled_ns = g_state.ahead = g_state.ahead_ns = 0;
-    g_state.requeued = 0;
+    g_state.requeued = g_state.skipped = 0;
 }
 
 } // namespace JitWarmup
