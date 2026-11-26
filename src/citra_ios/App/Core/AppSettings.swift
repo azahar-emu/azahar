@@ -512,7 +512,7 @@ final class AppSettings: ObservableObject {
         resolutionFactor = value("resolutionFactor", 2)
         linearFiltering = value("linearFiltering", true)
         textureFilter = TextureFilterOption(rawValue: value("textureFilter", 0)) ?? .none
-        skipDuplicateFrames = value("skipDuplicateFrames", false)
+        skipDuplicateFrames = value("skipDuplicateFrames", true)
         outerCamera = CameraSource(rawValue: value("outerCamera", 0)) ?? .off
         innerCamera = CameraSource(rawValue: value("innerCamera", 0)) ?? .off
         stereoMode = StereoModeOption(rawValue: value("stereoMode", 0)) ?? .off

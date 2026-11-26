@@ -29,7 +29,7 @@
     config.saturation = 0;
     config.contrast = 0;
     config.brightness = 0;
-    config.skipDuplicateFrames = NO;
+    config.skipDuplicateFrames = YES;
     config.asyncShaderCompilation = YES;
     config.framePacing = YES;
     config.displaySync = YES;
