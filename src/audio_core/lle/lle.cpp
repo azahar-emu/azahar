@@ -172,8 +172,7 @@ struct DspLle::Impl final {
     static constexpr u64 HostWriteLatency = 2650;
 
     // In multi-thread mode the DSP thread runs in steps of at most this many cycles, so that it
-    // sees writes queued while it runs. Being below the latency, a write arrives on time
-    // whenever the DSP is behind the ARM.
+    // sees writes queued while it runs.
     static constexpr u64 HostWritePollInterval = 2048;
 
     struct HostWrite {
@@ -187,6 +186,9 @@ struct DspLle::Impl final {
 
     // DSP cycles run since the component was loaded.
     std::atomic<u64> dsp_cycles = 0;
+    // The end of the DSP step being run, an uper bound for the DSP's position and for the cycle
+    // of anything the step raises.
+    std::atomic<u64> step_end = 0;
     // The DSP cycle that matches ARM tick sync_ticks. In single-thread mode a slice runs ahead,
     // so this is the end of the last slice run. In multi-thread mode it is the start of the
     // slice the DSP thread is running.
@@ -197,9 +199,11 @@ struct DspLle::Impl final {
         const s64 elapsed = std::max<s64>(core_timing.GetGlobalTicks() - sync_ticks, 0);
         // The DSP runs at half the ARM clock.
         const u64 arm_cycles = sync_cycles + static_cast<u64>(elapsed) / 2;
+        // When the DSP is ahead of the ARM, the latency counts from the end of its current step,
+        // so that a write never arrives sooner than that after the DSP's position.
         std::lock_guard lock(host_mutex);
         const u64 arrival =
-            std::max(std::max(arm_cycles, dsp_cycles.load()) + HostWriteLatency, last_arrival);
+            std::max(std::max(arm_cycles, step_end.load()) + HostWriteLatency, last_arrival);
         last_arrival = arrival;
         host_writes.push_back({arrival, std::move(apply)});
     }
@@ -302,7 +306,7 @@ struct DspLle::Impl final {
             }
             step_end = now + step;
             teakra.Run(static_cast<unsigned>(step));
-            dsp_cycles = step_end;
+            dsp_cycles = now + step;
         }
     }
 
