@@ -4,12 +4,16 @@
 
 #pragma once
 
+#include <memory>
 #include <unordered_map>
+#include <vector>
 
+#include "common/math_util.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
 
 namespace VideoCore {
+struct Extent;
 struct TextureBlit;
 struct TextureCopy;
 struct BufferTextureCopy;
@@ -47,6 +51,8 @@ private:
     vk::Pipeline MakeFilterPipeline(
         vk::ShaderModule fragment_shader, vk::PipelineLayout layout,
         VideoCore::PixelFormat color_format = VideoCore::PixelFormat::RGBA8);
+    vk::Pipeline MakeFilterPipeline(vk::ShaderModule fragment_shader, vk::PipelineLayout layout,
+                                    vk::RenderPass renderpass);
 
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
     void FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit);
@@ -57,11 +63,18 @@ private:
     void FilterPass(Surface& surface, vk::Pipeline pipeline, vk::PipelineLayout layout,
                     const VideoCore::TextureBlit& blit);
 
-    void FilterPassThreeTextures(Surface& surface, vk::Pipeline pipeline, vk::PipelineLayout layout,
-                                 const VideoCore::TextureBlit& blit);
+    /// Draws draw_rect of the framebuffer, sampling the inputs over tex_rect of an image of size
+    /// tex_extent.
+    void DrawFilter(vk::Pipeline pipeline, vk::PipelineLayout layout,
+                    vk::DescriptorSet descriptor_set, vk::Framebuffer framebuffer,
+                    vk::RenderPass renderpass, Common::Rectangle<u32> draw_rect,
+                    Common::Rectangle<u32> tex_rect, const VideoCore::Extent& tex_extent,
+                    float res_scale);
 
-    void FilterPassYGradient(Surface& surface, vk::Pipeline pipeline, vk::PipelineLayout layout,
-                             const VideoCore::TextureBlit& blit);
+    struct Anime4KImages;
+
+    /// Returns intermediate images of the given size for Anime4K, creating them if needed.
+    Anime4KImages& GetAnime4KImages(u32 width, u32 height);
 
 private:
     const Instance& instance;
@@ -70,7 +83,6 @@ private:
     DescriptorUpdateQueue& update_queue;
 
     vk::Device device;
-    vk::RenderPass r32_renderpass;
 
     DescriptorHeap compute_provider;
     DescriptorHeap compute_buffer_provider;
@@ -93,6 +105,13 @@ private:
     vk::ShaderModule xbrz_frag;
     vk::ShaderModule mmpx_frag;
     vk::ShaderModule refine_frag;
+    vk::ShaderModule x_gradient_frag;
+    vk::ShaderModule y_gradient_frag;
+
+    /// Render passes of the Anime4K intermediate images (R16G16 and R16 float)
+    vk::RenderPass xy_renderpass;
+    vk::RenderPass lumad_renderpass;
+    std::vector<std::unique_ptr<Anime4KImages>> anime4k_images;
 
     vk::Pipeline d24s8_to_rgba8_pipeline;
     vk::Pipeline d24s8_to_rgba8_ms_pipeline;

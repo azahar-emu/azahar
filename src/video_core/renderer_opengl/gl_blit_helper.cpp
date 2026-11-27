@@ -258,7 +258,8 @@ void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& b
     const auto& tuple = surface.Tuple();
     const u32 src_width = blit.src_rect.GetWidth();
     const u32 src_height = blit.src_rect.GetHeight();
-    const auto temp_rect{blit.src_rect * internal_scale_factor};
+    const Common::Rectangle<u32> temp_rect{0, src_height * internal_scale_factor,
+                                           src_width * internal_scale_factor, 0};
 
     const auto setup_temp_tex = [&](GLint internal_format, GLint format, u32 width, u32 height) {
         TempTexture texture;

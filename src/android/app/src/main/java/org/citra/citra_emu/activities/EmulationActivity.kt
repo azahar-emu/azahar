@@ -27,7 +27,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.camera.StillImageCameraHelper.onFilePickerResult
@@ -40,9 +39,7 @@ import org.citra.citra_emu.features.input.GamepadEventHandler
 import org.citra.citra_emu.features.input.GamepadHelper
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
-import org.citra.citra_emu.features.settings.model.GraphicsAPI
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.TextureFilter
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
@@ -243,28 +240,6 @@ class EmulationActivity : AppCompatActivity() {
                     gameId
                 )
             }
-        }
-
-        if (CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
-            CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
-        ) {
-            if (CitraSettings.activeSettings.hasOverride(IntSetting.GRAPHICS_API)) {
-                // in this case vulkan is a per-app override, so update the per-app setting
-                // which will happen because the settings context is per-app at this point.
-                CitraSettings.activeSettings.setBySettingsContext(
-                    IntSetting.TEXTURE_FILTER,
-                    TextureFilter.NOFILTER.int
-                )
-            } else {
-                // otherwise write global if texture filter is global, override if override
-                CitraSettings.activeSettings.setByCurrentState(
-                    IntSetting.TEXTURE_FILTER,
-                    TextureFilter.NOFILTER.int
-                )
-            }
-            SettingsFile.saveSetting(IntSetting.TEXTURE_FILTER, CitraSettings.activeSettings)
-            NativeLibrary.reloadSettings()
-            showAnime4kDialog()
         }
     }
 
@@ -484,15 +459,6 @@ class EmulationActivity : AppCompatActivity() {
         }
 
         return gamepadEventHandler.handleMotionEvent(event)
-    }
-
-    fun showAnime4kDialog() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.incompatible_texture_filter)
-            .setMessage(R.string.incompatible_texture_filter_description)
-            .setPositiveButton(android.R.string.ok, null)
-            .setCancelable(false)
-            .show()
     }
 
     val openAmiiboFileLauncher =

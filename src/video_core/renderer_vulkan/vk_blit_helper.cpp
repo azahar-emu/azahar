@@ -222,7 +222,77 @@ constexpr vk::PipelineShaderStageCreateInfo MakeStages(vk::ShaderModule compute_
     };
 }
 
+constexpr vk::Format ANIME4K_XY_FORMAT = vk::Format::eR16G16Sfloat;
+constexpr vk::Format ANIME4K_LUMAD_FORMAT = vk::Format::eR16Sfloat;
+
+constexpr u32 ANIME4K_INTERNAL_SCALE = 2;
+
+constexpr std::size_t ANIME4K_MAX_CACHED_IMAGES = 4;
+
+constexpr vk::MemoryBarrier FILTER_PASS_BARRIER{
+    .srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite,
+    .dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eColorAttachmentRead |
+                     vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eTransferRead |
+                     vk::AccessFlagBits::eTransferWrite,
+};
+constexpr vk::PipelineStageFlags FILTER_PASS_SRC_STAGES =
+    vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eFragmentShader;
+constexpr vk::PipelineStageFlags FILTER_PASS_DST_STAGES =
+    vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eFragmentShader |
+    vk::PipelineStageFlagBits::eTransfer;
+
+vk::RenderPass CreateColorRenderPass(vk::Device device, vk::Format format) {
+    const vk::AttachmentDescription attachment = {
+        .format = format,
+        .samples = vk::SampleCountFlagBits::e1,
+        .loadOp = vk::AttachmentLoadOp::eDontCare,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eGeneral,
+        .finalLayout = vk::ImageLayout::eGeneral,
+    };
+    const vk::AttachmentReference color_attachment_ref = {
+        .attachment = 0,
+        .layout = vk::ImageLayout::eGeneral,
+    };
+    const vk::SubpassDescription subpass = {
+        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &color_attachment_ref,
+    };
+    return device.createRenderPass({
+        .attachmentCount = 1,
+        .pAttachments = &attachment,
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+    });
+}
+
+/// Grows rect by margin on every side, clamped to an image of the given extent
+Common::Rectangle<u32> ExpandRect(Common::Rectangle<u32> rect, u32 margin,
+                                  const VideoCore::Extent& extent) {
+    const u32 left = std::min(rect.left, rect.right);
+    const u32 right = std::max(rect.left, rect.right);
+    const u32 bottom = std::min(rect.bottom, rect.top);
+    const u32 top = std::max(rect.bottom, rect.top);
+    return Common::Rectangle<u32>{
+        left > margin ? left - margin : 0,
+        std::min(top + margin, extent.height),
+        std::min(right + margin, extent.width),
+        bottom > margin ? bottom - margin : 0,
+    };
+}
+
 } // Anonymous namespace
+
+struct BlitHelper::Anime4KImages {
+    explicit Anime4KImages(const Instance& instance) : xy{instance}, lumad{instance} {}
+
+    Handle xy;
+    Handle lumad;
+    u64 tick{};
+};
 
 BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                        RenderManager& renderpass_cache_, DescriptorUpdateQueue& update_queue_)
@@ -264,6 +334,12 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
           Compile(HostShaders::XBRZ_FREESCALE_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       mmpx_frag{Compile(HostShaders::MMPX_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       refine_frag{Compile(HostShaders::REFINE_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
+      x_gradient_frag{
+          Compile(HostShaders::X_GRADIENT_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
+      y_gradient_frag{
+          Compile(HostShaders::Y_GRADIENT_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
+      xy_renderpass{CreateColorRenderPass(device, ANIME4K_XY_FORMAT)},
+      lumad_renderpass{CreateColorRenderPass(device, ANIME4K_LUMAD_FORMAT)},
       d24s8_to_rgba8_pipeline{MakeComputePipeline(d24s8_to_rgba8_comp, compute_pipeline_layout)},
       d24s8_to_rgba8_ms_pipeline{
           instance_.IsMultiSampleSupported()
@@ -339,6 +415,10 @@ BlitHelper::~BlitHelper() {
     device.destroyShaderModule(xbrz_frag);
     device.destroyShaderModule(mmpx_frag);
     device.destroyShaderModule(refine_frag);
+    device.destroyShaderModule(x_gradient_frag);
+    device.destroyShaderModule(y_gradient_frag);
+    device.destroyRenderPass(xy_renderpass);
+    device.destroyRenderPass(lumad_renderpass);
     device.destroyPipeline(depth_to_buffer_pipeline);
     device.destroyPipeline(d24s8_to_rgba8_pipeline);
     if (d24s8_to_rgba8_ms_pipeline) {
@@ -796,9 +876,133 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
 }
 
 void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit) {
-    auto pipeline =
-        MakeFilterPipeline(refine_frag, three_textures_pipeline_layout, surface.pixel_format);
-    FilterPassThreeTextures(surface, pipeline, three_textures_pipeline_layout, blit);
+    // The gradients cover the whole surface so every pass samples its inputs at the same
+    // normalized coordinates. Only the region around the blit is drawn.
+    const VideoCore::Extent extent = surface.RealExtent(false);
+    const VideoCore::Extent temp_extent = {
+        .width = extent.width * ANIME4K_INTERNAL_SCALE,
+        .height = extent.height * ANIME4K_INTERNAL_SCALE,
+    };
+    const auto temp_rect = blit.src_rect * ANIME4K_INTERNAL_SCALE;
+    // The refine pass reads LUMAD up to two texels around the region, the y gradient pass reads
+    // XY one texel around LUMAD.
+    const auto lumad_rect = ExpandRect(temp_rect, 2, temp_extent);
+    const auto xy_rect = ExpandRect(lumad_rect, 1, temp_extent);
+
+    const Anime4KImages& images = GetAnime4KImages(temp_extent.width, temp_extent.height);
+    const vk::ImageView source = surface.ImageView(ViewType::Sample, Type::Base);
+    const vk::ImageView xy = images.xy.image_views[ViewType::Sample];
+    const vk::ImageView lumad = images.lumad.image_views[ViewType::Sample];
+    const vk::PipelineLayout layout = three_textures_pipeline_layout;
+
+    const auto barrier = [this] {
+        renderpass_cache.EndRendering();
+        scheduler.Record([](vk::CommandBuffer cmdbuf) {
+            cmdbuf.pipelineBarrier(FILTER_PASS_SRC_STAGES, FILTER_PASS_DST_STAGES,
+                                   vk::DependencyFlagBits::eByRegion, FILTER_PASS_BARRIER, {}, {});
+        });
+    };
+
+    // An earlier filter may still be reading the intermediate images
+    barrier();
+
+    const auto x_set = three_textures_provider.Commit();
+    update_queue.AddImageSampler(x_set, 0, 0, source, linear_sampler);
+    update_queue.AddImageSampler(x_set, 1, 0, source, linear_sampler);
+    update_queue.AddImageSampler(x_set, 2, 0, source, linear_sampler);
+    DrawFilter(MakeFilterPipeline(x_gradient_frag, layout, xy_renderpass), layout, x_set,
+               images.xy.framebuffer, xy_renderpass, xy_rect, xy_rect, temp_extent, 1.0f);
+    barrier();
+
+    const auto y_set = three_textures_provider.Commit();
+    update_queue.AddImageSampler(y_set, 0, 0, source, linear_sampler);
+    update_queue.AddImageSampler(y_set, 1, 0, source, linear_sampler);
+    update_queue.AddImageSampler(y_set, 2, 0, xy, nearest_sampler);
+    DrawFilter(MakeFilterPipeline(y_gradient_frag, layout, lumad_renderpass), layout, y_set,
+               images.lumad.framebuffer, lumad_renderpass, lumad_rect, lumad_rect, temp_extent,
+               1.0f);
+    barrier();
+
+    const auto refine_set = three_textures_provider.Commit();
+    update_queue.AddImageSampler(refine_set, 0, 0, source, linear_sampler);
+    update_queue.AddImageSampler(refine_set, 1, 0, lumad, linear_sampler);
+    update_queue.AddImageSampler(refine_set, 2, 0, xy, nearest_sampler);
+    const auto renderpass = renderpass_cache.GetRenderpass(surface.pixel_format,
+                                                           VideoCore::PixelFormat::Invalid, false);
+    DrawFilter(MakeFilterPipeline(refine_frag, layout, renderpass), layout, refine_set,
+               surface.Framebuffer(), renderpass, blit.dst_rect, blit.src_rect, extent,
+               static_cast<float>(surface.GetResScale()));
+    barrier();
+}
+
+BlitHelper::Anime4KImages& BlitHelper::GetAnime4KImages(u32 width, u32 height) {
+    const u64 tick = scheduler.CurrentTick();
+    for (const auto& images : anime4k_images) {
+        if (images->xy.width == width && images->xy.height == height) {
+            images->tick = tick;
+            return *images;
+        }
+    }
+
+    // Free the least recently used images the GPU is done with
+    while (anime4k_images.size() >= ANIME4K_MAX_CACHED_IMAGES) {
+        const auto oldest = std::min_element(
+            anime4k_images.begin(), anime4k_images.end(),
+            [](const auto& lhs, const auto& rhs) { return lhs->tick < rhs->tick; });
+        if (!scheduler.IsFree((*oldest)->tick)) {
+            break;
+        }
+        anime4k_images.erase(oldest);
+    }
+
+    auto& images = *anime4k_images.emplace_back(std::make_unique<Anime4KImages>(instance));
+    images.tick = tick;
+
+    const auto create = [&](Handle& handle, vk::Format format, vk::RenderPass renderpass,
+                            std::string_view name) {
+        handle.Create(width, height, 1, VideoCore::TextureType::Texture2D, format,
+                      vk::SampleCountFlagBits::e1,
+                      vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
+                      {}, vk::ImageAspectFlagBits::eColor, false, name);
+        handle.framebuffer = device.createFramebuffer({
+            .renderPass = renderpass,
+            .attachmentCount = 1,
+            .pAttachments = &handle.image_views[ViewType::Sample],
+            .width = width,
+            .height = height,
+            .layers = 1,
+        });
+    };
+    create(images.xy, ANIME4K_XY_FORMAT, xy_renderpass, "Anime4K XY");
+    create(images.lumad, ANIME4K_LUMAD_FORMAT, lumad_renderpass, "Anime4K LUMAD");
+
+    renderpass_cache.EndRendering();
+    scheduler.Record([xy = images.xy.image, lumad = images.lumad.image](vk::CommandBuffer cmdbuf) {
+        const auto init_barrier = [](vk::Image image) {
+            return vk::ImageMemoryBarrier{
+                .srcAccessMask = vk::AccessFlagBits::eNone,
+                .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite,
+                .oldLayout = vk::ImageLayout::eUndefined,
+                .newLayout = vk::ImageLayout::eGeneral,
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .image = image,
+                .subresourceRange{
+                    .aspectMask = vk::ImageAspectFlagBits::eColor,
+                    .baseMipLevel = 0,
+                    .levelCount = 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1,
+                },
+            };
+        };
+        const std::array barriers = {init_barrier(xy), init_barrier(lumad)};
+        cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+                               vk::PipelineStageFlagBits::eColorAttachmentOutput,
+                               vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
+    });
+
+    return images;
 }
 
 void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit) {
@@ -828,22 +1032,27 @@ void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit
 vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
                                             vk::PipelineLayout layout,
                                             VideoCore::PixelFormat color_format) {
+    // Use the provided color format for render pass compatibility
+    return MakeFilterPipeline(
+        fragment_shader, layout,
+        renderpass_cache.GetRenderpass(color_format, VideoCore::PixelFormat::Invalid, false));
+}
 
+vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
+                                            vk::PipelineLayout layout, vk::RenderPass renderpass) {
     const VkShaderModule c_shader = static_cast<VkShaderModule>(fragment_shader);
     const VkPipelineLayout c_layout = static_cast<VkPipelineLayout>(layout);
+    const VkRenderPass c_renderpass = static_cast<VkRenderPass>(renderpass);
     const u64 cache_key = Common::HashCombine(
         Common::HashCombine(static_cast<u64>(reinterpret_cast<uintptr_t>(c_shader)),
                             static_cast<u64>(reinterpret_cast<uintptr_t>(c_layout))),
-        static_cast<u64>(color_format));
+        static_cast<u64>(reinterpret_cast<uintptr_t>(c_renderpass)));
 
     if (const auto it = filter_pipeline_cache.find(cache_key); it != filter_pipeline_cache.end()) {
         return it->second;
     }
 
     const std::array stages = MakeStages(full_screen_vert, fragment_shader);
-    // Use the provided color format for render pass compatibility
-    const auto renderpass =
-        renderpass_cache.GetRenderpass(color_format, VideoCore::PixelFormat::Invalid, false);
 
     vk::GraphicsPipelineCreateInfo pipeline_info = {
         .stageCount = static_cast<u32>(stages.size()),
@@ -881,154 +1090,60 @@ void BlitHelper::FilterPass(Surface& surface, vk::Pipeline pipeline, vk::Pipelin
 
     const auto renderpass = renderpass_cache.GetRenderpass(surface.pixel_format,
                                                            VideoCore::PixelFormat::Invalid, false);
-
-    const RenderPass render_pass = {
-        .framebuffer = surface.Framebuffer(),
-        .render_pass = renderpass,
-        .render_area =
-            {
-                .offset = {0, 0},
-                .extent = {surface.GetScaledWidth(), surface.GetScaledHeight()},
-            },
-    };
-    renderpass_cache.BeginRendering(render_pass);
-    const float src_scale = static_cast<float>(surface.GetResScale());
-    // Calculate normalized texture coordinates like OpenGL does
-    const auto src_extent = surface.RealExtent(false); // Get unscaled texture extent
-    const float tex_scale_x =
-        static_cast<float>(blit.src_rect.GetWidth()) / static_cast<float>(src_extent.width);
-    const float tex_scale_y =
-        static_cast<float>(blit.src_rect.GetHeight()) / static_cast<float>(src_extent.height);
-    const float tex_offset_x =
-        static_cast<float>(blit.src_rect.left) / static_cast<float>(src_extent.width);
-    const float tex_offset_y =
-        static_cast<float>(blit.src_rect.bottom) / static_cast<float>(src_extent.height);
-
-    scheduler.Record([pipeline, layout, texture_descriptor_set, blit, tex_scale_x, tex_scale_y,
-                      tex_offset_x, tex_offset_y, src_scale](vk::CommandBuffer cmdbuf) {
-        const FilterPushConstants push_constants{.tex_scale = {tex_scale_x, tex_scale_y},
-                                                 .tex_offset = {tex_offset_x, tex_offset_y},
-                                                 .res_scale = src_scale};
-
-        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-
-        // Bind single texture descriptor set
-        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
-                                  texture_descriptor_set, {});
-
-        cmdbuf.pushConstants(layout, FILTER_PUSH_CONSTANT_RANGE.stageFlags,
-                             FILTER_PUSH_CONSTANT_RANGE.offset, FILTER_PUSH_CONSTANT_RANGE.size,
-                             &push_constants);
-
-        // Set up viewport and scissor for filtering (don't use BindBlitState as it overwrites
-        // push constants)
-        const vk::Offset2D offset{
-            .x = std::min<s32>(blit.dst_rect.left, blit.dst_rect.right),
-            .y = std::min<s32>(blit.dst_rect.bottom, blit.dst_rect.top),
-        };
-        const vk::Extent2D extent{
-            .width = blit.dst_rect.GetWidth(),
-            .height = blit.dst_rect.GetHeight(),
-        };
-        const vk::Viewport viewport{
-            .x = static_cast<float>(offset.x),
-            .y = static_cast<float>(offset.y),
-            .width = static_cast<float>(extent.width),
-            .height = static_cast<float>(extent.height),
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f,
-        };
-        const vk::Rect2D scissor{
-            .offset = offset,
-            .extent = extent,
-        };
-        cmdbuf.setViewport(0, viewport);
-        cmdbuf.setScissor(0, scissor);
-        cmdbuf.draw(3, 1, 0, 0);
-    });
-    scheduler.MakeDirty(StateFlags::Pipeline);
+    DrawFilter(pipeline, layout, texture_descriptor_set, surface.Framebuffer(), renderpass,
+               blit.dst_rect, blit.src_rect, surface.RealExtent(false),
+               static_cast<float>(surface.GetResScale()));
 }
 
-void BlitHelper::FilterPassThreeTextures(Surface& surface, vk::Pipeline pipeline,
-                                         vk::PipelineLayout layout,
-                                         const VideoCore::TextureBlit& blit) {
-    const auto texture_descriptor_set = three_textures_provider.Commit();
-
-    update_queue.AddImageSampler(texture_descriptor_set, 0, 0,
-                                 surface.ImageView(ViewType::Sample, Type::Base), linear_sampler,
-                                 vk::ImageLayout::eGeneral);
-    update_queue.AddImageSampler(texture_descriptor_set, 1, 0,
-                                 surface.ImageView(ViewType::Sample, Type::Base), linear_sampler,
-                                 vk::ImageLayout::eGeneral);
-    update_queue.AddImageSampler(texture_descriptor_set, 2, 0,
-                                 surface.ImageView(ViewType::Sample, Type::Base), linear_sampler,
-                                 vk::ImageLayout::eGeneral);
-
-    const auto renderpass = renderpass_cache.GetRenderpass(surface.pixel_format,
-                                                           VideoCore::PixelFormat::Invalid, false);
-
-    const RenderPass render_pass = {
-        .framebuffer = surface.Framebuffer(),
-        .render_pass = renderpass,
-        .render_area =
-            {
-                .offset = {0, 0},
-                .extent = {surface.GetScaledWidth(), surface.GetScaledHeight()},
-            },
+void BlitHelper::DrawFilter(vk::Pipeline pipeline, vk::PipelineLayout layout,
+                            vk::DescriptorSet descriptor_set, vk::Framebuffer framebuffer,
+                            vk::RenderPass renderpass, Common::Rectangle<u32> draw_rect,
+                            Common::Rectangle<u32> tex_rect, const VideoCore::Extent& tex_extent,
+                            float res_scale) {
+    const vk::Rect2D area = {
+        .offset{
+            .x = static_cast<s32>(std::min(draw_rect.left, draw_rect.right)),
+            .y = static_cast<s32>(std::min(draw_rect.bottom, draw_rect.top)),
+        },
+        .extent{
+            .width = draw_rect.GetWidth(),
+            .height = draw_rect.GetHeight(),
+        },
     };
-    renderpass_cache.BeginRendering(render_pass);
+    renderpass_cache.BeginRendering(RenderPass{
+        .framebuffer = framebuffer,
+        .render_pass = renderpass,
+        .render_area = area,
+    });
 
-    const float src_scale = static_cast<float>(surface.GetResScale());
-    // Calculate normalized texture coordinates like OpenGL does
-    const auto src_extent = surface.RealExtent(false); // Get unscaled texture extent
-    const float tex_scale_x =
-        static_cast<float>(blit.src_rect.GetWidth()) / static_cast<float>(src_extent.width);
-    const float tex_scale_y =
-        static_cast<float>(blit.src_rect.GetHeight()) / static_cast<float>(src_extent.height);
-    const float tex_offset_x =
-        static_cast<float>(blit.src_rect.left) / static_cast<float>(src_extent.width);
-    const float tex_offset_y =
-        static_cast<float>(blit.src_rect.bottom) / static_cast<float>(src_extent.height);
+    // Normalized coordinates of tex_rect like OpenGL does
+    const FilterPushConstants push_constants{
+        .tex_scale = {static_cast<float>(tex_rect.GetWidth()) /
+                          static_cast<float>(tex_extent.width),
+                      static_cast<float>(tex_rect.GetHeight()) /
+                          static_cast<float>(tex_extent.height)},
+        .tex_offset = {static_cast<float>(tex_rect.left) / static_cast<float>(tex_extent.width),
+                       static_cast<float>(tex_rect.bottom) / static_cast<float>(tex_extent.height)},
+        .res_scale = res_scale,
+    };
 
-    scheduler.Record([pipeline, layout, texture_descriptor_set, blit, tex_scale_x, tex_scale_y,
-                      tex_offset_x, tex_offset_y, src_scale](vk::CommandBuffer cmdbuf) {
-        const FilterPushConstants push_constants{.tex_scale = {tex_scale_x, tex_scale_y},
-                                                 .tex_offset = {tex_offset_x, tex_offset_y},
-                                                 .res_scale = src_scale};
-
+    scheduler.Record([pipeline, layout, descriptor_set, area,
+                      push_constants](vk::CommandBuffer cmdbuf) {
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-
-        // Bind single texture descriptor set
-        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
-                                  texture_descriptor_set, {});
-
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, descriptor_set, {});
         cmdbuf.pushConstants(layout, FILTER_PUSH_CONSTANT_RANGE.stageFlags,
                              FILTER_PUSH_CONSTANT_RANGE.offset, FILTER_PUSH_CONSTANT_RANGE.size,
                              &push_constants);
-
-        // Set up viewport and scissor using safe viewport like working filters
-        const vk::Offset2D offset{
-            .x = std::min<s32>(blit.dst_rect.left, blit.dst_rect.right),
-            .y = std::min<s32>(blit.dst_rect.bottom, blit.dst_rect.top),
-        };
-        const vk::Extent2D extent{
-            .width = blit.dst_rect.GetWidth(),
-            .height = blit.dst_rect.GetHeight(),
-        };
         const vk::Viewport viewport{
-            .x = static_cast<float>(offset.x),
-            .y = static_cast<float>(offset.y),
-            .width = static_cast<float>(extent.width),
-            .height = static_cast<float>(extent.height),
+            .x = static_cast<float>(area.offset.x),
+            .y = static_cast<float>(area.offset.y),
+            .width = static_cast<float>(area.extent.width),
+            .height = static_cast<float>(area.extent.height),
             .minDepth = 0.0f,
             .maxDepth = 1.0f,
         };
-        const vk::Rect2D scissor{
-            .offset = offset,
-            .extent = extent,
-        };
         cmdbuf.setViewport(0, viewport);
-        cmdbuf.setScissor(0, scissor);
+        cmdbuf.setScissor(0, area);
         cmdbuf.draw(3, 1, 0, 0);
     });
     scheduler.MakeDirty(StateFlags::Pipeline);
