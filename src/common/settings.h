@@ -62,7 +62,10 @@ enum class PortraitLayoutOption : u32 {
     // formerly mobile portrait
     PortraitTopFullWidth,
     PortraitCustomLayout,
-    PortraitOriginal
+    PortraitOriginal,
+    /// For a folded device (a foldable held like a laptop): the top screen fills the upper half of
+    /// the window, the bottom screen the lower half, split at the middle where the hinge is.
+    PortraitFold,
 };
 
 enum class SecondaryDisplayLayout : u32 {

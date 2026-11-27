@@ -21,6 +21,7 @@ typedef NS_ENUM(NSInteger, AZPortraitLayoutOption) {
     AZPortraitLayoutOptionTopFullWidth = 0,
     AZPortraitLayoutOptionCustom = 1,
     AZPortraitLayoutOptionOriginal = 2,
+    AZPortraitLayoutOptionFold = 3,
 };
 
 /// Subset of the emulator settings exposed to the iOS frontend. The app persists these and hands

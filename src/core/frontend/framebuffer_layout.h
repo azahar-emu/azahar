@@ -100,6 +100,18 @@ FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool is_swapped,
                                          bool upright = false);
 
 /**
+ * Factory method for constructing the foldable layout: the window is split in two at the middle
+ * (where the hinge of a folded device is), the top screen fills the upper half and the bottom
+ * screen sits at the top of the lower half, each as large as it fits. The screen gap setting is
+ * the space left around the hinge.
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen is shown in the upper half
+ * @return Newly created FramebufferLayout object with both screens placed
+ */
+FramebufferLayout PortraitFoldLayout(u32 width, u32 height, bool is_swapped);
+
+/**
  * Factory method for constructing a FramebufferLayout with only the top or bottom screen
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels

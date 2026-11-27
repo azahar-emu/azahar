@@ -119,6 +119,46 @@ FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool swapped, bo
     return res;
 }
 
+FramebufferLayout PortraitFoldLayout(u32 width, u32 height, bool swapped) {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+    FramebufferLayout res{width, height, true, true, {}, {}, true};
+
+    // Two halves, split where the hinge is, with the gap setting left free around it.
+    const u32 hinge = height / 2;
+    const u32 half_gap = std::min<u32>(Settings::values.screen_gap.GetValue() / 2, hinge / 2);
+    const Common::Rectangle<u32> upper{0, 0, width, hinge - half_gap};
+    const Common::Rectangle<u32> lower{0, hinge + half_gap, width, height};
+
+    const Common::Rectangle<u32> top_native{0, 0, Core::kScreenTopWidth, Core::kScreenTopHeight};
+    const Common::Rectangle<u32> bottom_native{0, 0, Core::kScreenBottomWidth,
+                                               Core::kScreenBottomHeight};
+    const bool integer = Settings::values.use_integer_scaling.GetValue();
+    Common::Rectangle<u32> top;
+    Common::Rectangle<u32> bottom;
+    // The screen in the upper half is centered in it. The other one is as wide as the lower half
+    // allows and sits at its top, next to the hinge, which leaves the rest of that half for the
+    // controls drawn over it.
+    const auto center_in = [](Common::Rectangle<u32> area, Common::Rectangle<u32> screen,
+                              bool vertical) {
+        screen = screen.TranslateX(static_cast<u32>((area.GetWidth() - screen.GetWidth()) / 2));
+        if (vertical) {
+            screen = screen.TranslateY(static_cast<u32>((area.GetHeight() - screen.GetHeight()) / 2));
+        }
+        return screen;
+    };
+    // Each screen is shown in the half its role says: the top screen above, unless swapped.
+    Common::Rectangle<u32>& in_upper = swapped ? bottom : top;
+    Common::Rectangle<u32>& in_lower = swapped ? top : bottom;
+    const Common::Rectangle<u32> upper_native = swapped ? bottom_native : top_native;
+    const Common::Rectangle<u32> lower_native = swapped ? top_native : bottom_native;
+    in_upper = center_in(upper, MaxRectangle(upper, upper_native, integer), true);
+    in_lower = center_in(lower, MaxRectangle(lower, lower_native, integer), false);
+    res.top_screen = top;
+    res.bottom_screen = bottom;
+    return res;
+}
+
 FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
     ASSERT(width > 0);
     ASSERT(height > 0);
@@ -459,6 +499,11 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
             layout = PortraitOriginalLayout(width, height, Settings::values.swap_screen.GetValue());
             break;
+        case Settings::PortraitLayoutOption::PortraitFold:
+            width = Core::kScreenTopWidth * res_scale;
+            height = 2 * Core::kScreenTopHeight * res_scale + gap;
+            layout = PortraitFoldLayout(width, height, Settings::values.swap_screen.GetValue());
+            break;
         }
     } else {
         auto layout_option = Settings::values.layout_option.GetValue();
@@ -592,6 +637,8 @@ FramebufferLayout GetCardboardSettings(const FramebufferLayout& layout) {
     u32 cardboard_screen_height;
     if (is_portrait) {
         switch (Settings::values.portrait_layout_option.GetValue()) {
+        case Settings::PortraitLayoutOption::PortraitFold:
+            // One screen above the other, the same as the other stacked layouts.
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
         case Settings::PortraitLayoutOption::PortraitOriginal:
             cardboard_screen_width = top_screen_width;

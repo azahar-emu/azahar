@@ -56,6 +56,7 @@ enum PortraitScreenLayout: Int, CaseIterable, Identifiable {
     case topFullWidth = 0
     case custom = 1
     case original = 2
+    case fold = 3
 
     var id: Int { rawValue }
     var title: String {
@@ -63,6 +64,7 @@ enum PortraitScreenLayout: Int, CaseIterable, Identifiable {
         case .topFullWidth: return "Top Full Width"
         case .custom: return "Custom"
         case .original: return "Original"
+        case .fold: return "Fold (Top and Bottom Half)"
         }
     }
 }

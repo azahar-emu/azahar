@@ -849,6 +849,7 @@ struct LayoutSettingsView: View {
                 InfoHeader("Portrait") {
                     HelpList([
                         HelpItem("Screen Layout", "How the two screens are placed in portrait. Place the screens yourself with Edit Screen Layout in the menu while a game runs (Custom)."),
+                        HelpItem("Fold (Top and Bottom Half)", "For a foldable held like a laptop: the top screen fills the upper half of the display and the bottom screen sits at the top of the lower half, with the on-screen controller drawn over that half. The split is at the middle, where the hinge is; Screen Gap leaves space around it. Edit Controller Layout in the menu moves the controls as you like."),
                     ])
                 }
             }
