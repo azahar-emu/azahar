@@ -811,7 +811,6 @@
     <string name="reverse_interlaced">逆向交錯</string>
 
     <!-- Texture filters -->
-    <string name="anime4k">Anime4K</string>
     <string name="incompatible_texture_filter">不相容的材質濾鏡</string>
     <string name="incompatible_texture_filter_description">所選的材質濾鏡（Anime4K）與 Vulkan 算繪器不相容。\n材質濾鏡將重設為「無」。</string>
 
