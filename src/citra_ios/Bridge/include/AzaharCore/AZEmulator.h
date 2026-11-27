@@ -289,6 +289,10 @@ typedef NS_ENUM(NSInteger, AZCompressStatus) {
 /// The bottom screen in drawable pixels (the area touch positions land on), or an empty
 /// rectangle while there is none.
 @property(nonatomic, readonly) CGRect bottomScreenFrame;
+/// Where both screens are in the current layout, as fractions of the window (top screen x, y,
+/// width, height, then the bottom screen's), or nil while there is no layout. The custom layout
+/// editor starts from it.
+@property(nonatomic, readonly, nullable) NSArray<NSNumber*>* currentScreenFractions;
 /// Accelerometer in g and gyroscope in degrees per second, in 3DS axes.
 - (void)setMotionAccelerationX:(float)ax
                              y:(float)ay

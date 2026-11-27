@@ -1529,6 +1529,27 @@ const char* ThermalStateName() {
     IOSInput::SetAnalog(static_cast<int>(analog), x, y);
 }
 
+- (NSArray<NSNumber*>*)currentScreenFractions {
+    if (!_window) {
+        return nil;
+    }
+    const auto layout = _window->GetFramebufferLayout();
+    if (layout.width == 0 || layout.height == 0) {
+        return nil;
+    }
+    const auto fraction = [](u32 value, u32 extent) {
+        return @(static_cast<double>(value) / static_cast<double>(extent));
+    };
+    const auto& top = layout.top_screen;
+    const auto& bottom = layout.bottom_screen;
+    return @[
+        fraction(top.left, layout.width), fraction(top.top, layout.height),
+        fraction(top.GetWidth(), layout.width), fraction(top.GetHeight(), layout.height),
+        fraction(bottom.left, layout.width), fraction(bottom.top, layout.height),
+        fraction(bottom.GetWidth(), layout.width), fraction(bottom.GetHeight(), layout.height)
+    ];
+}
+
 - (CGRect)bottomScreenFrame {
     if (!_window) {
         return CGRectZero;

@@ -437,6 +437,16 @@ extension EmulationView {
     /// Switches the current orientation to the custom layout and lets the screens be moved.
     fileprivate func beginEditingScreens() {
         let portrait = UIScreen.main.bounds.height > UIScreen.main.bounds.width
+        // Coming from another layout (Fold, Top Full Width, ...), the editor starts from where the
+        // screens are now instead of an older custom layout, so they can be nudged from there.
+        let wasCustom = portrait ? settings.portraitLayout == .custom : settings.layout == .custom
+        if !wasCustom, let current = AZEmulator.shared.currentScreenFractions {
+            if portrait {
+                settings.customLayoutPortrait = current.map(\.doubleValue)
+            } else {
+                settings.customLayoutLandscape = current.map(\.doubleValue)
+            }
+        }
         if portrait {
             settings.portraitLayout = .custom
         } else {
