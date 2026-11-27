@@ -1,6 +1,6 @@
 // Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <QDesktopServices>
 #include <QMessageBox>
@@ -216,6 +216,7 @@ void ConfigureDebug::SetupPerGameUI() {
     ui->toggle_unique_data_console_type->setVisible(false);
     ui->toggle_cpu_jit->setVisible(false);
     ui->toggle_fastinterp->setVisible(false);
+    ui->deterministic_async_operations->setVisible(false);
 }
 
 void ConfigureDebug::RetranslateUI() {

@@ -1174,8 +1174,9 @@ void RendererVulkan::SwapBuffers() {
         secondary_window->PollEvents();
     }
 #endif
+    // Submit the work of a skipped frame without waiting for the GPU.
     if (!screenRendered) {
-        scheduler.Finish();
+        scheduler.Flush();
     }
 
     system.perf_stats->EndSwap();

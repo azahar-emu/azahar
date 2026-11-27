@@ -879,8 +879,14 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_isRunning([[maybe_unused]] JNIE
 
 jlong Java_org_citra_citra_1emu_NativeLibrary_getRunningTitleId([[maybe_unused]] JNIEnv* env,
                                                                 [[maybe_unused]] jobject obj) {
+    auto& system = Core::System::GetInstance();
+
+    if (!system.IsPoweredOn()) {
+        return 0;
+    }
+
     u64 title_id{};
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(title_id);
+    system.GetAppLoader().ReadProgramId(title_id);
     return static_cast<jlong>(title_id);
 }
 

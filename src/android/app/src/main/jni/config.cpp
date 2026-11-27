@@ -367,6 +367,8 @@ void Config::ReadValues() {
     ReadSetting("Debugging", Settings::values.enable_rpc_server);
     ReadSetting("Debugging", Settings::values.toggle_unique_data_console_type);
     ReadSetting("Debugging", Settings::values.enable_exception_handler);
+    ReadSetting("Debugging", Settings::values.delay_start_for_lle_modules);
+    ReadSetting("Debugging", Settings::values.deterministic_async_operations);
 
     for (const auto& service_module : Service::service_module_map) {
         bool use_lle = GetSettingFromKey<bool>("Debugging", "LLE\\" + service_module.name, false);

@@ -533,6 +533,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.pica_debugging);
     ReadBasicSetting(Settings::values.dump_command_buffers);
     ReadBasicSetting(Settings::values.instant_debug_log);
+    ReadBasicSetting(Settings::values.deterministic_async_operations);
     ReadBasicSetting(Settings::values.enable_rpc_server);
     ReadBasicSetting(Settings::values.toggle_unique_data_console_type);
     ReadBasicSetting(Settings::values.enable_exception_handler);
@@ -1132,6 +1133,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.renderer_debug);
     WriteBasicSetting(Settings::values.pica_debugging);
     WriteBasicSetting(Settings::values.instant_debug_log);
+    WriteBasicSetting(Settings::values.deterministic_async_operations);
     WriteBasicSetting(Settings::values.enable_rpc_server);
     WriteBasicSetting(Settings::values.toggle_unique_data_console_type);
     WriteBasicSetting(Settings::values.enable_exception_handler);
