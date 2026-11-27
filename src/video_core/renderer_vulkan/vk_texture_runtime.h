@@ -138,6 +138,12 @@ public:
     /// safely deleted.
     u64 GetResourceFreeTick();
 
+    /// Gets an opaque tick-value used to indicate to the garbage collector what surfaces can be
+    /// recycled.
+    u64 GetResourceRecycleTick() {
+        return GetResourceFreeTick();
+    }
+
     /// Submits and waits for current GPU work.
     void Finish();
 

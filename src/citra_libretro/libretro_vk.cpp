@@ -1,6 +1,6 @@
 // Copyright 2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <memory>
@@ -93,6 +93,10 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts,
+                            VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts,
+                            VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts,
                             VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts,
                             VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
@@ -100,13 +104,35 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
     const bool has_custom_border_color = AddExtensionIfAvailable(
         enabled_exts, available_exts, VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
+    const bool has_index_type_uint8 = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
+    const bool has_robustness2 =
+        AddExtensionIfAvailable(enabled_exts, available_exts, VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
+    const bool has_pipeline_creation_cache_control = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_EXT_PIPELINE_CREATION_CACHE_CONTROL_EXTENSION_NAME);
+    const bool has_fragment_shader_barycentric = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_KHR_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME);
+    const bool has_fragment_shader_interlock = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME);
 
-    // These are beneficial but blacklisted on some platforms due to driver bugs
-    // For now, let the Instance class handle these decisions
+    // Keep VK_EXT_extended_dynamic_state off where Instance::CreateDevice() blacklists it
+    PFN_vkGetPhysicalDeviceProperties2 vkGetPhysicalDeviceProperties2 =
+        (PFN_vkGetPhysicalDeviceProperties2)get_instance_proc_addr(
+            instance, "vkGetPhysicalDeviceProperties2");
+    VkPhysicalDeviceDriverProperties driver_properties{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES};
+    VkPhysicalDeviceProperties2 properties{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+    properties.pNext = &driver_properties;
+    vkGetPhysicalDeviceProperties2(gpu, &properties);
+    const bool has_extended_dynamic_state =
+        driver_properties.driverID != VK_DRIVER_ID_QUALCOMM_PROPRIETARY &&
+        driver_properties.driverID != VK_DRIVER_ID_ARM_PROPRIETARY &&
+        AddExtensionIfAvailable(enabled_exts, available_exts,
+                                VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
+
+    // Timeline semaphores stay off: MasterSemaphoreLibRetro uses fences instead
     // AddExtensionIfAvailable(enabled_exts, available_exts,
     // VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
-    // AddExtensionIfAvailable(enabled_exts, available_exts,
-    // VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
 
     // Merge frontend's required features with our baseline
     VkPhysicalDeviceFeatures merged_features{};
@@ -129,12 +155,16 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     // Request features we want, gated by actual device support
     if (device_features.geometryShader)
         merged_features.geometryShader = VK_TRUE;
+    if (device_features.sampleRateShading)
+        merged_features.sampleRateShading = VK_TRUE;
     if (device_features.logicOp)
         merged_features.logicOp = VK_TRUE;
     if (device_features.samplerAnisotropy)
         merged_features.samplerAnisotropy = VK_TRUE;
     if (device_features.fragmentStoresAndAtomics)
         merged_features.fragmentStoresAndAtomics = VK_TRUE;
+    if (device_features.shaderStorageImageMultisample)
+        merged_features.shaderStorageImageMultisample = VK_TRUE;
     if (device_features.shaderClipDistance)
         merged_features.shaderClipDistance = VK_TRUE;
 
@@ -178,6 +208,61 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         custom_border_color_features.customBorderColorWithoutFormat = VK_TRUE;
         custom_border_color_features.pNext = enabled_features.pNext;
         enabled_features.pNext = &custom_border_color_features;
+    }
+
+    // Instance::CreateDevice() in src/video_core/renderer_vulkan/vk_instance.cpp uses these
+    // features when the GPU supports them, except on drivers it blacklists
+    PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2 =
+        (PFN_vkGetPhysicalDeviceFeatures2)get_instance_proc_addr(instance,
+                                                                 "vkGetPhysicalDeviceFeatures2");
+    const auto enable_supported_features = [&](auto& extension_features) {
+        VkPhysicalDeviceFeatures2 supported_features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+        supported_features.pNext = &extension_features;
+        vkGetPhysicalDeviceFeatures2(gpu, &supported_features);
+        extension_features.pNext = enabled_features.pNext;
+        enabled_features.pNext = &extension_features;
+    };
+
+    VkPhysicalDeviceIndexTypeUint8FeaturesEXT index_type_uint8_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT};
+    if (has_index_type_uint8) {
+        enable_supported_features(index_type_uint8_features);
+    }
+
+    VkPhysicalDeviceRobustness2FeaturesEXT robustness2_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT};
+    if (has_robustness2) {
+        enable_supported_features(robustness2_features);
+        // Instance::CreateDevice() enables only nullDescriptor
+        robustness2_features.robustBufferAccess2 = VK_FALSE;
+        robustness2_features.robustImageAccess2 = VK_FALSE;
+    }
+
+    VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT cache_control_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT};
+    if (has_pipeline_creation_cache_control) {
+        enable_supported_features(cache_control_features);
+    }
+
+    VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR barycentric_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR};
+    if (has_fragment_shader_barycentric) {
+        enable_supported_features(barycentric_features);
+    }
+
+    VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT interlock_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT};
+    if (has_fragment_shader_interlock) {
+        enable_supported_features(interlock_features);
+        // Instance::CreateDevice() enables only fragmentShaderPixelInterlock
+        interlock_features.fragmentShaderSampleInterlock = VK_FALSE;
+        interlock_features.fragmentShaderShadingRateInterlock = VK_FALSE;
+    }
+
+    VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extended_dynamic_state_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT};
+    if (has_extended_dynamic_state) {
+        enable_supported_features(extended_dynamic_state_features);
     }
 
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};

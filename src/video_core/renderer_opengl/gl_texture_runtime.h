@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <limits>
+
 #include "video_core/rasterizer_cache/framebuffer_base.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
 #include "video_core/rasterizer_cache/surface_base.h"
@@ -49,6 +51,13 @@ public:
     /// safely deleted.
     u64 GetResourceFreeTick() {
         return GetResourceTick();
+    }
+
+    /// Gets an opaque tick-value used to indicate to the garbage collector what surfaces can be
+    /// recycled. OpenGL runs all work on a texture in submission order, so a surface can be
+    /// recycled while the GPU still uses it.
+    u64 GetResourceRecycleTick() {
+        return std::numeric_limits<u64>::max();
     }
 
     /// Submits and waits for current GPU work.
