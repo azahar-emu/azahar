@@ -417,7 +417,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::category::graphics,
         {
             { "none", "None" },
-            { "Anime4K", "Anime4K (OpenGL only)" },
+            { "Anime4K", "Anime4K" },
             { "Bicubic", "Bicubic" },
             { "ScaleForce", "ScaleForce" },
             { "xBRZ", "xBRZ" },
@@ -937,14 +937,8 @@ static void ParseAudioOptions(void) {
 }
 
 static Settings::TextureFilter GetTextureFilter(const std::string& name) {
-    if (name == "Anime4K") {
-        const auto graphics_api = LibRetro::FetchVariable(config::graphics::graphics_api, "auto");
-        if (graphics_api == "Vulkan") {
-            return Settings::TextureFilter::NoFilter;
-        } else {
-            return Settings::TextureFilter::Anime4K;
-        }
-    }
+    if (name == "Anime4K")
+        return Settings::TextureFilter::Anime4K;
     if (name == "Bicubic")
         return Settings::TextureFilter::Bicubic;
     if (name == "ScaleForce")
