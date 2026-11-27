@@ -1,11 +1,12 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
 #include <cmath>
 #include <cstring>
+#include <utility>
 #include <boost/serialization/access.hpp>
 #include "common/common_types.h"
 
@@ -75,6 +76,47 @@ public:
         res.value = std::bit_cast<float>(hex);
 
         return res;
+    }
+
+    constexpr u32 ToRaw() {
+
+#ifdef __FLT16_MANT_DIG__
+        if constexpr (M == 10 && E == 5) {
+            return std::bit_cast<std::uint16_t>(static_cast<_Float16>(value));
+        }
+#endif
+
+        constexpr s32 bias = 127 - ((1 << (E - 1)) - 1);
+        const u32 fp32_hex = std::bit_cast<u32>(value);
+        const u32 pica_sign = (fp32_hex >> 31) << (E + M);
+        const s32 fp32_exponent = (fp32_hex >> 23) & 0xFF;
+        const u32 fp32_mantissa = fp32_hex & ((1 << 23) - 1);
+        if (fp32_exponent == 0 && fp32_mantissa == 0) {
+            // Zero
+            return pica_sign;
+        } else [[likely]] {
+            if (fp32_exponent == 0) {
+                // Denormal
+                return pica_sign;
+            } else if (fp32_exponent == 0xFF) {
+                // Inf or NaN
+                return pica_sign | (EXPONENT_MASK << M) | (fp32_mantissa >> (23 - M));
+            } else [[likely]] {
+                // Normal, handle the exponent
+                const s32 pica_exponent = fp32_exponent - bias;
+                if (pica_exponent <= 0) {
+                    // Pica denormal, update the mantissa value
+                    u32 pica_mantissa = fp32_mantissa | (1 << 23);
+                    pica_mantissa >>= (1 - pica_exponent);
+                    return pica_sign | (pica_mantissa >> (23 - M));
+                } else if (std::cmp_greater_equal(pica_exponent, EXPONENT_MASK)) {
+                    // Overflow to Inf
+                    return pica_sign | (EXPONENT_MASK << M);
+                } else [[likely]] {
+                    return pica_sign | (pica_exponent << M) | (fp32_mantissa >> (23 - M));
+                }
+            }
+        }
     }
 
     static constexpr Float<M, E> Zero() {

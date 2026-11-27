@@ -1,6 +1,6 @@
 // Copyright 2022-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <algorithm>
 #include <mutex>
@@ -276,6 +276,8 @@ public:
             .has_fragment_shader_interlock = driver.HasArbFragmentShaderInterlock(),
             // TODO: This extension requires GLSL 450 / OpenGL 4.5 context.
             .has_fragment_shader_barycentric = false,
+            // TODO: Requires GL_EXT_shader_explicit_arithmetic_types_float16
+            .has_float16 = false,
             .has_blend_minmax_factor = driver.HasBlendMinMaxFactor(),
             .has_minus_one_to_one_range = true,
             .has_logic_op = !driver.IsOpenGLES(),

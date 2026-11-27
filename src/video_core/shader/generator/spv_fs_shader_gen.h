@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -9,6 +9,7 @@
 
 #include "video_core/pica/regs_framebuffer.h"
 #include "video_core/pica/regs_texturing.h"
+#include "video_core/pica_types.h"
 
 namespace Pica::Shader {
 struct FSConfig;
@@ -135,6 +136,12 @@ private:
 
     /// Pads the provided vector by inserting args at the end
     template <typename... Args>
+    [[nodiscard]] Id PadVectorF16(Id vector, Id pad_type_id, Args&&... args) {
+        return OpCompositeConstruct(pad_type_id, vector, ConstF16(args...));
+    }
+
+    /// Pads the provided vector by inserting args at the end
+    template <typename... Args>
     [[nodiscard]] Id PadVectorF32(Id vector, Id pad_type_id, Args&&... args) {
         return OpCompositeConstruct(pad_type_id, vector, ConstF32(args...));
     }
@@ -181,7 +188,7 @@ private:
         constexpr u32 size = static_cast<u32>(sizeof...(values));
         static_assert(size >= 2);
         const std::array constituents{Constant(u32_id, values)...};
-        const Id type = size <= 4 ? uvec_ids.Get(size) : TypeArray(u32_id, ConstU32(size));
+        const Id type = size <= 4 ? u32vec_ids.Get(size) : TypeArray(u32_id, ConstU32(size));
         return ConstantComposite(type, constituents);
     }
 
@@ -195,7 +202,7 @@ private:
         constexpr u32 size = static_cast<u32>(sizeof...(values));
         static_assert(size >= 2);
         const std::array constituents{Constant(i32_id, values)...};
-        const Id type = size <= 4 ? ivec_ids.Get(size) : TypeArray(i32_id, ConstU32(size));
+        const Id type = size <= 4 ? i32vec_ids.Get(size) : TypeArray(i32_id, ConstU32(size));
         return ConstantComposite(type, constituents);
     }
 
@@ -209,8 +216,54 @@ private:
         constexpr u32 size = static_cast<u32>(sizeof...(values));
         static_assert(size >= 2);
         const std::array constituents{Constant(f32_id, values)...};
-        const Id type = size <= 4 ? vec_ids.Get(size) : TypeArray(f32_id, ConstU32(size));
+        const Id type = size <= 4 ? f32vec_ids.Get(size) : TypeArray(f32_id, ConstU32(size));
         return ConstantComposite(type, constituents);
+    }
+
+    [[nodiscard]] Id ConstF16(f32 value) {
+        if (use_float16) {
+            return Constant(f16_id, Pica::f16::FromFloat32(value).ToRaw());
+        }
+        return Constant(f16_id, value);
+    }
+
+    template <typename... Args>
+    [[nodiscard]] Id ConstF16(Args... values) {
+        constexpr u32 size = static_cast<u32>(sizeof...(values));
+        static_assert(size >= 2);
+        const std::array constituents{
+            (use_float16 ? Constant(f16_id, Pica::f16::FromFloat32(values).ToRaw())
+                         : Constant(f16_id, values))...};
+        const Id type = size <= 4 ? f16vec_ids.Get(size) : TypeArray(f16_id, ConstU32(size));
+        return ConstantComposite(type, constituents);
+    }
+
+    // Converts to 16-bit floating point representation, if supported by the platform. Otherwise,
+    // converts to 32-bit float with relaxed precision.
+    [[nodiscard]] Id ToF16(Id var, u32 size = 1) {
+        if (!use_float16) [[likely]] {
+            Decorate(var, spv::Decoration::RelaxedPrecision);
+            return var;
+        }
+
+        if (size > 1) {
+            return OpFConvert(f16vec_ids.Get(size), var);
+        }
+        return OpFConvert(f16_id, var);
+        // Note: For debugging, use OpQuantizeToF16 here simulate the behavior of OpFConvert to
+        // f16 when the platform does not support float16
+        // return OpQuantizeToF16(f16_id, var);
+    }
+
+    [[nodiscard]] Id ToF32(Id var, u32 size = 1) {
+        if (!use_float16) [[likely]] {
+            return var;
+        }
+
+        if (size > 1) {
+            return OpFConvert(f32vec_ids.Get(size), var);
+        }
+        return OpFConvert(f32_id, var);
     }
 
     void DefineArithmeticTypes();
@@ -224,6 +277,7 @@ private:
     const Profile& profile;
 
     bool use_fragment_shader_barycentric{};
+    bool use_float16{};
 
     Id void_id{};
     Id bool_id{};
@@ -231,10 +285,15 @@ private:
     Id i32_id{};
     Id u32_id{};
 
-    VectorIds vec_ids{};
-    VectorIds ivec_ids{};
-    VectorIds uvec_ids{};
     VectorIds bvec_ids{};
+    VectorIds f32vec_ids{};
+    VectorIds i32vec_ids{};
+    VectorIds u32vec_ids{};
+
+    // Depending on the platform-support, f16 might be up-casted to f32 with relaxed-precision
+    // decoration
+    Id f16_id{};
+    VectorIds f16vec_ids{};
 
     Id image2d_id{};
     Id image_cube_id{};
