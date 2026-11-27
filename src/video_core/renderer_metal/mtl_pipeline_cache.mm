@@ -77,9 +77,36 @@ u64 ProfileHash(const Pica::Shader::Profile& profile) {
     return Common::ComputeHash64(&profile, offsetof(Pica::Shader::Profile, vk_disable_spirv_optimizer));
 }
 
+MTLCompileOptions* MakeCompileOptions(bool fast_math, bool fast_functions) {
+    MTLCompileOptions* options = [MTLCompileOptions new];
+    if (@available(iOS 16.0, macOS 13.0, *)) {
+        options.languageVersion = MTLLanguageVersion2_4;
+    }
+    // Keep the position output bit-exact between pipelines sharing geometry (multi-pass
+    // effects).
+    if (@available(iOS 14.0, macOS 11.0, *)) {
+        options.preserveInvariance = YES;
+    }
+    if (@available(iOS 18.0, macOS 15.0, *)) {
+        options.mathMode = fast_math ? MTLMathModeFast : MTLMathModeSafe;
+    } else {
+        options.fastMathEnabled = fast_math;
+    }
+    // Faster versions of the math functions (rsqrt, normalize, pow, ...), which do not need
+    // the assumptions about NaN and infinity that fast math makes. Set whatever the math
+    // mode is, so the two options work together.
+    if (fast_functions) {
+        if (@available(iOS 18.0, macOS 15.0, *)) {
+            options.mathFloatingPointFunctions = MTLMathFloatingPointFunctionsFast;
+        }
+    }
+    return options;
+}
+
 /// The header a cache file written now starts with. Files with another header are discarded.
 CacheHeader ExpectedCacheHeader(const Pica::Shader::Profile& profile,
-                                bool fragment_quaternion_fix) {
+                                bool fragment_quaternion_fix, bool vertex_fast_math,
+                                bool accurate_mul) {
     const auto& quality = Metal::GetQualityOptions();
     return CacheHeader{
         .magic = CACHE_MAGIC,
@@ -89,7 +116,8 @@ CacheHeader ExpectedCacheHeader(const Pica::Shader::Profile& profile,
             ProfileHash(profile), static_cast<u64>(quality.fast_math) |
                                       static_cast<u64>(quality.fast_functions) << 1 |
                                       static_cast<u64>(quality.vertex_fast_functions) << 2 |
-                                      static_cast<u64>(quality.vertex_fast_math) << 3 |
+                                      static_cast<u64>(vertex_fast_math) << 3 |
+                                      static_cast<u64>(accurate_mul) << 6 |
                                       static_cast<u64>(fragment_quaternion_fix) << 5),
     };
 }
@@ -118,44 +146,19 @@ struct PipelineCache::Pipeline {
 
 PipelineCache::PipelineCache(const Instance& instance_, MTLVertexDescriptor* vertex_descriptor_)
     : instance{instance_}, vertex_descriptor{vertex_descriptor_} {
-    const auto make_options = [](bool fast_math, bool fast_functions) {
-        MTLCompileOptions* options = [MTLCompileOptions new];
-        if (@available(iOS 16.0, macOS 13.0, *)) {
-            options.languageVersion = MTLLanguageVersion2_4;
-        }
-        // Keep the position output bit-exact between pipelines sharing geometry (multi-pass
-        // effects).
-        if (@available(iOS 14.0, macOS 11.0, *)) {
-            options.preserveInvariance = YES;
-        }
-        if (@available(iOS 18.0, macOS 15.0, *)) {
-            options.mathMode = fast_math ? MTLMathModeFast : MTLMathModeSafe;
-        } else {
-            options.fastMathEnabled = fast_math;
-        }
-        // Faster versions of the math functions (rsqrt, normalize, pow, ...), which do not need
-        // the assumptions about NaN and infinity that fast math makes. Set whatever the math
-        // mode is, so the two options work together.
-        if (fast_functions) {
-            if (@available(iOS 18.0, macOS 15.0, *)) {
-                options.mathFloatingPointFunctions = MTLMathFloatingPointFunctionsFast;
-            }
-        }
-        return options;
-    };
     // Vertex shaders may use the fast versions of the math functions, which keep the NaN and
     // infinity rules, or full fast math, which does not (and therefore needs the accurate
-    // multiplication off, see AZEmulator).
-    compile_options = make_options(GetQualityOptions().vertex_fast_math,
-                                   GetQualityOptions().vertex_fast_functions ||
-                                       GetQualityOptions().vertex_fast_math);
-    if (GetQualityOptions().vertex_fast_math) {
+    // multiplication off, see AZEmulator and SetAccurateMul).
+    accurate_mul = GetProfile().enable_accurate_mul;
+    compile_options = MakeCompileOptions(VertexFastMath(),
+                                   GetQualityOptions().vertex_fast_functions || VertexFastMath());
+    if (VertexFastMath()) {
         LOG_INFO(Render, "Vertex shaders are compiled with fast math");
     } else if (GetQualityOptions().vertex_fast_functions) {
         LOG_INFO(Render, "Vertex shaders use the fast math functions");
     }
     fragment_compile_options =
-        make_options(GetQualityOptions().fast_math, GetQualityOptions().fast_functions);
+        MakeCompileOptions(GetQualityOptions().fast_math, GetQualityOptions().fast_functions);
     if (GetQualityOptions().fast_functions) {
         LOG_INFO(Render, "Fragment shaders use the fast math functions{}",
                  GetQualityOptions().fast_math ? " (together with fast math)" : "");
@@ -528,7 +531,7 @@ PipelineCache::ShaderHandle PipelineCache::UseVertexShader(const Pica::RegsInter
                                                            Pica::ShaderSetup& setup) {
     const PicaVSConfig config{regs, setup};
     const bool use_clip_planes = GetProfile().has_clip_planes;
-    const bool sanitize_mul = GetProfile().enable_accurate_mul;
+    const bool sanitize_mul = accurate_mul;
     const bool half_interpolants = GetQualityOptions().half_interpolants;
     u64 hash = Common::HashCombine(config.Hash(), static_cast<u64>(use_clip_planes),
                                    static_cast<u64>(sanitize_mul),
@@ -888,7 +891,8 @@ void PipelineCache::OpenDiskCache(u64 title_id_) {
     title_id = title_id_;
     FileUtil::CreateFullPath(CachePath("cache"));
 
-    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix);
+    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix, VertexFastMath(),
+                                                               accurate_mul);
 
     // Reuse the file when it was written by this build with the same profile, otherwise start over.
     bool valid = false;
@@ -1028,6 +1032,25 @@ void PipelineCache::SaveBinaryArchive() {
     archived_keys.clear();
 }
 
+bool PipelineCache::VertexFastMath() const {
+    return GetQualityOptions().vertex_fast_math && !accurate_mul;
+}
+
+void PipelineCache::SetAccurateMul(bool accurate) {
+    if (accurate == accurate_mul) {
+        return;
+    }
+    accurate_mul = accurate;
+    compile_options = MakeCompileOptions(VertexFastMath(),
+                                         GetQualityOptions().vertex_fast_functions ||
+                                             VertexFastMath());
+    LOG_INFO(Render, "Vertex shaders multiply {}{}", accurate ? "accurately" : "as fast as possible",
+             accurate && GetQualityOptions().vertex_fast_math
+                 ? ": Fast Math in Vertex Shaders is left off for this game (a game hack or the "
+                   "Accurate Multiplication setting needs it)"
+                 : "");
+}
+
 void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_loading,
                                   const VideoCore::DiskResourceLoadCallback& callback) {
     using VideoCore::LoadCallbackStage;
@@ -1062,7 +1085,8 @@ void PipelineCache::LoadDiskCache(u64 title_id_, const std::atomic_bool& stop_lo
         return;
     }
     // The same header OpenDiskCache keeps. (They used to differ, which threw every cache away.)
-    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix);
+    const CacheHeader expected = ExpectedCacheHeader(GetProfile(), fragment_quaternion_fix, VertexFastMath(),
+                                                               accurate_mul);
     if (contents.size() < sizeof(CacheHeader) ||
         std::memcmp(contents.data(), &expected, sizeof(CacheHeader)) != 0) {
         LOG_INFO(Render, "Shader cache of {:016X}: {} ({} bytes), starting a new one", title_id,

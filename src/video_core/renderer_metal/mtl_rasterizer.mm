@@ -109,6 +109,8 @@ void RasterizerMetal::LoadDefaultDiskResources(
         Loader::ResultStatus::Success) {
         program_id = 0;
     }
+    // The accurate multiplication of the setting or of a game hack (GPU::ApplyPerProgramSettings).
+    pipeline_cache.SetAccurateMul(accurate_mul);
     pipeline_cache.LoadDiskCache(program_id, stop_loading, callback);
     if (callback) {
         callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");

@@ -146,6 +146,13 @@ public:
      * Opens the disk cache of a title and builds every program and pipeline it contains, reporting
      * the progress through `callback`. Stops early when `stop_loading` becomes true.
      */
+    /**
+     * Whether the vertex shaders multiply accurately for this game: the setting, or a game hack
+     * that forces it (Ocarina of Time 3D). It cannot work with the full fast math of Fast Math in
+     * Vertex Shaders, which is then left off for the game. Call before LoadDiskCache.
+     */
+    void SetAccurateMul(bool accurate);
+
     void LoadDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
                        const VideoCore::DiskResourceLoadCallback& callback);
 
@@ -191,6 +198,9 @@ private:
     MTLVertexDescriptor* vertex_descriptor;
     MTLCompileOptions* compile_options;
     MTLCompileOptions* fragment_compile_options; ///< Like compile_options, optionally fast math
+    /// Vertex shaders multiply accurately (see SetAccurateMul), and with it never use fast math.
+    bool accurate_mul{};
+    bool VertexFastMath() const;
     bool fragment_quaternion_fix{};
     ShaderHandle trivial_vertex_shader;
 
