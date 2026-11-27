@@ -645,7 +645,14 @@ struct Values {
     SwitchableSetting<float> bg_green{0.f, Keys::bg_green};
     SwitchableSetting<float> bg_blue{0.f, Keys::bg_blue};
 
+#ifdef ANDROID
+    // On Android, whether Stereoscopic 3D is actually enabled is controlled by another setting:
+    // render_3d_which_display
+    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::SideBySideFull,
+                                                    Keys::render_3d};
+#else
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, Keys::render_3d};
+#endif
     SwitchableSetting<u32> factor_3d{0, Keys::factor_3d};
     SwitchableSetting<bool> swap_eyes_3d{false, Keys::swap_eyes_3d};
 
