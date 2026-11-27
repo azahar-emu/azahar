@@ -810,7 +810,6 @@
     <string name="reverse_interlaced">Omvänd interlaced</string>
 
     <!-- Texture filters -->
-    <string name="anime4k">Anime4K (endast OpenGL)</string>
     <string name="incompatible_texture_filter">Inkompatibelt texturfilter</string>
     <string name="incompatible_texture_filter_description">Det valda texturfiltret (Anime4K) är inte kompatibelt med Vulkan-renderaren.\nTexturfiltret ställs in på Ingen.</string>
 
