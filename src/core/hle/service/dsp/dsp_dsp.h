@@ -1,6 +1,6 @@
-// Copyright 2014-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -61,6 +61,30 @@ private:
      *      This function has only been observed being called with a register number of 0.
      */
     void RecvDataIsReady(Kernel::HLERequestContext& ctx);
+
+    /**
+     * DSP_DSP::SendData service function
+     *  Inputs:
+     *      0 : Header Code[0x00030080]
+     *      1 : Register Number
+     *      2 : u16, Value to write
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *  Note:
+     *      The dsp module waits until the DSP has read the previous value.
+     */
+    void SendData(Kernel::HLERequestContext& ctx);
+
+    /**
+     * DSP_DSP::SendDataIsEmpty service function
+     *  Inputs:
+     *      0 : Header Code[0x00040040]
+     *      1 : Register Number
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : u8, 1 if the DSP has read the last value written to the register, 0 otherwise
+     */
+    void SendDataIsEmpty(Kernel::HLERequestContext& ctx);
 
     /**
      * DSP_DSP::SetSemaphore service function

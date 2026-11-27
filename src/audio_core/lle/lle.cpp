@@ -1,10 +1,16 @@
-// Copyright 2018-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
+#include <algorithm>
 #include <array>
 #include <atomic>
+#include <deque>
+#include <functional>
+#include <limits>
+#include <mutex>
 #include <thread>
+#include <vector>
 #include <teakra/teakra.h>
 #include "audio_core/lle/lle.h"
 #include "common/assert.h"
@@ -13,6 +19,7 @@
 #include "common/thread.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
 
 namespace AudioCore {
@@ -62,12 +69,20 @@ public:
 
     std::vector<Segment> segments;
     bool recv_data_on_start;
+    bool load_special_segment;
+    SegmentType special_segment_type;
+    u32 special_segment_address;
+    u32 special_segment_size;
 };
 
 Dsp1::Dsp1(std::span<const u8> raw) {
     Header header;
     std::memcpy(&header, raw.data(), sizeof(header));
     recv_data_on_start = header.recv_data_on_start != 0;
+    load_special_segment = header.load_special_segment != 0;
+    special_segment_type = header.special_segment_type;
+    special_segment_address = header.special_segment_address;
+    special_segment_size = header.special_segment_size;
     segments.reserve(header.num_segments);
     for (u32 i = 0; i < header.num_segments; ++i) {
         Segment segment;
@@ -121,9 +136,9 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 }
 
 struct DspLle::Impl final {
-    Impl(Core::Timing& timing, Memory::MemorySystem& memory, bool multithread)
-        : teakra(Teakra::UserConfig{.dsp_memory = memory.GetDspMemory(0)}), core_timing(timing),
-          multithread(multithread) {
+    Impl(Core::Timing& timing, Memory::MemorySystem& memory, bool multithread, bool use_jit)
+        : teakra(Teakra::UserConfig{.dsp_memory = memory.GetDspMemory(0), .use_jit = use_jit}),
+          core_timing(timing), multithread(multithread) {
         teakra_slice_event = core_timing.RegisterEvent(
             "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
     }
@@ -151,9 +166,152 @@ struct DspLle::Impl final {
     static constexpr u32 DspDataOffset = 0x40000;
     static constexpr u32 TeakraSlice = 16384;
 
+    // Simulates the delay between the guest application writing commands and the DSP hardware
+    // receiving them. Without this delay, the events would arrive too quickly which causes issues
+    // inside the DSP firmware. Measured on a real console, and takes about 2650 cycles on average.
+    static constexpr u64 HostWriteLatency = 2650;
+
+    // In multi-thread mode the DSP thread runs in steps of at most this many cycles, so that it
+    // sees writes queued while it runs.
+    static constexpr u64 HostWritePollInterval = 2048;
+
+    struct HostWrite {
+        u64 arrival_cycle;
+        std::function<void()> apply;
+    };
+    std::mutex host_mutex;
+    std::deque<HostWrite> host_writes;
+    std::array<bool, 3> index_data_pending{};
+    u64 last_arrival = 0;
+
+    // DSP cycles run since the component was loaded.
+    std::atomic<u64> dsp_cycles = 0;
+    // The end of the DSP step being run, an uper bound for the DSP's position and for the cycle
+    // of anything the step raises.
+    std::atomic<u64> step_end = 0;
+    // The DSP cycle that matches ARM tick sync_ticks. In single-thread mode a slice runs ahead,
+    // so this is the end of the last slice run. In multi-thread mode it is the start of the
+    // slice the DSP thread is running.
+    u64 sync_cycles = 0;
+    s64 sync_ticks = 0;
+
+    void QueueHostWrite(std::function<void()> apply) {
+        const s64 elapsed = std::max<s64>(core_timing.GetGlobalTicks() - sync_ticks, 0);
+        // The DSP runs at half the ARM clock.
+        const u64 arm_cycles = sync_cycles + static_cast<u64>(elapsed) / 2;
+        // When the DSP is ahead of the ARM, the latency counts from the end of its current step,
+        // so that a write never arrives sooner than that after the DSP's position.
+        std::lock_guard lock(host_mutex);
+        const u64 arrival =
+            std::max(std::max(arm_cycles, step_end.load()) + HostWriteLatency, last_arrival);
+        last_arrival = arrival;
+        host_writes.push_back({arrival, std::move(apply)});
+    }
+
+    void ResetTiming() {
+        {
+            std::lock_guard lock(host_mutex);
+            host_writes.clear();
+            index_data_pending = {};
+            last_arrival = 0;
+        }
+        {
+            std::lock_guard lock(interrupt_mutex);
+            pending_interrupts.clear();
+        }
+        step_end = 0;
+        dsp_cycles = 0;
+        sync_cycles = 0;
+        sync_ticks = core_timing.GetGlobalTicks();
+    }
+
+    // Interrupts for the ARM are delivered on the emulation thread once the ARM has synced past
+    // the slice that raised them.
+    struct PendingInterrupt {
+        u64 cycle;
+        std::function<void()> deliver;
+    };
+    std::mutex interrupt_mutex;
+    std::deque<PendingInterrupt> pending_interrupts;
+
+    void QueueInterrupt(std::function<void()> deliver) {
+        std::lock_guard lock(interrupt_mutex);
+        pending_interrupts.push_back({step_end, std::move(deliver)});
+    }
+
+    void DeliverInterrupts() {
+        std::vector<std::function<void()>> interrupts;
+        {
+            std::lock_guard lock(interrupt_mutex);
+            while (!pending_interrupts.empty() && pending_interrupts.front().cycle <= sync_cycles) {
+                interrupts.push_back(std::move(pending_interrupts.front().deliver));
+                pending_interrupts.pop_front();
+            }
+        }
+        for (auto& deliver : interrupts) {
+            deliver();
+        }
+    }
+
+    void SetSemaphore(u16 value) {
+        QueueHostWrite([this, value] { teakra.SetSemaphore(value); });
+    }
+
+    void SendData(u8 index, u16 value) {
+        {
+            std::lock_guard lock(host_mutex);
+            index_data_pending[index] = true;
+        }
+        QueueHostWrite([this, index, value] {
+            {
+                std::lock_guard lock(host_mutex);
+                index_data_pending[index] = false;
+            }
+            teakra.SendData(index, value);
+        });
+    }
+
+    bool SendDataIsEmpty(u8 index) {
+        std::lock_guard lock(host_mutex);
+        return !index_data_pending[index] && teakra.SendDataIsEmpty(index);
+    }
+
+    // Runs the DSP, applying queued host writes when appropriate.
+    void RunTeakra(u64 cycles) {
+        const u64 end = dsp_cycles + cycles;
+        while (true) {
+            const u64 now = dsp_cycles;
+            u64 next_arrival = std::numeric_limits<u64>::max();
+            std::vector<std::function<void()>> ready;
+            {
+                std::lock_guard lock(host_mutex);
+                while (!host_writes.empty() && host_writes.front().arrival_cycle <= now) {
+                    ready.push_back(std::move(host_writes.front().apply));
+                    host_writes.pop_front();
+                }
+                if (!host_writes.empty()) {
+                    next_arrival = host_writes.front().arrival_cycle;
+                }
+            }
+            for (auto& apply : ready) {
+                apply();
+            }
+            if (now >= end) {
+                break;
+            }
+            u64 step = std::min(end - now, next_arrival - now);
+            if (multithread) {
+                step = std::min(step, HostWritePollInterval);
+            }
+            step_end = now + step;
+            teakra.Run(static_cast<unsigned>(step));
+            dsp_cycles = now + step;
+        }
+    }
+
     void TeakraThread() {
         while (true) {
-            teakra.Run(TeakraSlice);
+            RunTeakra(TeakraSlice);
             teakra_slice_barrier.Sync();
             if (stop_signal) {
                 if (stop_generation == teakra_slice_barrier.Generation())
@@ -175,9 +333,13 @@ struct DspLle::Impl final {
     void RunTeakraSlice() {
         if (multithread) {
             teakra_slice_barrier.Sync();
+            sync_cycles += TeakraSlice;
         } else {
-            teakra.Run(TeakraSlice);
+            RunTeakra(TeakraSlice);
+            sync_cycles = dsp_cycles;
         }
+        sync_ticks = core_timing.GetGlobalTicks();
+        DeliverInterrupts();
     }
 
     void TeakraSliceEvent(u64 late) {
@@ -253,9 +415,9 @@ struct DspLle::Impl final {
         }
         if (need_update) {
             UpdatePipeStatus(pipe_status);
-            while (!teakra.SendDataIsEmpty(2))
+            while (!SendDataIsEmpty(2))
                 RunTeakraSlice();
-            teakra.SendData(2, pipe_status.slot_index);
+            SendData(2, pipe_status.slot_index);
         }
     }
 
@@ -290,9 +452,9 @@ struct DspLle::Impl final {
         }
         if (need_update) {
             UpdatePipeStatus(pipe_status);
-            while (!teakra.SendDataIsEmpty(2))
+            while (!SendDataIsEmpty(2))
                 RunTeakraSlice();
-            teakra.SendData(2, pipe_status.slot_index);
+            SendData(2, pipe_status.slot_index);
         }
         return data;
     }
@@ -305,13 +467,14 @@ struct DspLle::Impl final {
         return size & PipeStatus::PtrMask;
     }
 
-    void LoadComponent(std::span<const u8> buffer) {
+    void LoadComponent(std::span<const u8> buffer, std::span<const u8> special_segment) {
         if (loaded) {
             LOG_ERROR(Audio_DSP, "Component already loaded!");
             return;
         }
 
         teakra.Reset();
+        ResetTiming();
 
         Dsp1 dsp(buffer);
         auto dsp_memory = teakra.GetDspMemory();
@@ -326,7 +489,9 @@ struct DspLle::Impl final {
             }
         }
 
-        // TODO: load special segment
+        if (dsp.load_special_segment) {
+            LoadSpecialSegment(dsp, special_segment);
+        }
 
         core_timing.ScheduleEvent(TeakraSlice, teakra_slice_event, 0);
 
@@ -352,6 +517,23 @@ struct DspLle::Impl final {
         loaded = true;
     }
 
+    void LoadSpecialSegment(const Dsp1& dsp, std::span<const u8> special_segment) {
+        const bool is_program = dsp.special_segment_type == SegmentType::ProgramA ||
+                                dsp.special_segment_type == SegmentType::ProgramB;
+        const u32 space_words = is_program ? 0x20000 : 0x10000;
+        const u32 address = dsp.special_segment_address;
+        const u32 size = dsp.special_segment_size;
+        if (static_cast<u8>(dsp.special_segment_type) > static_cast<u8>(SegmentType::Data) ||
+            address >= space_words || address + size / 2 > space_words ||
+            size > special_segment.size()) {
+            LOG_ERROR(Audio_DSP, "Invalid special segment type={} address=0x{:X} size=0x{:X}",
+                      static_cast<u8>(dsp.special_segment_type), address, size);
+            return;
+        }
+        u8* base = teakra.GetDspMemory() + (is_program ? 0 : DspDataOffset);
+        std::memcpy(base + address * 2, special_segment.data(), size);
+    }
+
     void UnloadComponent() {
         if (!loaded) {
             LOG_ERROR(Audio_DSP, "Component not loaded!");
@@ -362,10 +544,10 @@ struct DspLle::Impl final {
 
         // Send finalization signal via command/reply register 2
         constexpr u16 FinalizeSignal = 0x8000;
-        while (!teakra.SendDataIsEmpty(2))
+        while (!SendDataIsEmpty(2))
             RunTeakraSlice();
 
-        teakra.SendData(2, FinalizeSignal);
+        SendData(2, FinalizeSignal);
 
         // Wait for completion
         while (!teakra.RecvDataIsReady(2))
@@ -389,8 +571,28 @@ bool DspLle::RecvDataIsReady(u32 register_number) const {
     return impl->teakra.RecvDataIsReady(register_number);
 }
 
+void DspLle::SendData(u32 register_number, u16 value) {
+    if (register_number >= 3) {
+        LOG_ERROR(Audio_DSP, "Invalid register_number {}", register_number);
+        return;
+    }
+    const u8 index = static_cast<u8>(register_number);
+    while (!impl->SendDataIsEmpty(index)) {
+        impl->RunTeakraSlice();
+    }
+    impl->SendData(index, value);
+}
+
+bool DspLle::SendDataIsEmpty(u32 register_number) const {
+    if (register_number >= 3) {
+        LOG_ERROR(Audio_DSP, "Invalid register_number {}", register_number);
+        return true;
+    }
+    return impl->SendDataIsEmpty(static_cast<u8>(register_number));
+}
+
 void DspLle::SetSemaphore(u16 semaphore_value) {
-    impl->teakra.SetSemaphore(semaphore_value);
+    impl->SetSemaphore(semaphore_value);
 }
 
 std::vector<u8> DspLle::PipeRead(DspPipe pipe_number, std::size_t length) {
@@ -407,20 +609,28 @@ void DspLle::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
 
 void DspLle::SetInterruptHandler(
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
-    impl->teakra.SetRecvDataHandler(0, [this, handler]() {
+    auto Signal = [this, handler](Service::DSP::InterruptType type, DspPipe pipe) {
+        impl->QueueInterrupt([this, handler, type, pipe] {
+            if (impl->loaded) {
+                handler(type, pipe);
+            }
+        });
+    };
+
+    impl->teakra.SetRecvDataHandler(0, [this, Signal]() {
         if (!impl->loaded) {
             return;
         }
-        handler(Service::DSP::InterruptType::Zero, static_cast<DspPipe>(0));
+        Signal(Service::DSP::InterruptType::Zero, static_cast<DspPipe>(0));
     });
-    impl->teakra.SetRecvDataHandler(1, [this, handler]() {
+    impl->teakra.SetRecvDataHandler(1, [this, Signal]() {
         if (!impl->loaded) {
             return;
         }
-        handler(Service::DSP::InterruptType::One, static_cast<DspPipe>(0));
+        Signal(Service::DSP::InterruptType::One, static_cast<DspPipe>(0));
     });
 
-    auto ProcessPipeEvent = [this, handler](bool event_from_data) {
+    auto ProcessPipeEvent = [this, Signal](bool event_from_data) {
         if (!impl->loaded)
             return;
 
@@ -430,6 +640,8 @@ void DspLle::SetInterruptHandler(
         } else {
             if ((teakra.GetSemaphore() & 0x8000) == 0)
                 return;
+            // The dsp module clears the bit every time it handles the interrupt.
+            teakra.ClearSemaphore(0x8000);
             impl->semaphore_signaled = true;
         }
         if (impl->semaphore_signaled && impl->data_signaled) {
@@ -442,10 +654,13 @@ void DspLle::SetInterruptHandler(
                 return;
             if (pipe == 0) {
                 // pipe 0 is for debug. 3DS automatically drains this pipe and discards the data
-                impl->ReadPipe(static_cast<u8>(pipe),
-                               impl->GetPipeReadableSize(static_cast<u8>(pipe)));
+                impl->QueueInterrupt([this] {
+                    if (impl->loaded) {
+                        impl->ReadPipe(0, impl->GetPipeReadableSize(0));
+                    }
+                });
             } else {
-                handler(Service::DSP::InterruptType::Pipe, static_cast<DspPipe>(pipe));
+                Signal(Service::DSP::InterruptType::Pipe, static_cast<DspPipe>(pipe));
             }
         }
     };
@@ -455,19 +670,29 @@ void DspLle::SetInterruptHandler(
 }
 
 void DspLle::LoadComponent(std::span<const u8> buffer) {
-    impl->LoadComponent(buffer);
+    // The dsp module fills the component's special segment with the 3D filters (surround
+    // calibration) from the config, or with zeros when it cannot read them.
+    std::array<u8, 0x214> filters{};
+    if (auto cfg = Service::CFG::GetModule(system)) {
+        filters = cfg->Get3dFilters();
+    }
+    impl->LoadComponent(buffer, filters);
 }
 
 void DspLle::UnloadComponent() {
     impl->UnloadComponent();
 }
 
-DspLle::DspLle(Core::System& system, bool multithread)
-    : DspLle(system, system.Memory(), system.CoreTiming(), multithread) {}
+DspLle::DspLle(Core::System& system, bool multithread, bool use_jit)
+    : DspLle(system, system.Memory(), system.CoreTiming(), multithread, use_jit) {}
 
 DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
-               bool multithread)
-    : DspInterface(system), impl(std::make_unique<Impl>(timing, memory, multithread)) {
+               bool multithread, bool use_jit)
+    : DspInterface(system), system(system),
+      impl(std::make_unique<Impl>(timing, memory, multithread, use_jit)) {
+    if (use_jit && !IsJitSupported()) {
+        LOG_WARNING(Audio_DSP, "The DSP JIT is not supported on this host, using the interpreter");
+    }
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {
         return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);
@@ -496,5 +721,9 @@ DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing&
         [this](std::array<s16, 2> sample) { OutputSample(std::move(sample)); });
 }
 DspLle::~DspLle() = default;
+
+bool DspLle::IsJitSupported() {
+    return Teakra::Teakra::IsJitSupported();
+}
 
 } // namespace AudioCore

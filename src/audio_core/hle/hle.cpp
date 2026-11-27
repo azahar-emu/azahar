@@ -517,6 +517,14 @@ bool DspHle::RecvDataIsReady(u32 register_number) const {
     return impl->RecvDataIsReady(register_number);
 }
 
+void DspHle::SendData(u32 register_number, u16 value) {
+    // Do nothing in HLE
+}
+
+bool DspHle::SendDataIsEmpty(u32 register_number) const {
+    return true;
+}
+
 void DspHle::SetSemaphore(u16 semaphore_value) {
     // Do nothing in HLE
 }

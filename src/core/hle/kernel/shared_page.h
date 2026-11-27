@@ -84,7 +84,9 @@ struct SharedPageDef {
     INSERT_PADDING_BYTES(0xA0 - 0x87);   // 87
     u64_le menu_title_id;                // A0
     u64_le active_menu_title_id;         // A8
-    INSERT_PADDING_BYTES(0x1000 - 0xB0); // B0
+    INSERT_PADDING_BYTES(0xC0 - 0xB0);   // B0
+    u8 headphones_connected;             // C0
+    INSERT_PADDING_BYTES(0x1000 - 0xC1); // C1
 };
 static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
               "Shared page structure size is wrong");
@@ -110,6 +112,8 @@ public:
     void SetBatteryState(const BatteryState& state);
 
     const BatteryState& GetBatteryState();
+
+    void SetHeadphonesConnected(bool);
 
     SharedPageDef& GetSharedPage();
 

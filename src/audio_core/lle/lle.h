@@ -1,6 +1,6 @@
-// Copyright 2018-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2018-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -19,13 +19,18 @@ namespace AudioCore {
 
 class DspLle final : public DspInterface {
 public:
-    explicit DspLle(Core::System& system, bool multithread);
+    explicit DspLle(Core::System& system, bool multithread, bool use_jit = false);
     explicit DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
-                    bool multithread);
+                    bool multithread, bool use_jit = false);
     ~DspLle() override;
+
+    /// Whether the DSP JIT is available on this build and host CPU.
+    static bool IsJitSupported();
 
     u16 RecvData(u32 register_number) override;
     bool RecvDataIsReady(u32 register_number) const override;
+    void SendData(u32 register_number, u16 value) override;
+    bool SendDataIsEmpty(u32 register_number) const override;
     void SetSemaphore(u16 semaphore_value) override;
     std::vector<u8> PipeRead(DspPipe pipe_number, std::size_t length) override;
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;
@@ -38,6 +43,7 @@ public:
     void UnloadComponent() override;
 
 private:
+    Core::System& system;
     struct Impl;
     std::unique_ptr<Impl> impl;
 };

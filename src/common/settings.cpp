@@ -148,6 +148,7 @@ void LogSettings() {
 #endif
     log_setting("Audio_InputType", values.input_type.GetValue());
     log_setting("Audio_InputDevice", values.input_device.GetValue());
+    log_setting("Audio_EnableDspLleJit", values.enable_dsp_lle_jit.GetValue());
     log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching.GetValue());
     log_setting("Audio_EnableRealtime", values.enable_realtime_audio.GetValue());
     using namespace Service::CAM;
@@ -206,6 +207,7 @@ void RestoreGlobalState(bool is_powered_on) {
 
     // Audio
     values.audio_emulation.SetGlobal(true);
+    values.enable_dsp_lle_jit.SetGlobal(true);
     values.enable_audio_stretching.SetGlobal(true);
     values.enable_realtime_audio.SetGlobal(true);
     values.volume.SetGlobal(true);

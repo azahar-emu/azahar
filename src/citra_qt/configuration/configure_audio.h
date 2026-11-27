@@ -1,6 +1,6 @@
 // Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -39,6 +39,7 @@ private:
 
     void SetupPerGameUI();
 
+    ConfigurationShared::CheckState dsp_lle_jit;
     ConfigurationShared::CheckState audio_stretching;
     ConfigurationShared::CheckState realtime_audio;
     ConfigurationShared::CheckState simulate_headphones_plugged;

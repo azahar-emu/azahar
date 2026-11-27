@@ -5,6 +5,7 @@
 #include <memory>
 #include <QtGlobal>
 #include "audio_core/input_details.h"
+#include "audio_core/lle/lle.h"
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "citra_qt/configuration/configuration_shared.h"
@@ -28,6 +29,7 @@ ConfigureAudio::ConfigureAudio(bool is_powered_on, QWidget* parent)
     }
 
     ui->emulation_combo_box->setEnabled(!is_powered_on);
+    ui->toggle_dsp_lle_jit->setVisible(AudioCore::DspLle::IsJitSupported());
 
     connect(ui->volume_slider, &QSlider::valueChanged, this,
             &ConfigureAudio::SetVolumeIndicatorText);
@@ -69,6 +71,7 @@ void ConfigureAudio::SetConfiguration() {
     SetInputDeviceFromDeviceID();
 
     ui->bypass_audio_effects->setChecked(Settings::values.bypass_audio_effects.GetValue());
+    ui->toggle_dsp_lle_jit->setChecked(Settings::values.enable_dsp_lle_jit.GetValue());
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching.GetValue());
     ui->toggle_realtime_audio->setChecked(Settings::values.enable_realtime_audio.GetValue());
     ui->simulate_headphones_plugged->setChecked(
@@ -168,9 +171,12 @@ void ConfigureAudio::SetHleFeaturesEnabled() {
 
     ui->toggle_audio_stretching->setEnabled(is_hle);
     ui->toggle_realtime_audio->setEnabled(is_hle);
+    ui->toggle_dsp_lle_jit->setEnabled(!is_hle && ui->emulation_combo_box->isEnabled());
 }
 
 void ConfigureAudio::ApplyConfiguration() {
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.enable_dsp_lle_jit,
+                                             ui->toggle_dsp_lle_jit, dsp_lle_jit);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.enable_audio_stretching,
                                              ui->toggle_audio_stretching, audio_stretching);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.enable_realtime_audio,
@@ -260,6 +266,9 @@ void ConfigureAudio::SetupPerGameUI() {
     ConfigurationShared::SetColoredComboBox(
         ui->emulation_combo_box, ui->widget_emulation,
         static_cast<u32>(Settings::values.audio_emulation.GetValue(true)));
+
+    ConfigurationShared::SetColoredTristate(ui->toggle_dsp_lle_jit,
+                                            Settings::values.enable_dsp_lle_jit, dsp_lle_jit);
 
     ConfigurationShared::SetColoredTristate(
         ui->toggle_audio_stretching, Settings::values.enable_audio_stretching, audio_stretching);

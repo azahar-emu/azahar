@@ -110,6 +110,7 @@ foreach(KEY IN ITEMS
     "async_custom_loading"
     "disable_right_eye_render"
     "audio_emulation"
+    "enable_dsp_lle_jit"
     "enable_audio_stretching"
     "enable_realtime_audio"
     "volume"

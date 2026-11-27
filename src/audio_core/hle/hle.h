@@ -1,6 +1,6 @@
-// Copyright 2017-2025 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -32,6 +32,8 @@ public:
 
     u16 RecvData(u32 register_number) override;
     bool RecvDataIsReady(u32 register_number) const override;
+    void SendData(u32 register_number, u16 value) override;
+    bool SendDataIsEmpty(u32 register_number) const override;
     void SetSemaphore(u16 semaphore_value) override;
     std::vector<u8> PipeRead(DspPipe pipe_number, std::size_t length) override;
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;

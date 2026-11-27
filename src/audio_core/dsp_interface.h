@@ -54,6 +54,21 @@ public:
     virtual bool RecvDataIsReady(u32 register_number) const = 0;
 
     /**
+     * Writes data to one of three DSP command registers
+     * @note this function blocks until the register is empty
+     * @param register_number the index of the register to write
+     * @param value the value to write
+     */
+    virtual void SendData(u32 register_number, u16 value) = 0;
+
+    /**
+     * Checks whether one of three DSP command registers is empty
+     * @param register_number the index of the register to check
+     * @returns true if the DSP has read the last value written to it
+     */
+    virtual bool SendDataIsEmpty(u32 register_number) const = 0;
+
+    /**
      * Sets the DSP semaphore register
      * @param semaphore_value the value set to the semaphore register
      */

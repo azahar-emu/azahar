@@ -39,6 +39,7 @@
 #include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/apt.h"
@@ -657,7 +658,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         dsp_core = std::make_unique<AudioCore::DspHle>(*this);
     } else {
         const bool multithread = audio_emulation == Settings::AudioEmulation::LLEMultithreaded;
-        dsp_core = std::make_unique<AudioCore::DspLle>(*this, multithread);
+        dsp_core = std::make_unique<AudioCore::DspLle>(
+            *this, multithread, Settings::values.enable_dsp_lle_jit.GetValue());
     }
 
     dsp_core->SetSink(Settings::values.output_type.GetValue(),
@@ -896,6 +898,8 @@ void System::ApplySettings() {
         dsp_core->SetSink(Settings::values.output_type.GetValue(),
                           Settings::values.output_device.GetValue());
         dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
+        kernel->GetSharedPageHandler().SetHeadphonesConnected(
+            Settings::values.simulate_headphones_plugged.GetValue());
 
         auto hid = Service::HID::GetModule(*this);
         if (hid) {
