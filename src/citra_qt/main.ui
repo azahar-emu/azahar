@@ -229,6 +229,7 @@
     <addaction name="separator"/>
     <addaction name="action_Capture_Screenshot"/>
     <addaction name="action_Dump_Video"/>
+    <addaction name="action_Network_Streaming"/>
     <addaction name="separator"/>
     <addaction name="action_Compress_ROM_File"/>
     <addaction name="action_Decompress_ROM_File"/>
@@ -523,6 +524,14 @@
    </property>
    <property name="text">
     <string>Dump Video</string>
+   </property>
+  </action>
+  <action name="action_Network_Streaming">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Stream Bottom Screen to Device</string>
    </property>
   </action>
   <action name="action_Compress_ROM_File">
