@@ -101,7 +101,22 @@ bool SDLJoystick::GetHatDirection(int hat, Uint8 direction) const {
     // no need to worry about gamecontroller here - that api treats hats as buttons
     if (!sdl_joystick)
         return false;
-    return SDL_JoystickGetHat(sdl_joystick.get(), hat) == direction;
+    const auto current_dir = SDL_JoystickGetHat(sdl_joystick.get(), hat);
+    if (direction == SDL_HAT_UP) {
+        return (current_dir == SDL_HAT_UP || current_dir == SDL_HAT_RIGHTUP ||
+                current_dir == SDL_HAT_LEFTUP);
+    } else if (direction == SDL_HAT_DOWN) {
+        return (current_dir == SDL_HAT_DOWN || current_dir == SDL_HAT_RIGHTDOWN ||
+                current_dir == SDL_HAT_LEFTDOWN);
+    } else if (direction == SDL_HAT_LEFT) {
+        return (current_dir == SDL_HAT_LEFT || current_dir == SDL_HAT_LEFTDOWN ||
+                current_dir == SDL_HAT_LEFTUP);
+    } else if (direction == SDL_HAT_RIGHT) {
+        return (current_dir == SDL_HAT_RIGHT || current_dir == SDL_HAT_RIGHTDOWN ||
+                current_dir == SDL_HAT_RIGHTUP);
+    } else {
+        return current_dir == direction;
+    }
 }
 
 void SDLJoystick::SetTouchpad(float x, float y, int touchpad, bool down) {
