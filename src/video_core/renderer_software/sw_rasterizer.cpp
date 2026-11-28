@@ -1,6 +1,6 @@
 // Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #include <boost/container/static_vector.hpp>
 #include "common/logging/log.h"
@@ -584,7 +584,10 @@ std::array<Common::Vec4<u8>, 4> RasterizerSoftware::TextureColor(
 
     // Sample procedural texture
     if (regs.texturing.main_config.texture3_enable) {
-        const auto& proctex_uv = uv[regs.texturing.main_config.texture3_coordinates];
+        // TODO: Check what hardware does with the undefined value 3. Until then, use texcoord0
+        // like FragmentModule::DefineProcTexSampler().
+        const u32 coord = regs.texturing.main_config.texture3_coordinates;
+        const auto& proctex_uv = uv[coord < 3 ? coord : 0];
         texture_color[3] = ProcTex(proctex_uv.u().ToFloat32(), proctex_uv.v().ToFloat32(),
                                    regs.texturing, pica.proctex);
     }
