@@ -270,6 +270,7 @@ void RasterizerVulkan::SetupVertexArray() {
     const u32 stride_alignment = instance.GetMinVertexStrideAlignment();
 
     VertexLayout& layout = pipeline_info.state.vertex_layout;
+    layout.bindings = {};
     layout.binding_count = 0;
     layout.attribute_count = 16;
     enable_attributes.fill(false);
