@@ -123,6 +123,10 @@ const Common::Vec4<u8> Framebuffer::GetPixel(u32 x, u32 y) const {
 }
 
 u32 Framebuffer::GetDepth(u32 x, u32 y) const {
+    if (depth_buffer == nullptr) {
+        return 0;
+    }
+
     const auto& framebuffer = regs.framebuffer;
     y = framebuffer.height - y;
 
