@@ -209,8 +209,11 @@ void RasterizerSoftware::MakeScreenCoords(Vertex& vtx) {
     Viewport viewport{};
     viewport.halfsize_x = f24::FromRaw(regs.rasterizer.viewport_size_x);
     viewport.halfsize_y = f24::FromRaw(regs.rasterizer.viewport_size_y);
-    viewport.offset_x = f24::FromFloat32(static_cast<f32>(regs.rasterizer.viewport_corner.x));
-    viewport.offset_y = f24::FromFloat32(static_cast<f32>(regs.rasterizer.viewport_corner.y));
+    const auto& framebuffer = regs.framebuffer.framebuffer;
+    const auto viewport_rect =
+        regs.rasterizer.GetViewportRect(framebuffer.GetWidth(), framebuffer.GetHeight());
+    viewport.offset_x = f24::FromFloat32(static_cast<f32>(viewport_rect.left));
+    viewport.offset_y = f24::FromFloat32(static_cast<f32>(viewport_rect.bottom));
 
     f24 inv_w = f24::One() / vtx.pos.w;
     vtx.pos.w = inv_w;
