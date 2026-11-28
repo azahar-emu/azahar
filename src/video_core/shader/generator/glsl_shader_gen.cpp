@@ -206,9 +206,9 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
         return "";
     };
 
-    auto program_source =
-        DecompileProgram(setup.GetProgramCode(), setup.GetSwizzleData(), config.state.main_offset,
-                         get_input_reg, get_output_reg, extra.sanitize_mul);
+    auto program_source = DecompileProgram(setup.GetProgramCode(), setup.GetSwizzleData(),
+                                           config.state.main_offset, config.state.bool_uniforms,
+                                           get_input_reg, get_output_reg, extra.sanitize_mul);
 
     if (program_source.empty()) {
         return "";

@@ -1,6 +1,6 @@
 // Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -103,6 +103,7 @@ struct PicaVSConfigState {
     u64 program_hash;
     u64 swizzle_hash;
     u32 main_offset;
+    u16 bool_uniforms;
 
     u32 num_outputs;
 
@@ -132,8 +133,8 @@ struct PicaVSConfigState {
                                    // fields
                                    FIELD_HASH(lighting_disable), FIELD_HASH(program_hash),
                                    FIELD_HASH(swizzle_hash), FIELD_HASH(main_offset),
-                                   FIELD_HASH(num_outputs), FIELD_HASH(output_map),
-                                   FIELD_HASH(used_input_vertex_attributes),
+                                   FIELD_HASH(bool_uniforms), FIELD_HASH(num_outputs),
+                                   FIELD_HASH(output_map), FIELD_HASH(used_input_vertex_attributes),
                                    FIELD_HASH(input_vertex_attributes), FIELD_HASH(gs_state),
 
                                    // nested layout

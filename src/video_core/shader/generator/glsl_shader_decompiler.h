@@ -1,6 +1,6 @@
-// Copyright 2017 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the misc/licenses/gplv2.txt file included.
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv3 or any later version
+// Refer to the LICENSE.txt file included.
 
 #pragma once
 
@@ -14,7 +14,7 @@ using RegGetter = std::function<std::string(u32)>;
 
 std::string DecompileProgram(const Pica::ProgramCode& program_code,
                              const Pica::SwizzleData& swizzle_data, u32 main_offset,
-                             const RegGetter& inputreg_getter, const RegGetter& outputreg_getter,
-                             bool sanitize_mul);
+                             u16 bool_uniforms, const RegGetter& inputreg_getter,
+                             const RegGetter& outputreg_getter, bool sanitize_mul);
 
 } // namespace Pica::Shader::Generator::GLSL
